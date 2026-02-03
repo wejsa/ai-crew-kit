@@ -1,0 +1,48 @@
+{
+  "id": "ecommerce",
+  "name": "이커머스",
+  "version": "1.0.0",
+  "description": "상품, 주문, 재고, 배송, 프로모션 등 이커머스 서비스 도메인",
+  "defaultStack": {
+    "backend": "spring-boot-kotlin",
+    "frontend": "nextjs",
+    "database": "mysql",
+    "cache": "redis",
+    "messageQueue": "rabbitmq",
+    "infrastructure": "docker-compose"
+  },
+  "compliance": ["전자상거래법", "소비자보호법", "개인정보보호법"],
+  "keywords": {
+    "order": {
+      "triggers": ["주문", "결제", "구매", "체크아웃"],
+      "docs": ["order-flow.md", "payment-integration.md"]
+    },
+    "inventory": {
+      "triggers": ["재고", "품절", "입고", "출고"],
+      "docs": ["inventory.md"]
+    },
+    "shipping": {
+      "triggers": ["배송", "택배", "물류", "배송지"],
+      "docs": ["shipping.md"]
+    },
+    "promotion": {
+      "triggers": ["쿠폰", "할인", "프로모션", "이벤트"],
+      "docs": ["promotion.md"]
+    },
+    "product": {
+      "triggers": ["상품", "카탈로그", "카테고리", "옵션"],
+      "docs": ["product.md"]
+    }
+  },
+  "errorCodePrefix": "EC",
+  "conventions": {
+    "taskPrefix": "EC",
+    "branchStrategy": "git-flow",
+    "commitFormat": "conventional"
+  },
+  "checklists": [
+    "domain-logic.md",
+    "compliance.md",
+    "performance.md"
+  ]
+}

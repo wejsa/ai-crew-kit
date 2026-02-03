@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(ls:*)",
+      "Bash(git:*)",
+      "Bash(gradle:*)",
+      "Bash(java:*)",
+      "Bash(mvn:*)",
+      "Bash(docker:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(echo:*)",
+      "Bash(sed:*)",
+      "Bash(curl:*)",
+      "Write(*)",
+      "Read(*)",
+      "Edit(*)"
+    ],
+    "deny": []
+  }
+}

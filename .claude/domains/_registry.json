@@ -1,0 +1,48 @@
+{
+  "description": "AI Crew Kit 도메인 레지스트리",
+  "lastUpdated": "2026-02-03",
+  "domains": [
+    {
+      "id": "fintech",
+      "name": "핀테크 / 금융",
+      "icon": "🏦",
+      "description": "결제, 정산, 환불, 토큰 인증 등 금융 서비스",
+      "defaultStack": {
+        "backend": "spring-boot-kotlin",
+        "database": "mysql",
+        "cache": "redis"
+      },
+      "compliance": ["PCI-DSS", "전자금융감독규정", "개인정보보호법"],
+      "keywords": ["결제", "정산", "환불", "토큰", "가맹점", "VAN", "PG"],
+      "maturity": "stable"
+    },
+    {
+      "id": "ecommerce",
+      "name": "이커머스",
+      "icon": "🛒",
+      "description": "상품, 주문, 재고, 배송, 프로모션",
+      "defaultStack": {
+        "backend": "spring-boot-kotlin",
+        "database": "mysql",
+        "cache": "redis"
+      },
+      "compliance": ["전자상거래법", "소비자보호법"],
+      "keywords": ["주문", "재고", "배송", "장바구니", "쿠폰", "상품"],
+      "maturity": "stable"
+    },
+    {
+      "id": "general",
+      "name": "범용",
+      "icon": "🔧",
+      "description": "도메인 특화 없는 범용 프로젝트",
+      "defaultStack": {
+        "backend": "spring-boot-kotlin",
+        "database": "mysql",
+        "cache": "none"
+      },
+      "compliance": [],
+      "keywords": [],
+      "maturity": "stable"
+    }
+  ]
+}

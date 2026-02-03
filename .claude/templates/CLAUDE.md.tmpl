@@ -1,0 +1,224 @@
+# {{PROJECT_NAME}}
+
+## 프로젝트 개요
+
+{{PROJECT_DESCRIPTION}}
+
+### 기술 스택
+{{TECH_STACK_SECTION}}
+
+### 도메인
+- **유형**: {{DOMAIN_NAME}} ({{DOMAIN_ID}})
+- **컴플라이언스**: {{DOMAIN_COMPLIANCE}}
+
+---
+
+## 세션 시작 시 필수
+
+```bash
+# 1. 최신 상태 동기화
+git checkout develop
+git pull origin develop
+
+# 2. 상태 요약 보기
+/skill-status
+
+# 3. 다음 작업 가져오기
+/skill-plan
+```
+
+---
+
+## 상태 관리 (Git 기반 SSOT)
+
+```
+.claude/state/              # Git 관리
+├── project.json            # 프로젝트 설정 (도메인, 스택, 에이전트)
+├── backlog.json            # 백로그 + 상태 + Phase
+└── completed.json          # 완료 이력
+
+.claude/temp/               # 임시 파일 (Git 제외)
+└── {taskId}-plan.md        # Task별 상세 계획
+```
+
+**Git clone/pull이 곧 동기화입니다.**
+
+---
+
+## 에이전트
+
+{{AGENTS_SECTION}}
+
+---
+
+## 주요 스킬
+
+```bash
+/skill-status         # 상태 확인
+/skill-backlog        # 백로그 조회
+/skill-feature        # 새 기능 기획 (요구사항 + backlog 등록)
+/skill-plan           # 다음 작업 + 설계 + 스텝 분리 계획 수립
+/skill-impl           # 스텝 개발 + PR 생성
+/skill-review         # 코드 리뷰
+/skill-review-pr {num}  # PR 코드 리뷰
+/skill-merge-pr {num}   # PR 머지
+/skill-docs           # 참고자료
+```
+
+---
+
+## 자연어 명령어
+
+| 자연어 | 스킬 | 동작 |
+|--------|------|------|
+| "상태 확인해줘" | `/skill-status` | 프로젝트 상태 확인 |
+| "백로그 보여줘" | `/skill-backlog` | 백로그 조회 |
+| "다음 작업 가져와줘" | `/skill-plan` | Task 선택 + 설계 + 스텝 계획 |
+| "새 기능 기획해줘: {기능명}" | `/skill-feature {기능명}` | 새 기능 기획 + 요구사항 문서 |
+| "개발 진행해줘" | `/skill-impl` | Step 1 개발 -> PR 생성 |
+| "다음 스텝 진행해줘" | `/skill-impl --next` | 다음 스텝 개발 -> PR 생성 |
+| "전체 개발 진행해줘" | `/skill-impl --all` | 모든 스텝 연속 개발 |
+| "{경로} 코드 리뷰해줘" | `/skill-review {경로}` | 코드 경로 종합 리뷰 |
+| "PR {번호} 리뷰해줘" | `/skill-review-pr {번호}` | PR 리뷰 |
+| "PR {번호} 머지해줘" | `/skill-merge-pr {번호}` | PR 머지 |
+
+{{DOMAIN_DOCS_MAPPING}}
+
+---
+
+## 워크플로우
+
+### 새 기능 (기획부터)
+
+```
+/skill-feature "기능명"
+  ↓
+요구사항 정의 -> docs/requirements/{{TASK_PREFIX}}-XXX-spec.md
+  ↓
+사용자 검토/승인
+  ↓
+backlog.json에 Task 등록
+  ↓
+/skill-plan으로 설계 + 계획 수립
+```
+
+### 기존 Task 개발
+
+```
+/skill-plan
+  ↓
+Task 선택 -> 요구사항 확인 -> 설계 -> 스텝 분리 계획
+  ↓
+(사용자 설계/계획 검토)
+  ↓
+/skill-impl 또는 "개발 진행해줘"
+  ↓
+Step 1 개발 -> PR 자동 생성
+  ↓
+/skill-review-pr {번호} 또는 "PR {번호} 리뷰해줘"
+  ↓
+(수정 필요 시 수정 -> 커밋 -> 푸시)
+  ↓
+/skill-merge-pr {번호} 또는 "PR {번호} 머지해줘"
+  ↓
+/skill-impl --next 또는 "다음 스텝 진행해줘"
+  ↓
+(반복)
+  ↓
+마지막 스텝 머지 -> 전체 완료
+```
+
+---
+
+## Git 브랜치 전략
+
+### 브랜치 구조
+```
+main (운영)
+  └── develop (개발 통합)
+        ├── feature/{{TASK_PREFIX}}-XXX-stepN (스텝별 개발)
+        ├── bugfix/{{TASK_PREFIX}}-XXX-버그명 (버그 수정)
+        └── hotfix/{{TASK_PREFIX}}-XXX-긴급수정 (긴급 패치)
+```
+
+### PR 규칙
+- PR은 develop 브랜치로 생성
+- 리뷰 승인 후 Squash 머지
+- **스텝별 PR 생성** ({{PR_LINE_LIMIT}}라인 미만 단위)
+- PR 생성: `/skill-impl` 스텝 완료 시 자동 처리
+- PR 리뷰: `/skill-review-pr {번호}`
+- PR 머지: `/skill-merge-pr {번호}`
+
+### 커밋 메시지 규칙
+```
+<type>: <description>
+
+Types:
+- feat: 새 기능
+- fix: 버그 수정
+- refactor: 리팩토링
+- docs: 문서
+- test: 테스트
+- chore: 기타
+
+예: feat: {{TASK_PREFIX}}-010 Step 1 - 서비스 구현
+```
+
+---
+
+## Task 개발 규칙
+
+### 작업 ID 체계
+```
+{{TASK_PREFIX}}-{번호}
+
+예: {{TASK_PREFIX}}-001, {{TASK_PREFIX}}-010
+```
+
+### 스텝 분리 기준
+- 각 스텝은 **수정 라인 {{PR_LINE_LIMIT}}라인 미만**으로 제한
+- 세부 계획을 스텝 단위로 명확히 구분
+
+### 라인 수 제한
+
+| 라인 수 | 처리 |
+|---------|------|
+| < 300 | 양호 |
+| 300~500 | 경고 (계속 진행 가능) |
+| 500~700 | 강력 경고 (사용자 확인 필요) |
+| > 700 | 차단 (반드시 스텝 분리) |
+
+---
+
+{{CONVENTIONS_SECTION}}
+
+---
+
+{{DOMAIN_ERROR_CODES}}
+
+---
+
+## 테스트 규칙
+
+### 커버리지 목표
+- 단위 테스트: {{TEST_COVERAGE}}%+
+- 통합 테스트: 주요 플로우 100%
+
+---
+
+## 산출물 저장 위치
+
+```
+docs/
+├── requirements/         # 요구사항 문서
+├── api-specs/            # API 명세 (OpenAPI)
+├── architecture/         # 아키텍처 문서
+├── security/             # 보안 문서
+└── test-plans/           # 테스트 계획
+```
+
+---
+
+<!-- CUSTOM_SECTION_START -->
+{{CUSTOM_SECTION}}
+<!-- CUSTOM_SECTION_END -->

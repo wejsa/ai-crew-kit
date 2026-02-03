@@ -1,0 +1,225 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ai-crew-kit.dev/schemas/project.schema.json",
+  "title": "AI Crew Kit Project Configuration",
+  "description": "프로젝트 설정 스키마 - skill-init이 생성하고 각 스킬이 참조",
+  "type": "object",
+  "required": ["name", "domain", "version"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "프로젝트 이름"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "프로젝트 설명"
+    },
+    "domain": {
+      "type": "string",
+      "enum": ["fintech", "ecommerce", "healthcare", "saas", "general", "custom"],
+      "description": "도메인 유형"
+    },
+    "techStack": {
+      "type": "object",
+      "description": "기술 스택 설정",
+      "properties": {
+        "backend": {
+          "type": "string",
+          "enum": ["spring-boot-kotlin", "spring-boot-java", "nodejs-typescript", "go", "none"],
+          "default": "spring-boot-kotlin",
+          "description": "백엔드 프레임워크"
+        },
+        "frontend": {
+          "type": "string",
+          "enum": ["nextjs", "react", "vue", "none"],
+          "default": "none",
+          "description": "프론트엔드 프레임워크"
+        },
+        "database": {
+          "type": "string",
+          "enum": ["mysql", "postgresql", "mongodb", "none"],
+          "default": "mysql",
+          "description": "데이터베이스"
+        },
+        "cache": {
+          "type": "string",
+          "enum": ["redis", "memcached", "none"],
+          "default": "none",
+          "description": "캐시"
+        },
+        "messageQueue": {
+          "type": "string",
+          "enum": ["rabbitmq", "kafka", "sqs", "none"],
+          "default": "none",
+          "description": "메시지 큐"
+        },
+        "infrastructure": {
+          "type": "string",
+          "enum": ["docker-compose", "kubernetes", "none"],
+          "default": "docker-compose",
+          "description": "인프라"
+        }
+      },
+      "additionalProperties": false
+    },
+    "agents": {
+      "type": "object",
+      "description": "에이전트 활성화 설정",
+      "properties": {
+        "enabled": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["pm", "planner", "backend", "frontend", "qa", "code-reviewer", "docs", "db-designer", "devops"]
+          },
+          "default": ["pm", "backend", "code-reviewer"],
+          "description": "활성화된 에이전트 목록"
+        },
+        "disabled": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["pm", "planner", "backend", "frontend", "qa", "code-reviewer", "docs", "db-designer", "devops"]
+          },
+          "default": [],
+          "description": "비활성화된 에이전트 목록"
+        }
+      },
+      "additionalProperties": false
+    },
+    "conventions": {
+      "type": "object",
+      "description": "컨벤션 설정",
+      "properties": {
+        "taskPrefix": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9-]*$",
+          "default": "TASK",
+          "description": "태스크 ID 접두사 (예: TASK, PG-GW)"
+        },
+        "branchStrategy": {
+          "type": "string",
+          "enum": ["git-flow", "github-flow", "trunk-based"],
+          "default": "git-flow",
+          "description": "브랜치 전략"
+        },
+        "commitFormat": {
+          "type": "string",
+          "enum": ["conventional", "angular", "custom"],
+          "default": "conventional",
+          "description": "커밋 메시지 형식"
+        },
+        "prLineLimit": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 1000,
+          "default": 500,
+          "description": "PR당 최대 라인 수"
+        },
+        "testCoverage": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 80,
+          "description": "테스트 커버리지 목표 (%)"
+        },
+        "language": {
+          "type": "string",
+          "enum": ["ko", "en"],
+          "default": "ko",
+          "description": "기본 언어"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ports": {
+      "type": "object",
+      "description": "서비스 포트 설정",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 1024,
+        "maximum": 65535
+      }
+    },
+    "customDomain": {
+      "type": "object",
+      "description": "커스텀 도메인 설정 (domain이 'custom'일 때 사용)",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "커스텀 도메인 이름"
+        },
+        "keywords": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "triggers": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "docs": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          },
+          "description": "키워드-문서 매핑"
+        }
+      }
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "생성 일시"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "수정 일시"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "스키마 버전 (semver)"
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "name": "pg-gateway",
+      "description": "PG 시스템 API Gateway 서비스",
+      "domain": "fintech",
+      "techStack": {
+        "backend": "spring-boot-kotlin",
+        "frontend": "none",
+        "database": "mysql",
+        "cache": "redis",
+        "messageQueue": "rabbitmq",
+        "infrastructure": "docker-compose"
+      },
+      "agents": {
+        "enabled": ["pm", "backend", "code-reviewer", "qa", "db-designer"],
+        "disabled": ["frontend", "planner", "docs"]
+      },
+      "conventions": {
+        "taskPrefix": "PG-GW",
+        "branchStrategy": "git-flow",
+        "commitFormat": "conventional",
+        "prLineLimit": 500,
+        "testCoverage": 80,
+        "language": "ko"
+      },
+      "ports": {
+        "gateway": 10080,
+        "payment": 10081,
+        "settlement": 10082
+      },
+      "createdAt": "2026-02-03T00:00:00Z",
+      "version": "2.0.0"
+    }
+  ]
+}

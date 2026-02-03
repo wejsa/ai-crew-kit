@@ -1,0 +1,10 @@
+# 요구사항 문서 디렉토리
+
+이 디렉토리에는 /pg-feature 스킬로 생성된 요구사항 문서가 저장됩니다.
+
+파일 명명 규칙:
+- PG-GW-{번호}-spec.md
+
+예시:
+- PG-GW-050-spec.md (Redis 분산 캐시 요구사항)
+- PG-GW-051-spec.md (OpenTelemetry 분산 추적 요구사항)

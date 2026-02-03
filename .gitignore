@@ -1,0 +1,60 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+*.swo
+
+# Kotlin
+*.class
+*.log
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+*.env
+
+# Secrets
+**/secrets/
+*.pem
+*.key
+*.crt
+
+# Build outputs
+out/
+target/
+
+# Test outputs
+test-results/
+test-output/
+
+# Claude temp files (plans)
+.claude/temp/
+
+# Node (if any frontend testing)
+node_modules/
+
+# Coverage
+coverage/
+*.lcov
+
+# Docker
+docker-compose.override.yml

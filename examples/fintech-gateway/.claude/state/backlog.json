@@ -1,0 +1,56 @@
+{
+  "metadata": {
+    "lastTaskNumber": 1,
+    "createdAt": "2026-02-03T00:00:00Z",
+    "updatedAt": "2026-02-03T00:00:00Z"
+  },
+  "summary": {
+    "total": 1,
+    "done": 0,
+    "inProgress": 0,
+    "review": 0,
+    "todo": 1
+  },
+  "phases": {
+    "PHASE-1": {
+      "title": "인증 시스템 구현",
+      "status": "todo",
+      "priority": "high",
+      "tasks": ["TASK-001"]
+    }
+  },
+  "tasks": {
+    "TASK-001": {
+      "title": "JWT 토큰 인증",
+      "description": "JWT 기반 인증 시스템 구현",
+      "status": "todo",
+      "type": "feature",
+      "phase": "PHASE-1",
+      "priority": "high",
+      "estimatedHours": 16,
+      "dependencies": [],
+      "steps": [
+        {
+          "number": 1,
+          "title": "JWT 서비스 인터페이스 및 모델",
+          "status": "pending",
+          "estimatedLines": 200
+        },
+        {
+          "number": 2,
+          "title": "JWT 서비스 구현",
+          "status": "pending",
+          "estimatedLines": 300
+        },
+        {
+          "number": 3,
+          "title": "JWT 인증 필터 및 설정",
+          "status": "pending",
+          "estimatedLines": 250
+        }
+      ],
+      "requirementsDoc": "docs/requirements/TASK-001-spec.md",
+      "createdAt": "2026-02-03T00:00:00Z"
+    }
+  }
+}

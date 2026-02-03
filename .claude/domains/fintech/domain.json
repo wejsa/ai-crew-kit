@@ -1,0 +1,52 @@
+{
+  "id": "fintech",
+  "name": "핀테크 / 금융",
+  "version": "1.0.0",
+  "description": "결제, 정산, 환불, 토큰 인증 등 금융 서비스 도메인",
+  "defaultStack": {
+    "backend": "spring-boot-kotlin",
+    "frontend": "none",
+    "database": "mysql",
+    "cache": "redis",
+    "messageQueue": "rabbitmq",
+    "infrastructure": "docker-compose"
+  },
+  "compliance": ["PCI-DSS", "전자금융감독규정", "개인정보보호법"],
+  "keywords": {
+    "payment": {
+      "triggers": ["결제", "승인", "인증", "카드"],
+      "docs": ["payment-flow.md", "token-auth.md"]
+    },
+    "settlement": {
+      "triggers": ["정산", "수수료", "D+N"],
+      "docs": ["settlement.md"]
+    },
+    "refund": {
+      "triggers": ["취소", "환불", "부분취소"],
+      "docs": ["refund-cancel.md"]
+    },
+    "security": {
+      "triggers": ["PCI-DSS", "암호화", "마스킹", "보안"],
+      "docs": ["security-compliance.md"]
+    },
+    "api": {
+      "triggers": ["API", "웹훅", "멱등성"],
+      "docs": ["api-design.md"]
+    },
+    "error": {
+      "triggers": ["에러코드", "재시도", "장애"],
+      "docs": ["error-handling.md"]
+    }
+  },
+  "errorCodePrefix": "PG-GW",
+  "conventions": {
+    "taskPrefix": "PG-GW",
+    "branchStrategy": "git-flow",
+    "commitFormat": "conventional"
+  },
+  "checklists": [
+    "compliance.md",
+    "domain-logic.md",
+    "security.md"
+  ]
+}

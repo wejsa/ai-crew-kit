@@ -1,0 +1,31 @@
+{
+  "name": "fintech-gateway",
+  "description": "핀테크 도메인 API Gateway 서비스",
+  "domain": "fintech",
+  "techStack": {
+    "backend": "spring-boot-kotlin",
+    "frontend": "none",
+    "database": "mysql",
+    "cache": "redis",
+    "messageQueue": "none",
+    "infrastructure": "docker-compose"
+  },
+  "agents": {
+    "enabled": ["pm", "backend", "code-reviewer", "qa"],
+    "disabled": ["planner", "frontend", "docs", "db-designer", "devops"]
+  },
+  "conventions": {
+    "taskPrefix": "TASK",
+    "branchStrategy": "git-flow",
+    "commitFormat": "conventional",
+    "prLineLimit": 500,
+    "testCoverage": 80,
+    "language": "ko"
+  },
+  "ports": {
+    "app": 10080,
+    "db": 3306,
+    "cache": 6379
+  },
+  "createdAt": "2026-02-03T00:00:00Z"
+}

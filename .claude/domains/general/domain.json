@@ -1,0 +1,23 @@
+{
+  "id": "general",
+  "name": "범용",
+  "version": "1.0.0",
+  "description": "도메인 특화 없는 범용 프로젝트",
+  "defaultStack": {
+    "backend": "spring-boot-kotlin",
+    "frontend": "none",
+    "database": "mysql",
+    "cache": "none",
+    "messageQueue": "none",
+    "infrastructure": "docker-compose"
+  },
+  "compliance": [],
+  "keywords": {},
+  "errorCodePrefix": "ERR",
+  "conventions": {
+    "taskPrefix": "TASK",
+    "branchStrategy": "git-flow",
+    "commitFormat": "conventional"
+  },
+  "checklists": []
+}
