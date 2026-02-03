@@ -100,6 +100,24 @@ git commit -m "feat: {taskId} 요구사항 정의 - {기능명}"
 git push origin develop
 ```
 
+### 7. skill-plan 자동 호출
+
+**"Y" 승인 시 반드시 수행:**
+```
+Skill tool 사용: skill="skill-plan", args="{taskId}"
+```
+
+**중요:**
+- 백로그 등록 후 skill-plan 호출
+- skill-plan 호출 없이 직접 설계 진행 **금지**
+- 반드시 Skill tool을 사용하여 skill-plan 스킬 실행
+
+**출력 예시:**
+```
+✅ 백로그 등록 완료
+🔄 설계 단계로 자동 진행합니다...
+```
+
 ## Task ID 생성 규칙
 - 형식: `{PREFIX}-{번호}`
 - PREFIX: `project.json`의 `conventions.taskPrefix` 사용 (기본: TASK)
@@ -133,6 +151,9 @@ git push origin develop
 승인하시면 백로그에 등록합니다.
 
 승인하시겠습니까? (Y/N)
+
+> Y: 백로그 등록 후 `/skill-plan` 자동 실행
+> N: 요구사항 수정
 ```
 
 ## 주의사항

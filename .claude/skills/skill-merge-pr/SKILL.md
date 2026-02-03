@@ -120,6 +120,34 @@ git commit -m "chore: {taskId} 완료 처리"
 git push origin develop
 ```
 
+### 6. 다음 스텝 자동 진행
+
+**남은 스텝이 있을 때 반드시 수행:**
+```
+Skill tool 사용: skill="skill-impl", args="--next"
+```
+
+**조건:**
+- 남은 스텝 있음: skill-impl --next 자동 호출
+- 마지막 스텝 완료: Task 완료 처리 후 종료
+
+**중요:**
+- PR 머지 및 상태 업데이트 후 skill-impl 호출
+- skill-impl 호출 없이 직접 개발 진행 **금지**
+- 반드시 Skill tool을 사용하여 skill-impl 스킬 실행
+
+**출력 예시 (중간 스텝):**
+```
+✅ PR #{number} 머지 완료
+🔄 Step {N+1} 개발을 자동 시작합니다...
+```
+
+**출력 예시 (마지막 스텝):**
+```
+🎉 Task 완료!
+다음 작업: `/skill-plan` 또는 "다음 작업 가져와"
+```
+
 ## 출력 포맷
 
 ### 중간 스텝 머지 완료
@@ -136,8 +164,10 @@ git push origin develop
 - **완료 스텝**: Step {N}/{Total}
 - **남은 스텝**: {remaining}개
 
-### 다음 단계
-`/skill-impl --next` 또는 "다음 스텝 진행해줘"
+### 자동 진행
+🔄 `/skill-impl --next` 자동 실행 중...
+
+남은 스텝: {remaining}개
 ```
 
 ### 마지막 스텝 머지 완료

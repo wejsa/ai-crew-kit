@@ -129,7 +129,35 @@ gh pr review 123 --request-changes --body "위 이슈들 수정 후 재검토 �
 gh pr review 123 --comment --body "몇 가지 제안사항이 있습니다."
 ```
 
-### 6. --auto-fix 옵션 처리
+### 6. skill-merge-pr 자동 호출 (승인 시)
+
+**리뷰 결과가 APPROVED일 때 반드시 수행:**
+```
+Skill tool 사용: skill="skill-merge-pr", args="{prNumber}"
+```
+
+**조건:**
+- APPROVED 상태일 때만 자동 호출
+- REQUEST_CHANGES면 수정 대기 (자동 호출 안 함)
+
+**중요:**
+- 리뷰 제출 후 APPROVED 판정 시 skill-merge-pr 호출
+- skill-merge-pr 호출 없이 직접 머지 진행 **금지**
+- 반드시 Skill tool을 사용하여 skill-merge-pr 스킬 실행
+
+**출력 예시 (APPROVED):**
+```
+✅ 리뷰 완료: APPROVED
+🔄 PR 머지를 자동 시작합니다...
+```
+
+**출력 예시 (REQUEST_CHANGES):**
+```
+⚠️ 리뷰 완료: REQUEST_CHANGES
+수정 후 `/skill-review-pr {number}` 재실행
+```
+
+### 7. --auto-fix 옵션 처리
 
 CRITICAL 이슈 자동 수정:
 ```bash
@@ -179,12 +207,15 @@ git push
 2. 🟡 **[m001]** {파일}:{라인} - {설명}
 
 ### 결정
-- **리뷰 결과**: Request Changes
-- **필수 수정**: 2개
-- **선택 수정**: 2개
+- **리뷰 결과**: {APPROVED | Request Changes}
+- **필수 수정**: {N}개
+- **선택 수정**: {N}개
 
-PR에 코멘트를 작성했습니다.
-수정 후 재리뷰 요청해주세요.
+### 자동 진행 (APPROVED 시)
+🔄 `/skill-merge-pr {number}` 자동 실행 중...
+
+### 다음 단계 (REQUEST_CHANGES 시)
+수정 후 `/skill-review-pr {number}` 재실행
 ```
 
 ## 에이전트 활용
