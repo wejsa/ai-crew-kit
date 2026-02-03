@@ -145,17 +145,24 @@ cat .claude/domains/_registry.json
 ```
 ## 에이전트 팀 구성
 
-기본 활성화 (필수):
-✅ agent-pm — 총괄 오케스트레이터
-✅ agent-backend — 백엔드 개발
-✅ agent-code-reviewer — 코드 리뷰
+### 기본 활성화 (필수)
+✅ 🎯 agent-pm — 프로젝트 총괄, 태스크 분배, 진행 관리
+✅ ⚙️ agent-backend — API 설계, 비즈니스 로직, 서버 개발
+✅ 👀 agent-code-reviewer — 코드 품질 검토, 보안 점검, 개선 제안
 
-선택 활성화:
-☐ agent-planner — 기획/요구사항 정의
-☐ agent-frontend — 프론트엔드 개발 (프론트 스택 선택 시 자동 활성화)
-☐ agent-qa — 테스트/품질 검증
-☐ agent-docs — 문서화
-☐ agent-db-designer — DB 설계
+### 선택 에이전트 (다중 선택 가능)
+
+**📋 기획/설계**
+☐ 📝 agent-planner — 요구사항 분석, 기능 명세, 유저 스토리 작성
+☐ 🗄️ agent-db-designer — ERD 설계, 테이블 정규화, 인덱스 전략
+
+**💻 개발**
+☐ 🎨 agent-frontend — UI/UX 구현, 컴포넌트 개발, 상태 관리
+   (프론트엔드 스택 선택 시 자동 활성화)
+
+**🔍 품질/문서**
+☐ 🧪 agent-qa — 테스트 케이스 작성, E2E 테스트, 품질 검증
+☐ 📚 agent-docs — API 문서, README, 기술 문서 작성
 ```
 
 ### Step 6: 파일 생성
