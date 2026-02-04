@@ -1,7 +1,7 @@
 ---
 name: skill-impl
 description: 구현 - 스텝별 개발 + PR 생성
-disable-model-invocation: true
+disable-model-invocation: false
 allowed-tools: Bash(git:*), Bash(./gradlew:*), Bash(npm:*), Bash(yarn:*), Read, Write, Edit, Glob, Grep
 argument-hint: "[--next|--all]"
 ---
@@ -138,7 +138,7 @@ EOF
 
 **PR 생성 완료 후 반드시 수행:**
 ```
-Skill tool 사용: skill="skill-review-pr", args="{prNumber}"
+Skill tool 사용: skill="skill-review-pr", args="{prNumber} --auto-fix"
 ```
 
 **중요:**
@@ -173,11 +173,11 @@ Skill tool 사용: skill="skill-review-pr", args="{prNumber}"
    {PR URL}
 
 ### 자동 진행
-🔄 `/skill-review-pr {number}` 자동 실행 중...
+🔄 `/skill-review-pr {number} --auto-fix` 자동 실행 중...
 
 ### 전체 워크플로우
 1. ✅ PR 생성 완료
-2. 🔄 `/skill-review-pr` - 코드 리뷰 (자동)
+2. 🔄 `/skill-review-pr --auto-fix` - 코드 리뷰 + 자동 수정 (자동)
 3. ⏳ `/skill-merge-pr` - PR 머지
 4. ⏳ `/skill-impl --next` - 다음 스텝
 

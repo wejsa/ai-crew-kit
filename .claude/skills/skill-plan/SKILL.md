@@ -1,7 +1,7 @@
 ---
 name: skill-plan
 description: 계획 수립 - Task 선택 + 설계 분석 + 스텝 분리 계획
-disable-model-invocation: true
+disable-model-invocation: false
 allowed-tools: Bash(git:*), Read, Write, Glob, Grep
 argument-hint: "[taskId]"
 ---

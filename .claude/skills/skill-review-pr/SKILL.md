@@ -1,7 +1,7 @@
 ---
 name: skill-review-pr
 description: PR 리뷰 - GitHub PR에 대한 5관점 통합 리뷰 수행
-disable-model-invocation: true
+disable-model-invocation: false
 allowed-tools: Bash(git:*), Bash(gh:*), Read, Glob, Grep, Task
 argument-hint: "{PR번호} [--auto-fix]"
 ---
@@ -117,16 +117,35 @@ try {
 - CRITICAL 이슈: 0개
 - MAJOR 이슈: 0개 또는 논의 후 승인
 
+#### 자기 PR 감지
+```bash
+# PR 작성자와 현재 사용자 비교
+PR_AUTHOR=$(gh pr view {number} --json author --jq '.author.login')
+CURRENT_USER=$(gh api user --jq '.login')
+
+if [ "$PR_AUTHOR" == "$CURRENT_USER" ]; then
+  IS_SELF_PR=true
+else
+  IS_SELF_PR=false
+fi
+```
+
 #### 리뷰 제출
 ```bash
-# 승인
-gh pr review 123 --approve --body "LGTM! 코드 품질이 좋습니다."
+# 자기 PR인 경우 (GitHub 정책상 승인 불가)
+if [ "$IS_SELF_PR" == "true" ]; then
+  gh pr review 123 --comment --body "✅ 셀프 리뷰 완료. CRITICAL 이슈 없음."
+  # 승인 SKIP → 바로 머지 진행
+fi
 
-# 변경 요청
+# 다른 사람 PR인 경우
+if [ "$IS_SELF_PR" == "false" ]; then
+  # 승인
+  gh pr review 123 --approve --body "LGTM! 코드 품질이 좋습니다."
+fi
+
+# 변경 요청 (자기/타인 무관)
 gh pr review 123 --request-changes --body "위 이슈들 수정 후 재검토 요청드립니다."
-
-# 코멘트만
-gh pr review 123 --comment --body "몇 가지 제안사항이 있습니다."
 ```
 
 ### 6. skill-merge-pr 자동 호출 (승인 시)
@@ -145,9 +164,16 @@ Skill tool 사용: skill="skill-merge-pr", args="{prNumber}"
 - skill-merge-pr 호출 없이 직접 머지 진행 **금지**
 - 반드시 Skill tool을 사용하여 skill-merge-pr 스킬 실행
 
-**출력 예시 (APPROVED):**
+**출력 예시 (APPROVED - 타인 PR):**
 ```
 ✅ 리뷰 완료: APPROVED
+🔄 PR 머지를 자동 시작합니다...
+```
+
+**출력 예시 (APPROVED - 자기 PR):**
+```
+✅ 리뷰 완료: 셀프 리뷰 (승인 불필요)
+📝 리뷰 코멘트 추가됨
 🔄 PR 머지를 자동 시작합니다...
 ```
 
@@ -157,24 +183,87 @@ Skill tool 사용: skill="skill-merge-pr", args="{prNumber}"
 수정 후 `/skill-review-pr {number}` 재실행
 ```
 
-### 7. --auto-fix 옵션 처리
+### 7. 옵션별 워크플로우
 
-CRITICAL 이슈 자동 수정:
-```bash
-# PR 브랜치 체크아웃
-gh pr checkout 123
+#### 7.1 기본 모드 (--auto-fix 없음)
 
-# 수정 적용
-# (코드 수정)
-
-# 커밋 & 푸시
-git add .
-git commit -m "fix: 코드 리뷰 피드백 반영"
-git push
-
-# 재리뷰
-/skill-review-pr 123
 ```
+/skill-review-pr {number}
+    │
+    ├─[1] PR 정보 수집
+    ├─[2] 자기 PR 여부 확인
+    ├─[3] 체크리스트 검증
+    ├─[4] 5관점 코드 리뷰
+    ├─[5] PR 코멘트 작성
+    ├─[6] 리뷰 결정
+    │
+    ▼
+┌─────────────────────────────────────┐
+│         CRITICAL 이슈 존재?          │
+└─────────────────────────────────────┘
+    │
+    ├─ YES → REQUEST_CHANGES → ⏸️ 종료
+    │            └─ 출력: "수정 후 /skill-review-pr {number} 재실행"
+    │
+    └─ NO  → 자기 PR인가?
+              │
+              ├─ YES → --comment "셀프 리뷰 완료"
+              │        승인 SKIP → skill-merge-pr 호출
+              │
+              └─ NO  → --approve "LGTM!"
+                       skill-merge-pr 호출
+```
+
+**분기 조건:**
+- CRITICAL 이슈 1개 이상 → REQUEST_CHANGES
+- CRITICAL 이슈 0개 + 자기 PR → COMMENT 후 머지
+- CRITICAL 이슈 0개 + 타인 PR → APPROVE 후 머지
+
+#### 7.2 자동수정 모드 (--auto-fix)
+
+```
+/skill-review-pr {number} --auto-fix
+    │
+    ├─[1] PR 정보 수집
+    ├─[2] 체크리스트 검증
+    ├─[3] 5관점 코드 리뷰
+    │
+    ▼
+┌─────────────────────────────────────┐
+│         CRITICAL 이슈 존재?          │
+└─────────────────────────────────────┘
+    │
+    ├─ NO  → [4] PR 코멘트 작성
+    │        [5] APPROVED
+    │        [6] skill-merge-pr 호출
+    │
+    └─ YES → [4] skill-fix 호출 (Skill tool)
+             │
+             └─ skill-fix 완료 후 자동으로
+                skill-review-pr 재호출됨
+```
+
+**분기 조건:**
+- CRITICAL 이슈 0개 → 일반 승인 플로우
+- CRITICAL 이슈 1개 이상 → skill-fix 호출
+
+#### 7.3 skill-fix 호출 방법
+
+**반드시 Skill tool 사용:**
+```
+Skill tool 사용: skill="skill-fix", args="{prNumber}"
+```
+
+**출력 (skill-fix 호출 시):**
+```
+⚠️ CRITICAL 이슈 {N}개 발견
+🔧 자동 수정을 시작합니다...
+🔄 `/skill-fix {number}` 실행 중...
+```
+
+**금지 사항:**
+- --auto-fix 시 직접 코드 수정 금지
+- skill-fix 없이 REQUEST_CHANGES 후 종료 금지
 
 ## 출력 포맷
 
@@ -231,3 +320,4 @@ Task: pr-review-senior
 - CI 실패 시 리뷰 보류 권장
 - CRITICAL 이슈는 반드시 수정 필요
 - auto-fix는 신중하게 사용
+- **자기 PR은 GitHub 정책상 승인 불가 → COMMENT로 대체 후 머지 진행**
