@@ -1,7 +1,7 @@
 ---
 name: skill-merge-pr
 description: PR 머지 - 승인된 PR을 Squash 머지하고 상태 업데이트
-disable-model-invocation: true
+disable-model-invocation: false
 allowed-tools: Bash(git:*), Bash(gh:*), Read, Write, Glob
 argument-hint: "{PR번호}"
 ---
@@ -14,21 +14,50 @@ argument-hint: "{PR번호}"
 ## 사전 조건 검증
 
 ### 필수 조건
-1. **PR 승인 상태**: Approved
+1. **PR 승인 상태**: Approved (또는 자기 PR)
 2. **CI 통과**: 모든 체크 성공
 3. **충돌 없음**: Mergeable 상태
 4. **Draft 아님**: Ready for review
 
 ```bash
 # 상태 확인
-gh pr view 123 --json state,reviewDecision,mergeable,statusCheckRollup
+gh pr view 123 --json state,reviewDecision,mergeable,statusCheckRollup,author
+
+# 자기 PR 여부 확인
+PR_AUTHOR=$(gh pr view 123 --json author --jq '.author.login')
+CURRENT_USER=$(gh api user --jq '.login')
+IS_SELF_PR=$([[ "$PR_AUTHOR" == "$CURRENT_USER" ]] && echo "true" || echo "false")
 ```
+
+### 자기 PR 예외 처리
+- 자기 PR은 GitHub 정책상 승인 불가
+- `reviewDecision`이 `APPROVED`가 아니어도 머지 허용
+- 대신 **skill-review-pr에서 COMMENT 리뷰 완료** 확인
 
 ## 실행 플로우
 
 ### 1. PR 상태 확인
 ```bash
-gh pr view 123 --json title,state,reviewDecision,mergeable,headRefName,baseRefName
+gh pr view 123 --json title,state,reviewDecision,mergeable,headRefName,baseRefName,author
+```
+
+**자기 PR 감지 및 승인 조건 처리**:
+```bash
+# 자기 PR 여부 확인
+PR_AUTHOR=$(gh pr view 123 --json author --jq '.author.login')
+CURRENT_USER=$(gh api user --jq '.login')
+
+if [ "$PR_AUTHOR" == "$CURRENT_USER" ]; then
+  # 자기 PR: reviewDecision 검사 스킵, CI와 충돌만 확인
+  echo "자기 PR 감지 - 승인 조건 스킵"
+else
+  # 타인 PR: reviewDecision == APPROVED 필수
+  REVIEW_DECISION=$(gh pr view 123 --json reviewDecision --jq '.reviewDecision')
+  if [ "$REVIEW_DECISION" != "APPROVED" ]; then
+    echo "PR 미승인 (현재: $REVIEW_DECISION)"
+    exit 1
+  fi
+fi
 ```
 
 **검증 실패 시**:
@@ -36,13 +65,15 @@ gh pr view 123 --json title,state,reviewDecision,mergeable,headRefName,baseRefNa
 ## ❌ 머지 불가
 
 ### 원인
-- [ ] PR 미승인 (현재: REVIEW_REQUIRED)
+- [ ] PR 미승인 (현재: REVIEW_REQUIRED) ← 타인 PR만 해당
 - [ ] CI 실패
 - [ ] 충돌 발생
 
 ### 해결 방법
 1. `/skill-review-pr 123` 으로 리뷰 요청
 2. 충돌 해결 후 재시도
+
+※ 자기 PR은 승인 없이도 머지 가능 (셀프 리뷰 완료 시)
 ```
 
 ### 2. Squash 머지 실행
@@ -265,7 +296,8 @@ Step 2 PR 머지 후:
 ```
 
 ## 주의사항
-- 반드시 리뷰 승인 후 머지
+- 반드시 리뷰 완료 후 머지 (타인 PR: 승인 필수, 자기 PR: 셀프 리뷰 코멘트 완료)
+- **자기 PR은 GitHub 정책상 승인 불가 → 승인 조건 스킵하고 머지 허용**
 - Squash 머지만 사용 (커밋 히스토리 정리)
 - 머지 후 로컬 브랜치 자동 정리
 - Task 완료 시 상태 파일 커밋 필수

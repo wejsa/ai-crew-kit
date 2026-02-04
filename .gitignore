@@ -48,6 +48,7 @@ test-output/
 
 # Claude temp files (plans)
 .claude/temp/
+.claude/skills/**/CLAUDE.md
 
 # Node (if any frontend testing)
 node_modules/
