@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-02-05
+
+### Changed
+- README.md: 하드코딩된 버전 참조 제거 (제목만 버전 유지)
+- CHANGELOG.md: [Unreleased] 섹션 추가로 skill-release 자동화 지원
+
 ## [1.1.0] - 2026-02-04
 
 ### Added
