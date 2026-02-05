@@ -468,27 +468,7 @@ mkdir -p .claude/domains/my-domain/{docs,checklists,templates}
 
 ## 변경 로그
 
-### v1.1.0 (2026-02-04)
-
-**새 기능**
-- 스킬 워크플로우 자동 체이닝
-  - `/skill-feature` 실행 후 승인 시 다음 스킬 자동 호출
-  - feature → plan → impl → review → merge 전체 자동화
-- 자기 PR 자동 감지 및 처리
-  - GitHub 승인 정책 우회 (COMMENT 대체)
-  - 자기 PR도 리뷰 완료 후 머지 가능
-
-**개선**
-- `disable-model-invocation` 설정 최적화
-  - 시작점 스킬(`skill-feature`)만 명시적 호출 필요
-  - 체이닝 대상 스킬은 자동 호출 허용
-
-### v1.0.0 (2026-02-03)
-
-- 초기 릴리스
-- 도메인 기반 에이전트 팀 구성
-- 5관점 통합 코드 리뷰
-- 스킬 기반 워크플로우
+자세한 변경 이력은 [CHANGELOG.md](./CHANGELOG.md)를 참조하세요.
 
 ---
 
