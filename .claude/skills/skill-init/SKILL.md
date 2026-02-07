@@ -25,6 +25,9 @@ argument-hint: "[--reset]"
 # Git 저장소 확인
 git status
 
+# 원격 저장소 확인
+git remote -v
+
 # 기존 설정 파일 확인
 ls .claude/state/project.json
 ls CLAUDE.md
@@ -33,7 +36,9 @@ ls CLAUDE.md
 **검증 항목:**
 | 항목 | 조건 | 처리 |
 |------|------|------|
-| Git 저장소 | 없음 | 생성 여부 확인 |
+| Git 저장소 | 없음 | `git init -b main` 실행 |
+| Git remote origin | ai-crew-kit 가리킴 | `rm -rf .git && git init -b main` (히스토리 초기화) |
+| Git remote origin | 사용자 저장소 가리킴 | 유지 |
 | project.json | 있음 | 재초기화 경고 (--reset 없으면) |
 | CLAUDE.md | 있음 | 백업 여부 확인 |
 
@@ -261,6 +266,7 @@ cat .claude/templates/README.md.tmpl
 ```bash
 git add .claude/state/ CLAUDE.md README.md VERSION
 git commit -m "chore: 프로젝트 초기화 (AI Crew Kit)"
+git checkout -b develop
 ```
 
 ### Step 7: 완료 안내
@@ -285,6 +291,13 @@ git commit -m "chore: 프로젝트 초기화 (AI Crew Kit)"
 - ⚙️ agent-backend
 - 👀 agent-code-reviewer
 - {추가 에이전트...}
+
+### Git 원격 저장소 설정
+\`\`\`bash
+git remote add origin https://github.com/{user}/{repo}.git
+git push -u origin main
+git push -u origin develop
+\`\`\`
 
 ### 다음 단계
 1. 새 기능 기획: `/skill-feature "기능명"` 또는 "새 기능 기획해줘"

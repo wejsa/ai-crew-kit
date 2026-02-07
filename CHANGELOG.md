@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-02-07
+
+### Fixed
+- skill-init: `git clone ai-crew-kit` 후 origin이 원본 저장소를 가리키는 문제 수정
+  - Step 1 환경 검증에서 `git remote -v`로 origin 확인
+  - ai-crew-kit origin 감지 시 `rm -rf .git && git init -b main`으로 히스토리 초기화
+
+### Added
+- skill-init: Git 초기 커밋 후 `develop` 브랜치 자동 생성
+- skill-init: 완료 안내에 Git 원격 저장소 설정 가이드 추가
+
 ## [1.2.0] - 2026-02-07
 
 ### Added
