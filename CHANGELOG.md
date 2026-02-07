@@ -24,6 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - skill-impl: allowed-tools에 Task 추가
 - agent-code-reviewer: mermaid 다이어그램 순차→병렬 흐름 반영
 
+### Fixed
+- Task subagent_type: 커스텀 에이전트명 → general-purpose + Read 로드 방식으로 수정
+  - Task tool은 빌트인 타입(Bash, general-purpose, Explore 등)만 지원
+  - 프롬프트에서 에이전트 파일을 Read로 로드하여 지침 적용하는 패턴으로 변경
+
 ## [1.4.0] - 2026-02-07
 
 ### Added
