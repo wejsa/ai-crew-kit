@@ -52,19 +52,53 @@ gh pr checks 123
 - [x] 충돌 없음
 ```
 
-### 3. @agent-reviewer 5관점 검토
+### 3. 도메인 체크리스트 로드 및 5관점 검토
 
-**도메인 체크리스트 동적 로딩**:
-1. `.claude/state/project.json`에서 현재 도메인 확인
-2. `.claude/domains/_base/checklists/*.md` 로드 (공통)
-3. `.claude/domains/{domain}/checklists/*.md` 로드 (도메인별)
+#### 3.1 도메인 체크리스트 동적 로딩
 
-skill-review와 동일한 5관점 검토 수행:
-1. 컴플라이언스
-2. 도메인
-3. 아키텍처
-4. 보안
-5. 테스트 품질
+**Step 1: 현재 도메인 확인**
+```bash
+cat .claude/state/project.json
+```
+→ `domain` 필드 추출
+
+**Step 2: _base 체크리스트 로드 (공통)**
+```bash
+cat .claude/domains/_base/checklists/common.md
+cat .claude/domains/_base/checklists/security-basic.md
+cat .claude/domains/_base/checklists/architecture.md
+```
+
+**Step 3: 도메인별 체크리스트 로드**
+```bash
+# domain.json에서 checklists 배열 확인
+cat .claude/domains/{domain}/domain.json
+# → checklists 배열의 각 파일 로드
+cat .claude/domains/{domain}/checklists/{각 파일}
+```
+
+**Step 4: 체크리스트 병합**
+- _base + 도메인 결합, 동일 항목은 도메인 우선 (Layered Override)
+
+#### 3.2 체크리스트 기반 5관점 검토
+
+PR diff를 로드된 체크리스트의 CRITICAL/MAJOR 항목과 대조:
+
+| 관점 | 체크리스트 출처 |
+|------|---------------|
+| 컴플라이언스 | `_base/common.md` (에러 처리) + `{domain}/compliance.md` |
+| 도메인 | `{domain}/domain-logic.md` |
+| 아키텍처 | `_base/architecture.md` |
+| 보안 | `_base/security-basic.md` + `{domain}/security.md` |
+| 테스트 품질 | `_base/common.md` (테스트 품질 섹션) |
+
+#### 3.3 체크리스트 검토 결과 기록
+
+위반 항목을 테이블로 정리:
+```
+| 체크리스트 | 항목 | 심각도 | 위반 | 파일:라인 |
+|-----------|------|--------|------|----------|
+```
 
 ### 4. PR 코멘트 작성
 
@@ -81,6 +115,16 @@ gh pr comment 123 --body "$(cat <<EOF
 | 아키텍처 | ✅ | 0개 |
 | 보안 | ✅ | 0개 |
 | 테스트 | ⚠️ | 1개 |
+
+### 체크리스트 검토 결과
+**적용된 체크리스트:**
+- _base: common.md, security-basic.md, architecture.md
+- {domain}: {domain checklists}
+
+**위반 항목:**
+| 심각도 | 체크리스트 | 항목 | 파일 |
+|--------|-----------|------|------|
+| {CRITICAL/MAJOR} | {출처} | {항목명} | {파일:라인} |
 
 ### 주요 이슈
 1. **[MAJOR]** 예외 처리 누락 - \`Service.kt:45\`

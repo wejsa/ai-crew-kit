@@ -97,31 +97,42 @@ git push -u origin feature/{taskId}-step{N}
 ```
 
 ### 7. PR 생성
+
+#### 7.1 PR body 템플릿 로드
+
+**Layered Override 적용:**
+```bash
+# 1. project.json에서 현재 도메인 확인
+cat .claude/state/project.json
+# → domain 필드 확인
+
+# 2. 도메인 오버라이드 확인
+ls .claude/domains/{domain}/templates/pr-body.md.tmpl 2>/dev/null
+
+# 3. 있으면 도메인 템플릿, 없으면 기본 템플릿 사용
+cat .claude/domains/{domain}/templates/pr-body.md.tmpl  # 우선
+cat .claude/templates/pr-body.md.tmpl                   # 폴백
+```
+
+#### 7.2 마커 치환
+
+| 마커 | 값 |
+|------|-----|
+| `{{TASK_TITLE}}` | 현재 Task 제목 (backlog.json) |
+| `{{TASK_ID}}` | 현재 Task ID |
+| `{{STEP_NUMBER}}` | 현재 스텝 번호 |
+| `{{STEP_TOTAL}}` | 전체 스텝 수 |
+| `{{CHANGES_LIST}}` | `git diff --stat` 기반 변경 사항 bullet 목록 |
+| `{{TEST_COVERAGE}}` | project.json → conventions.testCoverage (기본값: 80) |
+
+치환 후 남은 `{{...}}` 패턴은 빈 문자열로 대체.
+
+#### 7.3 PR 생성
 ```bash
 gh pr create \
   --base develop \
   --title "feat: {taskId} Step {N} - {스텝 제목}" \
-  --body "$(cat <<EOF
-## 개요
-{Task 제목} - Step {N}/{Total}
-
-## 변경 사항
-- {변경 1}
-- {변경 2}
-
-## 테스트
-- [ ] 단위 테스트 통과
-- [ ] 빌드 성공
-
-## 관련 문서
-- 요구사항: docs/requirements/{taskId}-spec.md
-- 계획: .claude/temp/{taskId}-plan.md
-
-## 체크리스트
-- [ ] 코드 리뷰 완료
-- [ ] 테스트 커버리지 80% 이상
-EOF
-)"
+  --body "{치환된 PR body}"
 ```
 
 ### 8. 상태 업데이트
