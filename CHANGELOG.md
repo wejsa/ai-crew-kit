@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-02-07
+
+### Added
+- skill-init: README.md 템플릿 기반 자동 생성 (프로젝트 전용 README)
+- skill-init: VERSION 파일 초기화 (0.1.0) 자동 생성
+- README.md.tmpl 템플릿 추가
+
+### Changed
+- skill-release: README.md 버전 업데이트 패턴을 project.json 기반 동적 처리로 변경
+- skill-init: Git 초기 커밋 대상에 README.md, VERSION 포함
+
 ## [1.1.1] - 2026-02-05
 
 ### Changed
