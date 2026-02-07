@@ -36,7 +36,7 @@ claude
 /skill-feature "사용자 인증"
 ```
 
-초기화 과정에서 **도메인**, **기술 스택**, **에이전트 팀**을 대화형으로 선택합니다.
+초기화 과정에서 **도메인**, **기술 스택**, **에이전트 팀**을 대화형으로 선택하고, 프로젝트 전용 `README.md`와 `VERSION`(0.1.0)이 자동 생성됩니다.
 
 ---
 
@@ -90,7 +90,9 @@ claude
     └── 6. 설정 파일 자동 생성
             ├── .claude/state/project.json
             ├── .claude/state/backlog.json
-            └── CLAUDE.md
+            ├── CLAUDE.md
+            ├── README.md  (프로젝트 전용)
+            └── VERSION    (0.1.0)
 ```
 
 ---
@@ -264,6 +266,9 @@ claude
 │   ├── fintech/        # 핀테크 도메인
 │   ├── ecommerce/      # 이커머스 도메인
 │   └── general/        # 범용 도메인
+├── templates/        # 파일 생성 템플릿
+│   ├── CLAUDE.md.tmpl    # CLAUDE.md 템플릿
+│   └── README.md.tmpl   # README.md 템플릿
 ├── workflows/        # 워크플로우 정의
 ├── schemas/          # JSON 스키마
 ├── state/            # 프로젝트 상태 (Git 관리)
@@ -271,6 +276,11 @@ claude
 │   ├── backlog.json    # 백로그
 │   └── completed.json  # 완료 이력
 └── temp/             # 임시 파일 (.gitignore)
+
+# 프로젝트 루트 (skill-init 시 자동 생성)
+CLAUDE.md               # AI 에이전트 지시문
+README.md               # 프로젝트 README (템플릿 기반)
+VERSION                 # 프로젝트 버전 (0.1.0부터 시작)
 ```
 
 ---
