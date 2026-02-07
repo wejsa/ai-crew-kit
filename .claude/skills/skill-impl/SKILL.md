@@ -186,18 +186,28 @@ Skill tool 사용: skill="skill-review-pr", args="{prNumber} --auto-fix"
 ```
 
 ## --all 옵션 플로우
-모든 스텝 연속 실행:
+모든 스텝을 사용자 개입 없이 연속 실행:
 ```
-Step 1 개발 → PR 생성 → 사용자 확인
+Step 1 개발 → PR 생성 → skill-review-pr --auto-fix → skill-merge-pr → 자동 진행
   ↓
-리뷰 & 머지 (수동)
-  ↓
-Step 2 개발 → PR 생성 → 사용자 확인
+Step 2 개발 → PR 생성 → skill-review-pr --auto-fix → skill-merge-pr → 자동 진행
   ↓
 (반복)
   ↓
 마지막 스텝 완료 → Task 완료 처리
 ```
+
+### 자동 진행 원칙
+- 각 스텝 완료 후 사용자 확인 없이 다음 스텝으로 자동 진행
+- 개별 스킬 간 체이닝 규칙을 그대로 따름:
+  - skill-impl → skill-review-pr --auto-fix (PR 생성 후 자동)
+  - skill-review-pr → skill-merge-pr (APPROVED 시 자동)
+  - skill-merge-pr → skill-impl --next (남은 스텝 시 자동)
+
+### 중단 조건 (이 경우에만 멈추고 사용자에게 보고)
+- CRITICAL 이슈 auto-fix 실패
+- 빌드 실패 (3회 재시도 후)
+- 라인 수 700 초과 (스텝 분리 필요)
 
 ## 에러 처리
 
