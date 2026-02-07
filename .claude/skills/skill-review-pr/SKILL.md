@@ -71,12 +71,15 @@ gh pr diff {number}
 #### 3.2 병렬 리뷰 실행
 
 3개 전문 subagent를 **하나의 메시지에서 동시 호출**하여 병렬 실행.
-각 subagent는 `.claude/agents/pr-reviewer-*.md`에 정의된 시스템 프롬프트를 자동 로드합니다.
+각 Task는 `.claude/agents/pr-reviewer-*.md`의 지침을 Read로 로드하여 따릅니다.
 
 **Task 1: 보안 + 컴플라이언스**
 ```
-Task tool (subagent_type: "pr-reviewer-security"):
+Task tool (subagent_type: "general-purpose"):
   prompt: |
+    .claude/agents/pr-reviewer-security.md 파일을 Read로 읽고,
+    해당 지침에 따라 아래 PR을 리뷰하세요.
+
     PR #{number}: {title}
     브랜치: {head} → {base}
     도메인: {domain}
@@ -87,8 +90,11 @@ Task tool (subagent_type: "pr-reviewer-security"):
 
 **Task 2: 도메인 + 아키텍처**
 ```
-Task tool (subagent_type: "pr-reviewer-domain"):
+Task tool (subagent_type: "general-purpose"):
   prompt: |
+    .claude/agents/pr-reviewer-domain.md 파일을 Read로 읽고,
+    해당 지침에 따라 아래 PR을 리뷰하세요.
+
     PR #{number}: {title}
     브랜치: {head} → {base}
     도메인: {domain}
@@ -99,8 +105,11 @@ Task tool (subagent_type: "pr-reviewer-domain"):
 
 **Task 3: 테스트 품질**
 ```
-Task tool (subagent_type: "pr-reviewer-test"):
+Task tool (subagent_type: "general-purpose"):
   prompt: |
+    .claude/agents/pr-reviewer-test.md 파일을 Read로 읽고,
+    해당 지침에 따라 아래 PR을 리뷰하세요.
+
     PR #{number}: {title}
     브랜치: {head} → {base}
     도메인: {domain}

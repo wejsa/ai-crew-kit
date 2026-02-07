@@ -168,8 +168,11 @@ Skill tool 사용: skill="skill-review-pr", args="{prNumber} --auto-fix"
 PR 생성 후 skill-review-pr 호출과 동시에 docs-impact-analyzer 백그라운드 실행:
 
 ```
-Task tool (subagent_type: "docs-impact-analyzer", run_in_background: true):
+Task tool (subagent_type: "general-purpose", run_in_background: true):
   prompt: |
+    .claude/agents/docs-impact-analyzer.md 파일을 Read로 읽고,
+    해당 지침에 따라 아래 PR을 분석하세요.
+
     PR #{number} ({title})의 변경 파일을 분석하여
     문서 업데이트 필요 여부를 판단하세요.
 
