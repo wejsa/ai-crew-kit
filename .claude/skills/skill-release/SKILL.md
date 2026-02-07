@@ -106,9 +106,14 @@ echo "$NEW_VERSION" > VERSION
 
 ### 6. README.md 버전 업데이트
 ```bash
-# 제목의 버전 업데이트
-sed -i "s/# AI Crew Kit v[0-9]*\.[0-9]*\.[0-9]*/# AI Crew Kit v$NEW_VERSION/" README.md
+# project.json에서 프로젝트명 읽기
+PROJECT_NAME=$(grep '"name"' .claude/state/project.json | sed 's/.*: *"\(.*\)".*/\1/')
+
+# 제목의 버전 업데이트 (프로젝트명 기반 동적 패턴)
+sed -i "s/# $PROJECT_NAME v[0-9]*\.[0-9]*\.[0-9]*/# $PROJECT_NAME v$NEW_VERSION/" README.md
 ```
+- `project.json`의 `name` 필드를 사용하여 동적으로 패턴 매칭
+- ai-crew-kit 자체뿐 아니라 초기화된 모든 프로젝트에서 동작
 
 ### 7. develop에 커밋
 ```bash

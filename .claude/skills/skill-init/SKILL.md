@@ -228,11 +228,38 @@ cat .claude/templates/CLAUDE.md.tmpl
 # 등...
 ```
 
-4. **.gitignore 업데이트** (필요 시)
-
-5. **Git 초기 커밋** (선택)
+4. **VERSION 초기화**
 ```bash
-git add .claude/state/ CLAUDE.md
+# 새 프로젝트의 초기 버전 생성
+echo "0.1.0" > VERSION
+```
+- 새 프로젝트는 항상 `0.1.0`으로 시작
+- 이후 `/skill-release`로 버전 관리
+
+5. **README.md 생성**
+```bash
+# 템플릿 로드
+cat .claude/templates/README.md.tmpl
+
+# 마커 치환 (project.json + domain 설정 기반)
+# {{PROJECT_NAME}} → 프로젝트명
+# {{PROJECT_DESCRIPTION}} → 프로젝트 설명
+# {{DOMAIN_ICON}} → 도메인 아이콘
+# {{DOMAIN_NAME}} → 도메인 이름
+# {{TECH_STACK_SUMMARY}} → 기술 스택 요약 (예: Spring Boot + MySQL + Redis)
+# {{TECH_STACK_SECTION}} → 기술 스택 상세 목록
+# {{INFRASTRUCTURE}} → 인프라 설정
+# {{AGENTS_TABLE}} → 에이전트 역할 테이블 행
+# {{TASK_PREFIX}} → 태스크 ID 접두사
+```
+- 기존 ai-crew-kit README.md를 프로젝트 전용 README.md로 교체
+- CLAUDE.md와 동일한 Layered Override 기반 마커 치환
+
+6. **.gitignore 업데이트** (필요 시)
+
+7. **Git 초기 커밋** (선택)
+```bash
+git add .claude/state/ CLAUDE.md README.md VERSION
 git commit -m "chore: 프로젝트 초기화 (AI Crew Kit)"
 ```
 
@@ -245,6 +272,8 @@ git commit -m "chore: 프로젝트 초기화 (AI Crew Kit)"
 - `.claude/state/project.json` — 프로젝트 설정
 - `.claude/state/backlog.json` — 백로그 (빈 상태)
 - `CLAUDE.md` — AI 지시문
+- `README.md` — 프로젝트 README (템플릿 기반)
+- `VERSION` — 프로젝트 버전 (0.1.0)
 
 ### 프로젝트 정보
 - **이름**: {프로젝트명}
@@ -275,7 +304,11 @@ git commit -m "chore: 프로젝트 초기화 (AI Crew Kit)"
 - **스택**: {techStack}
 
 ### 생성된 파일
-{파일 목록}
+- `.claude/state/project.json`
+- `.claude/state/backlog.json`
+- `CLAUDE.md`
+- `README.md`
+- `VERSION`
 
 ### 다음 단계
 {안내}
