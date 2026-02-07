@@ -52,53 +52,87 @@ gh pr checks 123
 - [x] 충돌 없음
 ```
 
-### 3. 도메인 체크리스트 로드 및 5관점 검토
+### 3. 5관점 병렬 리뷰 (Task sub-agent)
 
-#### 3.1 도메인 체크리스트 동적 로딩
+#### 3.1 사전 준비 (현재 세션)
 
-**Step 1: 현재 도메인 확인**
+**Step 1: 도메인 확인**
 ```bash
 cat .claude/state/project.json
 ```
 → `domain` 필드 추출
 
-**Step 2: _base 체크리스트 로드 (공통)**
+**Step 2: PR diff 수집**
 ```bash
-cat .claude/domains/_base/checklists/common.md
-cat .claude/domains/_base/checklists/security-basic.md
-cat .claude/domains/_base/checklists/architecture.md
+gh pr diff {number}
+```
+→ 변수 `{diff}`에 저장
+
+#### 3.2 병렬 리뷰 실행
+
+3개 전문 subagent를 **하나의 메시지에서 동시 호출**하여 병렬 실행.
+각 subagent는 `.claude/agents/pr-reviewer-*.md`에 정의된 시스템 프롬프트를 자동 로드합니다.
+
+**Task 1: 보안 + 컴플라이언스**
+```
+Task tool (subagent_type: "pr-reviewer-security"):
+  prompt: |
+    PR #{number}: {title}
+    브랜치: {head} → {base}
+    도메인: {domain}
+
+    ## PR Diff
+    {diff}
 ```
 
-**Step 3: 도메인별 체크리스트 로드**
-```bash
-# domain.json에서 checklists 배열 확인
-cat .claude/domains/{domain}/domain.json
-# → checklists 배열의 각 파일 로드
-cat .claude/domains/{domain}/checklists/{각 파일}
+**Task 2: 도메인 + 아키텍처**
+```
+Task tool (subagent_type: "pr-reviewer-domain"):
+  prompt: |
+    PR #{number}: {title}
+    브랜치: {head} → {base}
+    도메인: {domain}
+
+    ## PR Diff
+    {diff}
 ```
 
-**Step 4: 체크리스트 병합**
-- _base + 도메인 결합, 동일 항목은 도메인 우선 (Layered Override)
-
-#### 3.2 체크리스트 기반 5관점 검토
-
-PR diff를 로드된 체크리스트의 CRITICAL/MAJOR 항목과 대조:
-
-| 관점 | 체크리스트 출처 |
-|------|---------------|
-| 컴플라이언스 | `_base/common.md` (에러 처리) + `{domain}/compliance.md` |
-| 도메인 | `{domain}/domain-logic.md` |
-| 아키텍처 | `_base/architecture.md` |
-| 보안 | `_base/security-basic.md` + `{domain}/security.md` |
-| 테스트 품질 | `_base/common.md` (테스트 품질 섹션) |
-
-#### 3.3 체크리스트 검토 결과 기록
-
-위반 항목을 테이블로 정리:
+**Task 3: 테스트 품질**
 ```
-| 체크리스트 | 항목 | 심각도 | 위반 | 파일:라인 |
-|-----------|------|--------|------|----------|
+Task tool (subagent_type: "pr-reviewer-test"):
+  prompt: |
+    PR #{number}: {title}
+    브랜치: {head} → {base}
+    도메인: {domain}
+
+    ## PR Diff
+    {diff}
 ```
+
+#### 3.3 오류 처리
+
+| 상황 | 대응 |
+|------|------|
+| Task 1개 실패/타임아웃 | 해당 관점 "⚠️ 검토 불가 (Task 실패)" 표기, 나머지 결과로 진행 |
+| Task 결과 형식 불일치 | 결과를 "비정형" 분류, 텍스트 그대로 포함하여 수동 확인 요청 |
+| 2개 이상 Task 실패 | 전체 리뷰 중단, 수동 리뷰 요청 |
+
+#### 3.4 결과 병합
+
+3개 sub-agent 결과를 수집하여 통합 리뷰 테이블 생성:
+
+| 관점 | 담당 Task | CRITICAL | MAJOR | MINOR |
+|------|----------|----------|-------|-------|
+| 1️⃣ 컴플라이언스 | Task 1 | | | |
+| 2️⃣ 도메인 | Task 2 | | | |
+| 3️⃣ 아키텍처 | Task 2 | | | |
+| 4️⃣ 보안 | Task 1 | | | |
+| 5️⃣ 테스트 | Task 3 | | | |
+
+병합 규칙:
+- 이슈 ID 재채번: CRITICAL → C001~, MAJOR → H001~, MINOR → M001~
+- 위반 항목 통합 테이블 생성 (체크리스트, 항목, 심각도, 파일:라인)
+- CRITICAL 1개 이상 → 전체 REQUEST_CHANGES
 
 ### 4. PR 코멘트 작성
 
@@ -237,7 +271,7 @@ Skill tool 사용: skill="skill-merge-pr", args="{prNumber}"
     ├─[1] PR 정보 수집
     ├─[2] 자기 PR 여부 확인
     ├─[3] 체크리스트 검증
-    ├─[4] 5관점 코드 리뷰
+    ├─[4] 5관점 병렬 리뷰 (3 sub-agent)
     ├─[5] PR 코멘트 작성
     ├─[6] 리뷰 결정
     │
@@ -270,7 +304,7 @@ Skill tool 사용: skill="skill-merge-pr", args="{prNumber}"
     │
     ├─[1] PR 정보 수집
     ├─[2] 체크리스트 검증
-    ├─[3] 5관점 코드 리뷰
+    ├─[3] 5관점 병렬 리뷰 (3 sub-agent)
     │
     ▼
 ┌─────────────────────────────────────┐
@@ -352,12 +386,17 @@ Skill tool 사용: skill="skill-fix", args="{prNumber}"
 ```
 
 ## 에이전트 활용
-복잡한 PR 리뷰 시 전문 에이전트 병렬 호출:
-```
-Task: pr-review-toolkit:code-reviewer
-Task: pr-review-toolkit:type-design-analyzer
-Task: pr-review-senior
-```
+
+PR 리뷰 시 3개 전문 subagent를 병렬 호출합니다:
+
+| subagent | 파일 | 관점 | 도구 |
+|----------|------|------|------|
+| pr-reviewer-security | `.claude/agents/pr-reviewer-security.md` | 1️⃣ + 4️⃣ | Read, Glob, Grep |
+| pr-reviewer-domain | `.claude/agents/pr-reviewer-domain.md` | 2️⃣ + 3️⃣ | Read, Glob, Grep |
+| pr-reviewer-test | `.claude/agents/pr-reviewer-test.md` | 5️⃣ | Read, Glob, Grep |
+
+각 subagent는 독립 컨텍스트에서 실행되며, 체크리스트를 직접 Read하여 로드합니다.
+PR diff는 호출 시 프롬프트에 포함되어 전달됩니다.
 
 ## 주의사항
 - PR이 Draft 상태면 리뷰 불가

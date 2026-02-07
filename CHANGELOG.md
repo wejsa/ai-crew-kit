@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-02-07
+
+### Added
+- 3개 전용 리뷰 subagent 신규 생성 (YAML frontmatter 기반 네이티브 subagent)
+  - pr-reviewer-security: 보안 + 컴플라이언스 (Read/Glob/Grep only)
+  - pr-reviewer-domain: 도메인 + 아키텍처 (Read/Glob/Grep only)
+  - pr-reviewer-test: 테스트 품질 (Read/Glob/Grep only)
+- skill-review-pr: Task 실패 시 부분 결과 처리 및 오류 대응 규칙
+- skill-impl: PR 생성 후 docs-impact-analyzer 백그라운드 Task 자동 실행
+- docs-impact-analyzer subagent 신규 생성 (문서 영향도 분석 전용)
+
+### Changed
+- skill-review-pr: 순차 5관점 검토 → 3개 네이티브 subagent 병렬 호출로 변경
+- skill-review-pr: 에이전트 활용 섹션 플레이스홀더 → 실제 subagent 연동으로 교체
+- skill-impl: allowed-tools에 Task 추가
+- agent-code-reviewer: mermaid 다이어그램 순차→병렬 흐름 반영
+
 ## [1.4.0] - 2026-02-07
 
 ### Added
