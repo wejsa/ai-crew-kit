@@ -2,7 +2,7 @@
 name: skill-impl
 description: 구현 - 스텝별 개발 + PR 생성
 disable-model-invocation: false
-allowed-tools: Bash(git:*), Bash(./gradlew:*), Bash(npm:*), Bash(yarn:*), Read, Write, Edit, Glob, Grep
+allowed-tools: Bash(git:*), Bash(./gradlew:*), Bash(npm:*), Bash(yarn:*), Read, Write, Edit, Glob, Grep, Task
 argument-hint: "[--next|--all]"
 ---
 
@@ -163,6 +163,25 @@ Skill tool 사용: skill="skill-review-pr", args="{prNumber} --auto-fix"
 🔄 코드 리뷰를 자동 시작합니다...
 ```
 
+### 10. 문서 영향도 분석 (백그라운드 Task)
+
+PR 생성 후 skill-review-pr 호출과 동시에 docs-impact-analyzer 백그라운드 실행:
+
+```
+Task tool (subagent_type: "docs-impact-analyzer", run_in_background: true):
+  prompt: |
+    PR #{number} ({title})의 변경 파일을 분석하여
+    문서 업데이트 필요 여부를 판단하세요.
+
+    ## 변경 파일
+    {git diff --stat 결과}
+```
+
+**동작 규칙:**
+- skill-review-pr 호출과 **병렬 실행** (메인 플로우 차단 금지)
+- 분석 완료 후 문서 업데이트 필요 시 출력에 `📝 문서 업데이트 권장` 알림 포함
+- Task 실패 시 무시하고 진행 (백그라운드이므로 메인 플로우 영향 없음)
+
 ## 출력 포맷
 
 ```
@@ -183,6 +202,9 @@ Skill tool 사용: skill="skill-review-pr", args="{prNumber} --auto-fix"
 🔗 PR #{number}: {제목}
    {PR URL}
 
+### 문서 분석 (백그라운드)
+📝 문서 업데이트 {필요/불필요}
+
 ### 자동 진행
 🔄 `/skill-review-pr {number} --auto-fix` 자동 실행 중...
 
@@ -199,9 +221,9 @@ Skill tool 사용: skill="skill-review-pr", args="{prNumber} --auto-fix"
 ## --all 옵션 플로우
 모든 스텝을 사용자 개입 없이 연속 실행:
 ```
-Step 1 개발 → PR 생성 → skill-review-pr --auto-fix → skill-merge-pr → 자동 진행
+Step 1 개발 → PR 생성 → [skill-review-pr --auto-fix + docs 분석] → skill-merge-pr → 자동 진행
   ↓
-Step 2 개발 → PR 생성 → skill-review-pr --auto-fix → skill-merge-pr → 자동 진행
+Step 2 개발 → PR 생성 → [skill-review-pr --auto-fix + docs 분석] → skill-merge-pr → 자동 진행
   ↓
 (반복)
   ↓

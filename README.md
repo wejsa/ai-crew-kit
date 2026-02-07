@@ -1,4 +1,4 @@
-# AI Crew Kit v1.4.0
+# AI Crew Kit v1.5.0
 
 > 도메인 선택 → 자동 셋업 → 에이전트 팀 즉시 가동
 
@@ -376,6 +376,9 @@ agent-code-reviewer는 5가지 관점에서 통합 리뷰를 수행합니다.
 | **테스트 품질** | 커버리지 80%, 실패 케이스 |
 
 > 도메인 선택 시 해당 도메인의 특화 체크리스트가 자동 로딩됩니다.
+>
+> v1.5.0부터 5관점 리뷰가 3개 병렬 subagent로 분할 실행됩니다:
+> pr-reviewer-security (보안+컴플라이언스) / pr-reviewer-domain (도메인+아키텍처) / pr-reviewer-test (테스트 품질)
 
 ---
 

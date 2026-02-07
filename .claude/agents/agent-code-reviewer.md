@@ -209,12 +209,13 @@ graph TD
     A[코드 분석 시작] --> B[project.json 로드]
     B --> C[도메인 확인]
     C --> D[체크리스트 동적 로딩]
-    D --> E[1️⃣ 컴플라이언스 검토]
-    E --> F[2️⃣ 도메인 검토]
-    F --> G[3️⃣ 아키텍처 검토]
-    G --> H[4️⃣ 보안 검토]
-    H --> I[5️⃣ 테스트 검토]
-    I --> J{CRITICAL 이슈?}
+    D --> E[pr-reviewer-security]
+    D --> F[pr-reviewer-domain]
+    D --> G[pr-reviewer-test]
+    E --> H[결과 병합]
+    F --> H
+    G --> H
+    H --> J{CRITICAL 이슈?}
     J -->|있음| K[Request Changes - 머지 차단]
     J -->|없음| L{HIGH 이슈?}
     L -->|있음| M[Request Changes + 권장사항]
@@ -287,6 +288,21 @@ logger.info("Token validation: success")
 
 **머지 조건**: CRITICAL 이슈 해결 필수
 ```
+
+---
+
+## Sub-Agent 연동 참고
+
+skill-review-pr에서 5관점 리뷰 실행 시, 아래 3개 전용 subagent가 병렬 호출됩니다:
+
+| subagent 파일 | 담당 관점 |
+|--------------|----------|
+| `.claude/agents/pr-reviewer-security.md` | 1️⃣ 컴플라이언스 + 4️⃣ 보안 |
+| `.claude/agents/pr-reviewer-domain.md` | 2️⃣ 도메인 + 3️⃣ 아키텍처 |
+| `.claude/agents/pr-reviewer-test.md` | 5️⃣ 테스트 품질 |
+
+> 이 에이전트 문서는 5관점 리뷰의 전체 워크플로우를 정의합니다.
+> 개별 관점의 세부 지침은 각 subagent 파일에 정의되어 있습니다.
 
 ---
 
