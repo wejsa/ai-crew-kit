@@ -502,6 +502,30 @@ CLAUDE.md 재생성 제안
 
 도메인 템플릿이 있으면 우선 사용합니다.
 
+### PR Body 템플릿
+
+PR 생성 시 사용되는 body 템플릿입니다.
+
+#### 파일 위치
+```
+.claude/templates/pr-body.md.tmpl                    # 기본 템플릿
+.claude/domains/{domain}/templates/pr-body.md.tmpl   # 도메인 오버라이드
+```
+
+#### 마커 정의
+
+| 마커 | 출처 | 기본값 | 설명 |
+|------|------|--------|------|
+| `{{TASK_TITLE}}` | 런타임 | "" | Task 제목 |
+| `{{TASK_ID}}` | 런타임 | "" | Task ID |
+| `{{STEP_NUMBER}}` | 런타임 | "1" | 현재 스텝 번호 |
+| `{{STEP_TOTAL}}` | 런타임 | "1" | 전체 스텝 수 |
+| `{{CHANGES_LIST}}` | 런타임 (git diff) | "" | 변경 사항 목록 |
+| `{{TEST_COVERAGE}}` | project.json > conventions | 80 | 커버리지 목표 |
+
+#### 사용 시점
+- `skill-impl` → PR 생성 시 자동 로드
+
 ### 조건부 섹션
 
 ```markdown

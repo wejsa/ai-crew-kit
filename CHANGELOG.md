@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-02-07
+
+### Added
+- PR body 템플릿 시스템 (pr-body.md.tmpl) + Layered Override 도메인 오버라이드
+- fintech 도메인 PR 템플릿 (컴플라이언스 체크리스트 포함)
+- skill-review-pr: 도메인 체크리스트 명시적 로딩 및 검토 결과 PR 코멘트 포함
+
+### Changed
+- skill-impl: PR body 하드코딩 → 템플릿 기반 동적 생성으로 변경
+- skill-review-pr: 5관점 검토에 체크리스트 파일 대조 절차 구체화
+
 ## [1.3.0] - 2026-02-07
 
 ### Fixed

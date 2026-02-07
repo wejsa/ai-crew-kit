@@ -1,0 +1,26 @@
+## 개요
+{{TASK_TITLE}} - Step {{STEP_NUMBER}}/{{STEP_TOTAL}}
+
+## 변경 사항
+{{CHANGES_LIST}}
+
+## 테스트
+- [ ] 단위 테스트 통과
+- [ ] 빌드 성공
+- [ ] 금액 계산 BigDecimal 사용 확인
+- [ ] 상태 머신 전이 검증
+
+## 관련 문서
+- 요구사항: docs/requirements/{{TASK_ID}}-spec.md
+- 계획: .claude/temp/{{TASK_ID}}-plan.md
+
+## 컴플라이언스
+- [ ] PCI-DSS 요건 확인
+- [ ] 감사 로그 구현 (데이터 변경)
+- [ ] 민감정보 로그 마스킹
+
+## 체크리스트
+- [ ] 코드 리뷰 완료
+- [ ] 테스트 커버리지 {{TEST_COVERAGE}}% 이상
+- [ ] 멱등성 키 적용 (결제/취소)
+- [ ] 시크릿/토큰 로그 미포함
