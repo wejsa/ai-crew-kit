@@ -1,8 +1,8 @@
 ---
 name: skill-release
-description: 릴리스 - 버전 범프 + CHANGELOG 업데이트 + main 머지 + 태그 생성
+description: 릴리스 - 빌드 검증 + API spec 스냅샷 + 버전 범프 + CHANGELOG + main 머지 + 태그 생성
 disable-model-invocation: true
-allowed-tools: Bash(git:*), Bash(gh:*), Bash(cat:*), Read, Write, Edit, AskUserQuestion
+allowed-tools: Bash(git:*), Bash(gh:*), Bash(cat:*), Bash(./gradlew:*), Bash(npm:*), Bash(yarn:*), Bash(go:*), Bash(swag:*), Read, Write, Edit, Glob, AskUserQuestion
 argument-hint: "{버전타입: patch|minor|major}"
 ---
 
@@ -72,39 +72,63 @@ esac
 echo "새 버전: $NEW_VERSION"
 ```
 
-### 3. 변경사항 입력 받기
-AskUserQuestion 도구를 사용하여 변경사항 카테고리별로 입력 받기:
+### 3. 빌드 & 테스트 검증
 
-**입력 항목**:
-- **Added**: 새로운 기능
-- **Changed**: 기존 기능 변경
-- **Fixed**: 버그 수정
-- **Removed**: 제거된 기능 (선택)
-- **Deprecated**: 곧 제거될 기능 (선택)
-- **Security**: 보안 관련 (선택)
+`.claude/state/project.json`의 `techStack.backend` 참조 (skill-impl 패턴 재사용).
 
-### 4. VERSION 파일 업데이트
+| 스택 | 빌드 | 테스트 |
+|------|------|--------|
+| spring-boot-kotlin | `./gradlew build` | `./gradlew test` |
+| spring-boot-java | `./gradlew build` | `./gradlew test` |
+| nodejs-typescript | `npm run build` | `npm test` |
+| go | `go build ./...` | `go test ./...` |
+
+**project.json 미존재 시**: 스킵 + `"ℹ️ project.json 없음 — 빌드/테스트 스킵"`
+**실패 시**: 즉시 중단 (파일 변경 전이므로 롤백 불필요)
+
+### 4. 변경사항 수집
+
+#### 4.1 마지막 태그 이후 커밋 자동 수집
+```bash
+LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+if [ -n "$LAST_TAG" ]; then
+  GIT_LOG=$(git log ${LAST_TAG}..HEAD --oneline --no-merges)
+else
+  GIT_LOG=$(git log --oneline --no-merges -50)
+fi
+```
+
+#### 4.2 conventional commit prefix 기반 분류
+- `feat:` → Added
+- `fix:` → Fixed
+- `refactor:`, `perf:` → Changed
+- `docs:`, `chore:`, `test:` → 제외
+
+#### 4.3 사용자 확인
+AskUserQuestion으로 초안 제시 → "그대로 사용" 또는 직접 수정
+
+### 5. VERSION 파일 업데이트
 ```bash
 echo "$NEW_VERSION" > VERSION
 ```
 
-### 5. CHANGELOG.md 업데이트
+### 6. CHANGELOG.md 업데이트
 새 버전 섹션을 CHANGELOG.md 상단에 추가 (## [Unreleased] 다음 위치)
 
 ```markdown
 ## [X.Y.Z] - YYYY-MM-DD
 
 ### Added
-- {사용자 입력}
+- {수집된 변경사항}
 
 ### Changed
-- {사용자 입력}
+- {수집된 변경사항}
 
 ### Fixed
-- {사용자 입력}
+- {수집된 변경사항}
 ```
 
-### 6. README.md 버전 업데이트
+### 7. README.md 버전 업데이트
 ```bash
 # project.json에서 프로젝트명 읽기
 PROJECT_NAME=$(grep '"name"' .claude/state/project.json | sed 's/.*: *"\(.*\)".*/\1/')
@@ -115,31 +139,59 @@ sed -i "s/# $PROJECT_NAME v[0-9]*\.[0-9]*\.[0-9]*/# $PROJECT_NAME v$NEW_VERSION/
 - `project.json`의 `name` 필드를 사용하여 동적으로 패턴 매칭
 - ai-crew-kit 자체뿐 아니라 초기화된 모든 프로젝트에서 동작
 
-### 7. develop에 커밋
+### 8. API spec 스냅샷
+
+버전 파일 업데이트 후, 커밋 전에 실행.
+
+#### 스택별 생성
+
+| 스택 | 감지 방법 | 생성 명령 | 출력 |
+|------|----------|----------|------|
+| spring-boot | build.gradle(.kts)에 `openapi-gradle-plugin` | `./gradlew generateOpenApiDocs` | docs/api-specs/openapi.json |
+| nodejs | package.json에 `generate:api-docs` 스크립트 | `npm run generate:api-docs` | docs/api-specs/ |
+| go | `swag` 명령 존재 | `swag init -o docs/api-specs` | docs/api-specs/ |
+
+#### 플러그인/도구 미감지 시
+- 스킵 + `"ℹ️ API 문서 도구 미감지 — 스킵"`
+
+#### 생성 성공 시
+- API spec의 `info.version`을 NEW_VERSION으로 업데이트 (Edit 도구)
+
+#### 실패 시
+- AskUserQuestion: "API spec 생성 실패. 릴리스를 계속 진행할까요?"
+- 릴리스 차단 요소 아님
+
+### 9. develop에 커밋
 ```bash
 git add VERSION CHANGELOG.md README.md
+# API spec 변경사항 포함
+if [ -d "docs/api-specs" ] && [ -n "$(git status --porcelain docs/api-specs/)" ]; then
+  git add docs/api-specs/
+fi
+
 git commit -m "chore: release v$NEW_VERSION
 
 - VERSION: $CURRENT_VERSION → $NEW_VERSION
 - CHANGELOG.md 업데이트
 - README.md 버전 업데이트
+- API spec 업데이트 (해당 시)
 
-Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
 ```
 
-### 8. develop → main 머지
+### 10. develop → main 머지
 ```bash
 git checkout main
 git pull origin main
 git merge develop -m "Merge branch 'develop' for release v$NEW_VERSION"
 ```
 
-### 9. 태그 생성
+### 11. 태그 생성
 ```bash
 git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
 ```
 
-### 10. 원격 푸시
+### 12. 원격 푸시
 ```bash
 git push origin develop
 git push origin main
@@ -156,6 +208,8 @@ git checkout develop
 - **새 버전**: 1.2.0
 - **태그**: v1.2.0
 - **브랜치**: develop → main 머지 완료
+- **빌드/테스트**: 통과 (또는 스킵)
+- **API spec**: 생성 완료 (또는 스킵)
 
 ### 변경사항 요약
 - Added: {요약}
@@ -175,6 +229,17 @@ git checkout develop
 - **충돌 발생 시**: 수동 해결 후 재시도
 
 ### 롤백 방법
+
+#### 부분 실패 대응
+
+| 실패 지점 | 롤백 |
+|----------|------|
+| Step 3 빌드/테스트 | 불필요 (파일 변경 전) |
+| Step 8 API spec | 사용자 확인 후 스킵 가능 |
+| Step 9 커밋 | `git reset --hard HEAD~1` |
+| Step 10~ | 기존 롤백 절차 동일 |
+
+#### 전체 롤백
 릴리스 실패 시:
 ```bash
 # 태그 삭제
@@ -191,3 +256,12 @@ git checkout develop
 git reset --hard HEAD~1
 git push origin develop --force
 ```
+
+## Edge Case
+
+| 시나리오 | 처리 |
+|---------|------|
+| project.json 없음 | 빌드/테스트 + API spec 스킵 |
+| 빌드 도구 미설치 | 즉시 중단 |
+| API 문서 도구 미설정 | 스킵 (경고만) |
+| 첫 릴리스 (태그 없음) | 최근 50개 커밋에서 CHANGELOG 초안 |

@@ -260,11 +260,16 @@ cat .claude/templates/README.md.tmpl
 - 기존 ai-crew-kit README.md를 프로젝트 전용 README.md로 교체
 - CLAUDE.md와 동일한 Layered Override 기반 마커 치환
 
-6. **.gitignore 업데이트** (필요 시)
-
-7. **Git 초기 커밋** (선택)
+6. **docs/api-specs/ 디렉토리 생성**
 ```bash
-git add .claude/state/ CLAUDE.md README.md VERSION
+mkdir -p docs/api-specs
+```
+
+7. **.gitignore 업데이트** (필요 시)
+
+8. **Git 초기 커밋** (선택)
+```bash
+git add .claude/state/ CLAUDE.md README.md VERSION docs/
 git commit -m "chore: 프로젝트 초기화 (AI Crew Kit)"
 git checkout -b develop
 ```
@@ -280,6 +285,7 @@ git checkout -b develop
 - `CLAUDE.md` — AI 지시문
 - `README.md` — 프로젝트 README (템플릿 기반)
 - `VERSION` — 프로젝트 버전 (0.1.0)
+- `docs/api-specs/` — API spec 스냅샷 디렉토리
 
 ### 프로젝트 정보
 - **이름**: {프로젝트명}
@@ -298,6 +304,56 @@ git remote add origin https://github.com/{user}/{repo}.git
 git push -u origin main
 git push -u origin develop
 \`\`\`
+
+### 필수 의존성 설정
+
+백엔드 스택에 따라 아래 API 문서 도구를 프로젝트에 추가해야 합니다.
+릴리스 시 API spec 스냅샷 자동 생성에 필요합니다.
+
+> Step 4에서 선택한 백엔드 스택에 해당하는 섹션만 표시할 것.
+
+#### Spring Boot (Kotlin/Java) — API 문서 (springdoc-openapi)
+
+**build.gradle.kts:**
+\`\`\`kotlin
+plugins {
+    id("org.springdoc.openapi-gradle-plugin") version "1.9.0"
+}
+
+dependencies {
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.0")
+}
+
+openApi {
+    outputDir.set(file("docs/api-specs"))
+    outputFileName.set("openapi.json")
+}
+\`\`\`
+
+설정 후 `./gradlew generateOpenApiDocs`로 API spec 생성을 확인하세요.
+
+#### Node.js (TypeScript) — API 문서 (swagger-jsdoc)
+
+**package.json:**
+\`\`\`bash
+npm install swagger-jsdoc swagger-ui-express
+npm install -D @types/swagger-jsdoc @types/swagger-ui-express
+\`\`\`
+
+swagger 설정 후 빌드 스크립트에 spec 추출 명령 추가:
+\`\`\`json
+"scripts": {
+  "generate:api-docs": "node scripts/generate-openapi.js"
+}
+\`\`\`
+
+#### Go — API 문서 (swag)
+
+\`\`\`bash
+go install github.com/swaggo/swag/cmd/swag@latest
+\`\`\`
+
+swagger 주석 작성 후 `swag init -o docs/api-specs`로 확인하세요.
 
 ### 다음 단계
 1. 새 기능 기획: `/skill-feature "기능명"` 또는 "새 기능 기획해줘"
@@ -322,6 +378,7 @@ git push -u origin develop
 - `CLAUDE.md`
 - `README.md`
 - `VERSION`
+- `docs/api-specs/`
 
 ### 다음 단계
 {안내}
