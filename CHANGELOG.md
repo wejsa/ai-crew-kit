@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-02-08
+
+### Added
+- skill-release: 빌드 & 테스트 검증 단계 추가 (Step 3, project.json 스택 기반)
+- skill-release: API spec 스냅샷 단계 추가 (Step 8, springdoc/swagger-jsdoc/swag 자동 감지)
+- skill-release: CHANGELOG 자동 수집 (git log + conventional commit 분류 + 사용자 확인)
+- skill-init: 필수 의존성 설정 섹션 추가 (백엔드 스택별 API 문서 도구 안내)
+- skill-init: docs/api-specs/ 디렉토리 초기 생성
+
+### Changed
+- skill-release: 실행 플로우 10단계 → 12단계 확장
+- skill-release: Co-Authored-By "Opus 4.5" → "Opus 4.6" 업데이트
+- skill-release: allowed-tools에 빌드 도구(./gradlew, npm, yarn, go, swag) 및 Glob 추가
+- skill-release: 롤백 섹션에 부분 실패 대응 테이블 추가
+- skill-init: Git 초기 커밋에 docs/ 디렉토리 포함
+
 ## [1.5.0] - 2026-02-07
 
 ### Added
