@@ -209,7 +209,7 @@ cat .claude/domains/_registry.json
   },
   "createdAt": "{timestamp}",
   "kitVersion": "{cat VERSION의 값}",
-  "kitSource": "{Step 1에서 저장한 KIT_SOURCE_URL, 없으면 사용자에게 질문}"
+  "kitSource": "{Step 1에서 저장한 KIT_SOURCE_URL, 없으면 https://github.com/wejsa/ai-crew-kit.git}"
 }
 ```
 

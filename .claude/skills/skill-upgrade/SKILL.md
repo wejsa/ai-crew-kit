@@ -65,7 +65,7 @@ df -h .
 **소스 결정 우선순위:**
 1. `--source` 옵션으로 지정된 값
 2. `project.json`의 `kitSource` 필드
-3. 위 둘 다 없으면 → 사용자에게 AskUserQuestion으로 질문
+3. 기본값: `https://github.com/wejsa/ai-crew-kit.git`
 
 ```bash
 # project.json에서 kitSource 읽기
