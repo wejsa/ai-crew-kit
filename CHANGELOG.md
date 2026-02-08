@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- skill-upgrade: kitSource 미설정 시 AskUserQuestion 대신 기본값(`https://github.com/wejsa/ai-crew-kit.git`) 사용
+- skill-init: kitSource fallback을 사용자 질문에서 기본 URL로 변경
+
 ## [1.7.0] - 2026-02-08
 
 ### Added
