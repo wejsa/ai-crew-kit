@@ -1,0 +1,23 @@
+{
+  "description": "project.json 스키마 마이그레이션 정의",
+  "migrations": [
+    {
+      "from": "*",
+      "to": "1.7.0",
+      "changes": [
+        {
+          "type": "add_field",
+          "path": "kitVersion",
+          "default": "${KIT_VERSION}",
+          "required": false
+        },
+        {
+          "type": "add_field",
+          "path": "kitSource",
+          "default": "${KIT_SOURCE}",
+          "required": false
+        }
+      ]
+    }
+  ]
+}

@@ -185,6 +185,15 @@
       "type": "string",
       "pattern": "^\\d+\\.\\d+\\.\\d+$",
       "description": "스키마 버전 (semver)"
+    },
+    "kitVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "AI Crew Kit 프레임워크 버전 (skill-upgrade가 관리)"
+    },
+    "kitSource": {
+      "type": "string",
+      "description": "AI Crew Kit 소스 저장소 URL 또는 로컬 경로"
     }
   },
   "additionalProperties": false,

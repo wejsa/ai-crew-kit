@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-02-08
+
+### Added
+- skill-upgrade: 프레임워크 업그레이드 스킬 신규 생성 (14단계 실행 플로우)
+  - file-sync 기반 프레임워크 파일 선택적 업데이트
+  - 도메인 커스텀 파일/항목 3단계 보존 (감지→추출→복원)
+  - settings.json 커스텀 권한 머지 (합집합 + deny 보존)
+  - CLAUDE.md/README.md 커스텀 섹션 보존 재생성
+  - --dry-run, --rollback, --source, --version 옵션 지원
+  - 잠금 파일, 진행 상태 파일, 자동 롤백 안전장치
+- migrations.json: project.json 스키마 마이그레이션 매니페스트 추가
+- project.schema.json: `kitVersion`, `kitSource` optional 필드 추가
+- README.md.tmpl: CUSTOM_SECTION 마커 추가 (CLAUDE.md.tmpl과 동일 패턴)
+- README.md: 프레임워크 업그레이드 섹션 추가 (부트스트랩 가이드 포함)
+
+### Changed
+- skill-init: Step 1에서 히스토리 리셋 전 ai-crew-kit origin URL 조건부 캡처
+- skill-init: Step 6에서 project.json에 `kitVersion`, `kitSource` 필드 기록
+- skill-status: 프로젝트 설정에 Kit 버전 표시 추가
+
 ## [1.6.0] - 2026-02-08
 
 ### Added

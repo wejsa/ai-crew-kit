@@ -25,6 +25,7 @@ git log --oneline -5
 - **도메인**: 현재 프로젝트 도메인 (fintech, ecommerce, general 등)
 - **기술 스택**: 백엔드, 프론트엔드, DB 등
 - **활성 에이전트**: 사용 가능한 에이전트 목록
+- **Kit 버전**: kitVersion 필드 (미기록 시 "미설정" 표시)
 
 ### 3. 백로그 상태 요약
 `.claude/state/backlog.json` 파일에서:
@@ -45,6 +46,7 @@ git log --oneline -5
 - **기술 스택**: {백엔드} / {프론트엔드} / {DB}
 - **활성 에이전트**: {에이전트 목록}
 - **Task 접두사**: {taskPrefix}
+- **Kit 버전**: v{kitVersion} (kitVersion 미기록 시 "미설정" 표시)
 
 ### Git 상태
 - **현재 브랜치**: {브랜치명}
