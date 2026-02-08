@@ -28,6 +28,15 @@ git status
 # 원격 저장소 확인
 git remote -v
 
+# 히스토리 리셋 전에 소스 URL 저장 (skill-upgrade에서 kitSource로 사용)
+# ai-crew-kit origin인 경우만 저장 (사용자 저장소 URL 오탐 방지)
+ORIGIN_URL=$(git remote get-url origin 2>/dev/null || echo "")
+if echo "$ORIGIN_URL" | grep -q "ai-crew-kit"; then
+  KIT_SOURCE_URL="$ORIGIN_URL"
+else
+  KIT_SOURCE_URL=""
+fi
+
 # 기존 설정 파일 확인
 ls .claude/state/project.json
 ls CLAUDE.md
@@ -198,7 +207,9 @@ cat .claude/domains/_registry.json
     "prLineLimit": 500,
     "testCoverage": 80
   },
-  "createdAt": "{timestamp}"
+  "createdAt": "{timestamp}",
+  "kitVersion": "{cat VERSION의 값}",
+  "kitSource": "{Step 1에서 저장한 KIT_SOURCE_URL, 없으면 사용자에게 질문}"
 }
 ```
 
