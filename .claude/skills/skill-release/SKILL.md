@@ -151,8 +151,60 @@ sed -i "s/# $PROJECT_NAME v[0-9]*\.[0-9]*\.[0-9]*/# $PROJECT_NAME v$NEW_VERSION/
 | nodejs | package.json에 `generate:api-docs` 스크립트 | `npm run generate:api-docs` | docs/api-specs/ |
 | go | `swag` 명령 존재 | `swag init -o docs/api-specs` | docs/api-specs/ |
 
-#### 플러그인/도구 미감지 시
-- 스킵 + `"ℹ️ API 문서 도구 미감지 — 스킵"`
+#### 플러그인/도구 미감지 시 — 자동 설치
+
+`project.json`의 `techStack.backend` 기반으로 API 문서 도구를 자동 설치한다.
+
+**Spring Boot (Kotlin/Java)** — build.gradle(.kts)에 springdoc-openapi 추가:
+
+1. `build.gradle.kts` (또는 `build.gradle`) 파일을 Read로 읽기
+2. plugins 블록에 아래 추가 (없는 경우):
+   ```
+   id("org.springdoc.openapi-gradle-plugin") version "1.9.0"
+   ```
+3. dependencies 블록에 아래 추가 (없는 경우):
+   ```
+   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6")
+   ```
+4. 파일 끝에 openApi 설정 블록 추가 (없는 경우):
+   ```kotlin
+   openApi {
+       outputDir.set(file("docs/api-specs"))
+       outputFileName.set("openapi.json")
+   }
+   ```
+5. `./gradlew generateOpenApiDocs` 실행
+
+**Node.js (TypeScript)** — swagger-jsdoc 패키지 설치:
+
+1. 패키지 설치:
+   ```bash
+   npm install swagger-jsdoc swagger-ui-express
+   npm install -D @types/swagger-jsdoc @types/swagger-ui-express
+   ```
+2. package.json의 scripts에 아래 추가 (없는 경우):
+   ```json
+   "generate:api-docs": "node scripts/generate-openapi.js"
+   ```
+3. `scripts/generate-openapi.js` 파일 생성 (없는 경우):
+   - swagger-jsdoc로 프로젝트의 JSDoc 주석을 파싱하여 docs/api-specs/openapi.json 출력
+4. `npm run generate:api-docs` 실행
+
+**Go** — swag 설치:
+
+1. swag CLI 설치:
+   ```bash
+   go install github.com/swaggo/swag/cmd/swag@latest
+   ```
+2. `swag init -o docs/api-specs` 실행
+
+**자동 설치 후**:
+- 설치에 사용된 변경사항을 릴리스 커밋에 포함 (Step 9의 git add에 빌드 파일 추가)
+- `"✅ API 문서 도구 자동 설치 완료 — API spec 생성 성공"` 메시지 출력
+
+**자동 설치 실패 시**:
+- 기존 동작과 동일: AskUserQuestion으로 "API spec 생성 실패. 릴리스를 계속 진행할까요?" 확인
+- 릴리스 차단 요소 아님
 
 #### 생성 성공 시
 - API spec의 `info.version`을 NEW_VERSION으로 업데이트 (Edit 도구)
@@ -168,6 +220,8 @@ git add VERSION CHANGELOG.md README.md
 if [ -d "docs/api-specs" ] && [ -n "$(git status --porcelain docs/api-specs/)" ]; then
   git add docs/api-specs/
 fi
+# API 문서 도구 자동 설치에 의한 빌드 파일 변경 포함
+git add -u build.gradle.kts build.gradle package.json package-lock.json 2>/dev/null || true
 
 git commit -m "chore: release v$NEW_VERSION
 
@@ -263,5 +317,5 @@ git push origin develop --force
 |---------|------|
 | project.json 없음 | 빌드/테스트 + API spec 스킵 |
 | 빌드 도구 미설치 | 즉시 중단 |
-| API 문서 도구 미설정 | 스킵 (경고만) |
+| API 문서 도구 미설정 | 자동 설치 후 재시도 (실패 시 스킵) |
 | 첫 릴리스 (태그 없음) | 최근 50개 커밋에서 CHANGELOG 초안 |
