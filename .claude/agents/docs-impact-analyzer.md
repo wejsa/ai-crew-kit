@@ -1,5 +1,6 @@
 ---
 name: docs-impact-analyzer
+icon: "📝"
 description: PR 변경 파일의 문서 영향도 분석. skill-impl에서 백그라운드로 자동 호출됨.
 tools: Read, Glob, Grep
 model: opus

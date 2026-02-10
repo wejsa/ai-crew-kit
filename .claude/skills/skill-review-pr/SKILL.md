@@ -73,9 +73,9 @@ gh pr diff {number}
 3개 전문 subagent를 **하나의 메시지에서 동시 호출**하여 병렬 실행.
 각 Task는 `.claude/agents/pr-reviewer-*.md`의 지침을 Read로 로드하여 따릅니다.
 
-**Task 1: 보안 + 컴플라이언스**
+**Task 1: 🔐 보안 + 컴플라이언스**
 ```
-Task tool (subagent_type: "general-purpose"):
+Task tool (subagent_type: "pr-reviewer-security", description: "🔐 보안/컴플라이언스 리뷰"):
   prompt: |
     .claude/agents/pr-reviewer-security.md 파일을 Read로 읽고,
     해당 지침에 따라 아래 PR을 리뷰하세요.
@@ -88,9 +88,9 @@ Task tool (subagent_type: "general-purpose"):
     {diff}
 ```
 
-**Task 2: 도메인 + 아키텍처**
+**Task 2: 🏛️ 도메인 + 아키텍처**
 ```
-Task tool (subagent_type: "general-purpose"):
+Task tool (subagent_type: "pr-reviewer-domain", description: "🏛️ 도메인/아키텍처 리뷰"):
   prompt: |
     .claude/agents/pr-reviewer-domain.md 파일을 Read로 읽고,
     해당 지침에 따라 아래 PR을 리뷰하세요.
@@ -103,9 +103,9 @@ Task tool (subagent_type: "general-purpose"):
     {diff}
 ```
 
-**Task 3: 테스트 품질**
+**Task 3: 🧪 테스트 품질**
 ```
-Task tool (subagent_type: "general-purpose"):
+Task tool (subagent_type: "pr-reviewer-test", description: "🧪 테스트 품질 리뷰"):
   prompt: |
     .claude/agents/pr-reviewer-test.md 파일을 Read로 읽고,
     해당 지침에 따라 아래 PR을 리뷰하세요.
@@ -122,7 +122,7 @@ Task tool (subagent_type: "general-purpose"):
 
 | 상황 | 대응 |
 |------|------|
-| Task 1개 실패/타임아웃 | 해당 관점 "⚠️ 검토 불가 (Task 실패)" 표기, 나머지 결과로 진행 |
+| Task 1개 실패/타임아웃 | 해당 관점 "⚠️ {icon} 검토 불가 (Task 실패)" 표기, 나머지 결과로 진행 |
 | Task 결과 형식 불일치 | 결과를 "비정형" 분류, 텍스트 그대로 포함하여 수동 확인 요청 |
 | 2개 이상 Task 실패 | 전체 리뷰 중단, 수동 리뷰 요청 |
 
@@ -130,13 +130,13 @@ Task tool (subagent_type: "general-purpose"):
 
 3개 sub-agent 결과를 수집하여 통합 리뷰 테이블 생성:
 
-| 관점 | 담당 Task | CRITICAL | MAJOR | MINOR |
-|------|----------|----------|-------|-------|
-| 1️⃣ 컴플라이언스 | Task 1 | | | |
-| 2️⃣ 도메인 | Task 2 | | | |
-| 3️⃣ 아키텍처 | Task 2 | | | |
-| 4️⃣ 보안 | Task 1 | | | |
-| 5️⃣ 테스트 | Task 3 | | | |
+| 관점 | 담당 | CRITICAL | MAJOR | MINOR |
+|------|------|----------|-------|-------|
+| 🔐 컴플라이언스 | pr-reviewer-security | | | |
+| 🏛️ 도메인 | pr-reviewer-domain | | | |
+| 🏛️ 아키텍처 | pr-reviewer-domain | | | |
+| 🔐 보안 | pr-reviewer-security | | | |
+| 🧪 테스트 | pr-reviewer-test | | | |
 
 병합 규칙:
 - 이슈 ID 재채번: CRITICAL → C001~, MAJOR → H001~, MINOR → M001~
