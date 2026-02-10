@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-02-11
+
+### Added
+- 서브에이전트 frontmatter에 icon 필드 추가 (🔐 보안, 🏛️ 도메인, 🧪 테스트, 📝 문서분석)
+
+### Changed
+- skill-review-pr: Task 호출에 아이콘 description 추가, 결과 병합 테이블 아이콘 반영
+- skill-impl: docs-impact-analyzer Task에 아이콘 description 추가
+
 ## [1.8.0] - 2026-02-11
 
 ### Changed
