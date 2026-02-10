@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-02-11
+
+### Changed
+- skill-release Step 8: API 문서 도구 미감지 시 "스킵" → "자동 설치 후 재시도"로 변경 (Spring Boot/Node.js/Go 지원)
+- skill-release Step 9: 자동 설치된 빌드 파일 변경분을 릴리스 커밋에 포함
+- skill-init Step 7: API 문서 도구 수동 설정 안내 제거, 릴리스 시 자동 처리 안내로 교체
+
 ## [1.7.1] - 2026-02-08
 
 ### Changed
