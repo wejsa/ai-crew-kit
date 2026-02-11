@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-02-12
+
+### Changed
+- PR body 템플릿 간소화: 자동화 프로세스와 중복되는 테스트/관련 문서/체크리스트 섹션 제거
+- fintech PR 템플릿: 컴플라이언스 섹션만 유지, 나머지 중복 섹션 제거
+- skill-impl: PR body 마커 6개→4개 축소 (TASK_ID, TEST_COVERAGE 제거)
+
 ## [1.9.0] - 2026-02-11
 
 ### Added
