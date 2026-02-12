@@ -135,6 +135,18 @@
       },
       "additionalProperties": false
     },
+    "orchestrator": {
+      "type": "object",
+      "description": "외부 오케스트레이터 설정 (Claude Squad 등). 미지정 시 자동 감지.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["auto", "claude-squad", "none"],
+          "default": "auto"
+        }
+      },
+      "additionalProperties": false
+    },
     "ports": {
       "type": "object",
       "description": "서비스 포트 설정",

@@ -29,6 +29,20 @@ git pull origin develop
 git checkout -b feature/{taskId}-step{N}
 ```
 
+### Worktree 모드 (Claude Squad 등)
+
+git worktree 환경에서는 develop checkout이 불가하므로, 현재 브랜치(CS 브랜치)를 feature 브랜치로 직접 사용한다.
+
+| 일반 모드 | Worktree 모드 |
+|----------|--------------|
+| `git checkout develop && git pull` | `git fetch origin develop && git merge origin/develop` |
+| `git checkout -b feature/X` | 브랜치 생성 없음 (현재 브랜치 사용) |
+| `gh pr merge --squash --delete-branch` | `gh pr merge --squash` (브랜치 유지) |
+| 머지 후 `git checkout develop` | 머지 후 `git merge origin/develop` |
+| `git push origin develop` (상태) | `git push origin HEAD` |
+
+감지: `git rev-parse --git-dir` ≠ `--git-common-dir` → worktree
+
 ### 브랜치 병합
 
 - PR은 항상 `develop` 브랜치로 생성

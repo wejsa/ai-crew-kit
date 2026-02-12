@@ -78,7 +78,14 @@ fi
 
 ### 2. Squash 머지 실행
 ```bash
-gh pr merge 123 --squash --delete-branch
+GIT_DIR=$(git rev-parse --git-dir 2>/dev/null)
+GIT_COMMON_DIR=$(git rev-parse --git-common-dir 2>/dev/null)
+if [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
+  # Worktree 모드: CS 브랜치 삭제 금지 (CS가 관리)
+  gh pr merge 123 --squash
+else
+  gh pr merge 123 --squash --delete-branch
+fi
 ```
 
 머지 커밋 메시지:
@@ -91,14 +98,18 @@ feat: {Task ID} Step {N} - {스텝 제목} (#123)
 
 ### 3. 로컬 동기화
 ```bash
-# develop 브랜치로 이동
-git checkout develop
-
-# 최신 상태 동기화
-git pull origin develop
-
-# 로컬 브랜치 정리 (삭제된 원격 브랜치)
-git fetch --prune
+if [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
+  # Worktree 모드: CS 브랜치에 develop 변경사항 머지
+  git fetch origin develop --prune
+  git merge origin/develop
+else
+  # develop 브랜치로 이동
+  git checkout develop
+  # 최신 상태 동기화
+  git pull origin develop
+  # 로컬 브랜치 정리 (삭제된 원격 브랜치)
+  git fetch --prune
+fi
 ```
 
 ### 4. 계획 파일 상태 업데이트
@@ -148,7 +159,11 @@ rm .claude/temp/{taskId}-plan.md
 ```bash
 git add .claude/state/
 git commit -m "chore: {taskId} 완료 처리"
-git push origin develop
+if [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
+  git push -u origin HEAD
+else
+  git push origin develop
+fi
 ```
 
 ### 6. 다음 스텝 자동 진행
@@ -248,8 +263,8 @@ Skill tool 사용: skill="skill-impl", args="--next"
 - {파일 2}
 
 ### 해결 방법
-1. PR 브랜치 체크아웃: `gh pr checkout 123`
-2. develop 머지: `git merge develop`
+1. PR 브랜치 체크아웃: `gh pr checkout 123` (worktree 모드에서는 불필요)
+2. develop 머지: `git merge develop` (worktree: `git fetch origin develop && git merge origin/develop`)
 3. 충돌 해결
 4. 커밋 & 푸시
 5. 재시도: `/skill-merge-pr 123`

@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-02-12
+
+### Added
+- Claude Squad (git worktree) 옵셔널 통합: 모든 스킬에서 worktree 환경 자동 감지 및 대응
+- project.schema.json: `orchestrator` 프로퍼티 추가 (`auto`/`claude-squad`/`none`)
+- git-workflow.md: Worktree 모드 비교 테이블 문서 추가
+
+### Changed
+- CLAUDE.md.tmpl: 세션 시작 git 동기화에 worktree 분기 추가
+- skill-impl: 환경 준비/커밋/푸시에 worktree 분기 추가 (CS 브랜치 직접 사용)
+- skill-merge-pr: 머지 실행(`--delete-branch` 제거)/로컬 동기화/완료 푸시/충돌 안내에 worktree 대응 추가
+- skill-plan: Git 동기화 프로토콜에 worktree 분기 추가
+- skill-feature: 커밋/푸시에 worktree 분기 추가
+- skill-release: worktree 환경 실행 차단 + 메인 레포 경로 안내
+
 ## [1.10.0] - 2026-02-12
 
 ### Changed
