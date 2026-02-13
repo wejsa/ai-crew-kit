@@ -28,18 +28,25 @@ argument-hint: "[--next|--all]"
 
 ### --next 사용 시 추가 조건
 - 이전 스텝 PR이 머지되어 있어야 함
-- develop 브랜치 최신 상태 동기화
+- develop 최신 상태 동기화 (worktree 시 merge origin/develop)
 
 ## 실행 플로우
 
 ### 1. 환경 준비
 ```bash
-# develop 브랜치 동기화
-git checkout develop
-git pull origin develop
-
-# 스텝 브랜치 생성
-git checkout -b feature/{taskId}-step{N}
+# develop 최신 상태 동기화
+GIT_DIR=$(git rev-parse --git-dir 2>/dev/null)
+GIT_COMMON_DIR=$(git rev-parse --git-common-dir 2>/dev/null)
+if [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
+  # Worktree 모드: 현재 브랜치(CS브랜치)를 feature 브랜치로 직접 사용
+  git fetch origin develop
+  git merge origin/develop
+else
+  git checkout develop
+  git pull origin develop
+  # 스텝 브랜치 생성
+  git checkout -b feature/{taskId}-step{N}
+fi
 ```
 
 ### 2. 계획 파일 참조
@@ -93,37 +100,27 @@ git diff --stat
 ```bash
 git add .
 git commit -m "feat: {taskId} Step {N} - {스텝 제목}"
-git push -u origin feature/{taskId}-step{N}
+if [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
+  git push -u origin HEAD
+else
+  git push -u origin feature/{taskId}-step{N}
+fi
 ```
 
 ### 7. PR 생성
 
 #### 7.1 PR body 템플릿 로드
 
-**Layered Override 적용:**
-```bash
-# 1. project.json에서 현재 도메인 확인
-cat .claude/state/project.json
-# → domain 필드 확인
-
-# 2. 도메인 오버라이드 확인
-ls .claude/domains/{domain}/templates/pr-body.md.tmpl 2>/dev/null
-
-# 3. 있으면 도메인 템플릿, 없으면 기본 템플릿 사용
-cat .claude/domains/{domain}/templates/pr-body.md.tmpl  # 우선
-cat .claude/templates/pr-body.md.tmpl                   # 폴백
-```
+**Layered Override:** 도메인 템플릿(`.claude/domains/{domain}/templates/pr-body.md.tmpl`)이 있으면 우선 사용, 없으면 기본 템플릿(`.claude/templates/pr-body.md.tmpl`) 사용.
 
 #### 7.2 마커 치환
 
 | 마커 | 값 |
 |------|-----|
 | `{{TASK_TITLE}}` | 현재 Task 제목 (backlog.json) |
-| `{{TASK_ID}}` | 현재 Task ID |
 | `{{STEP_NUMBER}}` | 현재 스텝 번호 |
 | `{{STEP_TOTAL}}` | 전체 스텝 수 |
 | `{{CHANGES_LIST}}` | `git diff --stat` 기반 변경 사항 bullet 목록 |
-| `{{TEST_COVERAGE}}` | project.json → conventions.testCoverage (기본값: 80) |
 
 치환 후 남은 `{{...}}` 패턴은 빈 문자열로 대체.
 
@@ -168,7 +165,7 @@ Skill tool 사용: skill="skill-review-pr", args="{prNumber} --auto-fix"
 PR 생성 후 skill-review-pr 호출과 동시에 docs-impact-analyzer 백그라운드 실행:
 
 ```
-Task tool (subagent_type: "general-purpose", run_in_background: true):
+Task tool (subagent_type: "general-purpose", run_in_background: true, description: "📝 문서 영향도 분석"):
   prompt: |
     .claude/agents/docs-impact-analyzer.md 파일을 Read로 읽고,
     해당 지침에 따라 아래 PR을 분석하세요.
@@ -192,7 +189,7 @@ Task tool (subagent_type: "general-purpose", run_in_background: true):
 PR 생성 후 docs-impact-analyzer와 함께 **병렬 백그라운드** 실행:
 
 ```
-Task tool (subagent_type: "general-purpose", run_in_background: true):
+Task tool (subagent_type: "general-purpose", run_in_background: true, description: "🟢 테스트 품질 분석"):
   prompt: |
     .claude/agents/agent-qa.md 파일을 Read로 읽고,
     해당 지침에 따라 아래 PR의 테스트 품질을 분석하세요.

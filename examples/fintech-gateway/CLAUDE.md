@@ -23,8 +23,16 @@ JWT 인증, 라우팅, Rate Limiting, 보안 기능을 담당합니다.
 
 ```bash
 # 1. 최신 상태 동기화
-git checkout develop
-git pull origin develop
+GIT_DIR=$(git rev-parse --git-dir 2>/dev/null)
+GIT_COMMON_DIR=$(git rev-parse --git-common-dir 2>/dev/null)
+if [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
+  # Worktree 모드 (Claude Squad 등)
+  git fetch origin develop
+  git merge origin/develop
+else
+  git checkout develop
+  git pull origin develop
+fi
 
 # 2. 상태 요약 보기
 /skill-status
