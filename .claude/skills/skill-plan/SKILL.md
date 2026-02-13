@@ -42,14 +42,14 @@ docs/requirements/{taskId}-spec.md
 `.claude/state/project.json`의 `agents.enabled`에 `"db-designer"`가 포함된 경우에만 실행합니다.
 
 **실행 방법:**
-- 섹션 3의 설계 분석과 **병렬로** Task tool 호출
+- 섹션 3의 설계 분석과 **병렬로** Task tool 호출 (`run_in_background: true`)
 - Task tool (subagent_type: "general-purpose")로 agent-db-designer 실행
-- 결과를 계획 파일의 "데이터 모델" 섹션에 통합
+- 섹션 3 완료 후 Task 결과를 수거하여 계획 파일의 "데이터 모델" 섹션에 통합
 
 **호출 패턴:**
 
 ```
-Task tool (subagent_type: "general-purpose"):
+Task tool (subagent_type: "general-purpose", run_in_background: true, description: "🟠 DB 설계 분석"):
   prompt: |
     .claude/agents/agent-db-designer.md 파일을 Read로 읽고,
     해당 지침에 따라 아래 요구사항의 DB 설계를 분석하세요.
@@ -57,6 +57,11 @@ Task tool (subagent_type: "general-purpose"):
     도메인: {domain}
     요구사항: {specFile 내용 요약}
 ```
+
+**결과 수거:**
+- 섹션 3 설계 분석 완료 후 TaskOutput으로 db-designer Task 결과 확인
+- 결과가 준비되면 계획 파일의 "데이터 모델" 섹션에 통합
+- Task 미완료 시 최대 30초 대기 후 타임아웃 처리
 
 **오류 처리:**
 - Task 실패/타임아웃 시: 계획 파일 데이터 모델 섹션에 "DB 설계 분석 불가 - 메인 컨텍스트에서 직접 작성" 표기
