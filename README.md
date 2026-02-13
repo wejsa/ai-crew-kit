@@ -177,10 +177,24 @@ claude
 | **agent-code-reviewer** | 5관점 통합 코드 리뷰 | ✅ 기본 |
 | **agent-planner** | 요구사항 정의, 기획 | 선택적 |
 | **agent-frontend** | 프론트엔드 구현 | 선택적 |
-| **agent-db-designer** | DB 설계, ERD | 선택적 |
-| **agent-qa** | 테스트 설계, 품질 검증 | 선택적 |
+| **agent-db-designer** | DB 설계 분석 (sub-agent) | 선택적 |
+| **agent-qa** | 테스트 품질 분석 (sub-agent) | 선택적 |
 | **agent-docs** | 문서 자동화 | 선택적 |
 | **agent-devops** | CI/CD, 인프라 | 선택적 |
+
+### Sub-Agent (스킬에서 자동 호출)
+
+| | 에이전트 | 호출 스킬 | 역할 |
+|---|---------|----------|------|
+| 🔴 | **pr-reviewer-security** | skill-review-pr | 보안 + 컴플라이언스 리뷰 |
+| 🟣 | **pr-reviewer-domain** | skill-review-pr | 도메인 + 아키텍처 리뷰 |
+| 🔵 | **pr-reviewer-test** | skill-review-pr | 테스트 품질 리뷰 |
+| 📝 | **docs-impact-analyzer** | skill-impl | 문서 영향도 분석 + 초안 제안 |
+| 🟠 | **agent-db-designer** | skill-plan | DB 설계 분석 (병렬) |
+| 🟢 | **agent-qa** | skill-impl | 테스트 품질 분석 (백그라운드) |
+
+> Sub-agent는 읽기 전용(Read/Glob/Grep)으로 동작하며, 스킬을 통해서만 호출됩니다.
+> agent-db-designer, agent-qa는 `project.json`의 `agents.enabled`에 포함된 경우에만 실행됩니다.
 
 ---
 

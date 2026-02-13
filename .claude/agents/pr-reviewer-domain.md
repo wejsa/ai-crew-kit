@@ -1,9 +1,9 @@
 ---
 name: pr-reviewer-domain
-icon: "🏛️"
 description: PR 리뷰 시 도메인 로직 및 아키텍처 관점 전문 검토. skill-review-pr에서 자동 호출됨.
 tools: Read, Glob, Grep
 model: opus
+color: 🟣
 ---
 
 도메인 로직 및 아키텍처 전문 코드 리뷰어.

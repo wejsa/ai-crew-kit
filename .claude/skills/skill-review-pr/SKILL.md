@@ -75,7 +75,7 @@ gh pr diff {number}
 
 **Task 1: 🔐 보안 + 컴플라이언스**
 ```
-Task tool (subagent_type: "pr-reviewer-security", description: "🔐 보안/컴플라이언스 리뷰"):
+Task tool (subagent_type: "general-purpose", description: "🔐 보안/컴플라이언스 리뷰"):
   prompt: |
     .claude/agents/pr-reviewer-security.md 파일을 Read로 읽고,
     해당 지침에 따라 아래 PR을 리뷰하세요.
@@ -90,7 +90,7 @@ Task tool (subagent_type: "pr-reviewer-security", description: "🔐 보안/컴�
 
 **Task 2: 🏛️ 도메인 + 아키텍처**
 ```
-Task tool (subagent_type: "pr-reviewer-domain", description: "🏛️ 도메인/아키텍처 리뷰"):
+Task tool (subagent_type: "general-purpose", description: "🏛️ 도메인/아키텍처 리뷰"):
   prompt: |
     .claude/agents/pr-reviewer-domain.md 파일을 Read로 읽고,
     해당 지침에 따라 아래 PR을 리뷰하세요.
@@ -105,7 +105,7 @@ Task tool (subagent_type: "pr-reviewer-domain", description: "🏛️ 도메인/
 
 **Task 3: 🧪 테스트 품질**
 ```
-Task tool (subagent_type: "pr-reviewer-test", description: "🧪 테스트 품질 리뷰"):
+Task tool (subagent_type: "general-purpose", description: "🧪 테스트 품질 리뷰"):
   prompt: |
     .claude/agents/pr-reviewer-test.md 파일을 Read로 읽고,
     해당 지침에 따라 아래 PR을 리뷰하세요.

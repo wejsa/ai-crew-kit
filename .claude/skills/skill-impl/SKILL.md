@@ -182,6 +182,31 @@ Task tool (subagent_type: "general-purpose", run_in_background: true, descriptio
 - 분석 완료 후 문서 업데이트 필요 시 출력에 `📝 문서 업데이트 권장` 알림 포함
 - Task 실패 시 무시하고 진행 (백그라운드이므로 메인 플로우 영향 없음)
 
+### 10.5 테스트 품질 분석 (백그라운드 Task)
+
+`.claude/state/project.json`의 `agents.enabled`에 `"qa"`가 포함된 경우에만 실행합니다.
+
+PR 생성 후 docs-impact-analyzer와 함께 **병렬 백그라운드** 실행:
+
+```
+Task tool (subagent_type: "general-purpose", run_in_background: true, description: "🟢 테스트 품질 분석"):
+  prompt: |
+    .claude/agents/agent-qa.md 파일을 Read로 읽고,
+    해당 지침에 따라 아래 PR의 테스트 품질을 분석하세요.
+
+    PR #{number} ({title})
+    도메인: {domain}
+
+    ## 변경 파일
+    {git diff --stat 결과}
+```
+
+**동작 규칙:**
+- docs-impact-analyzer와 **동시에 병렬 실행** (메인 플로우 차단 금지)
+- `run_in_background: true` 사용
+- Task 실패 시 무시하고 진행 (백그라운드이므로 메인 플로우 영향 없음)
+- agents.enabled에 미포함 시: Task 호출 스킵
+
 ## 출력 포맷
 
 ```
@@ -202,8 +227,9 @@ Task tool (subagent_type: "general-purpose", run_in_background: true, descriptio
 🔗 PR #{number}: {제목}
    {PR URL}
 
-### 문서 분석 (백그라운드)
-📝 문서 업데이트 {필요/불필요}
+### 백그라운드 분석
+📝 문서 영향도: {필요/불필요}
+🧪 테스트 품질: {분석 완료/스킵} (agents.enabled에 qa 포함 시)
 
 ### 자동 진행
 🔄 `/skill-review-pr {number} --auto-fix` 자동 실행 중...
