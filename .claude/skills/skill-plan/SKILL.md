@@ -2,7 +2,7 @@
 name: skill-plan
 description: 계획 수립 - Task 선택 + 설계 분석 + 스텝 분리 계획
 disable-model-invocation: false
-allowed-tools: Bash(git:*), Read, Write, Glob, Grep
+allowed-tools: Bash(git:*), Read, Write, Glob, Grep, Task
 argument-hint: "[taskId]"
 ---
 
@@ -36,6 +36,32 @@ argument-hint: "[taskId]"
 ```
 docs/requirements/{taskId}-spec.md
 ```
+
+### 3.0 DB 설계 분석 (병렬 Task)
+
+`.claude/state/project.json`의 `agents.enabled`에 `"db-designer"`가 포함된 경우에만 실행합니다.
+
+**실행 방법:**
+- 섹션 3의 설계 분석과 **병렬로** Task tool 호출
+- Task tool (subagent_type: "general-purpose")로 agent-db-designer 실행
+- 결과를 계획 파일의 "데이터 모델" 섹션에 통합
+
+**호출 패턴:**
+
+```
+Task tool (subagent_type: "general-purpose"):
+  prompt: |
+    .claude/agents/agent-db-designer.md 파일을 Read로 읽고,
+    해당 지침에 따라 아래 요구사항의 DB 설계를 분석하세요.
+
+    도메인: {domain}
+    요구사항: {specFile 내용 요약}
+```
+
+**오류 처리:**
+- Task 실패/타임아웃 시: 계획 파일 데이터 모델 섹션에 "DB 설계 분석 불가 - 메인 컨텍스트에서 직접 작성" 표기
+- Task 결과 형식 불일치 시: 텍스트 그대로 포함
+- agents.enabled에 미포함 시: Task 호출 스킵, 메인 컨텍스트에서 직접 작성
 
 ### 3. 설계 분석
 요구사항 기반으로 분석:

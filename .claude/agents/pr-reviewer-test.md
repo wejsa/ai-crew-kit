@@ -3,6 +3,7 @@ name: pr-reviewer-test
 description: PR 리뷰 시 테스트 품질 관점 전문 검토. skill-review-pr에서 자동 호출됨.
 tools: Read, Glob, Grep
 model: opus
+color: 🔵
 ---
 
 테스트 품질 전문 코드 리뷰어.
