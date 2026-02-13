@@ -249,20 +249,33 @@ Skill tool 사용: skill="skill-impl"
 
 상태 업데이트 시:
 ```bash
-# 1. 최신 상태 동기화
-git pull origin develop --rebase
+# Worktree 감지
+GIT_DIR=$(git rev-parse --git-dir 2>/dev/null)
+GIT_COMMON_DIR=$(git rev-parse --git-common-dir 2>/dev/null)
 
-# 2. backlog.json 수정 (자동 처리)
+if [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
+  # Worktree 모드
+  git fetch origin develop
+  git merge origin/develop
+  git add .claude/state/backlog.json
+  git commit -m "chore: start TASK-001"
+  git push -u origin HEAD
+else
+  # 일반 모드
+  git pull origin develop --rebase
+  git add .claude/state/backlog.json
+  git commit -m "chore: start TASK-001"
+  git push origin develop
+fi
 
-# 3. 커밋 & 푸시
-git add .claude/state/backlog.json
-git commit -m "chore: start TASK-001"
-git push origin develop
-
-# 4. 푸시 실패 시 (충돌)
+# 푸시 실패 시 (충돌)
 git pull --rebase
 # JSON 충돌: 두 Task 변경 모두 유지 (수동 해결)
-git push origin develop
+if [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
+  git push -u origin HEAD
+else
+  git push origin develop
+fi
 ```
 
 ## 주의사항

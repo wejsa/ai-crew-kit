@@ -27,6 +27,16 @@ argument-hint: "{버전타입: patch|minor|major}"
 3. **원격 동기화**: origin/develop과 동기화됨
 
 ```bash
+# Worktree 환경 차단
+GIT_DIR=$(git rev-parse --git-dir 2>/dev/null)
+GIT_COMMON_DIR=$(git rev-parse --git-common-dir 2>/dev/null)
+if [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
+  MAIN_REPO=$(git rev-parse --git-common-dir | sed 's/\/.git$//')
+  echo "❌ skill-release는 worktree에서 실행할 수 없습니다."
+  echo "메인 레포에서 실행하세요: $MAIN_REPO"
+  exit 1
+fi
+
 # 브랜치 확인
 CURRENT_BRANCH=$(git branch --show-current)
 if [ "$CURRENT_BRANCH" != "develop" ]; then

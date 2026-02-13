@@ -28,18 +28,25 @@ argument-hint: "[--next|--all]"
 
 ### --next 사용 시 추가 조건
 - 이전 스텝 PR이 머지되어 있어야 함
-- develop 브랜치 최신 상태 동기화
+- develop 최신 상태 동기화 (worktree 시 merge origin/develop)
 
 ## 실행 플로우
 
 ### 1. 환경 준비
 ```bash
-# develop 브랜치 동기화
-git checkout develop
-git pull origin develop
-
-# 스텝 브랜치 생성
-git checkout -b feature/{taskId}-step{N}
+# develop 최신 상태 동기화
+GIT_DIR=$(git rev-parse --git-dir 2>/dev/null)
+GIT_COMMON_DIR=$(git rev-parse --git-common-dir 2>/dev/null)
+if [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
+  # Worktree 모드: 현재 브랜치(CS브랜치)를 feature 브랜치로 직접 사용
+  git fetch origin develop
+  git merge origin/develop
+else
+  git checkout develop
+  git pull origin develop
+  # 스텝 브랜치 생성
+  git checkout -b feature/{taskId}-step{N}
+fi
 ```
 
 ### 2. 계획 파일 참조
@@ -93,7 +100,11 @@ git diff --stat
 ```bash
 git add .
 git commit -m "feat: {taskId} Step {N} - {스텝 제목}"
-git push -u origin feature/{taskId}-step{N}
+if [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
+  git push -u origin HEAD
+else
+  git push -u origin feature/{taskId}-step{N}
+fi
 ```
 
 ### 7. PR 생성

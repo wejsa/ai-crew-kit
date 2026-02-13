@@ -97,7 +97,13 @@ argument-hint: "[기능명]"
 ```bash
 git add docs/requirements/{taskId}-spec.md .claude/state/backlog.json
 git commit -m "feat: {taskId} 요구사항 정의 - {기능명}"
-git push origin develop
+GIT_DIR=$(git rev-parse --git-dir 2>/dev/null)
+GIT_COMMON_DIR=$(git rev-parse --git-common-dir 2>/dev/null)
+if [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
+  git push -u origin HEAD
+else
+  git push origin develop
+fi
 ```
 
 ### 7. skill-plan 자동 호출
