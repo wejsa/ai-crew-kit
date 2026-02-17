@@ -37,7 +37,28 @@ argument-hint: "[list|add|update|priority] [options]"
 /skill-backlog priority {taskId} high|medium|low|critical
 ```
 
+## backlog.json 쓰기 프로토콜
+
+모든 backlog.json 쓰기 시 반드시 아래 순서를 따른다:
+
+1. **읽기**: 현재 `metadata.version` 값 기록
+2. **쓰기**: 변경 적용 + `metadata.version` 1 증가 + `metadata.updatedAt` 갱신
+3. **검증**: 쓰기 직후 JSON 유효성 검증
+   ```bash
+   cat .claude/state/backlog.json | python3 -c "import sys,json; json.load(sys.stdin)" 2>/dev/null || {
+     echo "❌ backlog.json 쓰기 후 JSON 유효성 검증 실패. 롤백 필요."
+     # Git에서 복원
+     git checkout -- .claude/state/backlog.json
+     exit 1
+   }
+   ```
+4. **충돌 감지**: Git push 실패 시 `metadata.version` 비교로 충돌 감지
+   - 로컬 version과 원격 version이 다르면 → 수동 머지 필요
+   - 동일하면 → 네트워크 오류, 재시도
+
 ## 백로그 데이터 구조
+
+**스키마 정의**: `.claude/schemas/backlog.schema.json` (단일 권위 문서)
 
 `.claude/state/backlog.json`:
 ```json
@@ -45,6 +66,7 @@ argument-hint: "[list|add|update|priority] [options]"
   "metadata": {
     "lastTaskNumber": 1,
     "projectPrefix": "TASK",
+    "version": 1,
     "createdAt": "2024-01-01T00:00:00Z",
     "updatedAt": "2024-01-01T00:00:00Z"
   },
@@ -79,6 +101,13 @@ argument-hint: "[list|add|update|priority] [options]"
         }
       ],
       "currentStep": 1,
+      "workflowState": {
+        "currentSkill": "skill-impl",
+        "lastCompletedSkill": "skill-plan",
+        "prNumber": null,
+        "autoChainArgs": "",
+        "updatedAt": "2026-02-03T14:30:52Z"
+      },
       "createdAt": "2024-01-01T00:00:00Z",
       "updatedAt": "2024-01-01T00:00:00Z"
     }

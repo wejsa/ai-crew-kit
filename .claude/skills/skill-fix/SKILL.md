@@ -12,6 +12,70 @@ argument-hint: "{PR번호}"
 - skill-review-pr --auto-fix에서 CRITICAL 이슈 발견 시 자동 호출
 - 또는 사용자가 `/skill-fix {번호}` 직접 호출
 
+## 사전 조건 검증 (MUST-EXECUTE-FIRST)
+
+실패 시 즉시 중단 + 사용자 보고. 절대 다음 단계 진행 금지.
+
+```bash
+# [REQUIRED] 1. project.json 존재
+if [ ! -f ".claude/state/project.json" ]; then
+  echo "❌ project.json이 없습니다. /skill-init을 먼저 실행하세요."
+  exit 1
+fi
+
+# [REQUIRED] 2. backlog.json 존재 + 유효 JSON
+if [ ! -f ".claude/state/backlog.json" ]; then
+  echo "❌ backlog.json이 없습니다. /skill-init을 먼저 실행하세요."
+  exit 1
+fi
+cat .claude/state/backlog.json | python3 -c "import sys,json; json.load(sys.stdin)" 2>/dev/null || {
+  echo "❌ backlog.json이 유효한 JSON이 아닙니다."
+  exit 1
+}
+
+# [REQUIRED] 3. PR 번호 지정됨
+if [ -z "$PR_NUMBER" ]; then
+  echo "❌ PR 번호를 지정해주세요. 예: /skill-fix 123"
+  exit 1
+fi
+
+# [REQUIRED] 4. PR 존재 + OPEN 상태
+PR_STATE=$(gh pr view $PR_NUMBER --json state --jq '.state' 2>/dev/null)
+if [ "$PR_STATE" != "OPEN" ]; then
+  echo "❌ PR #$PR_NUMBER 이 OPEN 상태가 아닙니다 (현재: $PR_STATE)."
+  exit 1
+fi
+
+# [REQUIRED] 5. CRITICAL 이슈가 존재
+# PR 리뷰 코멘트에서 CRITICAL 태그가 있는 코멘트 확인
+```
+
+## 워크플로우 상태 추적
+
+스킬 진입/완료 시 해당 Task의 `workflowState`를 업데이트한다:
+
+**진입 시:**
+```json
+"workflowState": {
+  "currentSkill": "skill-fix",
+  "lastCompletedSkill": "skill-review-pr",
+  "prNumber": {PR 번호},
+  "autoChainArgs": "",
+  "updatedAt": "{현재 시각}"
+}
+```
+
+**완료 시 (재리뷰 호출):**
+```json
+"workflowState": {
+  "currentSkill": "skill-review-pr",
+  "lastCompletedSkill": "skill-fix",
+  "prNumber": {PR 번호},
+  "autoChainArgs": "",
+  "updatedAt": "{현재 시각}"
+}
+```
+
 ## 입력
 - PR 번호 (필수)
 
@@ -73,6 +137,13 @@ git commit -m "fix: 코드 리뷰 피드백 반영
 Co-Authored-By: Claude <noreply@anthropic.com>"
 
 git push
+```
+
+### 6.5 실행 로그 기록
+
+`skill-status`의 "실행 로그 프로토콜"에 따라 `.claude/state/execution-log.json`에 추가:
+```json
+{"timestamp": "{현재시각}", "taskId": "{taskId}", "skill": "skill-fix", "action": "fix_completed", "details": {"prNumber": {number}, "issueCount": {N}}}
 ```
 
 ### 7. skill-review-pr 재호출

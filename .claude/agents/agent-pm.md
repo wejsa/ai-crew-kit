@@ -356,8 +356,11 @@ PM은 사용자의 자연어 요청을 받으면 자동으로 활성화됩니다
 ├── migration.yaml       # 마이그레이션
 ├── spike.yaml           # 기술 검증 (PoC)
 ├── review-only.yaml     # 코드 리뷰 전용
-└── docs-only.yaml       # 문서화 전용
+├── docs-only.yaml       # 문서화 전용
+└── {custom}.yaml        # 커스텀 워크플로우 (/skill-domain add-workflow로 생성)
 ```
+
+**커스텀 워크플로우**: `custom: true` 필드가 있는 YAML 파일은 사용자 정의 워크플로우입니다. `/skill-domain add-workflow`로 생성 가능합니다.
 
 ### 워크플로우 파일 구조
 

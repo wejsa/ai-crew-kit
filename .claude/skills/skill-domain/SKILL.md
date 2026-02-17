@@ -1,9 +1,9 @@
 ---
 name: skill-domain
-description: 도메인 관리 - 조회, 전환, 커스터마이징
+description: 도메인 관리 - 조회, 전환, 커스터마이징, 워크플로우 정의
 disable-model-invocation: true
 allowed-tools: Bash(git:*), Read, Write, Glob, AskUserQuestion
-argument-hint: "[list|switch|add-doc|add-checklist|export] [options]"
+argument-hint: "[list|switch|add-doc|add-checklist|add-workflow|export] [options]"
 ---
 
 # skill-domain: 도메인 관리
@@ -19,6 +19,7 @@ argument-hint: "[list|switch|add-doc|add-checklist|export] [options]"
 /skill-domain switch {domain}      # 도메인 전환
 /skill-domain add-doc {path}       # 참고자료 추가
 /skill-domain add-checklist {path} # 체크리스트 추가
+/skill-domain add-workflow {name}   # 커스텀 워크플로우 정의
 /skill-domain export {name}        # 커스텀 도메인으로 내보내기
 ```
 
@@ -288,6 +289,92 @@ cp {source} .claude/domains/{domain}/checklists/{filename}
 - **적용 시점**: 코드 리뷰, PR 리뷰
 
 코드 리뷰 시 이 체크리스트가 자동으로 적용됩니다.
+```
+
+---
+
+### add-workflow: 커스텀 워크플로우 정의
+
+**사용법:**
+```
+/skill-domain add-workflow my-workflow
+```
+
+사전 정의된 6개 워크플로우 외에 프로젝트 고유 워크플로우를 생성합니다.
+
+**Step 1: 워크플로우 정보 수집**
+
+AskUserQuestion으로 수집:
+```
+## 커스텀 워크플로우 생성
+
+### 워크플로우 이름
+예: hotfix, data-migration, api-integration
+
+### 설명
+이 워크플로우의 목적을 설명해주세요.
+
+### 스텝 정의
+각 스텝에 사용할 스킬을 선택하세요:
+
+1. 스텝명 → 스킬 (예: "분석 → skill-plan")
+2. 스텝명 → 스킬
+3. ...
+
+### 게이트 조건 (선택)
+스텝 간 진행 조건이 있으면 지정:
+- user_approval: 사용자 승인 필요
+- build_success: 빌드 성공 필수
+- test_pass: 테스트 통과 필수
+```
+
+**Step 2: YAML 생성**
+
+`.claude/workflows/{name}.yaml` 생성:
+
+```yaml
+name: {워크플로우명}
+description: {설명}
+created: {timestamp}
+custom: true
+
+steps:
+  - name: {스텝명}
+    skill: {스킬명}
+    gate: {게이트 조건}
+  - name: {스텝명}
+    skill: {스킬명}
+
+error_handling:
+  on_failure: pause
+  on_timeout: notify
+```
+
+**Step 3: 검증**
+- 참조된 스킬 존재 확인
+- YAML 문법 유효성 확인
+- 기존 워크플로우명 중복 확인
+
+**Step 4: 완료 안내**
+```
+## ✅ 커스텀 워크플로우 생성 완료
+
+- **이름**: {name}
+- **위치**: .claude/workflows/{name}.yaml
+- **스텝 수**: {N}개
+
+### 사용 방법
+agent-pm에게 이 워크플로우로 작업 요청:
+"my-workflow 워크플로우로 진행해줘"
+
+### 기존 워크플로우 목록
+1. full-feature (기본)
+2. quick-fix
+3. spike
+4. review-only
+5. docs-only
+6. migration
+7. {name} ← 새로 추가됨
 ```
 
 ---

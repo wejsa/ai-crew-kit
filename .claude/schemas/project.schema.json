@@ -19,7 +19,7 @@
     },
     "domain": {
       "type": "string",
-      "enum": ["fintech", "ecommerce", "healthcare", "saas", "general", "custom"],
+      "enum": ["fintech", "ecommerce", "general", "custom"],
       "description": "도메인 유형"
     },
     "techStack": {

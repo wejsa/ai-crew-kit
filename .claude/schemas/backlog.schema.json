@@ -1,0 +1,232 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ai-crew-kit.dev/schemas/backlog.schema.json",
+  "title": "AI Crew Kit Backlog",
+  "description": "백로그 상태 스키마 - skill-init이 생성하고 각 스킬이 참조/갱신",
+  "type": "object",
+  "required": ["metadata", "tasks"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["lastTaskNumber", "version", "createdAt", "updatedAt"],
+      "properties": {
+        "lastTaskNumber": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "마지막으로 생성된 Task 번호"
+        },
+        "projectPrefix": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9-]*$",
+          "default": "TASK",
+          "description": "Task ID 접두사"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "낙관적 동시성 제어용 버전 카운터. 모든 쓰기 시 1 증가."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "백로그 생성 시각"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "마지막 갱신 시각"
+        }
+      },
+      "additionalProperties": false
+    },
+    "summary": {
+      "type": "object",
+      "description": "백로그 요약 통계 (캐시용, 선택적)",
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "done": { "type": "integer", "minimum": 0 },
+        "inProgress": { "type": "integer", "minimum": 0 },
+        "review": { "type": "integer", "minimum": 0 },
+        "todo": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "phases": {
+      "type": "object",
+      "description": "Phase 정의 (key: phase 번호)",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "tasks": {
+      "type": "object",
+      "description": "Task 맵 (key: Task ID, 예: TASK-001)",
+      "additionalProperties": {
+        "$ref": "#/definitions/task"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "task": {
+      "type": "object",
+      "required": ["id", "title", "status", "priority", "createdAt"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9-]*-\\d+$",
+          "description": "Task 고유 식별자 (예: TASK-001)"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Task 제목"
+        },
+        "description": {
+          "type": "string",
+          "description": "Task 상세 설명"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["todo", "in_progress", "done", "blocked"],
+          "description": "Task 상태"
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["critical", "high", "medium", "low"],
+          "description": "우선순위"
+        },
+        "phase": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "소속 Phase 번호"
+        },
+        "assignee": {
+          "type": ["string", "null"],
+          "description": "담당자 식별자 (형식: user@hostname-YYYYMMDD-HHmmss)"
+        },
+        "assignedAt": {
+          "type": ["string", "null"],
+          "format": "date-time",
+          "description": "할당 시각"
+        },
+        "lockedFiles": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "현재 잠긴 파일 경로 목록"
+        },
+        "specFile": {
+          "type": "string",
+          "description": "요구사항 명세 파일 경로"
+        },
+        "dependencies": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "의존하는 Task ID 목록"
+        },
+        "steps": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/step" },
+          "description": "구현 스텝 목록"
+        },
+        "currentStep": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "현재 진행 중인 스텝 번호"
+        },
+        "workflowState": {
+          "oneOf": [
+            { "$ref": "#/definitions/workflowState" },
+            { "type": "null" }
+          ],
+          "description": "워크플로우 체이닝 상태 (세션 복구용)"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Task 생성 시각"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Task 마지막 갱신 시각"
+        },
+        "completedAt": {
+          "type": ["string", "null"],
+          "format": "date-time",
+          "description": "Task 완료 시각"
+        }
+      },
+      "additionalProperties": false
+    },
+    "step": {
+      "type": "object",
+      "required": ["number", "title", "status"],
+      "properties": {
+        "number": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "스텝 번호"
+        },
+        "title": {
+          "type": "string",
+          "description": "스텝 제목"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "in_progress", "pr_created", "merged", "done"],
+          "description": "스텝 상태"
+        },
+        "files": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "스텝에서 수정하는 파일 목록"
+        },
+        "prNumber": {
+          "type": ["integer", "null"],
+          "description": "생성된 PR 번호"
+        },
+        "mergedAt": {
+          "type": ["string", "null"],
+          "format": "date-time",
+          "description": "PR 머지 시각"
+        }
+      },
+      "additionalProperties": false
+    },
+    "workflowState": {
+      "type": "object",
+      "required": ["currentSkill", "updatedAt"],
+      "properties": {
+        "currentSkill": {
+          "type": "string",
+          "enum": ["skill-plan", "skill-impl", "skill-review-pr", "skill-fix", "skill-merge-pr"],
+          "description": "현재 실행 중인 스킬"
+        },
+        "lastCompletedSkill": {
+          "type": ["string", "null"],
+          "description": "마지막으로 완료된 스킬"
+        },
+        "prNumber": {
+          "type": ["integer", "null"],
+          "description": "현재 관련 PR 번호"
+        },
+        "autoChainArgs": {
+          "type": "string",
+          "description": "자동 체이닝에 전달할 인수"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "워크플로우 상태 마지막 갱신 시각"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

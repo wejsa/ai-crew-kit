@@ -502,6 +502,58 @@ CLAUDE.md 재생성 제안
 
 도메인 템플릿이 있으면 우선 사용합니다.
 
+### 코드 템플릿 스택 기반 자동 선택
+
+코드 템플릿(`.tmpl`)은 백엔드 스택에 따라 자동 선택됩니다.
+
+**파일 확장자 규칙:**
+| 스택 | 확장자 | 예시 |
+|------|--------|------|
+| spring-boot-kotlin | `.kt.tmpl` | `state-machine.kt.tmpl` |
+| spring-boot-java | `.java.tmpl` | `state-machine.java.tmpl` |
+| nodejs-typescript | `.ts.tmpl` | `state-machine.ts.tmpl` |
+| go | `.go.tmpl` | `state-machine.go.tmpl` |
+
+**선택 로직:**
+```python
+def select_template(template_name: str, tech_stack: dict, domain: str) -> str:
+    """
+    스택 기반 템플릿 파일 선택
+
+    1. project.json의 techStack.backend 확인
+    2. 해당 확장자의 템플릿 파일 검색
+    3. 없으면 .kt.tmpl 폴백 (기본)
+    """
+    backend = tech_stack.get("backend", "spring-boot-kotlin")
+
+    ext_map = {
+        "spring-boot-kotlin": ".kt.tmpl",
+        "spring-boot-java": ".java.tmpl",
+        "nodejs-typescript": ".ts.tmpl",
+        "go": ".go.tmpl",
+    }
+
+    ext = ext_map.get(backend, ".kt.tmpl")
+    template_path = f".claude/domains/{domain}/templates/{template_name}{ext}"
+
+    if os.path.exists(template_path):
+        return template_path
+
+    # 폴백: Kotlin 템플릿
+    fallback = f".claude/domains/{domain}/templates/{template_name}.kt.tmpl"
+    return fallback if os.path.exists(fallback) else None
+```
+
+**사용 시점:**
+- `skill-plan` — 설계 분석 시 관련 템플릿 참조
+- `skill-impl` — 코드 생성 시 템플릿 기반 스캐폴딩
+
+**현재 지원 현황:**
+| 도메인 | `.kt.tmpl` | `.ts.tmpl` | `.java.tmpl` | `.go.tmpl` |
+|--------|-----------|-----------|-------------|-----------|
+| fintech | 5개 | 4개 | - | - |
+| ecommerce | 3개 | 3개 | - | - |
+
 ### PR Body 템플릿
 
 PR 생성 시 사용되는 body 템플릿입니다.

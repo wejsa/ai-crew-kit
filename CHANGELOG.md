@@ -7,6 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- agent-db-designer: YAML frontmatter 기반 네이티브 subagent 전환 (분석 전용, Read/Glob/Grep)
+- agent-qa: YAML frontmatter 기반 네이티브 subagent 전환 (분석 전용, Read/Glob/Grep)
+- skill-plan: DB 설계 분석 병렬 Task 호출 (agents.enabled 조건부)
+- skill-impl: QA 테스트 품질 분석 백그라운드 Task 호출 (agents.enabled 조건부)
+
+### Changed
+- docs-impact-analyzer: 문서 영향도 분석 + 초안 제안까지 확장 (agent-docs 핵심 기능 통합)
+- skill-plan: allowed-tools에 Task 추가
+- agent-code-reviewer: YAML frontmatter 추가 (참조 문서로 명시), agent-qa 연동 정보 추가
+- agent-db-designer: 상세 가이드(434줄) → 분석 핵심+출력 형식(76줄)으로 축약
+- agent-qa: 상세 가이드(412줄) → 분석 핵심+출력 형식(71줄)으로 축약
+
+## [1.13.0] - 2026-02-17
+
+### Added
+- 워크플로우 상태 영속화: `workflowState` 필드로 크래시 후 재개 지원 (skill-impl, skill-review-pr, skill-fix, skill-merge-pr)
+- backlog.json 동시 쓰기 보호: `metadata.version` 낙관적 동시성 제어 + JSON 유효성 검증 프로토콜
+- 스킬 사전 조건 검증 표준화: `MUST-EXECUTE-FIRST` 블록 전 스킬 적용 (skill-impl, skill-review-pr, skill-fix, skill-release)
+- 중앙화된 스킬 실행 로그: `.claude/state/execution-log.json` append-only 감사 추적
+- skill-validate: 업그레이드 후 자체 검증 스킬 신규 생성 (7개 검증 카테고리)
+- backlog.schema.json: backlog.json 데이터 모델 JSON Schema 정의
+- General 도메인 보강: keywords 6개 + checklists 3개 + common-patterns.md 추가
+- 멀티 스택 코드 템플릿: TypeScript 템플릿 7개 추가 (fintech 4개, ecommerce 3개) + 스택 기반 자동 선택
+- skill-status 진단 강화: `--health` 옵션, 활성 PR 상태, 워크플로우 진행 상태, 시스템 건강 점검
+- 의존성 취약점 검사: skill-impl 빌드 후 `npm audit` / `dependencyCheckAnalyze` / `govulncheck` 선택적 실행
+- 트러블슈팅 가이드: `.claude/docs/troubleshooting.md` 8개 장애 시나리오별 진단/해결
+- E-commerce 예제 프로젝트: `examples/ecommerce-shop/` (project.json, backlog.json, 요구사항 스펙)
+- 커스텀 워크플로우 정의: `skill-domain add-workflow` 명령 추가
+
+### Changed
+- skill-upgrade: Step 15에서 skill-validate 자동 호출
+- pr-reviewer-security: 의존성 취약점 리뷰 섹션 추가
+
+### Removed
+- project.schema.json, skill-init: 미구현 healthcare/saas 도메인 선택지 제거
+
+## [1.12.0] - 2026-02-15
+
+### Added
+- 공통 개발 컨벤션 문서 7개 추가 (`_base/conventions/`):
+  - api-design.md: API 설계 컨벤션 (URL 구조, 상태코드, 페이지네이션, 멱등성, Rate Limiting)
+  - testing.md: 테스팅 컨벤션 (테스트 피라미드, 커버리지 목표, Mock 전략, 격리 원칙)
+  - logging.md: 로깅 컨벤션 (구조화 로그, 레벨 기준, 민감정보 마스킹, 성능 로깅)
+  - database.md: DB 설계 컨벤션 (네이밍, 인덱스, 마이그레이션, 무중단 변경, 낙관적 잠금)
+  - error-handling.md: 에러 처리 컨벤션 (예외 계층, 재시도 전략, 서킷 브레이커)
+  - security.md: 보안 개발 컨벤션 (JWT 인증, 입력 검증, CORS, Secret 관리)
+  - project-structure.md: 프로젝트 구조 컨벤션 (레이어 아키텍처, 스택별 패키지 구조)
+- skill-docs: 공통 컨벤션 키워드 매핑 섹션 추가 (도메인 무관 자동 참조)
+- skill-docs: 문서 로딩 우선순위에 `_base/conventions/` 경로 추가
+- skill-docs: 출력 포맷에 공통 컨벤션 섹션 추가
+
+### Changed
+- skill-feature: 기능 분석 시 공통 컨벤션 참조 경로 추가
+- skill-impl: 참고자료 로드 순서에 공통 컨벤션 경로 추가
 ## [1.11.0] - 2026-02-12
 
 ### Added

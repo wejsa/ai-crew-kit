@@ -19,15 +19,28 @@ argument-hint: "{버전타입: patch|minor|major}"
 | `minor` | 기능 추가 | 1.1.0 → 1.2.0 |
 | `major` | Breaking 변경 | 1.1.0 → 2.0.0 |
 
-## 사전 조건 검증
+## 사전 조건 검증 (MUST-EXECUTE-FIRST)
 
-### 필수 조건
-1. **develop 브랜치**: 현재 브랜치가 develop
-2. **Clean 상태**: 커밋되지 않은 변경사항 없음
-3. **원격 동기화**: origin/develop과 동기화됨
+실패 시 즉시 중단 + 사용자 보고. 절대 다음 단계 진행 금지.
 
 ```bash
-# Worktree 환경 차단
+# [REQUIRED] 1. project.json 존재
+if [ ! -f ".claude/state/project.json" ]; then
+  echo "❌ project.json이 없습니다. /skill-init을 먼저 실행하세요."
+  exit 1
+fi
+
+# [REQUIRED] 2. backlog.json 존재 + 유효 JSON
+if [ ! -f ".claude/state/backlog.json" ]; then
+  echo "❌ backlog.json이 없습니다. /skill-init을 먼저 실행하세요."
+  exit 1
+fi
+cat .claude/state/backlog.json | python3 -c "import sys,json; json.load(sys.stdin)" 2>/dev/null || {
+  echo "❌ backlog.json이 유효한 JSON이 아닙니다."
+  exit 1
+}
+
+# [REQUIRED] 3. Worktree 환경 차단
 GIT_DIR=$(git rev-parse --git-dir 2>/dev/null)
 GIT_COMMON_DIR=$(git rev-parse --git-common-dir 2>/dev/null)
 if [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
@@ -37,20 +50,20 @@ if [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
   exit 1
 fi
 
-# 브랜치 확인
+# [REQUIRED] 4. develop 브랜치 확인
 CURRENT_BRANCH=$(git branch --show-current)
 if [ "$CURRENT_BRANCH" != "develop" ]; then
-  echo "Error: develop 브랜치에서만 실행 가능합니다."
+  echo "❌ develop 브랜치에서만 실행 가능합니다 (현재: $CURRENT_BRANCH)."
   exit 1
 fi
 
-# Clean 상태 확인
+# [REQUIRED] 5. Clean 상태 확인
 if [ -n "$(git status --porcelain)" ]; then
-  echo "Error: 커밋되지 않은 변경사항이 있습니다."
+  echo "❌ 커밋되지 않은 변경사항이 있습니다."
   exit 1
 fi
 
-# 원격 동기화
+# [REQUIRED] 6. 원격 동기화
 git fetch origin
 ```
 

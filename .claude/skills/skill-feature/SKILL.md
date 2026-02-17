@@ -21,6 +21,7 @@ argument-hint: "[기능명]"
 - **도메인 참고자료 확인**:
   - `.claude/state/project.json`에서 현재 도메인 확인
   - `.claude/domains/{domain}/domain.json`의 keywords 매핑으로 관련 문서 자동 탐색
+  - `.claude/domains/_base/conventions/`에서 관련 컨벤션 확인
   - 관련 참고자료를 요구사항 문서에 반영
 
 ### 2. 중복 확인

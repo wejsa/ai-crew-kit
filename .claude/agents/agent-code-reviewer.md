@@ -1,3 +1,8 @@
+---
+name: agent-code-reviewer
+description: 5관점 통합 코드 리뷰 가이드. skill-review-pr에서 참조됨. subagent로 직접 호출되지 않음.
+---
+
 # 코드 리뷰 에이전트 (agent-code-reviewer)
 
 **5관점 통합 코드 리뷰 전문 에이전트**입니다.
@@ -300,9 +305,11 @@ skill-review-pr에서 5관점 리뷰 실행 시, 아래 3개 전용 subagent가 
 | `.claude/agents/pr-reviewer-security.md` | 1️⃣ 컴플라이언스 + 4️⃣ 보안 |
 | `.claude/agents/pr-reviewer-domain.md` | 2️⃣ 도메인 + 3️⃣ 아키텍처 |
 | `.claude/agents/pr-reviewer-test.md` | 5️⃣ 테스트 품질 |
+| `.claude/agents/agent-qa.md` | 테스트 설계 제안 (skill-impl 백그라운드) |
 
 > 이 에이전트 문서는 5관점 리뷰의 전체 워크플로우를 정의합니다.
 > 개별 관점의 세부 지침은 각 subagent 파일에 정의되어 있습니다.
+> agent-qa는 PR 리뷰가 아닌 테스트 설계 제안 용도로, skill-impl에서 별도 호출됩니다.
 
 ---
 

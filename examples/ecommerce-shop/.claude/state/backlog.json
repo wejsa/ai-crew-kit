@@ -1,0 +1,48 @@
+{
+  "metadata": {
+    "lastTaskNumber": 2,
+    "projectPrefix": "SHOP",
+    "version": 1,
+    "createdAt": "2026-02-15T00:00:00Z",
+    "updatedAt": "2026-02-15T00:00:00Z"
+  },
+  "summary": {
+    "total": 2,
+    "done": 0,
+    "inProgress": 0,
+    "review": 0,
+    "todo": 2
+  },
+  "phases": {
+    "PHASE-1": {
+      "title": "상품 및 주문 기본 기능",
+      "status": "todo",
+      "priority": "high",
+      "tasks": ["SHOP-001", "SHOP-002"]
+    }
+  },
+  "tasks": {
+    "SHOP-001": {
+      "id": "SHOP-001",
+      "title": "상품 카탈로그 API",
+      "description": "상품 CRUD API 구현. 카테고리, 검색, 페이지네이션 포함.",
+      "status": "todo",
+      "priority": "high",
+      "phase": 1,
+      "dependencies": [],
+      "specFile": "docs/requirements/SHOP-001-spec.md",
+      "createdAt": "2026-02-15T00:00:00Z"
+    },
+    "SHOP-002": {
+      "id": "SHOP-002",
+      "title": "주문 처리 시스템",
+      "description": "주문 생성, 상태 관리(상태 머신), 재고 차감. 전자상거래법 준수.",
+      "status": "todo",
+      "priority": "high",
+      "phase": 1,
+      "dependencies": ["SHOP-001"],
+      "specFile": "docs/requirements/SHOP-002-spec.md",
+      "createdAt": "2026-02-15T00:00:00Z"
+    }
+  }
+}
