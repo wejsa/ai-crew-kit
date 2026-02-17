@@ -7,22 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.13.0] - 2026-02-17
+
 ### Added
 - agent-db-designer: YAML frontmatter 기반 네이티브 subagent 전환 (분석 전용, Read/Glob/Grep)
 - agent-qa: YAML frontmatter 기반 네이티브 subagent 전환 (분석 전용, Read/Glob/Grep)
 - skill-plan: DB 설계 분석 병렬 Task 호출 (agents.enabled 조건부)
 - skill-impl: QA 테스트 품질 분석 백그라운드 Task 호출 (agents.enabled 조건부)
-
-### Changed
-- docs-impact-analyzer: 문서 영향도 분석 + 초안 제안까지 확장 (agent-docs 핵심 기능 통합)
-- skill-plan: allowed-tools에 Task 추가
-- agent-code-reviewer: YAML frontmatter 추가 (참조 문서로 명시), agent-qa 연동 정보 추가
-- agent-db-designer: 상세 가이드(434줄) → 분석 핵심+출력 형식(76줄)으로 축약
-- agent-qa: 상세 가이드(412줄) → 분석 핵심+출력 형식(71줄)으로 축약
-
-## [1.13.0] - 2026-02-17
-
-### Added
 - 워크플로우 상태 영속화: `workflowState` 필드로 크래시 후 재개 지원 (skill-impl, skill-review-pr, skill-fix, skill-merge-pr)
 - backlog.json 동시 쓰기 보호: `metadata.version` 낙관적 동시성 제어 + JSON 유효성 검증 프로토콜
 - 스킬 사전 조건 검증 표준화: `MUST-EXECUTE-FIRST` 블록 전 스킬 적용 (skill-impl, skill-review-pr, skill-fix, skill-release)
@@ -38,6 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 커스텀 워크플로우 정의: `skill-domain add-workflow` 명령 추가
 
 ### Changed
+- docs-impact-analyzer: 문서 영향도 분석 + 초안 제안까지 확장 (agent-docs 핵심 기능 통합)
+- skill-plan: allowed-tools에 Task 추가
+- agent-code-reviewer: YAML frontmatter 추가 (참조 문서로 명시), agent-qa 연동 정보 추가
+- agent-db-designer: 상세 가이드(434줄) → 분석 핵심+출력 형식(76줄)으로 축약
+- agent-qa: 상세 가이드(412줄) → 분석 핵심+출력 형식(71줄)으로 축약
 - skill-upgrade: Step 15에서 skill-validate 자동 호출
 - pr-reviewer-security: 의존성 취약점 리뷰 섹션 추가
 
