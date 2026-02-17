@@ -50,6 +50,7 @@ test-output/
 .claude/temp/
 .claude/skills/**/CLAUDE.md
 .claude/plans/
+memory/
 
 # Node (if any frontend testing)
 node_modules/
