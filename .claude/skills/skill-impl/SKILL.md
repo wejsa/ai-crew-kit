@@ -19,16 +19,69 @@ argument-hint: "[--next|--all]"
 /skill-impl --all    # 모든 스텝 연속 개발
 ```
 
-## 사전 조건 검증
+## 사전 조건 검증 (MUST-EXECUTE-FIRST)
 
-### 필수 조건
-1. **계획 파일 존재**: `.claude/temp/{taskId}-plan.md`
-2. **Task 상태**: `in_progress`
-3. **현재 스텝**: `pending` 상태
+실패 시 즉시 중단 + 사용자 보고. 절대 다음 단계 진행 금지.
+
+```bash
+# [REQUIRED] 1. project.json 존재
+if [ ! -f ".claude/state/project.json" ]; then
+  echo "❌ project.json이 없습니다. /skill-init을 먼저 실행하세요."
+  exit 1
+fi
+
+# [REQUIRED] 2. backlog.json 존재 + 유효 JSON
+if [ ! -f ".claude/state/backlog.json" ]; then
+  echo "❌ backlog.json이 없습니다. /skill-init을 먼저 실행하세요."
+  exit 1
+fi
+cat .claude/state/backlog.json | python3 -c "import sys,json; json.load(sys.stdin)" 2>/dev/null || {
+  echo "❌ backlog.json이 유효한 JSON이 아닙니다."
+  exit 1
+}
+
+# [REQUIRED] 3. in_progress Task 존재
+# backlog.json에서 status: in_progress인 Task가 있어야 함
+
+# [REQUIRED] 4. 계획 파일 존재: .claude/temp/{taskId}-plan.md
+if [ ! -f ".claude/temp/${TASK_ID}-plan.md" ]; then
+  echo "❌ 계획 파일이 없습니다. /skill-plan을 먼저 실행하세요."
+  exit 1
+fi
+
+# [REQUIRED] 5. 현재 스텝 상태: pending
+# backlog.json에서 steps[currentStep].status == "pending"
+```
 
 ### --next 사용 시 추가 조건
-- 이전 스텝 PR이 머지되어 있어야 함
-- develop 최신 상태 동기화 (worktree 시 merge origin/develop)
+- [REQUIRED] 이전 스텝 PR이 머지되어 있어야 함
+- [REQUIRED] develop 최신 상태 동기화 (worktree 시 merge origin/develop)
+
+## 워크플로우 상태 추적
+
+스킬 진입/완료 시 해당 Task의 `workflowState`를 업데이트한다:
+
+**진입 시:**
+```json
+"workflowState": {
+  "currentSkill": "skill-impl",
+  "lastCompletedSkill": "{이전 스킬}",
+  "prNumber": null,
+  "autoChainArgs": "{--next|--all 등}",
+  "updatedAt": "{현재 시각}"
+}
+```
+
+**완료 시 (PR 생성 후):**
+```json
+"workflowState": {
+  "currentSkill": "skill-review-pr",
+  "lastCompletedSkill": "skill-impl",
+  "prNumber": {생성된 PR 번호},
+  "autoChainArgs": "{--auto-fix}",
+  "updatedAt": "{현재 시각}"
+}
+```
 
 ## 실행 플로우
 
@@ -50,6 +103,11 @@ fi
 ```
 
 ### 2. 계획 파일 참조
+참고자료 로드 순서:
+1. 도메인 참고자료 (`.claude/domains/{domain}/docs/`)
+2. 공통 컨벤션 (`.claude/domains/_base/conventions/`)
+3. 계획 파일 (`.claude/temp/{taskId}-plan.md`)
+
 `.claude/temp/{taskId}-plan.md`에서 현재 스텝 내용 확인:
 - 생성/수정할 파일 목록
 - 구현 내용 상세
@@ -96,6 +154,30 @@ git diff --stat
 - 재실행
 - 3회 실패 시 사용자에게 보고
 
+### 5.5 의존성 취약점 검사 (선택적)
+
+빌드 성공 후, 프로젝트에 의존성 관리 도구가 있으면 취약점 검사 실행:
+
+| 스택 | 명령 | 조건 |
+|------|------|------|
+| nodejs-typescript | `npm audit --audit-level=high` | package-lock.json 존재 |
+| spring-boot-* | `./gradlew dependencyCheckAnalyze` (OWASP) | 플러그인 설정 시 |
+| go | `govulncheck ./...` | govulncheck 설치 시 |
+
+**동작 규칙:**
+- 도구 미설치/미설정 시 조용히 스킵 (빌드 차단 안 함)
+- HIGH/CRITICAL 취약점 발견 시 경고 표시 + PR body에 포함
+- 취약점이 빌드를 차단하지는 않음 (정보 제공 목적)
+
+```
+### 의존성 취약점 검사
+⚠️ 취약점 발견: HIGH 2개, CRITICAL 0개
+- lodash@4.17.20: Prototype Pollution (HIGH)
+- express@4.17.1: Open Redirect (HIGH)
+
+권장: `npm audit fix` 또는 수동 업데이트
+```
+
 ### 6. 커밋 & 푸시
 ```bash
 git add .
@@ -133,6 +215,11 @@ gh pr create \
 ```
 
 ### 8. 상태 업데이트
+
+**backlog.json 쓰기 시 반드시 `skill-backlog`의 "backlog.json 쓰기 프로토콜" 준수:**
+- `metadata.version` 1 증가 + `metadata.updatedAt` 갱신
+- 쓰기 후 JSON 유효성 검증 필수
+
 `backlog.json` 업데이트:
 ```json
 {
@@ -140,6 +227,13 @@ gh pr create \
     {"number": 1, "status": "pr_created", "prNumber": 123}
   ]
 }
+```
+
+### 8.5 실행 로그 기록
+
+`skill-status`의 "실행 로그 프로토콜"에 따라 `.claude/state/execution-log.json`에 추가:
+```json
+{"timestamp": "{현재시각}", "taskId": "{taskId}", "skill": "skill-impl", "action": "pr_created", "details": {"prNumber": {number}, "stepNumber": {N}}}
 ```
 
 ### 9. skill-review-pr 자동 호출

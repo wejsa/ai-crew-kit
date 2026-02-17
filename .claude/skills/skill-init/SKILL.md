@@ -94,9 +94,7 @@ cat .claude/domains/_registry.json
 
 1. 🏦 fintech    — 결제/정산/금융 서비스
 2. 🛒 ecommerce  — 이커머스/마켓플레이스
-3. 🏥 healthcare — 의료/헬스케어 (beta)
-4. ☁️ saas       — SaaS/B2B 플랫폼 (beta)
-5. 🔧 general    — 범용 (도메인 특화 없음)
+3. 🔧 general    — 범용 (도메인 특화 없음)
 
 각 도메인은 맞춤형 참고자료, 체크리스트, 템플릿을 제공합니다.
 ```
@@ -218,6 +216,7 @@ cat .claude/domains/_registry.json
 {
   "metadata": {
     "lastTaskNumber": 0,
+    "version": 1,
     "createdAt": "{timestamp}",
     "updatedAt": "{timestamp}"
   },

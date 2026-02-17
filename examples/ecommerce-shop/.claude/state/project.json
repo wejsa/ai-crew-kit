@@ -1,0 +1,33 @@
+{
+  "name": "ecommerce-shop",
+  "description": "이커머스 온라인 쇼핑몰 서비스",
+  "domain": "ecommerce",
+  "techStack": {
+    "backend": "nodejs-typescript",
+    "frontend": "nextjs",
+    "database": "postgresql",
+    "cache": "redis",
+    "messageQueue": "none",
+    "infrastructure": "docker-compose"
+  },
+  "agents": {
+    "enabled": ["pm", "backend", "frontend", "code-reviewer", "qa"],
+    "disabled": ["planner", "docs", "db-designer", "devops"]
+  },
+  "conventions": {
+    "taskPrefix": "SHOP",
+    "branchStrategy": "git-flow",
+    "commitFormat": "conventional",
+    "prLineLimit": 500,
+    "testCoverage": 80,
+    "language": "ko"
+  },
+  "ports": {
+    "app": 3000,
+    "api": 4000,
+    "db": 5432,
+    "cache": 6379
+  },
+  "createdAt": "2026-02-15T00:00:00Z",
+  "kitVersion": "1.13.0"
+}

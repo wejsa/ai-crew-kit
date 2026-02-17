@@ -11,10 +11,78 @@ argument-hint: "{PR번호} [--auto-fix]"
 ## 실행 조건
 - 사용자가 `/skill-review-pr {번호}` 또는 "PR {번호} 리뷰해줘" 요청 시
 
+## 사전 조건 검증 (MUST-EXECUTE-FIRST)
+
+실패 시 즉시 중단 + 사용자 보고. 절대 다음 단계 진행 금지.
+
+```bash
+# [REQUIRED] 1. project.json 존재
+if [ ! -f ".claude/state/project.json" ]; then
+  echo "❌ project.json이 없습니다. /skill-init을 먼저 실행하세요."
+  exit 1
+fi
+
+# [REQUIRED] 2. backlog.json 존재 + 유효 JSON
+if [ ! -f ".claude/state/backlog.json" ]; then
+  echo "❌ backlog.json이 없습니다. /skill-init을 먼저 실행하세요."
+  exit 1
+fi
+cat .claude/state/backlog.json | python3 -c "import sys,json; json.load(sys.stdin)" 2>/dev/null || {
+  echo "❌ backlog.json이 유효한 JSON이 아닙니다."
+  exit 1
+}
+
+# [REQUIRED] 3. PR 번호 지정됨
+if [ -z "$PR_NUMBER" ]; then
+  echo "❌ PR 번호를 지정해주세요. 예: /skill-review-pr 123"
+  exit 1
+fi
+
+# [REQUIRED] 4. PR 존재 + OPEN 상태
+PR_STATE=$(gh pr view $PR_NUMBER --json state --jq '.state' 2>/dev/null)
+if [ "$PR_STATE" != "OPEN" ]; then
+  echo "❌ PR #$PR_NUMBER 이 OPEN 상태가 아닙니다 (현재: $PR_STATE)."
+  exit 1
+fi
+
+# [REQUIRED] 5. Draft가 아님
+IS_DRAFT=$(gh pr view $PR_NUMBER --json isDraft --jq '.isDraft' 2>/dev/null)
+if [ "$IS_DRAFT" == "true" ]; then
+  echo "❌ PR #$PR_NUMBER 은 Draft 상태입니다. Ready for review 후 재시도하세요."
+  exit 1
+fi
+```
+
 ## 명령어 옵션
 ```
 /skill-review-pr 123           # PR 리뷰
 /skill-review-pr 123 --auto-fix # CRITICAL 이슈 자동 수정 후 재리뷰
+```
+
+## 워크플로우 상태 추적
+
+스킬 진입/완료 시 해당 Task의 `workflowState`를 업데이트한다:
+
+**진입 시:**
+```json
+"workflowState": {
+  "currentSkill": "skill-review-pr",
+  "lastCompletedSkill": "skill-impl",
+  "prNumber": {PR 번호},
+  "autoChainArgs": "{--auto-fix 여부}",
+  "updatedAt": "{현재 시각}"
+}
+```
+
+**완료 시 (APPROVED):**
+```json
+"workflowState": {
+  "currentSkill": "skill-merge-pr",
+  "lastCompletedSkill": "skill-review-pr",
+  "prNumber": {PR 번호},
+  "autoChainArgs": "",
+  "updatedAt": "{현재 시각}"
+}
 ```
 
 ## 실행 플로우
@@ -234,6 +302,12 @@ fi
 # 변경 요청 (자기/타인 무관)
 gh pr review 123 --request-changes --body "위 이슈들 수정 후 재검토 요청드립니다."
 ```
+
+### 5.5 실행 로그 기록
+
+`skill-status`의 "실행 로그 프로토콜"에 따라 `.claude/state/execution-log.json`에 추가:
+- APPROVED 시: `{"action": "approved", "details": {"prNumber": {number}, "criticalCount": 0}}`
+- REQUEST_CHANGES 시: `{"action": "request_changes", "details": {"prNumber": {number}, "criticalCount": {N}}}`
 
 ### 6. skill-merge-pr 자동 호출 (승인 시)
 

@@ -351,6 +351,18 @@ rm -f .claude/temp/upgrade-state.json
 rm -rf "$UPGRADE_TMP"
 ```
 
+### Step 15: 프레임워크 검증 (skill-validate 자동 호출)
+
+업그레이드 완료 후 구조 무결성 자동 검증:
+
+```
+Skill tool 사용: skill="skill-validate"
+```
+
+- 검증 통과 시: 완료 리포트에 "✅ 검증 통과" 포함
+- 검증 실패 시: 경고 표시 + `--fix` 옵션 안내
+- 검증 실패가 업그레이드를 롤백하지는 않음
+
 **출력:**
 ```
 ## 업그레이드 완료: v{old} → v{new}

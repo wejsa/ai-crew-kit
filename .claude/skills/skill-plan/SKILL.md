@@ -278,6 +278,11 @@ Skill tool 사용: skill="skill-impl"
 
 ## Git 동기화 프로토콜
 
+**backlog.json 쓰기 시 반드시 `skill-backlog`의 "backlog.json 쓰기 프로토콜" 준수:**
+- `metadata.version` 1 증가 + `metadata.updatedAt` 갱신
+- 쓰기 후 JSON 유효성 검증 필수
+- 검증 실패 시 `git checkout -- .claude/state/backlog.json`으로 롤백
+
 상태 업데이트 시:
 ```bash
 # Worktree 감지

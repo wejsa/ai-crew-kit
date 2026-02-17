@@ -32,6 +32,16 @@ domain 값은 호출 시 프롬프트에서 전달됩니다.
 
 이슈 발견 시 수정 코드 예시를 포함하세요.
 
+### 의존성 취약점
+PR diff에 의존성 파일 변경(package.json, build.gradle, go.mod 등)이 포함된 경우:
+- 새로 추가된 의존성의 알려진 취약점 여부 검토
+- 버전 다운그레이드 시 경고
+- 심각도: 알려진 CRITICAL CVE → CRITICAL, HIGH CVE → MAJOR
+
+| 심각도 | 의존성 | 취약점 | 설명 |
+|--------|--------|--------|------|
+
 ### 요약
 - 컴플라이언스: CRITICAL {N}개, MAJOR {N}개, MINOR {N}개
 - 보안: CRITICAL {N}개, MAJOR {N}개, MINOR {N}개
+- 의존성: CRITICAL {N}개, MAJOR {N}개

@@ -1,4 +1,4 @@
-# AI Crew Kit v1.11.0
+# AI Crew Kit v1.13.0
 
 > 도메인 선택 → 자동 셋업 → 에이전트 팀 즉시 가동
 
@@ -279,7 +279,9 @@ claude
 ├── skills/           # 스킬 정의
 ├── domains/          # 도메인 템플릿
 │   ├── _registry.json  # 도메인 카탈로그
-│   ├── _base/          # 공통 체크리스트
+│   ├── _base/          # 공통 컨벤션 + 체크리스트
+│   │   ├── conventions/  # 개발 컨벤션 (9개)
+│   │   └── checklists/   # 리뷰 체크리스트
 │   ├── fintech/        # 핀테크 도메인
 │   ├── ecommerce/      # 이커머스 도메인
 │   └── general/        # 범용 도메인

@@ -11,13 +11,32 @@ argument-hint: "{PR번호}"
 ## 실행 조건
 - 사용자가 `/skill-merge-pr {번호}` 또는 "PR {번호} 머지해줘" 요청 시
 
-## 사전 조건 검증
+## 사전 조건 검증 (MUST-EXECUTE-FIRST)
 
-### 필수 조건
-1. **PR 승인 상태**: Approved (또는 자기 PR)
-2. **CI 통과**: 모든 체크 성공
-3. **충돌 없음**: Mergeable 상태
-4. **Draft 아님**: Ready for review
+실패 시 즉시 중단 + 사용자 보고. 절대 다음 단계 진행 금지.
+
+```bash
+# [REQUIRED] 1. project.json 존재
+if [ ! -f ".claude/state/project.json" ]; then
+  echo "❌ project.json이 없습니다. /skill-init을 먼저 실행하세요."
+  exit 1
+fi
+
+# [REQUIRED] 2. backlog.json 존재 + 유효 JSON
+if [ ! -f ".claude/state/backlog.json" ]; then
+  echo "❌ backlog.json이 없습니다. /skill-init을 먼저 실행하세요."
+  exit 1
+fi
+cat .claude/state/backlog.json | python3 -c "import sys,json; json.load(sys.stdin)" 2>/dev/null || {
+  echo "❌ backlog.json이 유효한 JSON이 아닙니다."
+  exit 1
+}
+
+# [REQUIRED] 3. PR 승인 상태: Approved (또는 자기 PR)
+# [REQUIRED] 4. CI 통과: 모든 체크 성공
+# [REQUIRED] 5. 충돌 없음: Mergeable 상태
+# [REQUIRED] 6. Draft 아님: Ready for review
+```
 
 ```bash
 # 상태 확인
@@ -33,6 +52,37 @@ IS_SELF_PR=$([[ "$PR_AUTHOR" == "$CURRENT_USER" ]] && echo "true" || echo "false
 - 자기 PR은 GitHub 정책상 승인 불가
 - `reviewDecision`이 `APPROVED`가 아니어도 머지 허용
 - 대신 **skill-review-pr에서 COMMENT 리뷰 완료** 확인
+
+## 워크플로우 상태 추적
+
+스킬 진입/완료 시 해당 Task의 `workflowState`를 업데이트한다:
+
+**진입 시:**
+```json
+"workflowState": {
+  "currentSkill": "skill-merge-pr",
+  "lastCompletedSkill": "skill-review-pr",
+  "prNumber": {PR 번호},
+  "autoChainArgs": "",
+  "updatedAt": "{현재 시각}"
+}
+```
+
+**완료 시 (다음 스텝 있음):**
+```json
+"workflowState": {
+  "currentSkill": "skill-impl",
+  "lastCompletedSkill": "skill-merge-pr",
+  "prNumber": null,
+  "autoChainArgs": "--next",
+  "updatedAt": "{현재 시각}"
+}
+```
+
+**완료 시 (마지막 스텝):**
+```json
+"workflowState": null
+```
 
 ## 실행 플로우
 
@@ -113,6 +163,11 @@ fi
 ```
 
 ### 4. 계획 파일 상태 업데이트
+
+**backlog.json 쓰기 시 반드시 `skill-backlog`의 "backlog.json 쓰기 프로토콜" 준수:**
+- `metadata.version` 1 증가 + `metadata.updatedAt` 갱신
+- 쓰기 후 JSON 유효성 검증 필수
+
 `.claude/temp/{taskId}-plan.md` 또는 `backlog.json` 업데이트:
 
 ```json
@@ -165,6 +220,12 @@ else
   git push origin develop
 fi
 ```
+
+### 5.5 실행 로그 기록
+
+`skill-status`의 "실행 로그 프로토콜"에 따라 `.claude/state/execution-log.json`에 추가:
+- 머지 시: `{"action": "merged", "details": {"prNumber": {number}, "stepNumber": {N}}}`
+- Task 완료 시: `{"action": "task_completed", "details": {"prNumber": {number}, "stepNumber": {N}}}`
 
 ### 6. 다음 스텝 자동 진행
 
