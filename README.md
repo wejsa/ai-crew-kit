@@ -1,4 +1,4 @@
-# AI Crew Kit v1.13.2
+# AI Crew Kit v1.14.0
 
 > 도메인 선택 → 자동 셋업 → 에이전트 팀 즉시 가동
 
@@ -122,6 +122,10 @@ claude
 | `/skill-impl` | 코드 구현 + PR 생성 | "개발 진행해줘" |
 | `/skill-review-pr` | PR 리뷰 | "PR 123 리뷰해줘" |
 | `/skill-merge-pr` | PR 머지 | "PR 123 머지해줘" |
+| `/skill-retro` | 완료 Task 회고 | "회고 해줘" |
+| `/skill-hotfix` | main 긴급 수정 | "긴급 수정해줘" |
+| `/skill-rollback` | 릴리스 롤백 | "v1.2.3 롤백해줘" |
+| `/skill-report` | 프로젝트 메트릭 리포트 | "리포트 생성해줘" |
 
 ### 전체 명령어 목록
 
@@ -140,6 +144,13 @@ claude
 | `/skill-fix {번호}` | CRITICAL 이슈 수정 |
 | `/skill-merge-pr {번호}` | PR 머지 |
 | `/skill-docs` | 참고자료 조회 |
+| `/skill-retro` | 완료 Task 회고 + 학습 반영 |
+| `/skill-retro {TASK-ID}` | 특정 Task 회고 |
+| `/skill-retro --summary` | 전체 회고 요약 |
+| `/skill-hotfix "{설명}"` | main 긴급 수정 |
+| `/skill-rollback {태그\|PR번호}` | 릴리스/PR 롤백 |
+| `/skill-report` | 프로젝트 메트릭 리포트 |
+| `/skill-report --full` | 전체 히스토리 리포트 |
 | `/skill-domain` | 도메인 관리 |
 | `/skill-upgrade` | 프레임워크 업그레이드 |
 | `/skill-upgrade --dry-run` | 변경 사항 미리보기 |
@@ -267,6 +278,8 @@ claude
 | **migration** | "마이그레이션 해줘" | 기획 → 개발 → 리뷰 |
 | **review-only** | "리뷰해줘" | 리뷰만 진행 |
 | **review-auto-fix** | "--auto-fix로 리뷰" | 리뷰 → CRITICAL 자동 수정 → 재리뷰 |
+| **hotfix** | "긴급 수정해줘" | main 핫픽스 → 패치 릴리스 |
+| **rollback** | "v1.2.3 롤백해줘" | git revert → 패치 릴리스 |
 | **docs-only** | "문서 업데이트해줘" | 문서 작업만 |
 
 ---
@@ -300,6 +313,10 @@ claude
 CLAUDE.md               # AI 에이전트 지시문
 README.md               # 프로젝트 README (템플릿 기반)
 VERSION                 # 프로젝트 버전 (0.1.0부터 시작)
+
+docs/
+├── retro/              # 회고 리포트 (skill-retro)
+└── reports/            # 메트릭 리포트 (skill-report)
 ```
 
 ---
@@ -405,6 +422,8 @@ agent-code-reviewer는 5가지 관점에서 통합 리뷰를 수행합니다.
 
 ```
 main (운영)
+  ├── hotfix/HOT-NNN-긴급수정 (main에서 분기 → main PR)
+  ├── revert/{대상} (main에서 분기 → main PR)
   └── develop (개발 통합)
         ├── feature/TASK-XXX-stepN (스텝별 개발)
         └── bugfix/BUG-XXX (버그 수정)

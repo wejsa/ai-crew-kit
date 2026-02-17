@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- skill-retro: 완료 Task 회고 분석 + 체크리스트/컨벤션 학습 반영
+- skill-hotfix: main 긴급 수정 + 보안 리뷰 + 패치 릴리스 + develop 백머지
+- skill-rollback: git revert 기반 릴리스/PR 롤백 + 리버트 PR 감사 추적
+- skill-report: 프로젝트 메트릭 리포트 (throughput, quality, code, health)
+- hotfix.yaml: 긴급 핫픽스 워크플로우 정의
+
+### Changed
+- skill-merge-pr: Task 완료 시 회고 실행 안내 추가
+- skill-status: 실행 로그 프로토콜에 신규 3개 스킬 항목 추가
+- CLAUDE.md.tmpl: 신규 4개 스킬 명령어/자연어/워크플로우 매핑 추가
+- backlog.schema.json: workflowState.currentSkill enum 확장
+- git-workflow.md: 핫픽스/롤백 브랜치 절차 상세 추가
+
 ## [1.13.2] - 2026-02-17
 
 ### Fixed

@@ -249,6 +249,9 @@ git fetch --dry-run origin 2>&1
 | skill-review-pr | `review_started`, `approved`, `request_changes` | `{prNumber, criticalCount}` |
 | skill-fix | `fix_started`, `fix_completed` | `{prNumber, issueCount}` |
 | skill-merge-pr | `merge_started`, `merged`, `task_completed` | `{prNumber, stepNumber}` |
+| skill-retro | `retro_started`, `retro_completed`, `checklist_updated` | `{reportFile}`, `{files}` |
+| skill-hotfix | `hotfix_started`, `hotfix_completed` | `{description}`, `{hotfixId, prNumber, version}` |
+| skill-rollback | `rollback_started`, `rollback_completed` | `{target}`, `{revertSha, prNumber, version}` |
 
 ### 쓰기 규칙
 - 각 스킬 완료 시 로그 항목 1개 추가 (append)

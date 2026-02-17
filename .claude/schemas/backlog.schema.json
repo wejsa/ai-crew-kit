@@ -205,7 +205,7 @@
       "properties": {
         "currentSkill": {
           "type": "string",
-          "enum": ["skill-plan", "skill-impl", "skill-review-pr", "skill-fix", "skill-merge-pr"],
+          "enum": ["skill-plan", "skill-impl", "skill-review-pr", "skill-fix", "skill-merge-pr", "skill-hotfix", "skill-rollback", "skill-retro"],
           "description": "현재 실행 중인 스킬"
         },
         "lastCompletedSkill": {

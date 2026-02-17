@@ -75,6 +75,10 @@ fi
 /skill-review-pr {num}  # PR 코드 리뷰
 /skill-merge-pr {num}   # PR 머지
 /skill-docs           # 참고자료
+/skill-retro          # 완료 Task 회고 + 학습 반영
+/skill-hotfix         # main 긴급 수정
+/skill-rollback       # 릴리스 롤백
+/skill-report         # 프로젝트 메트릭 리포트
 ```
 
 ---
@@ -93,6 +97,11 @@ fi
 | "{경로} 코드 리뷰해줘" | `/skill-review {경로}` | 코드 경로 종합 리뷰 |
 | "PR {번호} 리뷰해줘" | `/skill-review-pr {번호}` | PR 리뷰 |
 | "PR {번호} 머지해줘" | `/skill-merge-pr {번호}` | PR 머지 |
+| "회고 해줘" | `/skill-retro` | 최근 완료 Task 회고 |
+| "전체 회고 요약해줘" | `/skill-retro --summary` | 전체 회고 요약 |
+| "긴급 수정해줘: {설명}" | `/skill-hotfix "{설명}"` | main 긴급 수정 |
+| "{태그} 롤백해줘" | `/skill-rollback {태그}` | 릴리스/PR 롤백 |
+| "리포트 생성해줘" | `/skill-report` | 프로젝트 메트릭 리포트 |
 
 {{DOMAIN_DOCS_MAPPING}}
 
@@ -110,6 +119,10 @@ fi
 | skill-merge-pr | 남은 스텝 있음 | → skill-impl --next |
 | skill-merge-pr | 마지막 스텝 | Task 완료 처리 후 종료 |
 | skill-plan | 사용자 "Y" 승인 | → skill-impl |
+| skill-hotfix | - | 자동 체이닝 없음 (독립 실행) |
+| skill-rollback | - | 자동 체이닝 없음 (독립 실행) |
+| skill-retro | - | 자동 체이닝 없음 (독립 실행) |
+| skill-report | - | 자동 체이닝 없음 (독립 실행) |
 
 ### --all 옵션
 `/skill-impl --all` 사용 시 모든 스텝을 사용자 개입 없이 연속 실행.
@@ -246,6 +259,26 @@ Step 1 개발 -> PR 자동 생성
 마지막 스텝 머지 -> 전체 완료
 ```
 
+### 긴급 수정 워크플로우
+
+```
+"긴급 수정해줘: {설명}" 또는 "v1.2.3 롤백해줘"
+        │
+        ├── [수정] /skill-hotfix
+        │     ├── main에서 hotfix 브랜치 분기
+        │     ├── 코드 수정 + 빌드/테스트
+        │     ├── PR 생성 (--base main) + 보안 리뷰
+        │     ├── 머지 → 패치 버전 범프 → 태그
+        │     └── develop 백머지
+        │
+        └── [롤백] /skill-rollback
+              ├── main에서 revert 브랜치 분기
+              ├── git revert (히스토리 보존)
+              ├── Revert PR 생성 (--base main)
+              ├── 머지 → 패치 버전 범프 → 태그
+              └── develop 백머지
+```
+
 ---
 
 ## Git 브랜치 전략
@@ -253,10 +286,11 @@ Step 1 개발 -> PR 자동 생성
 ### 브랜치 구조
 ```
 main (운영)
+  ├── hotfix/HOT-NNN-긴급수정 (main에서 분기 → main PR)
+  ├── revert/{대상} (main에서 분기 → main PR)
   └── develop (개발 통합)
         ├── feature/{{TASK_PREFIX}}-XXX-stepN (스텝별 개발)
-        ├── bugfix/{{TASK_PREFIX}}-XXX-버그명 (버그 수정)
-        └── hotfix/{{TASK_PREFIX}}-XXX-긴급수정 (긴급 패치)
+        └── bugfix/{{TASK_PREFIX}}-XXX-버그명 (버그 수정)
 ```
 
 ### PR 규칙
@@ -332,7 +366,9 @@ docs/
 ├── api-specs/            # API 명세 (OpenAPI)
 ├── architecture/         # 아키텍처 문서
 ├── security/             # 보안 문서
-└── test-plans/           # 테스트 계획
+├── test-plans/           # 테스트 계획
+├── retro/                # 회고 리포트
+└── reports/              # 메트릭 리포트
 ```
 
 ---
