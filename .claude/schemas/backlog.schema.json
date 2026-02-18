@@ -58,7 +58,13 @@
         "type": "object",
         "properties": {
           "name": { "type": "string" },
-          "description": { "type": "string" }
+          "description": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["todo", "in_progress", "done"],
+            "default": "todo",
+            "description": "Phase 상태 — 소속 Task 기준 자동 갱신"
+          }
         }
       }
     },

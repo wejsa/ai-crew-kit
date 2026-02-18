@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.14.1] - 2026-02-18
+
+### Added
+- skill-plan: MUST-EXECUTE-FIRST 블록 추가 (project.json/backlog.json 검증 + origin/develop 동기화)
+- skill-status: --health에 backlog-completed 정합성 검증 추가
+- backlog.schema.json: phases에 status 필드 추가 (todo/in_progress/done 자동 갱신)
+
+### Changed
+- skill-impl: MUST-EXECUTE-FIRST에 origin/develop 동기화 검증 추가 (5커밋 초과 차단, 1~4 자동 머지)
+- skill-merge-pr: MUST-EXECUTE-FIRST에 origin/develop 동기화 검증 추가
+- skill-merge-pr: Task 완료 처리 순서 변경 (completed.json 먼저 → backlog.json → 교차 검증 → Phase 갱신 → 단일 커밋)
+- skill-merge-pr: backlog-completed 교차 검증 + 누락 자동 복구 로직 추가
+- skill-merge-pr: Phase 상태 자동 갱신 로직 추가 (소속 Task 기준)
+
 ## [1.14.0] - 2026-02-18
 
 ### Added

@@ -12,6 +12,40 @@ argument-hint: "[taskId]"
 - 사용자가 `/skill-plan` 또는 "다음 작업 가져와" 요청 시
 - 특정 Task 지정: `/skill-plan {taskId}`
 
+## 사전 조건 검증 (MUST-EXECUTE-FIRST)
+
+실패 시 즉시 중단 + 사용자 보고. 절대 다음 단계 진행 금지.
+
+```bash
+# [REQUIRED] 1. project.json 존재
+if [ ! -f ".claude/state/project.json" ]; then
+  echo "❌ project.json이 없습니다. /skill-init을 먼저 실행하세요."
+  exit 1
+fi
+
+# [REQUIRED] 2. backlog.json 존재 + 유효 JSON
+if [ ! -f ".claude/state/backlog.json" ]; then
+  echo "❌ backlog.json이 없습니다. /skill-init을 먼저 실행하세요."
+  exit 1
+fi
+cat .claude/state/backlog.json | python3 -c "import sys,json; json.load(sys.stdin)" 2>/dev/null || {
+  echo "❌ backlog.json이 유효한 JSON이 아닙니다."
+  exit 1
+}
+
+# [REQUIRED] 3. origin/develop 동기화 검증
+git fetch origin develop --quiet
+BEHIND=$(git rev-list --count HEAD..origin/develop)
+if [ "$BEHIND" -gt 5 ]; then
+  echo "❌ origin/develop보다 ${BEHIND}커밋 뒤처져 있습니다."
+  echo "→ git merge origin/develop 실행 후 재시도하세요."
+  exit 1
+elif [ "$BEHIND" -gt 0 ]; then
+  echo "⚠️ origin/develop보다 ${BEHIND}커밋 뒤처짐 — 자동 동기화 중..."
+  git merge origin/develop --no-edit
+fi
+```
+
 ## 실행 플로우
 
 ### 1. Task 선택

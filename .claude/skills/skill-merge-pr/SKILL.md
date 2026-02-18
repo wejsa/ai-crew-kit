@@ -36,6 +36,18 @@ cat .claude/state/backlog.json | python3 -c "import sys,json; json.load(sys.stdi
 # [REQUIRED] 4. CI 통과: 모든 체크 성공
 # [REQUIRED] 5. 충돌 없음: Mergeable 상태
 # [REQUIRED] 6. Draft 아님: Ready for review
+
+# [REQUIRED] 7. origin/develop 동기화 검증
+git fetch origin develop --quiet
+BEHIND=$(git rev-list --count HEAD..origin/develop)
+if [ "$BEHIND" -gt 5 ]; then
+  echo "❌ origin/develop보다 ${BEHIND}커밋 뒤처져 있습니다."
+  echo "→ git merge origin/develop 실행 후 재시도하세요."
+  exit 1
+elif [ "$BEHIND" -gt 0 ]; then
+  echo "⚠️ origin/develop보다 ${BEHIND}커밋 뒤처짐 — 자동 동기화 중..."
+  git merge origin/develop --no-edit
+fi
 ```
 
 ```bash
@@ -184,15 +196,7 @@ fi
 
 마지막 스텝 머지 완료 시:
 
-#### 5.1 backlog.json 업데이트
-```json
-{
-  "status": "done",
-  "completedAt": "{timestamp}"
-}
-```
-
-#### 5.2 completed.json에 이동
+#### 5.1 completed.json에 먼저 추가 (데이터 보존 우선)
 ```json
 {
   "{taskId}": {
@@ -205,12 +209,56 @@ fi
 }
 ```
 
-#### 5.3 계획 파일 삭제
+#### 5.2 backlog.json 업데이트
+```json
+{
+  "status": "done",
+  "completedAt": "{timestamp}"
+}
+```
+
+#### 5.3 교차 검증: backlog-completed 정합성
+
+```bash
+# backlog.json의 status=="done"인 모든 Task ID 수집
+# completed.json의 모든 Task ID 수집
+# 차집합(backlog done - completed) 존재 시:
+#   → 누락된 Task를 completed.json에 자동 복구
+#   → 경고 메시지 출력: "⚠️ {N}건 completed.json 누락 복구됨"
+```
+
+누락 복구 시 completed.json에 최소 정보를 자동 추가:
+```json
+{
+  "{taskId}": {
+    "id": "{taskId}",
+    "title": "{backlog에서 가져온 제목}",
+    "completedAt": "{backlog의 completedAt 또는 현재 시각}",
+    "steps": [],
+    "totalPRs": 0,
+    "recoveredAt": "{현재 시각}"
+  }
+}
+```
+
+#### 5.4 계획 파일 삭제
 ```bash
 rm .claude/temp/{taskId}-plan.md
 ```
 
-#### 5.4 커밋 & 푸시
+#### 5.5 Phase 상태 자동 갱신
+
+완료된 Task의 phase 번호를 확인하고, 해당 Phase에 속한 모든 Task의 상태를 조회:
+
+```
+완료된 Task의 phase 번호 확인
+해당 phase에 속한 모든 Task의 status 조회:
+- 전부 "done"     → phases[N].status = "done"
+- 하나라도 "in_progress" → phases[N].status = "in_progress"
+- 그 외           → phases[N].status = "todo"
+```
+
+#### 5.6 상태 파일 커밋 & 푸시 (단일 커밋으로 원자성 확보)
 ```bash
 git add .claude/state/
 git commit -m "chore: {taskId} 완료 처리"

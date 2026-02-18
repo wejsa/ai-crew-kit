@@ -123,6 +123,25 @@ git fetch --dry-run origin 2>&1
 | Git 원격 동기화 | ⚠️ | 2 커밋 behind origin/develop |
 | 도메인 레지스트리 | ✅ | 3 도메인 정상 |
 | 실행 로그 | ✅ | 최근 47건 |
+| backlog-completed 정합성 | ✅ | 일치 |
+```
+
+#### backlog-completed 정합성 검증
+
+```bash
+# backlog.json에서 status=="done"인 Task ID 목록
+# completed.json에서 Task ID 목록
+# 차이가 있으면:
+#   ⚠️ 정합성 불일치: backlog done {N}건 중 completed.json 미기록 {M}건
+#   → /skill-merge-pr 실행 시 자동 복구됩니다.
+```
+
+```
+### backlog-completed 정합성
+⚠️ 정합성 불일치: backlog done 15건 중 completed.json 미기록 2건
+  - TASK-005: backlog done, completed.json 누락
+  - TASK-011: backlog done, completed.json 누락
+→ /skill-merge-pr 실행 시 자동 복구됩니다.
 ```
 
 **문제 발견 시:**

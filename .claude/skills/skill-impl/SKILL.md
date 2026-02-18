@@ -51,6 +51,18 @@ fi
 
 # [REQUIRED] 5. 현재 스텝 상태: pending
 # backlog.json에서 steps[currentStep].status == "pending"
+
+# [REQUIRED] 6. origin/develop 동기화 검증
+git fetch origin develop --quiet
+BEHIND=$(git rev-list --count HEAD..origin/develop)
+if [ "$BEHIND" -gt 5 ]; then
+  echo "❌ origin/develop보다 ${BEHIND}커밋 뒤처져 있습니다."
+  echo "→ git merge origin/develop 실행 후 재시도하세요."
+  exit 1
+elif [ "$BEHIND" -gt 0 ]; then
+  echo "⚠️ origin/develop보다 ${BEHIND}커밋 뒤처짐 — 자동 동기화 중..."
+  git merge origin/develop --no-edit
+fi
 ```
 
 ### --next 사용 시 추가 조건
