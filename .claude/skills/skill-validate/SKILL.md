@@ -124,6 +124,41 @@ grep -oP 'skill="skill-[a-z-]+"' .claude/skills/*/SKILL.md
 - 각 step에 `name`, `skill` 필드 존재
 - 참조된 스킬 존재 확인
 
+### 8. [OPTIONAL] 커스텀 스킬 매니페스트 검증
+
+`.claude/skills/custom/*/SKILL.md` 파일의 구조 검증:
+
+```bash
+# 커스텀 스킬 디렉토리 순회
+if [ -d ".claude/skills/custom" ]; then
+  for skill_dir in .claude/skills/custom/skill-*/; do
+    [ -d "$skill_dir" ] || continue
+    skill_name=$(basename "$skill_dir")
+
+    # SKILL.md 존재 확인
+    if [ ! -f "$skill_dir/SKILL.md" ]; then
+      echo "FAIL: $skill_dir에 SKILL.md 없음"
+      continue
+    fi
+
+    # YAML 프론트매터 검증 (Category 1과 동일)
+    # name, description 필드 존재 확인
+  done
+fi
+```
+
+**검증 항목:**
+- 커스텀 스킬 디렉토리에 SKILL.md 존재
+- YAML 프론트매터 유효성 (name, description 필수)
+- CLAUDE.md CUSTOM_SECTION에 해당 스킬 등록 여부 → WARNING (미등록 시)
+- 빌트인 스킬과 이름 충돌 → ERROR
+
+**CLAUDE.md 등록 확인:**
+```bash
+# CLAUDE.md에서 커스텀 스킬 등록 확인
+grep -q "/skill-{name}" CLAUDE.md || echo "WARN: $skill_name이 CLAUDE.md에 등록되지 않음"
+```
+
 ## 출력 포맷
 
 ```
@@ -139,8 +174,9 @@ grep -oP 'skill="skill-[a-z-]+"' .claude/skills/*/SKILL.md
 | 교차 참조 | 20 | 0 | 0 |
 | 스키마 | 3 | 0 | 0 |
 | 워크플로우 | 6 | 0 | 0 |
+| 커스텀 스킬 | 2 | 0 | 0 |
 
-### 전체 결과: ✅ PASS (67 통과, 1 경고, 0 실패)
+### 전체 결과: ✅ PASS (69 통과, 1 경고, 0 실패)
 
 ### 경고 상세
 - ⚠️ [템플릿] 미사용 마커: {{CUSTOM_MARKER}} (TEMPLATE-ENGINE.md에 정의됨)

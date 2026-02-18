@@ -79,6 +79,9 @@ fi
 /skill-hotfix         # main 긴급 수정
 /skill-rollback       # 릴리스 롤백
 /skill-report         # 프로젝트 메트릭 리포트
+/skill-onboard        # 기존 프로젝트 온보딩
+/skill-estimate       # 작업 복잡도 추정
+/skill-create         # 커스텀 스킬 생성
 ```
 
 ---
@@ -102,6 +105,10 @@ fi
 | "긴급 수정해줘: {설명}" | `/skill-hotfix "{설명}"` | main 긴급 수정 |
 | "{태그} 롤백해줘" | `/skill-rollback {태그}` | 릴리스/PR 롤백 |
 | "리포트 생성해줘" | `/skill-report` | 프로젝트 메트릭 리포트 |
+| "이 프로젝트에 적용해줘" | `/skill-onboard` | 기존 프로젝트 온보딩 |
+| "이 작업 얼마나 걸려?" | `/skill-estimate {TASK-ID}` | 작업 복잡도 추정 |
+| "스프린트 플래닝 해줘" | `/skill-estimate --sprint` | 스프린트 플래닝 |
+| "커스텀 스킬 만들어줘: {name}" | `/skill-create {name}` | 커스텀 스킬 생성 |
 
 {{DOMAIN_DOCS_MAPPING}}
 
@@ -123,6 +130,9 @@ fi
 | skill-rollback | - | 자동 체이닝 없음 (독립 실행) |
 | skill-retro | - | 자동 체이닝 없음 (독립 실행) |
 | skill-report | - | 자동 체이닝 없음 (독립 실행) |
+| skill-onboard | - | 자동 체이닝 없음 (독립 실행) |
+| skill-estimate | - | 자동 체이닝 없음 (독립 실행) |
+| skill-create | - | 자동 체이닝 없음 (독립 실행) |
 
 ### --all 옵션
 `/skill-impl --all` 사용 시 모든 스텝을 사용자 개입 없이 연속 실행.

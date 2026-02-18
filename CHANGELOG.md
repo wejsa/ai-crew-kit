@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.15.0] - 2026-02-18
+
+### Added
+- skill-onboard: 기존 프로젝트 온보딩 (코드베이스 스캔 → 기술 스택 자동 감지 → 도메인 추천 → 설정 생성)
+- skill-create: 커스텀 스킬 스캐폴딩 (SKILL.md 생성 + CLAUDE.md CUSTOM_SECTION 자동 등록)
+- skill-estimate: 작업 복잡도 추정 (5팩터 분석 + completed.json 타임스탬프 기반 과거 데이터 보정)
+- .claude/skills/custom/: 커스텀 스킬 디렉토리 (.gitkeep 포함)
+- skill-validate: Category 8 커스텀 스킬 매니페스트 검증 추가
+
+### Changed
+- CLAUDE.md.tmpl: 신규 스킬 3개 등록 (명령어, 자연어 매핑 4건, 자동 체이닝 3건)
+- skill-upgrade: Step 11에 커스텀 스킬 보존 로직 추가 (custom/ 백업 → 프레임워크 교체 → custom/ 복원)
+
 ## [1.14.1] - 2026-02-18
 
 ### Added

@@ -259,6 +259,11 @@ echo '{"step":11,"backupDir":"'$BACKUP_DIR'","timestamp":"'$(date -Iseconds)'"}'
 
 **교체 대상 디렉토리:**
 ```bash
+# 커스텀 스킬 백업 (교체 전)
+if [ -d ".claude/skills/custom" ]; then
+  cp -r .claude/skills/custom "$BACKUP_DIR/skills-custom"
+fi
+
 # 삭제 → 복사 (디렉토리 단위)
 FRAMEWORK_DIRS=(".claude/agents" ".claude/skills" ".claude/domains" ".claude/templates" ".claude/schemas" ".claude/workflows" ".claude/docs")
 
@@ -269,6 +274,11 @@ for dir in "${FRAMEWORK_DIRS[@]}"; do
     cp -r "$UPGRADE_TMP/$dir" "$dir"
   fi
 done
+
+# 커스텀 스킬 복원 (교체 후)
+if [ -d "$BACKUP_DIR/skills-custom" ]; then
+  cp -r "$BACKUP_DIR/skills-custom" .claude/skills/custom
+fi
 ```
 
 **실패 시 자동 롤백:**

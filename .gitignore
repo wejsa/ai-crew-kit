@@ -61,3 +61,7 @@ coverage/
 
 # Docker
 docker-compose.override.yml
+
+# Internal planning docs
+docs/roadmap-*.md
+docs/tier1-*.md
