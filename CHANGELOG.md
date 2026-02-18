@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- skill-merge-pr: Intent 기반 원자적 다중 파일 업데이트 프로토콜 (세션 중단 복구)
+- skill-backlog: 동적 lockTTL (lockedFiles 수 기반 1~3시간 자동 산정)
+- backlog.schema.json: lockTTL 필드 추가 (3600~14400초)
+- skill-status: 실행 로그 아카이브 로테이션 절차 구체화 (500건 초과 시 자동 정리, 30일 보관)
+
+### Changed
+- skill-merge-pr: Task 완료 처리에 intent 파일 기반 복구 메커니즘 추가 (5.0~5.7단계)
+- skill-plan: 상태 업데이트에 lockTTL 산정 로직 추가 + Intent 복구 사전 점검 추가
+- skill-impl: assignedAt 연장 시 lockTTL 동적 재산정 + Intent 복구 사전 점검 추가
+- skill-status: lockTTL 표시를 동적 TTL로 변경 + --health에 orphan intent 감지 추가
+- 서브에이전트 5개 지시문 대폭 확충 (317→855줄): 심각도 판정, 도메인별 검증, 설계 프레임워크
+- agent-db-designer: CRITICAL/MAJOR/MINOR/INFO 심각도 판정 기준 + 출력 심각도 컬럼 추가
+- agent-qa: P1/P2/P3 → CRITICAL/MAJOR/MINOR 심각도 매핑 테이블 추가 (pr-reviewer-test 연동)
+- pr-reviewer-test: 심각도-우선순위 역방향 매핑 추가 (agent-qa 연동)
+- pr-reviewer-security: general 도메인 보안 검토 항목 추가 (6항목)
+- pr-reviewer-domain: general 도메인 중점 검토 항목 보강 (5항목)
+- agent-pm: 컨텍스트 전달 프로토콜 표준화 (파일 명명 규칙, 생산자-소비자 매핑, 충돌 해소)
+- docs-impact-analyzer, agent-qa, pr-reviewer-test: 에이전트 간 상호참조 관계 명시
+
 ## [1.15.0] - 2026-02-18
 
 ### Added

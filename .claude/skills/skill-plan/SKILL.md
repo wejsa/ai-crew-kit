@@ -46,6 +46,13 @@ elif [ "$BEHIND" -gt 0 ]; then
 fi
 ```
 
+## Intent 복구 (사전 점검)
+
+스킬 진입 시 `.claude/temp/*-complete-intent.json` 파일이 존재하면:
+1. `skill-merge-pr`의 "Intent 기반 복구" 절차에 따라 미완료 처리를 먼저 복구
+2. 복구 완료 후 정상 플로우 진행
+3. "⚠️ 이전 세션의 미완료 처리를 복구했습니다: {taskId}" 출력
+
 ## 실행 플로우
 
 ### 1. Task 선택
@@ -242,6 +249,7 @@ sequenceDiagram
   "status": "in_progress",
   "assignee": "dev@DESKTOP-ABC-20260203-143052",
   "assignedAt": "2026-02-03T14:30:52Z",
+  "lockTTL": 3600,
   "lockedFiles": ["src/auth/JwtService.kt", "src/auth/TokenValidator.kt"],
   "steps": [
     {"number": 1, "title": "...", "status": "pending", "files": ["JwtService.kt"]},
@@ -250,6 +258,15 @@ sequenceDiagram
   "currentStep": 1,
   "updatedAt": "{timestamp}"
 }
+```
+
+**lockTTL 산정** (`skill-backlog`의 "동적 TTL" 규칙 참조):
+```
+lockedFiles 수에 따라:
+- ≤ 3개 → lockTTL = 3600  (1시간)
+- 4~8개 → lockTTL = 7200  (2시간)
+- ≥ 9개 → lockTTL = 10800 (3시간)
+```
 ```
 
 ### 8. skill-impl 자동 호출

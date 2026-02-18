@@ -143,17 +143,38 @@ const executionChain = requiredAgents.filter(a => enabledAgents.includes(a));
 └────────────────────────────────────────────────────────┘
 ```
 
-### 4단계: 컨텍스트 전달
+### 4단계: 컨텍스트 전달 프로토콜
 
-에이전트 간 산출물은 임시 파일로 저장:
+에이전트 간 산출물은 임시 파일로 저장. **파일명 컨벤션을 반드시 준수**합니다.
 
 ```
 .claude/temp/workflow-{id}/
-├── step1-plan.md           # 설계 문서
-├── step2-pr-info.json      # PR 정보
-├── step3-review.md         # 리뷰 결과
-└── step4-test-report.md    # 테스트 리포트
+├── plan.md                 # skill-plan 설계 문서
+├── db-design.md            # agent-db-designer 분석 결과
+├── qa-suggestions.md       # agent-qa 테스트 설계 제안
+├── docs-impact.md          # docs-impact-analyzer 문서 영향도
+├── pr-info.json            # skill-impl PR 정보 (number, url, branch)
+├── review-security.md      # pr-reviewer-security 결과
+├── review-domain.md        # pr-reviewer-domain 결과
+├── review-test.md          # pr-reviewer-test 결과
+├── review-summary.md       # skill-review-pr 통합 리뷰 결과
+└── test-report.md          # 테스트 실행 리포트
 ```
+
+#### 에이전트 간 참조 규칙
+
+| 생산자 | 파일 | 소비자 | 용도 |
+|--------|------|--------|------|
+| agent-db-designer | db-design.md | agent-backend (skill-impl) | 스키마 구현 참조 |
+| agent-qa | qa-suggestions.md | pr-reviewer-test (skill-review-pr) | 제안된 테스트 구현 여부 확인 |
+| docs-impact-analyzer | docs-impact.md | agent-docs (skill-impl) | 문서 업데이트 우선순위 결정 |
+| pr-reviewer-* | review-*.md | skill-review-pr | 통합 리뷰 요약 생성 |
+
+#### 충돌 해결 규칙
+
+- **agent-qa vs pr-reviewer-test**: agent-qa가 제안, pr-reviewer-test가 검증. pr-reviewer-test가 최종 판단 권한.
+- **docs-impact-analyzer vs agent-docs**: docs-impact-analyzer가 영향도 분석, agent-docs가 최종 문서 작성. agent-docs가 최종 권한.
+- **서브에이전트 간 의견 충돌**: 심각도가 높은 의견을 우선. 동일 심각도면 통합 리뷰에서 PM이 판단.
 
 ---
 

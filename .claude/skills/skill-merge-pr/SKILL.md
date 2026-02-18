@@ -194,7 +194,25 @@ fi
 
 ### 5. Task 완료 처리 (마지막 스텝인 경우)
 
-마지막 스텝 머지 완료 시:
+마지막 스텝 머지 완료 시, **원자적 다중 파일 업데이트 프로토콜**을 따른다.
+
+#### 5.0 Intent 파일 생성 (복구 지점)
+
+모든 상태 파일 변경 전에 intent 파일을 먼저 생성한다.
+세션 중단 시 이 파일을 기반으로 완료 처리를 재개할 수 있다.
+
+```json
+// .claude/temp/{taskId}-complete-intent.json
+{
+  "taskId": "{taskId}",
+  "action": "task_complete",
+  "timestamp": "{현재 시각}",
+  "prNumber": {number},
+  "stepNumber": {N},
+  "pending": ["completed.json", "backlog.json", "execution-log.json", "plan-file"],
+  "done": []
+}
+```
 
 #### 5.1 completed.json에 먼저 추가 (데이터 보존 우선)
 ```json
@@ -208,6 +226,7 @@ fi
   }
 }
 ```
+→ intent의 `done`에 `"completed.json"` 추가, `pending`에서 제거
 
 #### 5.2 backlog.json 업데이트
 ```json
@@ -216,6 +235,7 @@ fi
   "completedAt": "{timestamp}"
 }
 ```
+→ intent의 `done`에 `"backlog.json"` 추가, `pending`에서 제거
 
 #### 5.3 교차 검증: backlog-completed 정합성
 
@@ -245,6 +265,7 @@ fi
 ```bash
 rm .claude/temp/{taskId}-plan.md
 ```
+→ intent의 `done`에 `"plan-file"` 추가, `pending`에서 제거
 
 #### 5.5 Phase 상태 자동 갱신
 
@@ -260,13 +281,36 @@ rm .claude/temp/{taskId}-plan.md
 
 #### 5.6 상태 파일 커밋 & 푸시 (단일 커밋으로 원자성 확보)
 ```bash
-git add .claude/state/
+git add .claude/state/ .claude/temp/
 git commit -m "chore: {taskId} 완료 처리"
 if [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
   git push -u origin HEAD
 else
   git push origin develop
 fi
+```
+
+#### 5.7 Intent 파일 삭제
+```bash
+rm .claude/temp/{taskId}-complete-intent.json
+```
+
+모든 상태 파일 업데이트가 커밋된 후에만 intent 파일을 삭제한다.
+
+#### Intent 기반 복구 (세션 재개 시)
+
+스킬 진입 시 `.claude/temp/*-complete-intent.json` 파일이 존재하면:
+
+```
+1. intent 파일 읽기
+2. pending 배열의 각 항목에 대해:
+   - "completed.json": completed.json에 taskId 존재 여부 확인 → 없으면 추가
+   - "backlog.json": backlog.json의 task status 확인 → "done" 아니면 변경
+   - "execution-log.json": 해당 action 로그 존재 여부 확인 → 없으면 추가
+   - "plan-file": 계획 파일 존재 시 삭제
+3. 복구 완료 후 커밋 & 푸시
+4. intent 파일 삭제
+5. "⚠️ 이전 세션의 미완료 처리를 복구했습니다: {taskId}" 출력
 ```
 
 ### 5.5 실행 로그 기록

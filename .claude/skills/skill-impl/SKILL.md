@@ -69,6 +69,13 @@ fi
 - [REQUIRED] 이전 스텝 PR이 머지되어 있어야 함
 - [REQUIRED] develop 최신 상태 동기화 (worktree 시 merge origin/develop)
 
+## Intent 복구 (사전 점검)
+
+스킬 진입 시 `.claude/temp/*-complete-intent.json` 파일이 존재하면:
+1. `skill-merge-pr`의 "Intent 기반 복구" 절차에 따라 미완료 처리를 먼저 복구
+2. 복구 완료 후 정상 플로우 진행
+3. "⚠️ 이전 세션의 미완료 처리를 복구했습니다: {taskId}" 출력
+
 ## 워크플로우 상태 추적
 
 스킬 진입/완료 시 해당 Task의 `workflowState`를 업데이트한다:
@@ -440,7 +447,10 @@ Step 2 개발 → PR 생성 → [skill-review-pr --auto-fix + docs 분석] → s
 
 장시간 작업 시 잠금 만료 방지:
 - 코드 수정/커밋 시 자동으로 `assignedAt` 갱신
-- 명시적 연장: `/skill-impl --extend-lock`
+- 명시적 연장: `/skill-impl --extend-lock` → `lockTTL`에 +3600초 추가 (최대 14400초=4시간)
+
+**동적 TTL 참조**: `skill-backlog`의 "동적 TTL" 규칙에 따라 `lockTTL` 값이 결정됨.
+스텝 전환 시(다음 스텝 시작) lockedFiles 수 변경에 맞춰 `lockTTL`도 재산정.
 
 ## 주의사항
 - 계획 파일 없이 구현 진행 금지

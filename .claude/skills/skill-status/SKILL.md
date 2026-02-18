@@ -144,6 +144,34 @@ git fetch --dry-run origin 2>&1
 → /skill-merge-pr 실행 시 자동 복구됩니다.
 ```
 
+#### Orphan Intent 감지
+
+`.claude/temp/` 디렉토리에서 `*-complete-intent.json` 파일을 검색:
+
+```bash
+ls .claude/temp/*-complete-intent.json 2>/dev/null
+```
+
+**Intent 파일 발견 시:**
+```
+### Orphan Intent 감지
+⚠️ 미완료 Task 완료 처리 발견: {N}건
+
+| Task ID | 액션 | 생성 시각 | pending 항목 |
+|---------|------|----------|-------------|
+| TASK-005 | task_complete | 2026-02-18 14:30 | backlog.json, plan-file |
+
+→ 다음 스킬 실행 시 자동 복구됩니다.
+→ 즉시 복구: `/skill-merge-pr` 실행
+```
+
+**Intent 파일 없음 시:**
+```
+| Orphan Intent | ✅ | 미완료 처리 없음 |
+```
+
+각 intent 파일의 `pending` 배열을 읽어 미처리 항목 수를 표시합니다.
+
 **문제 발견 시:**
 ```
 ### 시스템 건강 상태
@@ -216,7 +244,7 @@ git fetch --dry-run origin 2>&1
 
 **TASK-005** 🔴 만료
 - 할당: 2026-02-03 10:15 (5시간 38분 전)
-- ⚠️ lockTTL(1시간) 초과 - 인계 가능
+- ⚠️ lockTTL 초과 - 인계 가능 (동적 TTL: lockedFiles 수 기반)
 - 잠금 파일:
   - src/config/CacheConfig.kt
 ```
@@ -227,7 +255,7 @@ git fetch --dry-run origin 2>&1
 |------|------|--------|
 | 정상 | 남은시간 > 30분 | 🔄 |
 | 만료임박 | 남은시간 <= 30분 | ⚠️ |
-| 만료 | lockTTL 초과 | 🔴 |
+| 만료 | lockTTL 초과 (동적: 1~3시간) | 🔴 |
 
 ### 6. 실행 로그 확인
 
@@ -275,7 +303,24 @@ git fetch --dry-run origin 2>&1
 ### 쓰기 규칙
 - 각 스킬 완료 시 로그 항목 1개 추가 (append)
 - 파일 미존재 시 `[]`로 생성
-- 500건 초과 시 오래된 항목을 `.claude/state/execution-log-archive-{YYYYMMDD}.json`으로 이동
+- 500건 초과 시 아카이브 로테이션 실행 (아래 참조)
+
+### 아카이브 로테이션
+
+실행 로그가 500건을 초과하면 자동으로 정리:
+
+```
+1. 현재 execution-log.json 읽기
+2. 최근 200건만 유지 (배열 끝에서 200개)
+3. 나머지(오래된 항목)를 아카이브 파일로 이동:
+   .claude/state/execution-log-archive-{YYYYMMDD}.json
+4. execution-log.json을 최근 200건으로 덮어쓰기
+5. 30일 이상 된 아카이브 파일 삭제:
+   find .claude/state/ -name "execution-log-archive-*.json" -mtime +30 -delete
+```
+
+**로테이션 실행 시점**: 모든 스킬의 로그 쓰기 직후, 건수 확인 → 500건 초과 시 자동 실행.
+별도 스킬 호출 불필요.
 
 ### 읽기 규칙
 - `skill-status`에서 최근 10건 표시

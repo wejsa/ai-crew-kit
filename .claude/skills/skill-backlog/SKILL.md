@@ -160,8 +160,29 @@ argument-hint: "[list|add|update|priority] [options]"
 - `lockedFiles`로 파일 잠금 관리
 - 동일 파일 수정 Task는 순차 처리 권장
 
-### 잠금 만료
-- `assignedAt` + `lockTTL`(기본 1시간) 초과 시 만료
+### 잠금 만료 (동적 TTL)
+
+`lockTTL`은 스텝 복잡도에 따라 동적으로 산정:
+
+| 조건 | TTL | 근거 |
+|------|-----|------|
+| lockedFiles ≤ 3개 | 1시간 | 단순 스텝 |
+| lockedFiles 4~8개 | 2시간 | 중간 복잡도 |
+| lockedFiles 9개 이상 | 3시간 | 복잡한 스텝 |
+| `--extend-lock` 사용 | +1시간 | 수동 연장 (최대 4시간) |
+
+**산정 시점**: Task를 `in_progress`로 전환할 때 `lockTTL` 필드를 계산하여 저장.
+```json
+{
+  "assignedAt": "2026-02-03T14:30:52Z",
+  "lockTTL": 7200,
+  "lockedFiles": ["A.kt", "B.kt", "C.kt", "D.kt"]
+}
+```
+
+`lockTTL` 필드가 없는 기존 Task는 기본값 3600(1시간) 적용.
+
+**만료 판정**: `assignedAt` + `lockTTL`초 < 현재 시각 → 만료
 - 만료된 잠금은 `/skill-status`에서 경고 표시
 - 다른 세션에서 만료된 Task 인계 가능
 

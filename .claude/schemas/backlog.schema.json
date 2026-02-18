@@ -121,6 +121,13 @@
           "format": "date-time",
           "description": "할당 시각"
         },
+        "lockTTL": {
+          "type": ["integer", "null"],
+          "minimum": 3600,
+          "maximum": 14400,
+          "default": 3600,
+          "description": "잠금 만료 시간(초). lockedFiles 수 기반 동적 산정: ≤3→3600, 4~8→7200, ≥9→10800. --extend-lock 시 +3600 (최대 14400)"
+        },
         "lockedFiles": {
           "type": "array",
           "items": { "type": "string" },
