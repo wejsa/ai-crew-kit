@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.15.1] - 2026-02-19
+## [1.16.0] - 2026-02-19
 
 ### Added
 - skill-merge-pr: Intent 기반 원자적 다중 파일 업데이트 프로토콜 (세션 중단 복구)
