@@ -45,8 +45,14 @@ GIT_DIR=$(git rev-parse --git-dir 2>/dev/null)
 GIT_COMMON_DIR=$(git rev-parse --git-common-dir 2>/dev/null)
 if [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
   MAIN_REPO=$(git rev-parse --git-common-dir | sed 's/\/.git$//')
-  echo "❌ skill-release는 worktree에서 실행할 수 없습니다."
-  echo "메인 레포에서 실행하세요: $MAIN_REPO"
+  echo "❌ Worktree 환경에서는 release를 실행할 수 없습니다."
+  echo ""
+  echo "📌 이유: release는 main/develop 브랜치를 직접 조작하므로"
+  echo "   워크트리의 독립 브랜치 구조와 충돌합니다."
+  echo ""
+  echo "💡 대안:"
+  echo "  1. 메인 레포에서 실행: cd $MAIN_REPO"
+  echo "  2. Claude Squad에서: cs switch main → 실행 → cs switch back"
   exit 1
 fi
 
@@ -97,14 +103,31 @@ echo "새 버전: $NEW_VERSION"
 
 ### 3. 빌드 & 테스트 검증
 
-`.claude/state/project.json`의 `techStack.backend` 참조 (skill-impl 패턴 재사용).
+**빌드 명령어 결정** (`buildCommands` 우선 → `techStack` 폴백):
 
-| 스택 | 빌드 | 테스트 |
-|------|------|--------|
-| spring-boot-kotlin | `./gradlew build` | `./gradlew test` |
-| spring-boot-java | `./gradlew build` | `./gradlew test` |
-| nodejs-typescript | `npm run build` | `npm test` |
-| go | `go build ./...` | `go test ./...` |
+```bash
+# buildCommands 우선 참조
+BUILD_CMD=$(python3 -c "import json; d=json.load(open('.claude/state/project.json')); print(d.get('buildCommands',{}).get('build',''))" 2>/dev/null)
+TEST_CMD=$(python3 -c "import json; d=json.load(open('.claude/state/project.json')); print(d.get('buildCommands',{}).get('test',''))" 2>/dev/null)
+
+# 미설정 시 techStack 기반 폴백
+if [ -z "$BUILD_CMD" ]; then
+  STACK=$(python3 -c "import json; print(json.load(open('.claude/state/project.json')).get('techStack',{}).get('backend',''))")
+  case "$STACK" in
+    *spring*|*kotlin*|*java*)
+      BUILD_CMD="./gradlew build"; TEST_CMD="${TEST_CMD:-./gradlew test}";;
+    *node*|*typescript*|*express*|*nest*)
+      BUILD_CMD="npm run build"; TEST_CMD="${TEST_CMD:-npm test}";;
+    *go*)
+      BUILD_CMD="go build ./..."; TEST_CMD="${TEST_CMD:-go test ./...}";;
+    *)
+      echo "⚠️ 빌드 도구 미감지 - 수동 검증 필요";;
+  esac
+fi
+
+[ -n "$BUILD_CMD" ] && eval "$BUILD_CMD"
+[ -n "$TEST_CMD" ] && eval "$TEST_CMD"
+```
 
 **project.json 미존재 시**: 스킵 + `"ℹ️ project.json 없음 — 빌드/테스트 스킵"`
 **실패 시**: 즉시 중단 (파일 변경 전이므로 롤백 불필요)
@@ -296,6 +319,20 @@ git checkout develop
 ### 확인
 - [ ] GitHub에서 태그 확인: https://github.com/{owner}/{repo}/releases/tag/v1.2.0
 - [ ] main 브랜치 확인
+```
+
+### 실패
+```
+## ❌ 릴리스 실패
+
+### 단계
+{실패한 단계}
+
+### 에러
+{에러 메시지}
+
+### 복구 방법
+{복구 절차}
 ```
 
 ## 주의사항

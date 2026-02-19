@@ -99,14 +99,21 @@ Task tool (subagent_type: "general-purpose", run_in_background: true, descriptio
     요구사항: {specFile 내용 요약}
 ```
 
+**서브에이전트 호출 프로토콜:**
+| 항목 | 값 |
+|------|-----|
+| timeout | 60초 (TaskOutput timeout: 60000) |
+| retry | 0회 (재시도 없이 1회 실행) |
+| fallback | "⚠️ DB 설계 분석 불가 — 수동 확인 필요" + 메인 컨텍스트에서 직접 작성 |
+| partial_result | 형식 불일치 시 원문 그대로 포함 + ⚠️ 마크 |
+
 **결과 수거:**
-- 섹션 3 설계 분석 완료 후 TaskOutput으로 db-designer Task 결과 확인
+- 섹션 3 설계 분석 완료 후 TaskOutput(timeout: 60000)으로 db-designer Task 결과 확인
 - 결과가 준비되면 계획 파일의 "데이터 모델" 섹션에 통합
-- Task 미완료 시 최대 30초 대기 후 타임아웃 처리
 
 **오류 처리:**
-- Task 실패/타임아웃 시: 계획 파일 데이터 모델 섹션에 "DB 설계 분석 불가 - 메인 컨텍스트에서 직접 작성" 표기
-- Task 결과 형식 불일치 시: 텍스트 그대로 포함
+- Task 실패/타임아웃 시: 계획 파일에 "⚠️ DB 설계 분석 불가 — 수동 확인 필요" 표기 후 진행
+- Task 결과 형식 불일치 시: 원문 그대로 포함 + ⚠️ 마크
 - agents.enabled에 미포함 시: Task 호출 스킵, 메인 컨텍스트에서 직접 작성
 
 ### 3. 설계 분석
@@ -314,10 +321,10 @@ Skill tool 사용: skill="skill-impl"
 설계와 스텝 계획을 검토해주세요.
 승인하시면 개발을 시작합니다.
 
-승인하시겠습니까? (Y/N)
+승인하시겠습니까?
 
 > Y: 상태 업데이트 후 `/skill-impl` 자동 실행 (Step 1 시작)
-> N: 계획 수정
+> 수정사항 입력: 해당 부분만 반영하여 계획 수정 (예: "Step 2 파일 분리해줘", "API 응답 형식 변경")
 ```
 
 ## 라인 수 가이드라인

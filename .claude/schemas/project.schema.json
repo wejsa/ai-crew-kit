@@ -147,6 +147,25 @@
       },
       "additionalProperties": false
     },
+    "buildCommands": {
+      "type": "object",
+      "description": "빌드/테스트/린트 명령어 설정. 미지정 시 techStack 기반 자동 결정.",
+      "properties": {
+        "build": {
+          "type": "string",
+          "description": "빌드 명령어 (예: ./gradlew build, npm run build, go build ./...)"
+        },
+        "test": {
+          "type": "string",
+          "description": "테스트 명령어 (예: ./gradlew test, npm test, go test ./...)"
+        },
+        "lint": {
+          "type": "string",
+          "description": "린트 명령어 (예: ./gradlew ktlintCheck, npm run lint, golangci-lint run)"
+        }
+      },
+      "additionalProperties": false
+    },
     "ports": {
       "type": "object",
       "description": "서비스 포트 설정",
@@ -233,6 +252,11 @@
         "prLineLimit": 500,
         "testCoverage": 80,
         "language": "ko"
+      },
+      "buildCommands": {
+        "build": "./gradlew build",
+        "test": "./gradlew test",
+        "lint": "./gradlew ktlintCheck"
       },
       "ports": {
         "gateway": 10080,

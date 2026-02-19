@@ -137,10 +137,18 @@ fi
 ### --all 옵션
 `/skill-impl --all` 사용 시 모든 스텝을 사용자 개입 없이 연속 실행.
 
+### 루프 가드
+- skill-fix → skill-review-pr 루프: **최대 2회**
+  - 1회: skill-review-pr → CRITICAL → skill-fix → skill-review-pr (재리뷰)
+  - 2회: 재리뷰 → CRITICAL → skill-fix → skill-review-pr (최종 리뷰)
+  - 3회째 CRITICAL 발견 시: REQUEST_CHANGES 출력 후 **즉시 중단** (수동 개입 필요)
+- 카운트 기준: 같은 PR에 대한 skill-fix 호출 횟수
+
 ### 중단 조건 (이 경우에만 멈추고 사용자에게 보고)
 - CRITICAL 이슈 auto-fix 실패
 - 빌드 실패 (3회 재시도 후)
 - 라인 수 700 초과 (스텝 분리 필요)
+- skill-fix → skill-review-pr 루프 2회 초과 (루프 가드 발동)
 
 ### 금지 사항
 - 자동 호출 대상인데 "진행할까요?" 질문하며 멈추기 **금지**

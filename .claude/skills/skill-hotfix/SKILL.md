@@ -45,8 +45,15 @@ fi
 GIT_DIR=$(git rev-parse --git-dir 2>/dev/null)
 GIT_COMMON_DIR=$(git rev-parse --git-common-dir 2>/dev/null)
 if [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
+  MAIN_REPO=$(git rev-parse --git-common-dir | sed 's/\/.git$//')
   echo "❌ Worktree 환경에서는 hotfix를 실행할 수 없습니다."
-  echo "메인 레포지토리에서 실행해주세요: $(git rev-parse --git-common-dir)"
+  echo ""
+  echo "📌 이유: hotfix는 main/develop 브랜치를 직접 조작하므로"
+  echo "   워크트리의 독립 브랜치 구조와 충돌합니다."
+  echo ""
+  echo "💡 대안:"
+  echo "  1. 메인 레포에서 실행: cd $MAIN_REPO"
+  echo "  2. Claude Squad에서: cs switch main → 실행 → cs switch back"
   exit 1
 fi
 ```
@@ -98,20 +105,26 @@ git checkout -b "$BRANCH_NAME"
 ### 4. 빌드/테스트 검증
 
 ```bash
-# project.json에서 스택 확인 후 빌드
-STACK=$(python3 -c "import json; print(json.load(open('.claude/state/project.json')).get('techStack',{}).get('backend',''))")
+# buildCommands 우선 참조 → techStack 폴백
+BUILD_CMD=$(python3 -c "import json; d=json.load(open('.claude/state/project.json')); print(d.get('buildCommands',{}).get('build',''))" 2>/dev/null)
+TEST_CMD=$(python3 -c "import json; d=json.load(open('.claude/state/project.json')); print(d.get('buildCommands',{}).get('test',''))" 2>/dev/null)
 
-case "$STACK" in
-  *spring*|*kotlin*|*java*)
-    ./gradlew build test
-    ;;
-  *node*|*typescript*|*express*|*nest*)
-    npm test
-    ;;
-  *)
-    echo "⚠️ 빌드 도구 미감지 - 수동 검증 필요"
-    ;;
-esac
+if [ -z "$BUILD_CMD" ]; then
+  STACK=$(python3 -c "import json; print(json.load(open('.claude/state/project.json')).get('techStack',{}).get('backend',''))")
+  case "$STACK" in
+    *spring*|*kotlin*|*java*)
+      BUILD_CMD="./gradlew build"; TEST_CMD="${TEST_CMD:-./gradlew test}";;
+    *node*|*typescript*|*express*|*nest*)
+      BUILD_CMD="npm run build"; TEST_CMD="${TEST_CMD:-npm test}";;
+    *go*)
+      BUILD_CMD="go build ./..."; TEST_CMD="${TEST_CMD:-go test ./...}";;
+    *)
+      echo "⚠️ 빌드 도구 미감지 - 수동 검증 필요";;
+  esac
+fi
+
+[ -n "$BUILD_CMD" ] && eval "$BUILD_CMD"
+[ -n "$TEST_CMD" ] && eval "$TEST_CMD"
 ```
 
 ### 5. 커밋

@@ -152,7 +152,36 @@ git diff --stat
 
 ### 5. 빌드 & 테스트
 
-**스택별 빌드 명령** (`.claude/state/project.json`의 `techStack.backend` 참조):
+**빌드 명령어 결정** (`buildCommands` 우선 → `techStack` 폴백):
+
+```bash
+# 1단계: project.json의 buildCommands 확인
+BUILD_CMD=$(python3 -c "import json; d=json.load(open('.claude/state/project.json')); print(d.get('buildCommands',{}).get('build',''))" 2>/dev/null)
+TEST_CMD=$(python3 -c "import json; d=json.load(open('.claude/state/project.json')); print(d.get('buildCommands',{}).get('test',''))" 2>/dev/null)
+LINT_CMD=$(python3 -c "import json; d=json.load(open('.claude/state/project.json')); print(d.get('buildCommands',{}).get('lint',''))" 2>/dev/null)
+
+# 2단계: 미설정 시 techStack 기반 폴백
+if [ -z "$BUILD_CMD" ]; then
+  STACK=$(python3 -c "import json; print(json.load(open('.claude/state/project.json')).get('techStack',{}).get('backend',''))")
+  case "$STACK" in
+    *spring*|*kotlin*|*java*)
+      BUILD_CMD="./gradlew build"; TEST_CMD="${TEST_CMD:-./gradlew test}"; LINT_CMD="${LINT_CMD:-./gradlew ktlintCheck}";;
+    *node*|*typescript*|*express*|*nest*)
+      BUILD_CMD="npm run build"; TEST_CMD="${TEST_CMD:-npm test}"; LINT_CMD="${LINT_CMD:-npm run lint}";;
+    *go*)
+      BUILD_CMD="go build ./..."; TEST_CMD="${TEST_CMD:-go test ./...}"; LINT_CMD="${LINT_CMD:-golangci-lint run}";;
+    *)
+      echo "⚠️ 빌드 도구 미감지 - 수동 검증 필요";;
+  esac
+fi
+
+# 3단계: 실행
+[ -n "$BUILD_CMD" ] && eval "$BUILD_CMD"
+[ -n "$TEST_CMD" ] && eval "$TEST_CMD"
+[ -n "$LINT_CMD" ] && eval "$LINT_CMD"
+```
+
+**폴백 테이블** (buildCommands 미설정 시 참조):
 
 | 스택 | 빌드 | 테스트 | 린트 |
 |------|------|--------|------|
@@ -160,13 +189,6 @@ git diff --stat
 | spring-boot-java | `./gradlew build` | `./gradlew test` | `./gradlew checkstyleMain` |
 | nodejs-typescript | `npm run build` | `npm test` | `npm run lint` |
 | go | `go build ./...` | `go test ./...` | `golangci-lint run` |
-
-```bash
-# Spring Boot (Kotlin) 예시
-./gradlew build
-./gradlew test
-./gradlew ktlintCheck
-```
 
 실패 시:
 - 오류 분석 및 수정
@@ -290,10 +312,18 @@ Task tool (subagent_type: "general-purpose", run_in_background: true, descriptio
     {git diff --stat 결과}
 ```
 
+**서브에이전트 호출 프로토콜:**
+| 항목 | 값 |
+|------|-----|
+| timeout | 60초 (TaskOutput timeout: 60000) |
+| retry | 0회 (재시도 없이 1회 실행) |
+| fallback | "⚠️ 문서 영향도 분석 불가 — 수동 확인 필요" + 진행 |
+| partial_result | 형식 불일치 시 원문 그대로 포함 + ⚠️ 마크 |
+
 **동작 규칙:**
 - skill-review-pr 호출과 **병렬 실행** (메인 플로우 차단 금지)
 - 분석 완료 후 문서 업데이트 필요 시 출력에 `📝 문서 업데이트 권장` 알림 포함
-- Task 실패 시 무시하고 진행 (백그라운드이므로 메인 플로우 영향 없음)
+- Task 실패/타임아웃 시: "⚠️ 문서 영향도 분석 불가 — 수동 확인 필요" 출력 후 진행
 
 ### 10.5 테스트 품질 분석 (백그라운드 Task)
 
@@ -314,10 +344,18 @@ Task tool (subagent_type: "general-purpose", run_in_background: true, descriptio
     {git diff --stat 결과}
 ```
 
+**서브에이전트 호출 프로토콜:**
+| 항목 | 값 |
+|------|-----|
+| timeout | 60초 (TaskOutput timeout: 60000) |
+| retry | 0회 (재시도 없이 1회 실행) |
+| fallback | "⚠️ 테스트 품질 분석 불가 — 수동 확인 필요" + 진행 |
+| partial_result | 형식 불일치 시 원문 그대로 포함 + ⚠️ 마크 |
+
 **동작 규칙:**
 - docs-impact-analyzer와 **동시에 병렬 실행** (메인 플로우 차단 금지)
 - `run_in_background: true` 사용
-- Task 실패 시 무시하고 진행 (백그라운드이므로 메인 플로우 영향 없음)
+- Task 실패/타임아웃 시: "⚠️ 테스트 품질 분석 불가 — 수동 확인 필요" 출력 후 진행
 - agents.enabled에 미포함 시: Task 호출 스킵
 
 ## 출력 포맷

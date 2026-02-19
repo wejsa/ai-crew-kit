@@ -107,9 +107,17 @@ gh api repos/{owner}/{repo}/pulls/{number}/comments
 
 ### 4. 빌드 검증
 ```bash
-# 프로젝트 스택에 따라
-./gradlew build   # Spring Boot
-npm run build     # Node.js
+# buildCommands 우선 참조 → techStack 폴백
+BUILD_CMD=$(python3 -c "import json; d=json.load(open('.claude/state/project.json')); print(d.get('buildCommands',{}).get('build',''))" 2>/dev/null)
+if [ -z "$BUILD_CMD" ]; then
+  STACK=$(python3 -c "import json; print(json.load(open('.claude/state/project.json')).get('techStack',{}).get('backend',''))")
+  case "$STACK" in
+    *spring*|*kotlin*|*java*) BUILD_CMD="./gradlew build";;
+    *node*|*typescript*|*express*|*nest*) BUILD_CMD="npm run build";;
+    *go*) BUILD_CMD="go build ./...";;
+  esac
+fi
+[ -n "$BUILD_CMD" ] && eval "$BUILD_CMD"
 ```
 
 실패 시:
@@ -118,8 +126,16 @@ npm run build     # Node.js
 
 ### 5. 테스트 검증
 ```bash
-./gradlew test    # Spring Boot
-npm test          # Node.js
+TEST_CMD=$(python3 -c "import json; d=json.load(open('.claude/state/project.json')); print(d.get('buildCommands',{}).get('test',''))" 2>/dev/null)
+if [ -z "$TEST_CMD" ]; then
+  STACK=$(python3 -c "import json; print(json.load(open('.claude/state/project.json')).get('techStack',{}).get('backend',''))")
+  case "$STACK" in
+    *spring*|*kotlin*|*java*) TEST_CMD="./gradlew test";;
+    *node*|*typescript*|*express*|*nest*) TEST_CMD="npm test";;
+    *go*) TEST_CMD="go test ./...";;
+  esac
+fi
+[ -n "$TEST_CMD" ] && eval "$TEST_CMD"
 ```
 
 실패 시:
@@ -146,16 +162,35 @@ git push
 {"timestamp": "{현재시각}", "taskId": "{taskId}", "skill": "skill-fix", "action": "fix_completed", "details": {"prNumber": {number}, "issueCount": {N}}}
 ```
 
-### 7. skill-review-pr 재호출
+### 7. skill-review-pr 재호출 (루프 가드 적용)
+
+**루프 가드 확인:**
+같은 PR에 대한 skill-fix 호출 횟수를 카운트한다.
+```bash
+# PR 코멘트에서 "fix: 코드 리뷰 피드백 반영" 커밋 수 확인
+FIX_COUNT=$(git log --oneline --grep="fix: 코드 리뷰 피드백 반영" origin/$(gh pr view {number} --json headRefName --jq '.headRefName')..HEAD 2>/dev/null | wc -l)
+# 또는 현재 세션의 skill-fix 호출 횟수 추적
+```
+
+**분기 처리:**
+| fix 횟수 | 재호출 방식 | 설명 |
+|----------|-----------|------|
+| 1회 (첫 수정) | `skill-review-pr {prNumber} --auto-fix` | 재수정 기회 1회 더 부여 |
+| 2회 (최종 수정) | `skill-review-pr {prNumber}` (--auto-fix 없음) | CRITICAL 남으면 REQUEST_CHANGES |
+| 3회 이상 | 호출 금지 | 이 상태에 도달하면 안 됨 (루프 가드 발동) |
 
 **반드시 Skill tool 사용:**
 ```
+# fix 횟수 1회일 때
+Skill tool 사용: skill="skill-review-pr", args="{prNumber} --auto-fix"
+
+# fix 횟수 2회일 때
 Skill tool 사용: skill="skill-review-pr", args="{prNumber}"
 ```
 
 **중요:**
-- --auto-fix 플래그 없이 재호출 (무한루프 방지)
-- 재리뷰에서 CRITICAL 남아있으면 REQUEST_CHANGES로 종료
+- 루프 가드 최대 2회: 3회째 skill-fix 호출은 금지
+- 2회째 fix 후에는 --auto-fix 없이 재호출 (CRITICAL 남으면 REQUEST_CHANGES로 종료)
 
 ## 출력 포맷
 

@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.17.0] - 2026-02-19
+
+### Added
+- project.schema.json: `buildCommands` 프로퍼티 추가 (build/test/lint 명령어 외부 설정)
+- skill-onboard: 빌드 명령어 자동 감지 로직 (Step 1.6) + project.json 저장
+- CLAUDE.md.tmpl: 루프 가드 규칙 추가 (skill-fix→skill-review-pr 최대 2회)
+
+### Changed
+- skill-hotfix: 워크트리 에러 메시지에 이유/대안 추가 (📌 이유 + 💡 대안)
+- skill-rollback: 워크트리 에러 메시지에 이유/대안 추가 (📌 이유 + 💡 대안)
+- skill-release: 워크트리 에러 메시지에 이유/대안 추가 + 실패 출력 포맷 표준화
+- skill-plan: 승인 메시지를 "Y/N" → "Y/수정사항 입력"으로 변경 (부분 수정 지원)
+- skill-plan: DB 설계 서브에이전트 호출 프로토콜 표준화 (timeout 60초, fallback, retry 0)
+- skill-review-pr: 3종 리뷰 서브에이전트 호출 프로토콜 표준화 (timeout 60초, fallback, retry 0)
+- skill-impl: docs/QA 서브에이전트 호출 프로토콜 표준화 (timeout 60초, fallback, retry 0)
+- skill-impl: 빌드 명령어를 buildCommands 우선 참조 → techStack 폴백으로 변경
+- skill-hotfix: 빌드 명령어를 buildCommands 우선 참조 → techStack 폴백으로 변경
+- skill-rollback: 빌드 명령어를 buildCommands 우선 참조 → techStack 폴백으로 변경
+- skill-release: 빌드 명령어를 buildCommands 우선 참조 → techStack 폴백으로 변경
+- skill-fix: 빌드/테스트 명령어를 buildCommands 우선 참조 → techStack 폴백으로 변경
+- skill-fix: 루프 가드 적용 (fix 횟수 기반 --auto-fix 재호출 제어)
+- skill-onboard: 실패 출력 포맷 표준화 (❌ 실패 / 단계 / 에러 / 복구 방법)
+
 ## [1.16.0] - 2026-02-19
 
 ### Added

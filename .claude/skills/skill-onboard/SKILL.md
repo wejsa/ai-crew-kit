@@ -131,7 +131,52 @@ fi
 # Dockerfile만 존재 → docker-compose (기본)
 ```
 
-#### 1.6 도메인 추천
+#### 1.6 빌드 명령어 감지
+
+감지된 빌드 시스템을 기반으로 `buildCommands`를 자동 설정:
+
+```bash
+# 감지된 백엔드 스택 기반 빌드 명령어 결정
+case "$DETECTED_BACKEND" in
+  *spring*|*kotlin*)
+    DETECTED_BUILD="./gradlew build"
+    DETECTED_TEST="./gradlew test"
+    DETECTED_LINT="./gradlew ktlintCheck"
+    ;;
+  *java*)
+    DETECTED_BUILD="./gradlew build"
+    DETECTED_TEST="./gradlew test"
+    DETECTED_LINT="./gradlew checkstyleMain"
+    ;;
+  *node*|*typescript*)
+    DETECTED_BUILD="npm run build"
+    DETECTED_TEST="npm test"
+    DETECTED_LINT="npm run lint"
+    # package.json scripts에서 실제 명령어 확인
+    if [ -f "package.json" ]; then
+      # build 스크립트가 없으면 빈 값
+      HAS_BUILD=$(python3 -c "import json; s=json.load(open('package.json')).get('scripts',{}); print(s.get('build',''))")
+      [ -z "$HAS_BUILD" ] && DETECTED_BUILD=""
+    fi
+    ;;
+  *go*)
+    DETECTED_BUILD="go build ./..."
+    DETECTED_TEST="go test ./..."
+    DETECTED_LINT="golangci-lint run"
+    ;;
+esac
+```
+
+**Maven 프로젝트 추가 감지:**
+```bash
+if [ -f "pom.xml" ]; then
+  DETECTED_BUILD="mvn package"
+  DETECTED_TEST="mvn test"
+  DETECTED_LINT=""
+fi
+```
+
+#### 1.7 도메인 추천
 
 도메인 레지스트리의 `keywords`와 프로젝트 파일명/디렉토리명/README 내용을 매칭:
 
@@ -152,7 +197,7 @@ fi
 - README/설명 매칭: 1점
 - 최고 점수 도메인을 추천, 동점이면 general
 
-#### 1.7 기존 구조 분석
+#### 1.8 기존 구조 분석
 
 ```bash
 # 소스 코드 규모
@@ -179,6 +224,13 @@ ls README.md 2>/dev/null
 | 데이터베이스 | postgresql | MEDIUM (docker-compose) |
 | 캐시 | redis | MEDIUM (docker-compose) |
 | 인프라 | docker-compose | HIGH (docker-compose.yml) |
+
+### 감지된 빌드 명령어
+| 항목 | 명령어 | 감지 근거 |
+|------|--------|----------|
+| 빌드 | {DETECTED_BUILD} | {감지 근거} |
+| 테스트 | {DETECTED_TEST} | {감지 근거} |
+| 린트 | {DETECTED_LINT} | {감지 근거} |
 
 ### 도메인 추천
 | 도메인 | 매칭 점수 | 매칭 키워드 |
@@ -241,7 +293,7 @@ fi
 
 skill-init Step 6과 동일한 파일 생성:
 
-1. **project.json** — 스캔 결과 + 사용자 확인 기반
+1. **project.json** — 스캔 결과 + 사용자 확인 기반 (감지된 `buildCommands` 포함)
 2. **backlog.json** — 빈 상태로 초기화
 3. **CLAUDE.md** — 템플릿 기반 생성
 4. **README.md** — 템플릿 기반 생성
@@ -293,6 +345,20 @@ fi
 1. 기존 기능을 Task로 등록: `/skill-feature "기능명"`
 2. 백로그 확인: `/skill-backlog`
 3. 작업 시작: `/skill-plan`
+```
+
+### 실패
+```
+## ❌ 온보딩 실패
+
+### 단계
+{실패한 단계}
+
+### 에러
+{에러 메시지}
+
+### 복구 방법
+{복구 절차}
 ```
 
 ## 자동 체이닝
