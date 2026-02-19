@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.15.1] - 2026-02-19
+
 ### Added
 - skill-merge-pr: Intent 기반 원자적 다중 파일 업데이트 프로토콜 (세션 중단 복구)
 - skill-backlog: 동적 lockTTL (lockedFiles 수 기반 1~3시간 자동 산정)
@@ -23,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - agent-qa: P1/P2/P3 → CRITICAL/MAJOR/MINOR 심각도 매핑 테이블 추가 (pr-reviewer-test 연동)
 - pr-reviewer-test: 심각도-우선순위 역방향 매핑 추가 (agent-qa 연동)
 - pr-reviewer-security: general 도메인 보안 검토 항목 추가 (6항목)
-- pr-reviewer-domain: general 도메인 중점 검토 항목 보강 (5항목)
+- pr-reviewer-domain: general 도메인 중점 검토 항목 보강 (6항목)
 - agent-pm: 컨텍스트 전달 프로토콜 표준화 (파일 명명 규칙, 생산자-소비자 매핑, 충돌 해소)
 - docs-impact-analyzer, agent-qa, pr-reviewer-test: 에이전트 간 상호참조 관계 명시
 
