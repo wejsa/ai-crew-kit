@@ -128,6 +128,58 @@ cat "$UPGRADE_TMP/.claude/schemas/migrations.json"
 
 ### Step 6: 커스터마이징 감지
 
+**6-0. 프레임워크 파일 해시 비교**
+
+현재 파일과 소스 파일의 SHA256 해시를 비교하여 사용자 수정 파일을 감지:
+
+```bash
+# 동일 경로에 존재하는 도메인 파일 비교
+MODIFIED_FILES=""
+for file in $(comm -12 /tmp/current_domain_files.txt /tmp/new_domain_files.txt); do
+  CURRENT_HASH=$(sha256sum ".claude/domains/$file" | cut -d' ' -f1)
+  SOURCE_HASH=$(sha256sum "$UPGRADE_TMP/.claude/domains/$file" | cut -d' ' -f1)
+  if [ "$CURRENT_HASH" != "$SOURCE_HASH" ]; then
+    MODIFIED_FILES="$MODIFIED_FILES $file"
+  fi
+done
+```
+
+해시 비교 범위를 전체 프레임워크 디렉토리로 확장:
+
+```bash
+# 전체 프레임워크 파일 해시 비교
+FRAMEWORK_DIRS=("agents" "skills" "domains" "templates" "schemas" "workflows" "docs")
+USER_MODIFIED_FILES=""
+
+for dir in "${FRAMEWORK_DIRS[@]}"; do
+  if [ -d ".claude/$dir" ] && [ -d "$UPGRADE_TMP/.claude/$dir" ]; then
+    for file in $(find ".claude/$dir" -type f -name "*.md" -o -name "*.json" -o -name "*.yaml" -o -name "*.yml"); do
+      RELATIVE="${file#.claude/}"
+      if [ -f "$UPGRADE_TMP/.claude/$RELATIVE" ]; then
+        CURRENT_HASH=$(sha256sum "$file" | cut -d' ' -f1)
+        SOURCE_HASH=$(sha256sum "$UPGRADE_TMP/.claude/$RELATIVE" | cut -d' ' -f1)
+        if [ "$CURRENT_HASH" != "$SOURCE_HASH" ]; then
+          USER_MODIFIED_FILES="$USER_MODIFIED_FILES\n$RELATIVE"
+        fi
+      fi
+    done
+  fi
+done
+```
+
+사용자 수정 파일 감지 시 미리보기에 포함:
+```
+### 사용자 수정된 프레임워크 파일 (해시 불일치)
+| 파일 | 현재 해시 (앞 8자) | 소스 해시 (앞 8자) |
+|------|-------------------|-------------------|
+| domains/fintech/docs/payment.md | a1b2c3d4 | e5f6g7h8 |
+```
+
+이 파일들은 업그레이드 시 덮어쓰기 전에 사용자에게 확인 질문 (AskUserQuestion):
+- "소스로 덮어쓰기" (새 버전 사용)
+- "현재 유지" (사용자 수정본 보존)
+- "수동 머지" (diff 표시 후 사용자 결정)
+
 **6-1. 도메인 커스텀 파일 감지**
 ```bash
 # 현재 도메인 디렉토리의 파일 목록
@@ -179,6 +231,10 @@ cat "$UPGRADE_TMP/.claude/settings.json" | jq '.permissions'
 - CLAUDE.md 커스텀 섹션: {있음/없음}
 - README.md 커스텀 섹션: {있음/없음}
 
+### 사용자 수정된 프레임워크 파일
+- {N}개 파일에서 소스와 해시 불일치 감지
+- {해시 불일치 파일 목록 (Step 6-0 결과)}
+
 ### 스키마 마이그레이션
 - {마이그레이션 항목 목록}
 ```
@@ -225,6 +281,31 @@ echo "$CURRENT_VERSION" > "$BACKUP_DIR/kitVersion.txt"
 ```
 
 ### Step 10: 커스텀 콘텐츠 추출
+
+**10-0. CUSTOM_SECTION 마커 존재 확인**
+
+CLAUDE.md/README.md에서 CUSTOM_SECTION 마커 존재 여부를 먼저 확인:
+
+```bash
+# CLAUDE.md 마커 확인
+if ! grep -q "CUSTOM_SECTION_START" CLAUDE.md 2>/dev/null; then
+  echo "⚠️ CLAUDE.md에 CUSTOM_SECTION 마커가 없습니다."
+  echo "   마커 없는 커스텀 내용은 업그레이드 시 유실될 수 있습니다."
+
+  # 안전장치: 현재 CLAUDE.md 전체를 백업
+  cp CLAUDE.md "$BACKUP_DIR/CLAUDE.md.full-backup"
+
+  # 표준 템플릿과 diff하여 사용자 추가 내용 감지
+  # 템플릿에 없는 내용 = 커스텀으로 간주
+  TEMPLATE_CONTENT=$(cat .claude/templates/CLAUDE.md.tmpl)
+  # diff 결과를 custom_content.md로 저장
+fi
+
+# README.md 동일 패턴
+if ! grep -q "CUSTOM_SECTION_START" README.md 2>/dev/null; then
+  cp README.md "$BACKUP_DIR/README.md.full-backup"
+fi
+```
 
 **10-1. CLAUDE.md 커스텀 섹션 추출**
 ```bash
@@ -327,6 +408,40 @@ jq '.kitSource = "'$KIT_SOURCE'"' /tmp/project_tmp.json > .claude/state/project.
 ```
 
 ### Step 13: CLAUDE.md/README.md 재생성
+
+**13-0. 마커 자동 삽입 (안전장치)**
+
+재생성된 CLAUDE.md에 CUSTOM_SECTION 마커가 없으면 자동 추가:
+
+```bash
+# 재생성 후 마커 확인
+if ! grep -q "CUSTOM_SECTION_START" CLAUDE.md; then
+  # 파일 끝에 마커 블록 추가
+  cat >> CLAUDE.md << 'EOF'
+
+---
+
+<!-- CUSTOM_SECTION_START -->
+<!-- CUSTOM_SECTION_END -->
+EOF
+fi
+
+# README.md도 동일하게 확인 + 마커 추가
+if ! grep -q "CUSTOM_SECTION_START" README.md; then
+  cat >> README.md << 'EOF'
+
+---
+
+<!-- CUSTOM_SECTION_START -->
+<!-- CUSTOM_SECTION_END -->
+EOF
+fi
+
+# 백업에서 추출한 커스텀 내용이 있으면 마커 사이에 삽입
+if [ -f "$BACKUP_DIR/custom_content.md" ] && [ -s "$BACKUP_DIR/custom_content.md" ]; then
+  # CUSTOM_SECTION_START와 CUSTOM_SECTION_END 사이에 삽입
+fi
+```
 
 **13-1. CLAUDE.md 재생성**
 ```bash
@@ -460,6 +575,16 @@ Skill tool 사용: skill="skill-validate"
 
 ### 자동 롤백
 - Step 11 파일 교체 중 오류 발생 시 → 즉시 백업에서 복원
+
+### SHA256 해시 비교
+- Step 6-0에서 전체 프레임워크 파일의 해시를 비교하여 사용자 수정 파일 감지
+- 파일 목록 비교(comm)만으로는 잡히지 않는 "동일 경로이지만 내용이 다른" 파일을 탐지
+- 감지된 파일은 덮어쓰기 전에 사용자에게 처리 방법 확인
+
+### CUSTOM_SECTION 마커 안전장치
+- Step 10-0에서 CLAUDE.md/README.md의 마커 존재 여부 사전 확인
+- 마커 없는 경우 전체 파일 백업 + 템플릿 diff로 커스텀 내용 추출
+- Step 13-0에서 재생성 후 마커 누락 시 자동 삽입 + 백업 커스텀 내용 복원
 
 ## 주의사항
 - Git 상태가 clean한 상태에서 실행 권장

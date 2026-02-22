@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.18.0] - 2026-02-22
+
+### Added
+- 공통 컨벤션 4개 추가 (`_base/conventions/`):
+  - cache.md: 캐시 컨벤션 (키 네이밍, TTL 전략, Cache-Aside/Write-Through/Write-Behind, 무효화, Thundering Herd 방지)
+  - message-queue.md: 메시지 큐 컨벤션 (CloudEvents 포맷, 전달 보증, 멱등성, DLQ, 재시도, 이벤트 버전 관리)
+  - deployment.md: 배포 컨벤션 (환경 구분, Docker, CI/CD 파이프라인, 배포 전략, 헬스 체크, 롤백)
+  - monitoring.md: 모니터링 컨벤션 (RED/USE 메서드, 메트릭 네이밍, 알림 규칙, 로그-메트릭-트레이스 연계)
+- skill-upgrade: Step 6-0 SHA256 해시 비교 커스터마이징 감지 추가 (전체 프레임워크 파일 대상)
+- skill-upgrade: Step 10-0 CUSTOM_SECTION 마커 존재 사전 확인 + 전체 백업 안전장치 추가
+- skill-upgrade: Step 13-0 마커 자동 삽입 + 백업 커스텀 내용 복원 안전장치 추가
+
+### Changed
+- skill-upgrade: 해시 불일치 파일에 대해 덮어쓰기 전 사용자 확인 (소스 덮어쓰기/현재 유지/수동 머지)
+- skill-upgrade: Step 7 미리보기에 사용자 수정 프레임워크 파일 목록 추가
+- skill-docs: 공통 컨벤션 키워드 매핑에 4개 항목 추가 (캐시, 메시지큐, 배포, 모니터링)
+
 ## [1.17.0] - 2026-02-19
 
 ### Added

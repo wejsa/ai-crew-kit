@@ -96,6 +96,10 @@ argument-hint: "[keyword]"
 | 패키지, 구조, 레이어, 아키텍처 | project-structure.md |
 | 네이밍, 변수명, 클래스명 | naming.md |
 | 브랜치, 커밋, PR, Git | git-workflow.md |
+| 캐시, Redis, TTL, 무효화 | cache.md |
+| 메시지큐, RabbitMQ, Kafka, 이벤트, 비동기 | message-queue.md |
+| 배포, Docker, CI/CD, K8s, 환경변수 | deployment.md |
+| 모니터링, 메트릭, 알림, 헬스체크 | monitoring.md |
 
 또는 `docs/README.md`에 키워드 매핑 정의:
 
@@ -135,6 +139,10 @@ argument-hint: "[keyword]"
 | project-structure.md | 프로젝트 구조 컨벤션 | 패키지, 레이어 |
 | naming.md | 네이밍 컨벤션 | 네이밍, 변수명 |
 | git-workflow.md | Git 워크플로우 컨벤션 | 브랜치, 커밋 |
+| cache.md | 캐시 컨벤션 | 캐시, Redis, TTL |
+| message-queue.md | 메시지 큐 컨벤션 | 메시지큐, RabbitMQ, 이벤트 |
+| deployment.md | 배포 컨벤션 | 배포, Docker, CI/CD |
+| monitoring.md | 모니터링 컨벤션 | 모니터링, 메트릭, 알림 |
 
 특정 문서 조회: `/skill-docs {키워드}`
 ```
