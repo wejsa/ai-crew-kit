@@ -1,6 +1,6 @@
 ---
 name: skill-impl
-description: 구현 - 스텝별 개발 + PR 생성
+description: 구현 - 스텝별 개발 + PR 생성. 사용자가 "개발 진행해줘", "구현해줘" 또는 /skill-impl을 요청할 때 사용합니다.
 disable-model-invocation: false
 allowed-tools: Bash(git:*), Bash(./gradlew:*), Bash(npm:*), Bash(yarn:*), Read, Write, Edit, Glob, Grep, Task
 argument-hint: "[--next|--all]"

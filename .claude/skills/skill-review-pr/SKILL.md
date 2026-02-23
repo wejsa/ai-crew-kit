@@ -1,6 +1,6 @@
 ---
 name: skill-review-pr
-description: PR 리뷰 - GitHub PR에 대한 5관점 통합 리뷰 수행
+description: PR 리뷰 - GitHub PR에 대한 5관점 통합 리뷰 수행. 사용자가 "PR 리뷰해줘" 또는 /skill-review-pr을 요청할 때 사용합니다.
 disable-model-invocation: false
 allowed-tools: Bash(git:*), Bash(gh:*), Read, Glob, Grep, Task
 argument-hint: "{PR번호} [--auto-fix]"
