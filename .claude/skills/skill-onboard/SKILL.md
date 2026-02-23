@@ -1,6 +1,6 @@
 ---
 name: skill-onboard
-description: 기존 프로젝트 온보딩 - 코드베이스 스캔 + 자동 설정 생성
+description: 기존 프로젝트 온보딩 - 코드베이스 스캔 + 자동 설정 생성. 사용자가 "프로젝트 온보딩" 또는 /skill-onboard를 요청할 때 사용합니다.
 disable-model-invocation: false
 allowed-tools: Bash(git:*), Bash(ls:*), Bash(cat:*), Bash(wc:*), Read, Write, Edit, Glob, Grep, AskUserQuestion
 argument-hint: "[--scan-only]"

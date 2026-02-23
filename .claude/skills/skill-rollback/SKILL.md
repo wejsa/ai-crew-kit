@@ -1,6 +1,6 @@
 ---
 name: skill-rollback
-description: 릴리스 롤백 - git revert 기반 안전한 릴리스/PR 롤백 + 감사 추적
+description: 릴리스 롤백 - git revert 기반 안전한 릴리스/PR 롤백 + 감사 추적. 사용자가 "롤백해줘" 또는 /skill-rollback을 요청할 때 사용합니다.
 disable-model-invocation: false
 allowed-tools: Bash(git:*), Bash(gh:*), Read, Write, Edit, Glob
 argument-hint: "\"{태그 또는 PR번호}\""

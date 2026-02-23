@@ -1,6 +1,6 @@
 ---
 name: skill-docs
-description: 프로젝트 참고자료 - 개발 시 자동 참조되는 도메인별 문서
+description: 프로젝트 참고자료 - 개발 시 자동 참조되는 도메인별 문서. 사용자가 "문서 찾아줘", "참고자료" 또는 /skill-docs를 요청할 때 사용합니다.
 disable-model-invocation: false
 allowed-tools: Read, Glob
 argument-hint: "[keyword]"
