@@ -1,6 +1,6 @@
 ---
 name: skill-fix
-description: PR 수정 - CRITICAL 이슈 자동 수정
+description: PR 수정 - CRITICAL 이슈 자동 수정. skill-review-pr --auto-fix에서 자동 호출되거나 사용자가 /skill-fix를 요청할 때 사용합니다.
 disable-model-invocation: false
 allowed-tools: Bash(git:*), Bash(gh:*), Bash(./gradlew:*), Bash(npm:*), Read, Write, Edit, Glob, Grep
 argument-hint: "{PR번호}"
