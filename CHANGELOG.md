@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.18.1] - 2026-02-23
+
+### Changed
+- 22개 SKILL.md description에 WHEN(사용 시점/트리거 조건) 추가
+  - P0: 13개 자동 트리거 스킬 — 자연어 매칭 정확도 개선 (plan, impl, review-pr, fix, merge-pr, report, retro, estimate, create, onboard, hotfix, rollback, docs)
+  - P1: 9개 내부 전용 스킬 — 문서화 일관성 확보 (init, feature, review, domain, backlog, status, release, validate, upgrade)
+- Anthropic 스킬 가이드 기준 description 필드의 WHAT + WHEN 구조 적용
+
 ## [1.18.0] - 2026-02-22
 
 ### Added
