@@ -1,6 +1,6 @@
 ---
 name: skill-release
-description: 릴리스 - 빌드 검증 + API spec 스냅샷 + 버전 범프 + CHANGELOG + main 머지 + 태그 생성
+description: 릴리스 - 빌드 검증 + API spec 스냅샷 + 버전 범프 + CHANGELOG + main 머지 + 태그 생성. /skill-release로 호출합니다.
 disable-model-invocation: true
 allowed-tools: Bash(git:*), Bash(gh:*), Bash(cat:*), Bash(./gradlew:*), Bash(npm:*), Bash(yarn:*), Bash(go:*), Bash(swag:*), Read, Write, Edit, Glob, AskUserQuestion
 argument-hint: "{버전타입: patch|minor|major}"

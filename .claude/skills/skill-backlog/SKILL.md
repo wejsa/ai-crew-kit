@@ -1,6 +1,6 @@
 ---
 name: skill-backlog
-description: 백로그 관리 - Task 목록 조회, 추가, 수정, 우선순위 변경
+description: 백로그 관리 - Task 목록 조회, 추가, 수정, 우선순위 변경. /skill-backlog로 호출합니다.
 disable-model-invocation: true
 allowed-tools: Bash(git:*), Read, Write, Glob
 argument-hint: "[list|add|update|priority] [options]"

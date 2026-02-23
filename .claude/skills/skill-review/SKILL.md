@@ -1,6 +1,6 @@
 ---
 name: skill-review
-description: 코드 리뷰 - 지정 경로의 코드를 5관점 통합 리뷰
+description: 코드 리뷰 - 지정 경로의 코드를 5관점 통합 리뷰. /skill-review로 호출합니다.
 disable-model-invocation: true
 allowed-tools: Bash(git:*), Read, Glob, Grep, Task
 argument-hint: "[경로]"
