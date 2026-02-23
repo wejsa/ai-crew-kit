@@ -1,6 +1,6 @@
 ---
 name: skill-retro
-description: 완료 Task 회고 - 분석 리포트 생성 + 체크리스트/컨벤션 학습 반영
+description: 완료 Task 회고 - 분석 리포트 생성 + 체크리스트/컨벤션 학습 반영. 사용자가 "회고 해줘" 또는 /skill-retro를 요청할 때 사용합니다.
 disable-model-invocation: false
 allowed-tools: Bash(git:*), Bash(gh:*), Read, Write, Edit, Glob, Grep, AskUserQuestion
 argument-hint: "[TASK-ID|--summary]"
