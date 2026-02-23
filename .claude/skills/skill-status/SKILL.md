@@ -1,6 +1,6 @@
 ---
 name: skill-status
-description: 프로젝트 상태 확인 - 현재 작업 진행상황, 백로그 요약, Git 상태, 시스템 건강 점검
+description: 프로젝트 상태 확인 - 현재 작업 진행상황, 백로그 요약, Git 상태, 시스템 건강 점검. 사용자가 "상태 확인해줘" 또는 /skill-status를 요청할 때 사용합니다.
 disable-model-invocation: true
 allowed-tools: Bash(git:*), Bash(gh:*), Bash(python3:*), Read, Glob
 argument-hint: "[--health|--locks]"

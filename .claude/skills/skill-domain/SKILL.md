@@ -1,6 +1,6 @@
 ---
 name: skill-domain
-description: 도메인 관리 - 조회, 전환, 커스터마이징, 워크플로우 정의
+description: 도메인 관리 - 조회, 전환, 커스터마이징, 워크플로우 정의. /skill-domain으로 호출합니다.
 disable-model-invocation: true
 allowed-tools: Bash(git:*), Read, Write, Glob, AskUserQuestion
 argument-hint: "[list|switch|add-doc|add-checklist|add-workflow|export] [options]"

@@ -1,6 +1,6 @@
 ---
 name: skill-validate
-description: 프레임워크 검증 - 업그레이드 후 구조 무결성 자체 검증
+description: 프레임워크 검증 - 업그레이드 후 구조 무결성 자체 검증. skill-upgrade에서 자동 호출되거나 /skill-validate로 호출합니다.
 disable-model-invocation: true
 allowed-tools: Bash(cat:*), Bash(ls:*), Bash(python3:*), Read, Glob, Grep
 argument-hint: "[--fix]"

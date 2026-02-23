@@ -1,6 +1,6 @@
 ---
 name: skill-upgrade
-description: 프레임워크 업그레이드 - ai-crew-kit 최신 버전으로 프레임워크 파일 업데이트
+description: 프레임워크 업그레이드 - ai-crew-kit 최신 버전으로 프레임워크 파일 업데이트. /skill-upgrade로 호출합니다.
 disable-model-invocation: true
 allowed-tools: Bash(git:*), Bash(cp:*), Bash(rm:*), Bash(tar:*), Bash(diff:*), Bash(mktemp:*), Bash(mkdir:*), Bash(cat:*), Bash(ls:*), Bash(date:*), Bash(wc:*), Bash(df:*), Bash(jq:*), Bash(echo:*), Read, Write, Edit, Glob, Grep, AskUserQuestion
 argument-hint: "[--dry-run] [--source <git-url|local-path>] [--version <tag>] [--rollback <backup-path>]"

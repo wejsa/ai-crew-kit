@@ -1,6 +1,6 @@
 ---
 name: skill-init
-description: 프로젝트 초기화 - 도메인 선택 + 자동 셋업
+description: 프로젝트 초기화 - 도메인 선택 + 자동 셋업. /skill-init으로 호출합니다.
 disable-model-invocation: true
 allowed-tools: Bash(git:*), Read, Write, Glob, AskUserQuestion
 argument-hint: "[--reset]"
