@@ -34,7 +34,9 @@ argument-hint: "[--scan-only]"
 ```bash
 # [REQUIRED] 1. Git 저장소 확인
 if ! git rev-parse --git-dir > /dev/null 2>&1; then
-  echo "Git 저장소가 아닙니다. git init을 먼저 실행하세요."
+  echo "❌ Git 저장소가 아닙니다"
+  echo "   원인: 현재 디렉토리에 .git이 없습니다"
+  echo "   해결: git init을 먼저 실행하거나, git 저장소 디렉토리로 이동하세요"
   exit 1
 fi
 

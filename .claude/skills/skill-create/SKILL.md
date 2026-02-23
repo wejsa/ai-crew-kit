@@ -18,19 +18,25 @@ argument-hint: "<name> [description]"
 ```bash
 # [REQUIRED] 1. project.json 존재
 if [ ! -f ".claude/state/project.json" ]; then
-  echo "project.json이 없습니다. /skill-init을 먼저 실행하세요."
+  echo "❌ project.json이 없습니다"
+  echo "   원인: 프로젝트가 초기화되지 않았습니다"
+  echo "   해결: /skill-init을 먼저 실행하세요"
   exit 1
 fi
 
 # [REQUIRED] 2. CLAUDE.md 존재
 if [ ! -f "CLAUDE.md" ]; then
-  echo "CLAUDE.md가 없습니다. /skill-init을 먼저 실행하세요."
+  echo "❌ CLAUDE.md가 없습니다"
+  echo "   원인: 프로젝트 설정 파일이 생성되지 않았습니다"
+  echo "   해결: /skill-init을 먼저 실행하세요"
   exit 1
 fi
 
 # [REQUIRED] 3. 스킬명 인수 존재
 if [ -z "$1" ]; then
-  echo "스킬명을 지정해주세요. 예: /skill-create my-lint \"프로젝트 전용 린트\""
+  echo "❌ 스킬명이 지정되지 않았습니다"
+  echo "   원인: 필수 인수 누락"
+  echo "   해결: /skill-create my-lint \"프로젝트 전용 린트\""
   exit 1
 fi
 ```

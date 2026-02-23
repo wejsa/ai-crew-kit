@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.19.0] - 2026-02-23
+
+### Changed
+- skill-status: 정적 "다음 단계 추천"을 컨텍스트 기반 추천으로 교체 (workflowState/PR 상태/백로그 기반 8단계 우선순위)
+- skill-review-pr: 서브에이전트 실패 시 사용자 선택 제공 (재시도/스킵/중단), 재시도 1회 허용
+- skill-review-pr: 서브에이전트 실패를 execution-log.json에 기록 (subagent_failed 액션)
+- 에러 메시지 표준화: skill-estimate, skill-onboard, skill-retro, skill-report, skill-create의 MUST-EXECUTE-FIRST 에러를 ❌/원인/해결 3줄 형식으로 통일
+
+### Added
+- skill-status: `--health --fix` 옵션 — Orphan Intent 자동 복구 + 정리 (30분 경과 기준, skill-validate --fix 패턴)
+
 ## [1.18.1] - 2026-02-23
 
 ### Changed

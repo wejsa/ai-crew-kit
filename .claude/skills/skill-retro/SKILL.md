@@ -28,24 +28,32 @@ argument-hint: "[TASK-ID|--summary]"
 ```bash
 # [REQUIRED] 1. project.json 존재
 if [ ! -f ".claude/state/project.json" ]; then
-  echo "❌ project.json이 없습니다. /skill-init을 먼저 실행하세요."
+  echo "❌ project.json이 없습니다"
+  echo "   원인: 프로젝트가 초기화되지 않았습니다"
+  echo "   해결: /skill-init을 먼저 실행하세요"
   exit 1
 fi
 
 # [REQUIRED] 2. completed.json 존재 + 유효 JSON
 if [ ! -f ".claude/state/completed.json" ]; then
-  echo "❌ completed.json이 없습니다. 완료된 Task가 없습니다."
+  echo "❌ completed.json이 없습니다"
+  echo "   원인: 완료된 Task가 없습니다"
+  echo "   해결: Task를 완료한 후 다시 시도하세요 (/skill-impl → /skill-merge-pr 워크플로우)"
   exit 1
 fi
 cat .claude/state/completed.json | python3 -c "import sys,json; json.load(sys.stdin)" 2>/dev/null || {
-  echo "❌ completed.json이 유효한 JSON이 아닙니다."
+  echo "❌ completed.json이 유효한 JSON이 아닙니다"
+  echo "   원인: JSON 파싱 실패"
+  echo "   해결: /skill-validate --fix를 실행하세요"
   exit 1
 }
 
 # [REQUIRED] 3. 완료된 Task 존재 확인
 TASK_COUNT=$(python3 -c "import json; print(len(json.load(open('.claude/state/completed.json'))))")
 if [ "$TASK_COUNT" == "0" ]; then
-  echo "❌ 완료된 Task가 없습니다."
+  echo "❌ 완료된 Task가 없습니다"
+  echo "   원인: completed.json에 기록된 Task가 0건입니다"
+  echo "   해결: Task를 완료한 후 다시 시도하세요"
   exit 1
 fi
 ```

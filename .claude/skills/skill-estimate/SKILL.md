@@ -28,13 +28,17 @@ argument-hint: "<TASK-ID|--phase N|--sprint>"
 ```bash
 # [REQUIRED] 1. project.json 존재
 if [ ! -f ".claude/state/project.json" ]; then
-  echo "project.json이 없습니다. /skill-init을 먼저 실행하세요."
+  echo "❌ project.json이 없습니다"
+  echo "   원인: 프로젝트가 초기화되지 않았습니다"
+  echo "   해결: /skill-init을 먼저 실행하세요"
   exit 1
 fi
 
 # [REQUIRED] 2. backlog.json 존재 + 유효 JSON
 if [ ! -f ".claude/state/backlog.json" ]; then
-  echo "backlog.json이 없습니다."
+  echo "❌ backlog.json이 없습니다"
+  echo "   원인: 백로그가 초기화되지 않았습니다"
+  echo "   해결: /skill-init을 먼저 실행하세요"
   exit 1
 fi
 ```

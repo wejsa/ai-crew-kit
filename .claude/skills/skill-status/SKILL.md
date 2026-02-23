@@ -3,7 +3,7 @@ name: skill-status
 description: 프로젝트 상태 확인 - 현재 작업 진행상황, 백로그 요약, Git 상태, 시스템 건강 점검. 사용자가 "상태 확인해줘" 또는 /skill-status를 요청할 때 사용합니다.
 disable-model-invocation: true
 allowed-tools: Bash(git:*), Bash(gh:*), Bash(python3:*), Read, Glob
-argument-hint: "[--health|--locks]"
+argument-hint: "[--health [--fix]|--locks]"
 ---
 
 # skill-status: 프로젝트 상태 확인
@@ -13,9 +13,10 @@ argument-hint: "[--health|--locks]"
 
 ## 명령어 옵션
 ```
-/skill-status            # 기본 상태 확인
-/skill-status --locks    # 병렬 작업 잠금 현황 포함
-/skill-status --health   # 시스템 건강 점검
+/skill-status                  # 기본 상태 확인
+/skill-status --locks          # 병렬 작업 잠금 현황 포함
+/skill-status --health         # 시스템 건강 점검
+/skill-status --health --fix   # 건강 점검 + Orphan Intent 자동 정리
 ```
 
 ## 실행 플로우
@@ -172,6 +173,68 @@ ls .claude/temp/*-complete-intent.json 2>/dev/null
 
 각 intent 파일의 `pending` 배열을 읽어 미처리 항목 수를 표시합니다.
 
+#### Orphan Intent 자동 정리 (--health --fix)
+
+`/skill-status --health --fix` 실행 시, 감지된 orphan intent를 자동으로 복구 및 정리합니다.
+
+**정리 대상**: 생성 후 30분 이상 경과한 `*-complete-intent.json` 파일
+
+**감지 로직:**
+```bash
+# python3 인라인 스크립트로 mtime 기반 30분+ 경과 intent 필터링
+python3 -c "
+import os, time, json, glob
+
+threshold = time.time() - 1800  # 30분
+intents = glob.glob('.claude/temp/*-complete-intent.json')
+stale = [f for f in intents if os.path.getmtime(f) < threshold]
+
+for f in stale:
+    age_min = int((time.time() - os.path.getmtime(f)) / 60)
+    data = json.load(open(f))
+    pending = data.get('pending', [])
+    print(json.dumps({'file': f, 'age_min': age_min, 'taskId': data.get('taskId',''), 'pending': pending}))
+"
+```
+
+**정리 플로우** (skill-validate --fix 패턴, AskUserQuestion 없이 자동):
+
+1. 30분+ 경과 intent 파일 목록 표시
+2. 각 intent의 `pending` 배열 순회하여 안전 복구:
+   - **completed.json**: taskId 누락 시 최소 정보(taskId, completedAt) 추가
+   - **backlog.json**: status가 done이 아닌 경우 done으로 변경
+   - **plan-file**: temp 계획 파일 존재 시 삭제
+3. intent 파일 삭제
+4. 결과 테이블 출력
+
+```
+### Orphan Intent 정리 결과
+
+| Task ID | 경과 시간 | 복구 항목 | 결과 |
+|---------|----------|----------|------|
+| TASK-005 | 45분 | completed.json, backlog.json | ✅ 복구 완료 |
+| TASK-011 | 62분 | plan-file | ✅ 정리 완료 |
+
+✅ Orphan Intent {N}건 정리 완료
+```
+
+**정리 대상 없음 시:**
+```
+✅ 정리 대상 없음 (30분+ 경과 orphan intent 없음)
+```
+
+**실행 로그 기록:**
+`execution-log.json`에 `orphan_intent_cleanup` 액션 추가:
+```json
+{
+  "timestamp": "{현재 시각}",
+  "taskId": "",
+  "skill": "skill-status",
+  "action": "orphan_intent_cleanup",
+  "details": {"method": "--health --fix", "pendingRecovered": ["completed.json", "backlog.json"], "intentFile": "{파일명}"}
+}
+```
+
 **문제 발견 시:**
 ```
 ### 시스템 건강 상태
@@ -215,9 +278,53 @@ ls .claude/temp/*-complete-intent.json 2>/dev/null
   - 브랜치: feature/{Task ID}-step{N}
 
 ### 다음 단계 추천
-- `/skill-plan`: 새 작업 시작
-- `/skill-impl`: 현재 스텝 개발 진행
-- `/skill-impl --next`: 다음 스텝 진행
+
+워크플로우 상태와 프로젝트 컨텍스트를 기반으로 우선순위별 추천:
+
+| 우선순위 | 조건 | 추천 |
+|---------|------|------|
+| 1 | in_progress Task의 workflowState.currentSkill 존재 | 해당 스킬 실행 + autoChainArgs |
+| 2 | 활성 PR reviewDecision == APPROVED | `/skill-merge-pr {prNumber}` |
+| 3 | 활성 PR reviewDecision == CHANGES_REQUESTED | `/skill-fix {prNumber}` |
+| 4 | 활성 PR (리뷰 미완료) | `/skill-review-pr {prNumber}` |
+| 5 | in_progress Task + stale (30분+) | 복구 안내 |
+| 6 | in_progress Task 존재 | `/skill-impl` |
+| 7 | todo Task 존재 | `/skill-plan` |
+| 8 | 모든 Task done | `/skill-feature "기능명"` |
+
+위에서 아래 순서로 첫 매칭 적용. 추천 1개를 🎯로 강조 표시하고, 기타 가능한 작업을 💡로 1~2개 추가 안내.
+
+**데이터 소스**: backlog.json(workflowState), `gh pr list`(reviewDecision), execution-log.json — 이미 skill-status가 읽고 있는 데이터만 사용.
+
+**출력 예시 1 — 워크플로우 재개:**
+```
+### 다음 단계 추천
+🎯 `/skill-review-pr 42` — TASK-001 워크플로우 재개 (currentSkill: skill-review-pr)
+💡 `/skill-plan` — 새 작업 시작 (todo 3건 대기)
+```
+
+**출력 예시 2 — PR 승인 대기:**
+```
+### 다음 단계 추천
+🎯 `/skill-merge-pr 42` — PR #42 APPROVED, 머지 가능
+💡 `/skill-impl` — TASK-003 다음 스텝 진행
+```
+
+**출력 예시 3 — Stale 감지:**
+```
+### 다음 단계 추천
+🎯 TASK-003 워크플로우 45분간 미갱신 (stale)
+   → `/skill-impl` — 중단된 구현 재개
+   → `/skill-backlog update TASK-003 --status=todo` — Task 초기화
+💡 `/skill-plan` — 다른 작업 시작
+```
+
+**출력 예시 4 — 모든 작업 완료:**
+```
+### 다음 단계 추천
+🎯 `/skill-feature "기능명"` — 새 기능 등록 (모든 Task 완료)
+💡 `/skill-retro --summary` — 전체 회고 요약
+```
 ```
 
 ### 병렬 작업 현황 (--locks 옵션)
@@ -299,6 +406,8 @@ ls .claude/temp/*-complete-intent.json 2>/dev/null
 | skill-retro | `retro_started`, `retro_completed`, `checklist_updated` | `{reportFile}`, `{files}` |
 | skill-hotfix | `hotfix_started`, `hotfix_completed` | `{description}`, `{hotfixId, prNumber, version}` |
 | skill-rollback | `rollback_started`, `rollback_completed` | `{target}`, `{revertSha, prNumber, version}` |
+| skill-review-pr | `subagent_failed` | `{prNumber, failedAgent, reason, userChoice, retryResult}` |
+| skill-status | `orphan_intent_cleanup` | `{method, pendingRecovered, intentFile}` |
 
 ### 쓰기 규칙
 - 각 스킬 완료 시 로그 항목 1개 추가 (append)
@@ -327,6 +436,6 @@ ls .claude/temp/*-complete-intent.json 2>/dev/null
 - 기존 `completed.json`, `backlog.json`과 보완 관계 (대체 아님)
 
 ## 주의사항
-- 읽기 전용 작업만 수행
+- 기본 모드는 읽기 전용, --health --fix는 orphan intent 정리 시 상태 파일 수정
 - 상태 파일이 없으면 초기 상태로 간주
 - 문제 발견 시 `.claude/docs/troubleshooting.md` 참조 안내

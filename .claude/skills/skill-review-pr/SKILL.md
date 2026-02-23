@@ -2,7 +2,7 @@
 name: skill-review-pr
 description: PR 리뷰 - GitHub PR에 대한 5관점 통합 리뷰 수행. 사용자가 "PR 리뷰해줘" 또는 /skill-review-pr을 요청할 때 사용합니다.
 disable-model-invocation: false
-allowed-tools: Bash(git:*), Bash(gh:*), Read, Glob, Grep, Task
+allowed-tools: Bash(git:*), Bash(gh:*), Read, Glob, Grep, Task, AskUserQuestion
 argument-hint: "{PR번호} [--auto-fix]"
 ---
 
@@ -145,7 +145,7 @@ gh pr diff {number}
 | 항목 | 값 |
 |------|-----|
 | timeout | 60초 (TaskOutput timeout: 60000) |
-| retry | 0회 (재시도 없이 1회 실행) |
+| retry | 0회 자동 재시도 (사용자 요청 시 1회 재시도 허용) |
 | fallback | "⚠️ {에이전트명} 분석 불가 — 수동 확인 필요" + 진행 |
 | partial_result | 형식 불일치 시 원문 그대로 포함 + ⚠️ 마크 |
 
@@ -196,13 +196,45 @@ Task tool (subagent_type: "general-purpose", description: "🧪 테스트 품질
 
 #### 3.3 오류 처리
 
-| 상황 | 대응 |
-|------|------|
-| Task 1개 실패/타임아웃(60초) | 해당 관점 "⚠️ {에이전트명} 분석 불가 — 수동 확인 필요" 표기, 나머지 결과로 진행 |
-| Task 결과 형식 불일치 | 원문 그대로 포함 + ⚠️ 마크, 수동 확인 요청 |
-| 2개 이상 Task 실패 | 전체 리뷰 중단, "⚠️ 리뷰 서브에이전트 2개 이상 실패 — 수동 리뷰 필요" 출력 |
+**1개 서브에이전트 실패 시:**
 
-**재시도 금지:** 서브에이전트는 1회 실행 후 실패 시 fallback 처리. 재시도하지 않는다.
+실패 에이전트 정보를 표시하고 AskUserQuestion으로 사용자에게 선택지 제공:
+
+```
+⚠️ 서브에이전트 실패: {에이전트명}
+   원인: {타임아웃/에러 메시지}
+   영향: {해당 관점} 분석 결과 누락
+```
+
+AskUserQuestion 선택지:
+- **[재시도]** 해당 에이전트 1회 재실행 (재시도도 실패 시 자동 스킵)
+- **[스킵]** "⚠️ {에이전트명} 분석 불가 — 수동 확인 필요" 표기 후 진행
+- **[중단]** 리뷰 전체 중단
+
+**--auto-fix 체인 모드**: 사용자 질문 없이 자동 [재시도] → 실패 시 자동 [스킵]
+
+**결과 형식 불일치 시:**
+원문 그대로 포함 + ⚠️ 마크 (사용자 선택 없이 진행)
+
+**2개 이상 서브에이전트 실패 시:**
+표준 에러 포맷 적용 (사용자 선택 없이 즉시 중단):
+```
+❌ 리뷰 중단: 서브에이전트 2개 이상 실패
+   원인: {실패한 에이전트 목록}
+   해결: 네트워크/시스템 상태 확인 후 `/skill-review-pr {number}` 재실행
+```
+
+**실행 로그 기록 (실패 시):**
+execution-log.json에 `subagent_failed` 액션 추가:
+```json
+{
+  "timestamp": "{현재 시각}",
+  "taskId": "{TASK-ID}",
+  "skill": "skill-review-pr",
+  "action": "subagent_failed",
+  "details": {"prNumber": "{number}", "failedAgent": "{에이전트명}", "reason": "{실패 원인}", "userChoice": "{재시도|스킵|중단}", "retryResult": "{성공|실패|N/A}"}
+}
+```
 
 #### 3.4 결과 병합
 
