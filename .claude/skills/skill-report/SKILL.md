@@ -1,6 +1,6 @@
 ---
 name: skill-report
-description: 프로젝트 메트릭 리포트 - throughput, quality, code, health 4축 분석
+description: 프로젝트 메트릭 리포트 - throughput, quality, code, health 4축 분석. 사용자가 "리포트 생성해줘" 또는 /skill-report을 요청할 때 사용합니다.
 disable-model-invocation: false
 allowed-tools: Bash(git:*), Bash(gh:*), Bash(python3:*), Read, Write, Glob, Grep
 argument-hint: "[--full]"

@@ -1,6 +1,6 @@
 ---
 name: skill-create
-description: 커스텀 스킬 생성 - SKILL.md 스캐폴딩 + CLAUDE.md 자동 등록
+description: 커스텀 스킬 생성 - SKILL.md 스캐폴딩 + CLAUDE.md 자동 등록. 사용자가 "스킬 만들어줘" 또는 /skill-create를 요청할 때 사용합니다.
 disable-model-invocation: false
 allowed-tools: Bash(mkdir:*), Bash(ls:*), Read, Write, Edit, Glob, Grep, AskUserQuestion
 argument-hint: "<name> [description]"

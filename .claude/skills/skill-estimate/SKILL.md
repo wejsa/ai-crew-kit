@@ -1,6 +1,6 @@
 ---
 name: skill-estimate
-description: 작업 복잡도 추정 - 5팩터 분석 + 과거 데이터 보정
+description: 작업 복잡도 추정 - 5팩터 분석 + 과거 데이터 보정. 사용자가 "작업량 추정해줘" 또는 /skill-estimate를 요청할 때 사용합니다.
 disable-model-invocation: false
 allowed-tools: Bash(git:*), Bash(gh:*), Bash(wc:*), Read, Glob, Grep
 argument-hint: "<TASK-ID|--phase N|--sprint>"
