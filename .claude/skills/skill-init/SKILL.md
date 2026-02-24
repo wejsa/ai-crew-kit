@@ -3,7 +3,7 @@ name: skill-init
 description: 프로젝트 초기화 - 도메인 선택 + 자동 셋업. /skill-init으로 호출합니다.
 disable-model-invocation: true
 allowed-tools: Bash(git:*), Read, Write, Glob, AskUserQuestion
-argument-hint: "[--reset]"
+argument-hint: "[--quick] [--reset]"
 ---
 
 # skill-init: 프로젝트 초기화
@@ -13,11 +13,86 @@ argument-hint: "[--reset]"
 
 ## 옵션
 ```
-/skill-init           # 새 프로젝트 초기화
+/skill-init           # 새 프로젝트 초기화 (대화형)
+/skill-init --quick   # 제로 결정 빠른 초기화 (자동 감지 + 기본값)
 /skill-init --reset   # 기존 설정 초기화 (재설정)
+/skill-init --quick --reset  # 기존 설정 초기화 + 빠른 재설정
 ```
 
+## --quick 모드 (제로 결정 온보딩)
+
+`--quick` 플래그가 지정되면 사용자 질문을 최소화하고 자동 감지 + 기본값으로 즉시 초기화합니다.
+
+### --quick vs 일반 모드 비교
+
+| 단계 | 일반 모드 | --quick 모드 |
+|------|----------|-------------|
+| Step 1: 환경 검증 | 그대로 | 그대로 |
+| Step 2: 프로젝트 정보 | AskUserQuestion 2회 | 디렉토리명 → name, 설명 빈칸 |
+| Step 3: 도메인 선택 | AskUserQuestion 1회 | 자동 감지 → fallback: general |
+| Step 4: 기술 스택 | AskUserQuestion 5+회 | `_registry.json`의 domain.defaultStack 사용 |
+| Step 5: 에이전트 팀 | AskUserQuestion 1회 (multi-select) | 기본 3개: pm, backend, code-reviewer |
+| Step 6: 파일 생성 | 그대로 | 그대로 |
+| Step 7: 완료 안내 | 그대로 | + "설정 변경: /skill-init --reset" 안내 추가 |
+
+### --quick 자동 감지 로직 (Step 3-4)
+
+skill-onboard 스캔 패턴을 참조하여 도메인과 기술 스택을 자동 감지:
+
+```bash
+# 백엔드 감지
+if [ -f "package.json" ]; then
+  DETECTED_BACKEND="nodejs-typescript"
+elif [ -f "build.gradle.kts" ]; then
+  DETECTED_BACKEND="spring-boot-kotlin"
+elif [ -f "build.gradle" ]; then
+  DETECTED_BACKEND="spring-boot-java"
+elif [ -f "go.mod" ]; then
+  DETECTED_BACKEND="go"
+else
+  DETECTED_BACKEND=""  # 감지 실패
+fi
+
+# 도메인 감지 (감지된 백엔드가 있으면 _registry.json에서 매칭)
+# 감지 실패 시 → general 도메인의 defaultStack 사용
+```
+
+**도메인 감지 실패 시 기본값:**
+- 도메인: `general`
+- 기술 스택: `_registry.json`의 general.defaultStack (spring-boot-kotlin, mysql, none)
+
+### --quick Step 2: 프로젝트 정보 (자동)
+
+```bash
+# 디렉토리명에서 프로젝트명 추출
+PROJECT_NAME=$(basename "$(pwd)")
+PROJECT_DESCRIPTION=""  # 빈 값 (나중에 수정 가능)
+```
+
+### --quick Step 5: 에이전트 팀 (기본값)
+
+```json
+{
+  "agents": {
+    "enabled": ["pm", "backend", "code-reviewer"],
+    "disabled": ["planner", "frontend", "qa", "docs", "db-designer", "devops"]
+  }
+}
+```
+
+### --quick Step 7: 완료 안내 (추가 문구)
+
+일반 모드의 완료 안내에 다음 문구를 추가:
+
+```
+> **--quick 모드로 초기화됨**: 설정을 변경하려면 `/skill-init --reset`을 실행하세요.
+```
+
+---
+
 ## 실행 플로우
+
+> 아래는 **일반 모드** 실행 플로우입니다. `--quick` 모드는 위 섹션의 비교표에 따라 각 Step이 자동 처리됩니다.
 
 ### Step 1: 환경 검증
 
