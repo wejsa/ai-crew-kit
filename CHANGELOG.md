@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.20.0] - 2026-02-24
+
+### Changed
+- README.md 구조 개편: 599줄 → 110줄 축소, 상세 내용을 docs/ 6개 파일로 분리
+  - `docs/getting-started.md`: 설치 상세 + 초기화 흐름 + 온보딩 안내
+  - `docs/concepts.md`: 도메인, 에이전트 팀, 디렉토리 구조, 실행 모델, 핵심 원칙
+  - `docs/skill-reference.md`: 22개 스킬 전체 레퍼런스 + 자연어 매핑
+  - `docs/workflow-guide.md`: 자동 체이닝, 7가지 워크플로우, 품질 게이트, Git 전략
+  - `docs/customization.md`: 도메인 확장, 새 도메인 생성/전환, Layered Override
+  - `docs/upgrade-guide.md`: 프레임워크 업그레이드, 보존 항목, 롤백
+
+### Added
+- skill-init: `--quick` 모드 — 제로 결정 온보딩 (자동 감지 + 기본값, AskUserQuestion 0회)
+  - 디렉토리명 → 프로젝트명, 빌드 파일 기반 도메인/스택 자동 감지
+  - 감지 실패 시 general 도메인 defaultStack 사용
+  - 기본 에이전트 3개 (pm, backend, code-reviewer)
+  - `--quick --reset` 조합 지원
+
 ## [1.19.0] - 2026-02-23
 
 ### Changed
