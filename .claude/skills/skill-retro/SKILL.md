@@ -3,7 +3,7 @@ name: skill-retro
 description: 완료 Task 회고 - 분석 리포트 생성 + 체크리스트/컨벤션 학습 반영. 사용자가 "회고 해줘" 또는 /skill-retro를 요청할 때 사용합니다.
 disable-model-invocation: false
 allowed-tools: Bash(git:*), Bash(gh:*), Read, Write, Edit, Glob, Grep, AskUserQuestion
-argument-hint: "[TASK-ID|--summary]"
+argument-hint: "[TASK-ID|--summary|--lessons [list|search {keyword}|top]]"
 ---
 
 # skill-retro: 완료 Task 회고
@@ -12,6 +12,7 @@ argument-hint: "[TASK-ID|--summary]"
 - 사용자가 `/skill-retro` 또는 "회고 해줘" 요청 시
 - 사용자가 `/skill-retro {TASK-ID}` 또는 "TASK-001 회고해줘" 요청 시
 - 사용자가 `/skill-retro --summary` 또는 "전체 회고 요약해줘" 요청 시
+- 사용자가 `/skill-retro --lessons` 또는 "학습 항목 보여줘" 요청 시
 
 ## 실행 모드
 
@@ -20,6 +21,7 @@ argument-hint: "[TASK-ID|--summary]"
 | 기본 | `/skill-retro` | 최근 완료 1개 Task |
 | 특정 | `/skill-retro TASK-001` | 지정 Task |
 | 전체 요약 | `/skill-retro --summary` | completed.json 전체 |
+| 학습 관리 | `/skill-retro --lessons [list\|search {keyword}\|top]` | lessons-learned.json |
 
 ## 사전 조건 검증 (MUST-EXECUTE-FIRST)
 
@@ -307,6 +309,44 @@ AskUserQuestion 옵션:
 
 **중요**: CLAUDE.md는 절대 수정하지 않음. 체크리스트/컨벤션 파일만 수정.
 
+### 5.5 lessons-learned.json 저장
+
+회고 분석 결과에서 도출된 학습 항목을 `.claude/state/lessons-learned.json`에 저장한다.
+파일이 없으면 빈 구조로 새로 생성한다.
+
+**JSON 구조:**
+```json
+{
+  "metadata": {
+    "version": 1,
+    "updatedAt": "{timestamp}"
+  },
+  "lessons": [
+    {
+      "id": "L-001",
+      "taskId": "{TASK-ID}",
+      "category": "quality|performance|architecture|process|security",
+      "title": "{학습 항목 제목}",
+      "description": "{상세 설명}",
+      "impact": "high|medium|low",
+      "tags": ["tag1", "tag2"],
+      "appliedCount": 0,
+      "createdAt": "{timestamp}",
+      "updatedAt": "{timestamp}"
+    }
+  ]
+}
+```
+
+**저장 절차:**
+1. `.claude/state/lessons-learned.json` 존재 확인 → 없으면 `{"metadata":{"version":1,"updatedAt":""},"lessons":[]}` 생성
+2. 회고 분석의 Lessons 섹션 (Keep/Improve/Learn/Try)에서 학습 항목 추출
+3. 기존 lessons과 중복 검사 (title + category 기반)
+4. 중복이면 `appliedCount` 증가 + `updatedAt` 갱신
+5. 신규면 새 항목 추가 (ID는 `L-{NNN}` 형식, 자동 증가)
+6. `metadata.version` 1 증가 + `metadata.updatedAt` 갱신
+7. JSON 유효성 검증 후 저장
+
 ### 6. 실행 로그 기록
 
 `.claude/state/execution-log.json`에 추가:
@@ -366,6 +406,56 @@ AskUserQuestion 옵션:
 ### 리포트
 📄 `docs/retro/summary-YYYY-MM-DD.md`
 ```
+
+## --lessons 관리 명령어
+
+학습 항목(lessons-learned.json) 조회 및 관리 전용 모드.
+
+### /skill-retro --lessons list
+
+전체 학습 항목을 카테고리별로 정리하여 출력:
+
+```
+## 📚 학습 항목 목록
+
+### quality (N건)
+| ID | 제목 | 영향도 | 적용 횟수 | 출처 Task |
+|----|------|--------|----------|----------|
+| L-001 | {제목} | high | 3 | TASK-005 |
+
+### architecture (N건)
+...
+
+### 총 {N}건 / 마지막 갱신: {updatedAt}
+```
+
+### /skill-retro --lessons search {keyword}
+
+키워드로 학습 항목 검색 (title, description, tags 대상):
+
+```
+## 🔍 학습 검색: "{keyword}"
+
+| ID | 제목 | 카테고리 | 영향도 | 매칭 |
+|----|------|---------|--------|------|
+| L-003 | {제목} | security | high | tags: "{keyword}" |
+```
+
+### /skill-retro --lessons top
+
+가장 많이 반복된 (appliedCount 기준) 상위 5개 학습 항목 출력:
+
+```
+## 🏆 Top 학습 항목 (반복 빈도순)
+
+| 순위 | ID | 제목 | 카테고리 | 적용 횟수 |
+|------|-----|------|---------|----------|
+| 1 | L-002 | {제목} | quality | 5 |
+| 2 | L-001 | {제목} | process | 3 |
+...
+```
+
+**파일 미존재 시:** "학습 항목이 없습니다. 회고를 먼저 실행하세요: `/skill-retro`" 출력
 
 ## 자동 체이닝
 - 없음 (독립 실행)

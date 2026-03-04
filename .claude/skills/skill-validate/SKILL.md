@@ -159,6 +159,46 @@ fi
 grep -q "/skill-{name}" CLAUDE.md || echo "WARN: $skill_name이 CLAUDE.md에 등록되지 않음"
 ```
 
+### 9. [IMPORTANT] 도메인 완전성 검증
+
+각 도메인 디렉토리(`_base` 제외)의 최소 요구 파일/구조 확인:
+
+```bash
+for domain_dir in .claude/domains/*/; do
+  domain=$(basename "$domain_dir")
+  [ "$domain" = "_base" ] && continue
+
+  # 필수 파일 확인
+  [ -f "$domain_dir/domain.json" ] || echo "FAIL: $domain — domain.json 없음"
+
+  # domain.json 필수 필드 확인
+  python3 -c "
+import json, sys
+d = json.load(open('$domain_dir/domain.json'))
+for field in ['id', 'name', 'icon', 'description']:
+    if field not in d:
+        print(f'FAIL: $domain — domain.json에 {field} 필드 없음')
+" 2>/dev/null
+
+  # docs 디렉토리 존재 + 최소 1개 파일
+  if [ -d "$domain_dir/docs" ]; then
+    DOC_COUNT=$(ls "$domain_dir/docs/"*.md 2>/dev/null | wc -l)
+    [ "$DOC_COUNT" -eq 0 ] && echo "WARN: $domain — docs/ 디렉토리에 .md 파일 없음"
+  else
+    echo "WARN: $domain — docs/ 디렉토리 없음"
+  fi
+
+  # checklists 디렉토리 존재
+  [ -d "$domain_dir/checklists" ] || echo "INFO: $domain — checklists/ 디렉토리 없음"
+done
+```
+
+**검증 항목:**
+- 도메인 디렉토리에 `domain.json` 존재 → ERROR (없으면)
+- `domain.json`에 필수 필드(`id`, `name`, `icon`, `description`) 존재 → ERROR (없으면)
+- `docs/` 디렉토리에 최소 1개 `.md` 파일 → WARNING (없으면)
+- `checklists/` 디렉토리 존재 → INFO (없으면)
+
 ## 출력 포맷
 
 ```
@@ -175,8 +215,9 @@ grep -q "/skill-{name}" CLAUDE.md || echo "WARN: $skill_name이 CLAUDE.md에 등
 | 스키마 | 3 | 0 | 0 |
 | 워크플로우 | 6 | 0 | 0 |
 | 커스텀 스킬 | 2 | 0 | 0 |
+| 도메인 완전성 | 4 | 0 | 0 |
 
-### 전체 결과: ✅ PASS (69 통과, 1 경고, 0 실패)
+### 전체 결과: ✅ PASS (73 통과, 1 경고, 0 실패)
 
 ### 경고 상세
 - ⚠️ [템플릿] 미사용 마커: {{CUSTOM_MARKER}} (TEMPLATE-ENGINE.md에 정의됨)

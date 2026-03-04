@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.23.0] - 2026-03-05
+
+### Added
+- skill-domain: `create` 명령어 추가 — `--ref` 참조 도메인 기반 새 도메인 생성 + AI 초기 문서 자동 생성
+- skill-domain: `disable-model-invocation: false`로 변경 (AI 문서 생성 지원)
+- skill-validate: 검증 항목 #9 도메인 완전성 검증 추가 (domain.json 필수 필드, docs/ 최소 파일)
+- skill-retro: `lessons-learned.json` 구조 설계 + 회고 시 학습 항목 자동 추출/저장 (Step 5.5)
+- skill-retro: `--lessons` 명령어 추가 (list/search/top 하위 명령)
+- skill-plan: "과거 학습 반영" 절차 추가 — lessons-learned.json에서 관련 항목 로드 후 설계 참고
+
+### Changed
+- skill-domain: allowed-tools에 `Edit` 추가
+- skill-domain: argument-hint에 `create` 추가
+
 ## [1.22.0] - 2026-03-04
 
 ### Added

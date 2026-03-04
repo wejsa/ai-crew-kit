@@ -1,9 +1,9 @@
 ---
 name: skill-domain
 description: 도메인 관리 - 조회, 전환, 커스터마이징, 워크플로우 정의. /skill-domain으로 호출합니다.
-disable-model-invocation: true
-allowed-tools: Bash(git:*), Read, Write, Glob, AskUserQuestion
-argument-hint: "[list|switch|add-doc|add-checklist|add-workflow|export] [options]"
+disable-model-invocation: false
+allowed-tools: Bash(git:*), Read, Write, Edit, Glob, AskUserQuestion
+argument-hint: "[list|switch|create|add-doc|add-checklist|add-workflow|export] [options]"
 ---
 
 # skill-domain: 도메인 관리
@@ -17,6 +17,7 @@ argument-hint: "[list|switch|add-doc|add-checklist|add-workflow|export] [options
 /skill-domain                      # 현재 도메인 정보
 /skill-domain list                 # 사용 가능한 도메인 목록
 /skill-domain switch {domain}      # 도메인 전환
+/skill-domain create {name} [--ref {domain}]  # 새 도메인 생성 (AI 초기 문서 포함)
 /skill-domain add-doc {path}       # 참고자료 추가
 /skill-domain add-checklist {path} # 체크리스트 추가
 /skill-domain add-workflow {name}   # 커스텀 워크플로우 정의
@@ -375,6 +376,129 @@ agent-pm에게 이 워크플로우로 작업 요청:
 5. docs-only
 6. migration
 7. {name} ← 새로 추가됨
+```
+
+---
+
+### create: 새 도메인 생성
+
+**사용법:**
+```
+/skill-domain create healthcare
+/skill-domain create healthcare --ref fintech
+```
+
+`--ref`로 참조 도메인을 지정하면 해당 도메인의 구조를 기반으로 생성합니다. 미지정 시 `general` 기반.
+
+**Step 1: 도메인 정보 수집**
+
+AskUserQuestion으로 수집:
+```
+question: "새 도메인의 정보를 입력해주세요."
+options:
+  - label: "도메인 표시명"
+    description: "예: 헬스케어, IoT, 교육"
+  - label: "아이콘"
+    description: "예: 🏥, 📡, 📚"
+  - label: "설명"
+    description: "이 도메인의 주요 특성과 컴플라이언스 요구사항"
+```
+
+**Step 2: 도메인 이름 유효성 검증**
+
+```bash
+# 기존 도메인 이름 충돌 확인
+ls .claude/domains/{name}/ 2>/dev/null && {
+  echo "❌ 이미 존재하는 도메인입니다: {name}"
+  exit 1
+}
+# 이름 규칙: 소문자 영문 + 하이픈만 허용
+echo "{name}" | grep -qP '^[a-z][a-z0-9-]*$' || {
+  echo "❌ 도메인 이름은 소문자 영문과 하이픈만 사용 가능합니다"
+  exit 1
+}
+```
+
+**Step 3: 디렉토리 구조 생성**
+
+```bash
+# 참조 도메인 결정 (--ref 또는 general)
+REF_DOMAIN="${ref:-general}"
+
+# 디렉토리 생성
+mkdir -p .claude/domains/{name}/{docs,checklists,error-codes,templates}
+```
+
+**Step 4: domain.json 생성**
+
+참조 도메인의 domain.json을 기반으로 새 domain.json 생성:
+
+```json
+{
+  "id": "{name}",
+  "name": "{표시명}",
+  "icon": "{아이콘}",
+  "description": "{설명}",
+  "status": "custom",
+  "compliance": [],
+  "defaultTaskPrefix": "{NAME 대문자 축약}",
+  "defaultStack": {
+    "backend": "spring-boot-kotlin",
+    "database": "mysql",
+    "cache": "none"
+  },
+  "keywords": {},
+  "checklists": ["common.md", "security-basic.md"]
+}
+```
+
+**Step 5: AI 기반 초기 문서 생성**
+
+사용자가 제공한 도메인 설명과 참조 도메인의 문서 구조를 기반으로 AI가 초기 문서를 생성한다:
+
+1. **참조 도메인 문서 분석**: `.claude/domains/{ref}/docs/` 디렉토리의 파일명과 구조 확인
+2. **초기 문서 생성** (각 파일을 Write 도구로 생성):
+   - `docs/overview.md` — 도메인 개요, 핵심 개념, 용어집
+   - `docs/common-patterns.md` — 자주 사용되는 설계 패턴
+   - `docs/error-handling.md` — 도메인 특화 에러 처리 가이드
+   - `checklists/domain-logic.md` — 도메인 로직 검증 체크리스트
+3. **키워드 매핑 초기화**: 생성된 문서 기반으로 domain.json의 `keywords` 필드 설정
+
+**생성 품질 기준:**
+- 참조 도메인 문서의 구조와 형식을 따르되, 내용은 새 도메인에 맞게 생성
+- 각 문서는 최소 50줄 이상의 실질적 내용 포함
+- 체크리스트는 CRITICAL/MAJOR/MINOR 심각도 포함
+
+**Step 6: _registry.json에 등록**
+
+```bash
+# _registry.json에 새 도메인 추가
+# domains 배열에 새 항목 추가
+```
+
+**Step 7: 완료 안내**
+
+```
+## ✅ 도메인 생성 완료
+
+### 생성된 도메인
+- **ID**: {name}
+- **표시명**: {표시명} {아이콘}
+- **참조 도메인**: {ref}
+- **위치**: .claude/domains/{name}/
+
+### 생성된 파일
+- domain.json — 도메인 설정
+- docs/overview.md — 도메인 개요 (AI 생성)
+- docs/common-patterns.md — 설계 패턴 (AI 생성)
+- docs/error-handling.md — 에러 처리 (AI 생성)
+- checklists/domain-logic.md — 도메인 체크리스트 (AI 생성)
+
+### 다음 단계
+1. 생성된 문서를 검토하고 프로젝트에 맞게 수정하세요
+2. 도메인 전환: `/skill-domain switch {name}`
+3. 참고자료 추가: `/skill-domain add-doc {path}`
+4. 체크리스트 추가: `/skill-domain add-checklist {path}`
 ```
 
 ---
