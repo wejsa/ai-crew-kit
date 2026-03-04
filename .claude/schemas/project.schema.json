@@ -131,6 +131,12 @@
           "enum": ["ko", "en"],
           "default": "ko",
           "description": "기본 언어"
+        },
+        "workflowProfile": {
+          "type": "string",
+          "enum": ["standard", "fast"],
+          "default": "standard",
+          "description": "standard: 전체 체이닝 (review 포함), fast: 프로토타입용 (리뷰 생략)"
         }
       },
       "additionalProperties": false

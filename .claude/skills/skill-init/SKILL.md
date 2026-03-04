@@ -32,6 +32,7 @@ argument-hint: "[--quick] [--reset]"
 | Step 3: 도메인 선택 | AskUserQuestion 1회 | 자동 감지 → fallback: general |
 | Step 4: 기술 스택 | AskUserQuestion 5+회 | `_registry.json`의 domain.defaultStack 사용 |
 | Step 5: 에이전트 팀 | AskUserQuestion 1회 (multi-select) | 기본 3개: pm, backend, code-reviewer |
+| Step 5.5: 워크플로우 프로필 | AskUserQuestion 1회 | standard 기본값 |
 | Step 6: 파일 생성 | 그대로 | 그대로 |
 | Step 7: 완료 안내 | 그대로 | + "설정 변경: /skill-init --reset" 안내 추가 |
 
@@ -252,6 +253,21 @@ cat .claude/domains/_registry.json
 ☐ 📚 agent-docs — API 문서, README, 기술 문서 작성
 ```
 
+### Step 5.5: 워크플로우 프로필 선택
+
+**AskUserQuestion 사용:**
+
+```
+question: "워크플로우 프로필을 선택해주세요."
+options:
+  - label: "Standard (권장)"
+    description: "전체 체이닝 (5관점 리뷰 포함), 팀 프로젝트용"
+  - label: "Fast"
+    description: "리뷰 생략, 프로토타입/개인 프로젝트용"
+```
+
+**--quick 모드**: standard 기본값 자동 적용 (질문 생략)
+
 ### Step 6: 파일 생성
 
 **생성 항목:**
@@ -278,7 +294,8 @@ cat .claude/domains/_registry.json
     "branchStrategy": "git-flow",
     "commitFormat": "conventional",
     "prLineLimit": 500,
-    "testCoverage": 80
+    "testCoverage": 80,
+    "workflowProfile": "standard"
   },
   "createdAt": "{timestamp}",
   "kitVersion": "{cat VERSION의 값}",

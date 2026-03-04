@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.22.0] - 2026-03-04
+
+### Added
+- 워크플로우 프로필 (standard/fast): project.schema.json에 `workflowProfile` 필드 추가
+- CLAUDE.md.tmpl: `{{WORKFLOW_PROFILE}}`, `{{WORKFLOW_CHAINING_RULES}}` 마커 기반 프로필별 체이닝 규칙 동적 생성
+- TEMPLATE-ENGINE.md: `generate_workflow_chaining_rules()` 블록 생성기 추가
+- skill-init: Step 5.5 워크플로우 프로필 선택 질문 추가 (--quick 시 standard 자동)
+- skill-impl: 프로필별 라인 수 제한 (standard: 700줄, fast: 1000줄)
+- skill-impl: 프로필별 다음 스킬 분기 (standard: review-pr, fast: merge-pr 직행)
+
+### Changed
+- CLAUDE.md.tmpl: 자동 체이닝 규칙 테이블을 `{{WORKFLOW_CHAINING_RULES}}` 블록 마커로 교체
+- CLAUDE.md.tmpl: 중단 조건 "라인 수 700 초과" → "라인 수 제한 초과 (프로필별 상이)"
+- CLAUDE.md.tmpl: 워크플로우 진행 표시에서 review-pr/fix 단계에 "(standard에서만 실행)" 주석 추가
+- skill-init: project.json conventions 템플릿에 `workflowProfile` 필드 추가
+
 ## [1.21.0] - 2026-03-04
 
 ### Added

@@ -44,6 +44,7 @@ AI Crew Kit의 CLAUDE.md 자동 생성 엔진입니다.
 | `{{TASK_PREFIX}}` | project.json → conventions.taskPrefix | domain.defaultTaskPrefix | Task ID 접두사 |
 | `{{PR_LINE_LIMIT}}` | project.json → conventions.prLineLimit | 500 | PR 라인 제한 |
 | `{{TEST_COVERAGE}}` | project.json → conventions.testCoverage | 80 | 테스트 커버리지 목표 |
+| `{{WORKFLOW_PROFILE}}` | project.json → conventions.workflowProfile | "standard" | 워크플로우 프로필 (standard/fast) |
 
 ### 블록 마커
 
@@ -58,6 +59,7 @@ AI Crew Kit의 CLAUDE.md 자동 생성 엔진입니다.
 | `{{DOMAIN_ERROR_CODES}}` | error-codes.json 기반 | 에러 코드 테이블 |
 | `{{DOMAIN_COMPLIANCE}}` | domain.compliance 기반 | 컴플라이언스 목록 |
 | `{{CUSTOM_SECTION}}` | project.json → customSections | 사용자 정의 섹션 |
+| `{{WORKFLOW_CHAINING_RULES}}` | workflowProfile 기반 | 프로필별 자동 체이닝 규칙 테이블 |
 
 ---
 
@@ -292,6 +294,57 @@ def generate_conventions_section(project: dict, domain: dict) -> str:
     return "\n".join(lines)
 ```
 
+### WORKFLOW_CHAINING_RULES (프로필별 체이닝 규칙)
+
+```python
+def generate_workflow_chaining_rules(project: dict) -> str:
+    """
+    워크플로우 프로필(standard/fast)에 따라 자동 체이닝 규칙 테이블 생성
+    """
+    profile = project.get("conventions", {}).get("workflowProfile", "standard")
+
+    if profile == "fast":
+        # fast: review-pr/fix 단계 생략, impl → merge-pr 직행
+        return "\n".join([
+            "| 완료 스킬 | 조건 | 자동 호출 |",
+            "|-----------|------|----------|",
+            "| skill-feature | 사용자 승인 | → skill-plan |",
+            "| skill-plan | 사용자 \"Y\" 승인 | → skill-impl |",
+            "| skill-impl | PR 생성 + 빌드/테스트 통과 | → skill-merge-pr {PR번호} |",
+            "| skill-merge-pr | 남은 스텝 있음 | → skill-impl --next |",
+            "| skill-merge-pr | 마지막 스텝 | Task 완료 처리 후 종료 |",
+            "| skill-hotfix | - | 자동 체이닝 없음 (독립 실행) |",
+            "| skill-rollback | - | 자동 체이닝 없음 (독립 실행) |",
+            "| skill-retro | - | 자동 체이닝 없음 (독립 실행) |",
+            "| skill-report | - | 자동 체이닝 없음 (독립 실행) |",
+            "| skill-onboard | - | 자동 체이닝 없음 (독립 실행) |",
+            "| skill-estimate | - | 자동 체이닝 없음 (독립 실행) |",
+            "| skill-create | - | 자동 체이닝 없음 (독립 실행) |",
+        ])
+    else:
+        # standard: 전체 체이닝 (review-pr/fix 포함)
+        return "\n".join([
+            "| 완료 스킬 | 조건 | 자동 호출 |",
+            "|-----------|------|----------|",
+            "| skill-feature | 사용자 승인 | → skill-plan |",
+            "| skill-plan | 사용자 \"Y\" 승인 | → skill-impl |",
+            "| skill-impl | PR 생성 완료 | → skill-review-pr {PR번호} --auto-fix |",
+            "| skill-review-pr | APPROVED | → skill-merge-pr {PR번호} |",
+            "| skill-review-pr | CRITICAL + --auto-fix | → skill-fix {PR번호} |",
+            "| skill-review-pr | REQUEST_CHANGES | ❌ 멈춤 (수정 대기) |",
+            "| skill-fix | 수정 완료 | → skill-review-pr {PR번호} --auto-fix |",
+            "| skill-merge-pr | 남은 스텝 있음 | → skill-impl --next |",
+            "| skill-merge-pr | 마지막 스텝 | Task 완료 처리 후 종료 |",
+            "| skill-hotfix | - | 자동 체이닝 없음 (독립 실행) |",
+            "| skill-rollback | - | 자동 체이닝 없음 (독립 실행) |",
+            "| skill-retro | - | 자동 체이닝 없음 (독립 실행) |",
+            "| skill-report | - | 자동 체이닝 없음 (독립 실행) |",
+            "| skill-onboard | - | 자동 체이닝 없음 (독립 실행) |",
+            "| skill-estimate | - | 자동 체이닝 없음 (독립 실행) |",
+            "| skill-create | - | 자동 체이닝 없음 (독립 실행) |",
+        ])
+```
+
 ### DOMAIN_ERROR_CODES (레이지 로딩 — 파일 경로 참조)
 
 ```python
@@ -442,6 +495,7 @@ def generate_claude_md(project_json_path: str) -> str:
         "TASK_PREFIX": resolve_task_prefix(project, domain),
         "PR_LINE_LIMIT": resolve_pr_line_limit(project, domain),
         "TEST_COVERAGE": resolve_test_coverage(project, domain),
+        "WORKFLOW_PROFILE": project.get("conventions", {}).get("workflowProfile", "standard"),
     }
 
     # 4. 블록 마커 값 준비
@@ -452,6 +506,7 @@ def generate_claude_md(project_json_path: str) -> str:
         "DOMAIN_DOCS_MAPPING": generate_docs_mapping(domain),
         "DOMAIN_ERROR_CODES": generate_error_codes_section(domain_id),  # 레이지 로딩 파일 참조
         "DOMAIN_COMPLIANCE": generate_compliance_section(domain),
+        "WORKFLOW_CHAINING_RULES": generate_workflow_chaining_rules(project),  # 프로필별 체이닝 규칙
         "CUSTOM_SECTION": "",  # 초기 생성 시 빈 값, 보존 시 extract_custom_section()으로 대체
     }
 

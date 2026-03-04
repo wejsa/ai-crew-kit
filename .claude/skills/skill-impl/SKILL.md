@@ -165,12 +165,24 @@ fi
 git diff --stat
 ```
 
+project.json의 `conventions.workflowProfile` 확인:
+
+**standard (기본):**
+
 | 라인 수 | 처리 |
 |---------|------|
 | < 300 | ✅ 진행 |
 | 300~500 | ⚠️ 경고 표시 후 진행 |
 | 500~700 | ⚠️ 강력 경고 + 사용자 확인 |
 | > 700 | ❌ 차단 - 스텝 분리 필요 |
+
+**fast:**
+
+| 라인 수 | 처리 |
+|---------|------|
+| < 500 | ✅ 진행 |
+| 500~1000 | ⚠️ 경고 표시 후 진행 |
+| > 1000 | ❌ 차단 - 스텝 분리 필요 |
 
 ### 5. 빌드 & 테스트
 
@@ -299,23 +311,41 @@ gh pr create \
 {"timestamp": "{현재시각}", "taskId": "{taskId}", "skill": "skill-impl", "action": "pr_created", "details": {"prNumber": {number}, "stepNumber": {N}}}
 ```
 
-### 9. skill-review-pr 자동 호출
+### 9. 다음 스킬 호출 (프로필별)
 
-**PR 생성 완료 후 반드시 수행:**
+project.json의 `conventions.workflowProfile` 확인:
+
+**standard:**
+
+PR 생성 완료 후 반드시 수행:
 ```
 Skill tool 사용: skill="skill-review-pr", args="{prNumber} --auto-fix"
 ```
-
-**중요:**
-- PR 생성 및 상태 업데이트 후 skill-review-pr 호출
-- skill-review-pr 호출 없이 직접 리뷰 진행 **금지**
-- 반드시 Skill tool을 사용하여 skill-review-pr 스킬 실행
 
 **출력 예시:**
 ```
 ✅ PR #{number} 생성 완료
 🔄 코드 리뷰를 자동 시작합니다...
 ```
+
+**fast:**
+
+빌드/테스트 통과 확인 후:
+```
+Skill tool 사용: skill="skill-merge-pr", args="{prNumber}"
+```
+(review-pr 생략, 직접 merge 호출)
+
+**출력 예시:**
+```
+✅ PR #{number} 생성 완료 (fast 프로필)
+🔄 빌드/테스트 통과 — PR 머지를 자동 시작합니다...
+```
+
+**중요:**
+- PR 생성 및 상태 업데이트 후 다음 스킬 호출
+- 반드시 Skill tool을 사용하여 스킬 실행
+- 직접 리뷰/머지 진행 **금지**
 
 ### 10. 문서 영향도 분석 (백그라운드 Task)
 
