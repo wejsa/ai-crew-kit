@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.21.0] - 2026-03-04
+
 ### Added
 - 워크플로우 진행 표시 프로토콜: 체이닝 스킬 진입 시 표준 진행바 출력 (✅/🔄/⬜ 아이콘 + 단계별 설명)
 - 자동 체이닝 전환/중단 출력 포맷: 6가지 전환 사유 + 3가지 중단 사유 표준 메시지 템플릿
@@ -16,11 +18,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - skill-impl: 컨벤션 로딩 절차 — 계획 파일의 참조 컨벤션 또는 트리거 테이블 기반 자동 로드
 - skill-plan: 스텝 설계 시 "참조 컨벤션" 필드 추가 (skill-impl이 활용)
 - skill-review-pr: 리뷰 전 컨벤션 + 체크리스트 로딩 절차 추가
+- backlog.schema.json: workflowState.fixLoopCount 필드 추가 (루프 가드)
 
 ### Changed
 - 컨벤션 레이지 로딩: CONVENTIONS_SECTION 마커가 인라인 컨벤션 → 트리거 테이블로 변경 (토큰 ~60% 절감)
 - 에러 코드 레이지 로딩: DOMAIN_ERROR_CODES 마커가 전체 테이블 → 파일 경로 참조로 변경
 - TEMPLATE-ENGINE.md: generate_conventions_section(), generate_error_codes_section() 레이지 로딩 방식으로 재설계
+- 자동 체이닝 규칙 테이블 3행 추가 (feature→plan, review-pr→fix, fix→review-pr)
 
 ## [1.20.0] - 2026-02-24
 
