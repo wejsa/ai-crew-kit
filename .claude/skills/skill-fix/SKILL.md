@@ -50,6 +50,14 @@ fi
 # PR 리뷰 코멘트에서 CRITICAL 태그가 있는 코멘트 확인
 ```
 
+## 워크플로우 진행 표시
+
+MUST-EXECUTE-FIRST 완료 후, 다음 진행바를 출력한다:
+- workflowState.fixLoopCount에서 현재 회차 N 확인 (없으면 1)
+- "CRITICAL 이슈 자동 수정 중 (회차: N/2)" 표시
+- 루프 횟수를 명시하여 사용자가 자동 수정 한도를 인지
+- CLAUDE.md의 "워크플로우 진행 표시 프로토콜" 포맷을 따른다
+
 ## 워크플로우 상태 추적
 
 스킬 진입/완료 시 해당 Task의 `workflowState`를 업데이트한다:
@@ -60,10 +68,14 @@ fi
   "currentSkill": "skill-fix",
   "lastCompletedSkill": "skill-review-pr",
   "prNumber": {PR 번호},
+  "fixLoopCount": {N},
   "autoChainArgs": "",
   "updatedAt": "{현재 시각}"
 }
 ```
+- `fixLoopCount`: 같은 PR에 대한 skill-fix 호출 횟수 (1부터 시작, 최대 2)
+- skill-review-pr이 CRITICAL 발견 시 `fixLoopCount`를 증가시켜 전달
+- 3회째 CRITICAL 발견 시 skill-fix를 호출하지 않고 즉시 중단 (루프 가드)
 
 **완료 시 (재리뷰 호출):**
 ```json
@@ -71,6 +83,7 @@ fi
   "currentSkill": "skill-review-pr",
   "lastCompletedSkill": "skill-fix",
   "prNumber": {PR 번호},
+  "fixLoopCount": {N},
   "autoChainArgs": "",
   "updatedAt": "{현재 시각}"
 }

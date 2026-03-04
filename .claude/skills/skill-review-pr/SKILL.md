@@ -53,6 +53,26 @@ if [ "$IS_DRAFT" == "true" ]; then
 fi
 ```
 
+## 경량 점검
+
+MUST-EXECUTE-FIRST 완료 후, 워크플로우 진행 표시 전에 실행한다.
+CLAUDE.md의 "스킬 진입 시 경량 점검 프로토콜" 상세 절차를 따르되, 핵심 3단계:
+
+1. **PR-backlog 상태 일치 확인**: step.prNumber가 있고 step.status == "pr_created"면
+   `gh pr view {prNumber} --json state,mergedAt`으로 확인 → MERGED면 done 보정, CLOSED면 pending 보정
+   (네트워크 실패 시 스킵)
+2. **Stale workflow 감지**: workflowState.updatedAt < 30분 전이면
+   AskUserQuestion으로 "이어서 진행 / 처음부터 / 다른 Task" 선택지 제공
+3. **Intent 파일 복구**: `.claude/temp/*-complete-intent.json` 존재하면
+   skill-merge-pr "Intent 기반 복구" 절차로 미완료 처리 복구 후 파일 삭제
+
+## 워크플로우 진행 표시
+
+경량 점검 완료 후, 다음 진행바를 출력한다:
+- "코드 리뷰 중 (보안/도메인/테스트 3관점)" 표시
+- --auto-fix 모드일 때: "자동 리뷰 + CRITICAL 자동 수정" 명시
+- CLAUDE.md의 "워크플로우 진행 표시 프로토콜" 포맷을 따른다
+
 ## 명령어 옵션
 ```
 /skill-review-pr 123           # PR 리뷰
@@ -84,6 +104,16 @@ fi
   "updatedAt": "{현재 시각}"
 }
 ```
+
+## 리뷰 전 컨벤션 로딩
+
+PR 리뷰 시작 전 다음 절차를 수행한다:
+1. PR의 변경 파일 목록 확인 (`gh pr view {N} --json files`)
+2. CLAUDE.md의 "도메인 컨벤션 참조" 트리거 테이블에서 해당 파일에 매칭되는 컨벤션 식별
+3. 도메인 체크리스트 파일 Read로 로드:
+   - `.claude/domains/_base/checklists/common.md` (필수)
+   - `.claude/domains/{domain}/checklists/` (해당 도메인)
+4. sub-agent에게 컨벤션 + 체크리스트 내용 전달
 
 ## 실행 플로우
 

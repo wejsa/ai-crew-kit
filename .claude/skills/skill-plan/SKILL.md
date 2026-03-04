@@ -46,12 +46,26 @@ elif [ "$BEHIND" -gt 0 ]; then
 fi
 ```
 
-## Intent 복구 (사전 점검)
+## 경량 점검
 
-스킬 진입 시 `.claude/temp/*-complete-intent.json` 파일이 존재하면:
-1. `skill-merge-pr`의 "Intent 기반 복구" 절차에 따라 미완료 처리를 먼저 복구
-2. 복구 완료 후 정상 플로우 진행
-3. "⚠️ 이전 세션의 미완료 처리를 복구했습니다: {taskId}" 출력
+MUST-EXECUTE-FIRST 완료 후, 워크플로우 진행 표시 전에 실행한다.
+CLAUDE.md의 "스킬 진입 시 경량 점검 프로토콜" 상세 절차를 따르되, 핵심 3단계:
+
+1. **PR-backlog 상태 일치 확인**: step.prNumber가 있고 step.status == "pr_created"면
+   `gh pr view {prNumber} --json state,mergedAt`으로 확인 → MERGED면 done 보정, CLOSED면 pending 보정
+   (네트워크 실패 시 스킵)
+2. **Stale workflow 감지**: workflowState.updatedAt < 30분 전이면
+   AskUserQuestion으로 "이어서 진행 / 처음부터 / 다른 Task" 선택지 제공
+3. **Intent 파일 복구**: `.claude/temp/*-complete-intent.json` 존재하면
+   skill-merge-pr "Intent 기반 복구" 절차로 미완료 처리 복구 후 파일 삭제
+
+## 워크플로우 진행 표시
+
+경량 점검 완료 후, 다음 진행바를 출력한다:
+- Task의 workflowState 읽기
+- "설계 분석 및 스텝 분리 중"으로 현재 단계 표시
+- steps가 없는 초기 상태면: `⬜ plan → ⬜ impl → ⬜ review → ⬜ merge` 출력
+- CLAUDE.md의 "워크플로우 진행 표시 프로토콜" 포맷을 따른다
 
 ## 실행 플로우
 
@@ -152,15 +166,19 @@ Task tool (subagent_type: "general-purpose", run_in_background: true, descriptio
 ```
 Step 1: {제목}
 - 파일: {파일 목록}
+- 참조 컨벤션: {관련 컨벤션 파일명 목록}
 - 예상 라인: {N}
 - 내용: {상세 설명}
 
 Step 2: {제목}
 - 파일: {파일 목록}
+- 참조 컨벤션: {관련 컨벤션 파일명 목록}
 - 예상 라인: {N}
 - 내용: {상세 설명}
 - 의존: Step 1
 ```
+
+**참조 컨벤션 자동 식별**: CLAUDE.md의 "도메인 컨벤션 참조" 트리거 테이블을 참고하여 각 Step의 작업 내용에 매칭되는 컨벤션을 자동 식별한다. skill-impl이 해당 컨벤션을 Read로 로드하여 코딩 표준을 준수한다.
 
 ### 4.5 파일 충돌 검사
 

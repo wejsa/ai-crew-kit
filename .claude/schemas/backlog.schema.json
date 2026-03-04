@@ -233,6 +233,12 @@
           "type": "string",
           "description": "자동 체이닝에 전달할 인수"
         },
+        "fixLoopCount": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "maximum": 2,
+          "description": "같은 PR에 대한 skill-fix 호출 횟수 (루프 가드: 최대 2회)"
+        },
         "updatedAt": {
           "type": "string",
           "format": "date-time",

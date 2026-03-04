@@ -238,57 +238,79 @@ def generate_docs_mapping(domain_config: dict) -> str:
 | 취소, 환불 | `refund-cancel.md` |
 ```
 
-### CONVENTIONS_SECTION
+### CONVENTIONS_SECTION (레이지 로딩 — 트리거 테이블)
 
 ```python
 def generate_conventions_section(project: dict, domain: dict) -> str:
     """
-    코딩 컨벤션 섹션 생성
-    기술 스택에 따라 적절한 컨벤션 로드
+    컨벤션 레이지 로딩 트리거 테이블 생성
+    컨벤션 전체 내용을 인라인하지 않고, 트리거 조건 + 파일 경로 참조 테이블을 생성한다.
+    스킬 실행 시 해당 트리거에 매칭되면 Read 도구로 파일을 로드한다.
     """
-    tech_stack = project.get("techStack", {})
-    backend = tech_stack.get("backend", "")
+    domain_id = domain.get("id", "general")
 
-    # 백엔드 스택별 컨벤션 파일 선택
-    if "kotlin" in backend.lower():
-        return load_convention_template("kotlin")
-    elif "java" in backend.lower():
-        return load_convention_template("java")
-    elif "node" in backend.lower() or "typescript" in backend.lower():
-        return load_convention_template("typescript")
-    elif "go" in backend.lower():
-        return load_convention_template("go")
-    else:
-        return load_convention_template("default")
+    # _base 컨벤션 + 도메인 docs를 조합하여 트리거 테이블 생성
+    base_conventions = [
+        ("API 엔드포인트 설계/수정", ".claude/domains/_base/conventions/api-design.md", "필수"),
+        ("DB 스키마/쿼리 작성", ".claude/domains/_base/conventions/database.md", "필수"),
+        ("Redis 키/TTL 설정", ".claude/domains/_base/conventions/cache.md", "필수"),
+        ("테스트 작성", ".claude/domains/_base/conventions/testing.md", "필수"),
+        ("보안 관련 코드", ".claude/domains/_base/conventions/security.md", "필수"),
+        ("메시지 큐 사용", ".claude/domains/_base/conventions/message-queue.md", "필수"),
+        ("배포 설정 변경", ".claude/domains/_base/conventions/deployment.md", "필수"),
+        ("네이밍 규칙 적용", ".claude/domains/_base/conventions/naming.md", "필수"),
+        ("프로젝트 구조 변경", ".claude/domains/_base/conventions/project-structure.md", "필수"),
+        ("로깅 코드 작성", ".claude/domains/_base/conventions/logging.md", "권장"),
+        ("모니터링 설정", ".claude/domains/_base/conventions/monitoring.md", "권장"),
+        ("에러 핸들링 코드", ".claude/domains/_base/conventions/error-handling.md", "권장"),
+        ("Git 워크플로우", ".claude/domains/_base/conventions/git-workflow.md", "권장"),
+    ]
+
+    # 도메인별 docs 추가 (domain.json의 keywords에서 추출)
+    domain_docs = []
+    for keyword_group in domain.get("keywords", {}).values():
+        for doc in keyword_group.get("docs", []):
+            trigger = ", ".join(keyword_group.get("triggers", []))
+            path = f".claude/domains/{domain_id}/docs/{doc}"
+            domain_docs.append((trigger, path, "필수"))
+
+    all_entries = base_conventions + domain_docs
+
+    lines = [
+        "## 도메인 컨벤션 참조 (필요 시 Read)",
+        "",
+        "| 트리거 조건 | 참조 파일 | 필수/권장 |",
+        "|------------|----------|----------|",
+    ]
+
+    for trigger, path, level in all_entries:
+        lines.append(f"| {trigger} | `{path}` | {level} |")
+
+    lines.append("")
+    lines.append('⚠️ "필수" 파일은 해당 트리거 조건에서 반드시 Read 도구로 읽은 후 작업할 것.')
+
+    return "\n".join(lines)
 ```
 
-### DOMAIN_ERROR_CODES
+### DOMAIN_ERROR_CODES (레이지 로딩 — 파일 경로 참조)
 
 ```python
 def generate_error_codes_section(domain_id: str) -> str:
     """
-    도메인 에러 코드 테이블 생성
+    에러 코드 파일 경로 참조 생성
+    전체 에러 코드 테이블을 인라인하지 않고 파일 경로만 안내한다.
     """
     error_codes_path = f".claude/domains/{domain_id}/error-codes/error-codes.json"
 
     if not os.path.exists(error_codes_path):
         return ""
 
-    error_codes = load_json(error_codes_path)
-
-    lines = [
-        "## 에러 코드 체계",
+    return "\n".join([
+        "## 에러 코드 참조",
         "",
-        "| 코드 | HTTP | 설명 |",
-        "|------|------|------|"
-    ]
-
-    for code, info in error_codes.items():
-        http_status = info.get("httpStatus", 500)
-        description = info.get("description", "")
-        lines.append(f"| {code} | {http_status} | {description} |")
-
-    return "\n".join(lines)
+        f"에러 코드 추가/수정 시: `{error_codes_path}` 필수 참조 (Read 도구로 로드)",
+        f"에러 핸들링 가이드: `.claude/domains/{domain_id}/docs/error-handling.md`",
+    ])
 ```
 
 ### DOMAIN_COMPLIANCE
@@ -426,9 +448,9 @@ def generate_claude_md(project_json_path: str) -> str:
     block_values = {
         "TECH_STACK_SECTION": generate_tech_stack_section(project.get("techStack", {})),
         "AGENTS_SECTION": generate_agents_section(project.get("agents", {})),
-        "CONVENTIONS_SECTION": generate_conventions_section(project, domain),
+        "CONVENTIONS_SECTION": generate_conventions_section(project, domain),  # 레이지 로딩 트리거 테이블
         "DOMAIN_DOCS_MAPPING": generate_docs_mapping(domain),
-        "DOMAIN_ERROR_CODES": generate_error_codes_section(domain_id),
+        "DOMAIN_ERROR_CODES": generate_error_codes_section(domain_id),  # 레이지 로딩 파일 참조
         "DOMAIN_COMPLIANCE": generate_compliance_section(domain),
         "CUSTOM_SECTION": "",  # 초기 생성 시 빈 값, 보존 시 extract_custom_section()으로 대체
     }

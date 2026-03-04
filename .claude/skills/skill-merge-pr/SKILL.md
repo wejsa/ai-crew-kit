@@ -65,6 +65,27 @@ IS_SELF_PR=$([[ "$PR_AUTHOR" == "$CURRENT_USER" ]] && echo "true" || echo "false
 - `reviewDecision`이 `APPROVED`가 아니어도 머지 허용
 - 대신 **skill-review-pr에서 COMMENT 리뷰 완료** 확인
 
+## 경량 점검
+
+MUST-EXECUTE-FIRST 완료 후, 워크플로우 진행 표시 전에 실행한다.
+CLAUDE.md의 "스킬 진입 시 경량 점검 프로토콜" 상세 절차를 따르되, 핵심 3단계:
+
+1. **PR-backlog 상태 일치 확인**: step.prNumber가 있고 step.status == "pr_created"면
+   `gh pr view {prNumber} --json state,mergedAt`으로 확인 → MERGED면 done 보정, CLOSED면 pending 보정
+   (네트워크 실패 시 스킵)
+2. **Stale workflow 감지**: workflowState.updatedAt < 30분 전이면
+   AskUserQuestion으로 "이어서 진행 / 처음부터 / 다른 Task" 선택지 제공
+3. **Intent 파일 복구**: `.claude/temp/*-complete-intent.json` 존재하면
+   skill-merge-pr "Intent 기반 복구" 절차로 미완료 처리 복구 후 파일 삭제
+
+## 워크플로우 진행 표시
+
+경량 점검 완료 후, 다음 진행바를 출력한다:
+- "PR 머지 및 상태 업데이트 중" 표시
+- 남은 스텝 있으면: "→ 다음: impl(N+1/{total})" 안내
+- 마지막 스텝이면: "→ Task 완료 처리" 안내
+- CLAUDE.md의 "워크플로우 진행 표시 프로토콜" 포맷을 따른다
+
 ## 워크플로우 상태 추적
 
 스킬 진입/완료 시 해당 Task의 `workflowState`를 업데이트한다:

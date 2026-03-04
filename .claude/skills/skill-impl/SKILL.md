@@ -69,12 +69,26 @@ fi
 - [REQUIRED] 이전 스텝 PR이 머지되어 있어야 함
 - [REQUIRED] develop 최신 상태 동기화 (worktree 시 merge origin/develop)
 
-## Intent 복구 (사전 점검)
+## 경량 점검
 
-스킬 진입 시 `.claude/temp/*-complete-intent.json` 파일이 존재하면:
-1. `skill-merge-pr`의 "Intent 기반 복구" 절차에 따라 미완료 처리를 먼저 복구
-2. 복구 완료 후 정상 플로우 진행
-3. "⚠️ 이전 세션의 미완료 처리를 복구했습니다: {taskId}" 출력
+MUST-EXECUTE-FIRST 완료 후, 워크플로우 진행 표시 전에 실행한다.
+CLAUDE.md의 "스킬 진입 시 경량 점검 프로토콜" 상세 절차를 따르되, 핵심 3단계:
+
+1. **PR-backlog 상태 일치 확인**: step.prNumber가 있고 step.status == "pr_created"면
+   `gh pr view {prNumber} --json state,mergedAt`으로 확인 → MERGED면 done 보정, CLOSED면 pending 보정
+   (네트워크 실패 시 스킵)
+2. **Stale workflow 감지**: workflowState.updatedAt < 30분 전이면
+   AskUserQuestion으로 "이어서 진행 / 처음부터 / 다른 Task" 선택지 제공
+3. **Intent 파일 복구**: `.claude/temp/*-complete-intent.json` 존재하면
+   skill-merge-pr "Intent 기반 복구" 절차로 미완료 처리 복구 후 파일 삭제
+
+## 워크플로우 진행 표시
+
+경량 점검 완료 후, 다음 진행바를 출력한다:
+- Task의 steps 배열에서 현재 stepNumber 확인
+- "코드 구현 중 (Step {N}/{total} — {스텝명})"으로 표시
+- 각 step의 status(pending/pr_created/done)에 따라 아이콘 배정
+- CLAUDE.md의 "워크플로우 진행 표시 프로토콜" 포맷을 따른다
 
 ## 워크플로우 상태 추적
 
@@ -101,6 +115,14 @@ fi
   "updatedAt": "{현재 시각}"
 }
 ```
+
+## 컨벤션 로딩
+
+Step 시작 전 다음 절차를 수행한다:
+1. 계획 파일(`.claude/temp/{taskId}-plan.md`)에서 현재 Step의 "참조 컨벤션" 필드 확인
+2. 참조 컨벤션이 명시된 경우 → Read 도구로 해당 파일 로드
+3. 참조 컨벤션이 없는 경우 → CLAUDE.md의 "도메인 컨벤션 참조" 트리거 테이블에서 해당 작업에 매칭되는 컨벤션 파일 식별 후 Read
+4. "필수" 파일은 반드시 로드, "권장" 파일은 관련 코드 작성 시에만 로드
 
 ## 실행 플로우
 
