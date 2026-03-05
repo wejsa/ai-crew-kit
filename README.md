@@ -1,45 +1,40 @@
-# AI Crew Kit v1.23.0
+<div align="center">
 
-> 도메인 선택 → 자동 셋업 → 에이전트 팀 즉시 가동
+# AI Crew Kit
 
-AI 에이전트 팀 기반 소프트웨어 개발 키트입니다. 도메인을 선택하면 해당 분야에 특화된 에이전트 팀과 체크리스트, 참고자료가 자동으로 구성됩니다.
+**도메인 선택 → 자동 셋업 → 에이전트 팀 즉시 가동**
+
+AI 에이전트 팀 기반 소프트웨어 개발 키트
+
+[![Version](https://img.shields.io/badge/version-v1.23.0-blue?style=flat-square)](./CHANGELOG.md)
+[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](./LICENSE)
+[![GitHub Stars](https://img.shields.io/github/stars/wejsa/ai-crew-kit?style=flat-square)](https://github.com/wejsa/ai-crew-kit)
+[![Built with Claude Code](https://img.shields.io/badge/built_with-Claude_Code-blueviolet?style=flat-square)](https://claude.ai/download)
+
+[빠른 시작](#-빠른-시작) · [도메인](#-지원-도메인) · [명령어](#-주요-명령어) · [문서](#-상세-문서)
+
+</div>
 
 ---
 
-## 빠른 시작
+## 🚀 빠른 시작
 
 ```bash
-# 1. 저장소 클론
 git clone https://github.com/wejsa/ai-crew-kit.git my-project
 cd my-project
-
-# 2. Claude Code 실행
 claude
-
-# 3. 프로젝트 초기화
-/skill-init --quick    # 5분 체험 (제로 결정, 자동 감지)
-/skill-init            # 대화형 (모든 설정을 직접 선택)
-
-# 4. 첫 기능 기획
-/skill-feature "사용자 인증"
+/skill-init --quick
 ```
+
+> [!TIP]
+> `/skill-init --quick`은 제로 결정 모드로 5분 안에 체험할 수 있습니다.
+> 모든 설정을 직접 선택하려면 `/skill-init`을 사용하세요.
 
 초기화 과정에서 **도메인**, **기술 스택**, **에이전트 팀**을 선택하고, 프로젝트 전용 `README.md`와 `VERSION`(0.1.0)이 자동 생성됩니다.
 
 ---
 
-## 요구사항
-
-| 구분 | 요구사항 |
-|------|---------|
-| **필수** | [Claude Code](https://claude.ai/download) CLI |
-| **권장** | Git 2.30+ |
-
-> Node.js, Python 등 외부 런타임은 불필요합니다. Claude Code가 모든 것을 처리합니다.
-
----
-
-## 지원 도메인
+## 🌐 지원 도메인
 
 | 도메인 | 설명 | 기본 스택 | 컴플라이언스 |
 |--------|------|----------|-------------|
@@ -49,7 +44,7 @@ claude
 
 ---
 
-## 주요 명령어
+## ⚡ 주요 명령어
 
 | 명령어 | 설명 | 자연어 예시 |
 |--------|------|------------|
@@ -68,18 +63,19 @@ claude
 
 ---
 
-## 핵심 원칙
+## 💡 핵심 원칙
 
-| 원칙 | 설명 |
-|------|------|
-| **Domain-Driven Kit** | 도메인 선택이 전체 키트 동작 결정 |
-| **Layered Override** | `_base` → `{domain}` → `project.json` 순서로 설정 적용 |
-| **Agent Orchestration** | PM이 워크플로우에 따라 에이전트 자동 분배 |
-| **Zero-Config Start** | `/skill-init` 한 번으로 즉시 가동 |
+> **Domain-Driven Kit** — 도메인 선택이 전체 키트 동작 결정
+>
+> **Layered Override** — `_base` → `{domain}` → `project.json` 순서로 설정 적용
+>
+> **Agent Orchestration** — PM이 워크플로우에 따라 에이전트 자동 분배
+>
+> **Zero-Config Start** — `/skill-init` 한 번으로 즉시 가동
 
 ---
 
-## 상세 문서
+## 📖 상세 문서
 
 | 문서 | 내용 |
 |------|------|
@@ -92,19 +88,19 @@ claude
 
 ---
 
-## 변경 로그
+## 📋 요구사항
 
-자세한 변경 이력은 [CHANGELOG.md](./CHANGELOG.md)를 참조하세요.
+| 구분 | 요구사항 |
+|------|---------|
+| **필수** | [Claude Code](https://claude.ai/download) CLI |
+| **권장** | Git 2.30+ |
+
+> Node.js, Python 등 외부 런타임은 불필요합니다. Claude Code가 모든 것을 처리합니다.
 
 ---
 
-## 라이선스
+<div align="center">
 
-MIT License
+[MIT License](./LICENSE) · [변경 로그](./CHANGELOG.md) · [이슈 리포트](https://github.com/wejsa/ai-crew-kit/issues)
 
----
-
-## 관련 링크
-
-- [상세 문서](./docs/)
-- [이슈 리포트](https://github.com/wejsa/ai-crew-kit/issues)
+</div>

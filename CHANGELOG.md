@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- README.md: 리디자인 — 중앙 정렬 헤더, shields.io 배지 4개, 이모지 섹션 헤더, GitHub Alert 블록, blockquote 원칙, 중앙 푸터
+- README.md: 제목에서 버전 번호 제거 → 배지로 이동 (릴리스 시 제목 수정 불필요)
+- README.md: 요구사항 섹션 하단 이동, 정보 우선순위 재배치
+
+### Added
+- LICENSE: MIT 라이선스 파일 신규 생성
+
 ## [1.23.0] - 2026-03-05
 
 ### Added
