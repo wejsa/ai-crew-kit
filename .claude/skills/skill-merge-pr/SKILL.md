@@ -236,14 +236,23 @@ fi
 ```
 
 #### 5.1 completed.json에 먼저 추가 (데이터 보존 우선)
+
+**completed.json 쓰기 프로토콜** (backlog.json과 동일한 동시성 제어):
+1. `metadata.version` 읽기 (파일 미존재 시 `{"metadata":{"version":1,"updatedAt":"..."},"tasks":{}}` 생성)
+2. task entry 추가 + `metadata.version` 1 증가 + `metadata.updatedAt` 갱신
+3. JSON 유효성 검증 (실패 시 `git checkout -- .claude/state/completed.json`으로 롤백)
+
 ```json
 {
-  "{taskId}": {
-    "id": "{taskId}",
-    "title": "{제목}",
-    "completedAt": "{timestamp}",
-    "steps": [...],
-    "totalPRs": {N}
+  "metadata": { "version": "{N+1}", "updatedAt": "{timestamp}" },
+  "tasks": {
+    "{taskId}": {
+      "id": "{taskId}",
+      "title": "{제목}",
+      "completedAt": "{timestamp}",
+      "steps": [...],
+      "totalPRs": {N}
+    }
   }
 }
 ```
@@ -302,6 +311,14 @@ rm .claude/temp/{taskId}-plan.md
 
 #### 5.6 상태 파일 커밋 & 푸시 (단일 커밋으로 원자성 확보)
 ```bash
+# push 전 최신 develop 동기화 (다른 세션의 state 파일 변경 반영)
+if [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
+  git fetch origin develop
+  git merge origin/develop
+else
+  git pull origin develop --rebase
+fi
+
 git add .claude/state/ .claude/temp/
 git commit -m "chore: {taskId} 완료 처리"
 if [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
@@ -309,6 +326,11 @@ if [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
 else
   git push origin develop
 fi
+
+# push 실패 시 충돌 해소:
+# - backlog.json: 서로 다른 Task 변경은 모두 유지, metadata.version = max + 1
+# - completed.json: 서로 다른 Task entry 모두 유지, metadata.version = max + 1
+# - pull --rebase 후 재시도 (최대 2회)
 ```
 
 #### 5.7 Intent 파일 삭제

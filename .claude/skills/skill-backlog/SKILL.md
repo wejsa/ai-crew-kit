@@ -53,8 +53,22 @@ argument-hint: "[list|add|update|priority] [options]"
    }
    ```
 4. **충돌 감지**: Git push 실패 시 `metadata.version` 비교로 충돌 감지
-   - 로컬 version과 원격 version이 다르면 → 수동 머지 필요
+   - 로컬 version과 원격 version이 다르면 → 아래 충돌 해소 규칙 적용
    - 동일하면 → 네트워크 오류, 재시도
+
+### JSON 충돌 해소 규칙 (pull --rebase 후)
+
+| 상황 | 해소 방법 |
+|------|----------|
+| 서로 **다른 Task** 수정 | 두 변경 모두 유지 |
+| 같은 Task의 **다른 필드** 수정 | 두 필드 모두 유지 |
+| 같은 Task의 **같은 필드** 수정 | 최신 `updatedAt` 타임스탬프 우선 |
+| `metadata.version` 충돌 | `max(local, remote) + 1` |
+| `metadata.updatedAt` | 현재 시각으로 갱신 |
+
+해소 후 JSON 유효성 재검증 필수. 실패 시 `git rebase --abort` + 사용자 안내.
+
+**completed.json 동일 프로토콜 적용**: completed.json에도 `metadata.version`/`updatedAt`을 관리하며, 위와 동일한 충돌 해소 규칙을 따른다.
 
 ## 백로그 데이터 구조
 

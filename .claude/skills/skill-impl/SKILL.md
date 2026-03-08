@@ -138,10 +138,34 @@ if [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
 else
   git checkout develop
   git pull origin develop
-  # 스텝 브랜치 생성
-  git checkout -b feature/{taskId}-step{N}
+
+  # 스텝 브랜치 생성 (중복 방지)
+  BRANCH="feature/{taskId}-step{N}"
+  if git ls-remote --heads origin "$BRANCH" | grep -q "$BRANCH"; then
+    # 이미 존재 → PR 상태 확인
+    PR_STATE=$(gh pr list --head "$BRANCH" --json state --jq '.[0].state // empty')
+    if [ "$PR_STATE" = "MERGED" ]; then
+      echo "✅ $BRANCH 이미 머지됨 — 다음 Step으로 진행"
+      # 다음 step으로 스킵 (currentStep +1)
+    elif [ "$PR_STATE" = "OPEN" ]; then
+      echo "🔄 $BRANCH 기존 PR 열림 — 기존 브랜치에서 이어서 작업"
+      git checkout "$BRANCH"
+      git pull origin "$BRANCH"
+    else
+      git checkout -b "$BRANCH"
+    fi
+  else
+    git checkout -b "$BRANCH"
+  fi
 fi
 ```
+
+**Worktree merge 후 step 상태 재검증:**
+- merge 후 backlog.json 재읽기
+- 현재 step의 remote 상태 확인:
+  - `done` 또는 `merged` → 다음 step으로 스킵
+  - 다른 세션이 `in_progress` → 충돌 경고 출력
+  - `pending` → 정상 진행
 
 ### 2. 계획 파일 참조
 참고자료 로드 순서:
@@ -255,6 +279,15 @@ fi
 
 ### 6. 커밋 & 푸시
 ```bash
+# push 전 최신 develop 동기화 (다른 세션의 backlog.json 변경 반영)
+if [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
+  git fetch origin develop
+  git merge origin/develop
+else
+  git fetch origin develop
+  git rebase origin/develop
+fi
+
 git add .
 git commit -m "feat: {taskId} Step {N} - {스텝 제목}"
 if [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
@@ -262,6 +295,10 @@ if [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
 else
   git push -u origin feature/{taskId}-step{N}
 fi
+
+# push 실패 시: pull --rebase → backlog.json 충돌 해소 → 재시도 (최대 2회)
+# backlog.json 충돌 해소: 서로 다른 Task 필드는 모두 유지
+# metadata.version: max(local, remote) + 1로 재설정
 ```
 
 ### 7. PR 생성

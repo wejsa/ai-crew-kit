@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- skill-impl: push 전 develop 동기화 — 다른 세션의 backlog.json 변경 반영, push 실패 시 충돌 해소 + 재시도
+- skill-impl: branch 중복 방지 — 기존 branch/PR 상태 확인 후 생성/이어서 작업/스킵 분기
+- skill-impl: 워크트리 merge 후 step 상태 재검증 — 이미 완료된 step 스킵, 충돌 경고
+- skill-merge-pr: completed.json version 관리 — `metadata.version`/`updatedAt` 동시성 제어 도입
+- skill-merge-pr: push 전 develop 동기화 — state 파일 충돌 방지
+- skill-backlog: JSON 충돌 해소 규칙 명시 — 다른 Task는 모두 유지, 같은 필드는 최신 우선, version = max + 1
+
 ## [1.24.0] - 2026-03-08
 
 ### Added
