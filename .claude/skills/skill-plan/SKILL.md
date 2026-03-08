@@ -368,6 +368,13 @@ sequenceDiagram
 ```
 - `assignedAt` 갱신: TTL 기준점을 승인 시점으로 리셋 (planning 중 경과 시간 제외)
 
+**Git push** (하단 "Git 동기화 프로토콜" 절차 준수):
+- 커밋 메시지: `chore: lock files for {TASK-ID}`
+- **push 성공 확인 후에만 skill-impl 호출** (push 미확인 상태에서 개발 진행 금지)
+- push 충돌 시: pull --rebase → lockedFiles 교집합 확인
+  - 충돌 있으면: 사용자에게 경고 + 순차 처리/강제 진행 선택지
+  - 충돌 없으면: 정상 push 재시도
+
 **lockTTL 산정** (`skill-backlog`의 "동적 TTL" 규칙 참조):
 ```
 lockedFiles 수에 따라:

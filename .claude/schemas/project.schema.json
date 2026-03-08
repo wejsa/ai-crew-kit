@@ -208,6 +208,22 @@
         }
       }
     },
+    "metadata": {
+      "type": "object",
+      "description": "동시성 제어용 메타데이터 (backlog.json과 동일 패턴)",
+      "properties": {
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "낙관적 동시성 제어용 — 쓰기 시 1 증가"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "마지막 수정 일시"
+        }
+      }
+    },
     "createdAt": {
       "type": "string",
       "format": "date-time",
@@ -216,7 +232,7 @@
     "updatedAt": {
       "type": "string",
       "format": "date-time",
-      "description": "수정 일시"
+      "description": "수정 일시 (하위호환용, metadata.updatedAt 우선)"
     },
     "version": {
       "type": "string",

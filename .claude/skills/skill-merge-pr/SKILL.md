@@ -333,7 +333,32 @@ fi
 # - pull --rebase 후 재시도 (최대 2회)
 ```
 
-#### 5.7 Intent 파일 삭제
+#### 5.7 워크트리 → develop 동기화 (워크트리 모드 전용)
+
+워크트리에서는 state 파일 변경이 CS 브랜치에만 커밋됨. develop에도 명시적으로 반영:
+
+```bash
+if [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
+  # 메인 리포의 develop에 state 파일 변경 반영
+  MAIN_REPO=$(git rev-parse --git-common-dir | sed 's|/.git$||')
+  git -C "$MAIN_REPO" fetch origin develop
+  git -C "$MAIN_REPO" checkout develop
+  git -C "$MAIN_REPO" pull origin develop --rebase
+
+  # 워크트리의 state 파일을 메인 리포로 복사
+  cp .claude/state/backlog.json "$MAIN_REPO/.claude/state/backlog.json"
+  cp .claude/state/completed.json "$MAIN_REPO/.claude/state/completed.json" 2>/dev/null
+  cp .claude/state/execution-log.json "$MAIN_REPO/.claude/state/execution-log.json" 2>/dev/null
+
+  git -C "$MAIN_REPO" add .claude/state/
+  git -C "$MAIN_REPO" commit -m "chore: sync state from {taskId} completion" --allow-empty
+  git -C "$MAIN_REPO" push origin develop
+fi
+```
+
+**비워크트리 모드**: 섹션 5.6에서 develop에 직접 push하므로 추가 동기화 불필요.
+
+#### 5.8 Intent 파일 삭제
 ```bash
 rm .claude/temp/{taskId}-complete-intent.json
 ```

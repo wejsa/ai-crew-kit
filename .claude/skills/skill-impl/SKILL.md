@@ -335,11 +335,14 @@ gh pr create \
 `backlog.json` 업데이트:
 ```json
 {
+  "assignedAt": "{현재 ISO 8601 timestamp}",
   "steps": [
     {"number": 1, "status": "pr_created", "prNumber": 123}
   ]
 }
 ```
+- `assignedAt` 갱신: PR 생성 시점으로 TTL 타이머 자동 리셋 (lock heartbeat 효과)
+- 별도 push 불필요 — PR 커밋에 포함됨
 
 ### 8.5 실행 로그 기록
 

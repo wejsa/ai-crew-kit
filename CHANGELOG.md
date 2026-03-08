@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - skill-merge-pr: completed.json version 관리 — `metadata.version`/`updatedAt` 동시성 제어 도입
 - skill-merge-pr: push 전 develop 동기화 — state 파일 충돌 방지
 - skill-backlog: JSON 충돌 해소 규칙 명시 — 다른 Task는 모두 유지, 같은 필드는 최신 우선, version = max + 1
+- skill-status: execution-log.json 동시 쓰기 안전 규칙 — append-only + push 충돌 시 재추가
+- project.schema.json: `metadata.version`/`updatedAt` 동시성 제어 필드 추가
+- skill-merge-pr: 워크트리 → develop 명시적 동기화 (섹션 5.7) — state 파일 메인 리포 반영
+- skill-plan: 섹션 7 lockedFiles push 성공 확인 필수 + 충돌 시 교집합 검사
+- skill-impl: step 완료 시 `assignedAt` 자동 갱신 — lock heartbeat 효과
 
 ## [1.24.0] - 2026-03-08
 
