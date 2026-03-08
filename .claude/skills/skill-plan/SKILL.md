@@ -113,6 +113,42 @@ CLAUDE.md의 "스킬 진입 시 경량 점검 프로토콜" 상세 절차를 따
 - 의존성 체인에 없는 Task
 - 다른 `in_progress` Task의 `lockedFiles`와 겹치지 않음
 
+### 1.5 조기 잠금 (중복 선택 방지)
+
+Task 선택 직후, 다른 세션의 중복 선택을 방지하기 위해 **즉시** backlog.json을 업데이트하고 push한다.
+
+**1단계: backlog.json 업데이트**
+```json
+{
+  "status": "in_progress",
+  "assignee": "{user}@{hostname}-{YYYYMMDD-HHmmss}",
+  "assignedAt": "{ISO 8601 timestamp}",
+  "lockTTL": 1800,
+  "lockedFiles": [],
+  "updatedAt": "{timestamp}"
+}
+```
+- `lockTTL: 1800` (30분) — planning 전용 TTL. 승인 후 동적 TTL로 갱신됨
+- `lockedFiles: []` — 아직 스텝 분리 전이므로 비어있음
+- `metadata.version` 1 증가 + `metadata.updatedAt` 갱신
+
+**2단계: Git push** (하단 "Git 동기화 프로토콜" 절차 준수)
+- 커밋 메시지: `chore: claim {TASK-ID}`
+
+**3단계: Push 실패 시 충돌 해소**
+- `git pull --rebase` 후 선택한 Task의 remote 상태 확인
+- 해당 Task가 이미 다른 세션에 의해 `in_progress`이면:
+  → 로컬 변경 취소 (`git checkout -- .claude/state/backlog.json`)
+  → **섹션 1로 돌아가 다음 우선순위 Task 재선택**
+- 해당 Task가 여전히 `todo`이면: 정상 push 재시도
+
+**4단계: 출력**
+```
+🔒 {TASK-ID} 선점 완료 — 다른 세션에서 선택 불가
+```
+
+**Push 성공 확인 후에만 다음 단계(섹션 2)로 진행한다.** Push 미확인 상태로 진행 금지.
+
 ### 2. 요구사항 확인
 선택된 Task의 `specFile` 읽기:
 ```
@@ -293,14 +329,33 @@ sequenceDiagram
 - 수정 의견 수렴
 - **승인 받을 때까지 개발 진행하지 않음**
 
+**거절/취소 시 롤백:**
+1. backlog.json 업데이트:
+   ```json
+   {
+     "status": "todo",
+     "assignee": null,
+     "assignedAt": null,
+     "lockTTL": null,
+     "lockedFiles": []
+   }
+   ```
+   - `metadata.version` 1 증가 + `metadata.updatedAt` 갱신
+2. Git push (하단 "Git 동기화 프로토콜" 절차 준수)
+   - 커밋 메시지: `chore: release {TASK-ID}`
+3. 출력: `🔓 {TASK-ID} 잠금 해제 — 다른 세션에서 선택 가능`
+4. 사용자에게 다음 옵션 제시:
+   - 다른 Task 선택 (`/skill-plan`)
+   - 종료
+
 ### 7. 상태 업데이트 (승인 후)
+
+> `status`, `assignee`는 섹션 1.5(조기 잠금)에서 이미 설정됨. 여기서는 **파일 잠금 + 스텝 정보만 갱신**.
 
 `backlog.json` 업데이트:
 ```json
 {
-  "status": "in_progress",
-  "assignee": "dev@DESKTOP-ABC-20260203-143052",
-  "assignedAt": "2026-02-03T14:30:52Z",
+  "assignedAt": "{현재 ISO 8601 timestamp}",
   "lockTTL": 3600,
   "lockedFiles": ["src/auth/JwtService.kt", "src/auth/TokenValidator.kt"],
   "steps": [
@@ -311,6 +366,7 @@ sequenceDiagram
   "updatedAt": "{timestamp}"
 }
 ```
+- `assignedAt` 갱신: TTL 기준점을 승인 시점으로 리셋 (planning 중 경과 시간 제외)
 
 **lockTTL 산정** (`skill-backlog`의 "동적 TTL" 규칙 참조):
 ```
@@ -318,7 +374,6 @@ lockedFiles 수에 따라:
 - ≤ 3개 → lockTTL = 3600  (1시간)
 - 4~8개 → lockTTL = 7200  (2시간)
 - ≥ 9개 → lockTTL = 10800 (3시간)
-```
 ```
 
 ### 8. skill-impl 자동 호출
@@ -369,6 +424,7 @@ Skill tool 사용: skill="skill-impl"
 승인하시겠습니까?
 
 > Y: 상태 업데이트 후 `/skill-impl` 자동 실행 (Step 1 시작)
+> N: 계획 거절 — Task 잠금 해제 후 종료
 > 수정사항 입력: 해당 부분만 반영하여 계획 수정 (예: "Step 2 파일 분리해줘", "API 응답 형식 변경")
 ```
 
@@ -409,7 +465,9 @@ fi
 
 # 푸시 실패 시 (충돌)
 git pull --rebase
-# JSON 충돌: 두 Task 변경 모두 유지 (수동 해결)
+# 충돌 해소 후, 선택한 Task의 remote 상태 확인:
+# - 같은 Task가 이미 다른 세션에 의해 in_progress → 로컬 변경 취소 + 재선택
+# - 서로 다른 Task 변경 → 두 변경 모두 유지 (정상 머지)
 if [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
   git push -u origin HEAD
 else

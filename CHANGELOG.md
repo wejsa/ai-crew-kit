@@ -7,7 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- skill-plan: Task 조기 잠금(섹션 1.5) — 선택 즉시 `in_progress` + git push로 동시 세션 중복 선택 방지
+- skill-plan: 계획 거절 시 롤백 — `todo`로 복원 + git push로 잠금 해제
+- skill-status: `--locks`에 🟡 계획 중 상태 표시 (`lockedFiles` 비어있는 `in_progress` Task 구분)
+
 ### Changed
+- skill-plan: 섹션 7(승인 후) 축소 — status/assignee는 조기 잠금에서 설정, 승인 후는 lockedFiles/steps만 갱신
+- skill-plan: Git 동기화 프로토콜 충돌 해소 로직 보강 — 같은 Task 중복 claim 시 재선택
 - README.md: 리디자인 — 중앙 정렬 헤더, shields.io 배지 4개, 이모지 섹션 헤더, GitHub Alert 블록, blockquote 원칙, 중앙 푸터
 - README.md: 제목에서 버전 번호 제거 → 배지로 이동 (릴리스 시 제목 수정 불필요)
 - README.md: 요구사항 섹션 하단 이동, 정보 우선순위 재배치
