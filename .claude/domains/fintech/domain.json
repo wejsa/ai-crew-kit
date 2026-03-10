@@ -15,7 +15,7 @@
   "compliance": ["PCI-DSS", "전자금융감독규정", "개인정보보호법"],
   "keywords": {
     "payment": {
-      "triggers": ["결제", "승인", "인증", "카드"],
+      "triggers": ["결제", "승인", "인증", "카드", "토큰", "PG", "VAN", "가맹점"],
       "docs": ["payment-flow.md", "token-auth.md"]
     },
     "settlement": {

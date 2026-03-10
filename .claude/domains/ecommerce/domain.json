@@ -15,7 +15,7 @@
   "compliance": ["전자상거래법", "소비자보호법", "개인정보보호법"],
   "keywords": {
     "order": {
-      "triggers": ["주문", "결제", "구매", "체크아웃"],
+      "triggers": ["주문", "결제", "구매", "체크아웃", "장바구니"],
       "docs": ["order-flow.md", "payment-integration.md"]
     },
     "inventory": {

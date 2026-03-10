@@ -228,9 +228,10 @@ class TokenMaskingConverter : ClassicConverter() {
 
 // Error Response (401 Unauthorized) - Token Reuse Detection
 {
-  "code": "PG-GW-016",
+  "code": "TOKEN_INVALID",
   "message": "Token has been revoked"
 }
+// 내부 로그에만 PG-GW-016 기록 (외부 노출 금지)
 ```
 
 ### POST /api/v1/auth/logout
