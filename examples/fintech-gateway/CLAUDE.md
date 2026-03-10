@@ -147,6 +147,9 @@ Types: feat, fix, refactor, docs, test, chore
 
 ## 에러 코드 체계
 
+> **SSOT**: 에러 코드 전체 정의는 `.claude/domains/fintech/docs/error-handling.md` 참조.
+> 아래는 JWT 인증 관련 빠른 참조용 요약입니다.
+
 ### 외부 응답 (클라이언트에게 노출)
 공격자 정보 유출 방지를 위해 외부에는 3단계로만 응답합니다.
 
@@ -173,6 +176,8 @@ Types: feat, fix, refactor, docs, test, chore
 ---
 
 ## 보안 규칙
+
+> **SSOT**: JWT 토큰 사양 전체는 `.claude/domains/fintech/docs/token-auth.md` 참조.
 
 ### JWT 보안
 - 알고리즘: HMAC-SHA256 (HS256)

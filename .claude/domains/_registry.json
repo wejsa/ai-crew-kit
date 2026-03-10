@@ -6,7 +6,7 @@
       "id": "fintech",
       "name": "핀테크 / 금융",
       "icon": "🏦",
-      "description": "결제, 정산, 환불, 토큰 인증 등 금융 서비스",
+      "description": "결제, 정산, 환불, 토큰 인증 등 금융 서비스 도메인",
       "defaultStack": {
         "backend": "spring-boot-kotlin",
         "database": "mysql",
@@ -20,14 +20,14 @@
       "id": "ecommerce",
       "name": "이커머스",
       "icon": "🛒",
-      "description": "상품, 주문, 재고, 배송, 프로모션",
+      "description": "상품, 주문, 재고, 배송, 프로모션 등 이커머스 서비스 도메인",
       "defaultStack": {
         "backend": "spring-boot-kotlin",
         "database": "mysql",
         "cache": "redis"
       },
-      "compliance": ["전자상거래법", "소비자보호법"],
-      "keywords": ["주문", "재고", "배송", "장바구니", "쿠폰", "상품"],
+      "compliance": ["전자상거래법", "소비자보호법", "개인정보보호법"],
+      "keywords": ["주문", "재고", "배송", "장바구니", "쿠폰", "상품", "회원", "로그인", "마이페이지"],
       "maturity": "stable"
     },
     {

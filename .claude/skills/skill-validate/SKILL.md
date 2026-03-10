@@ -199,6 +199,127 @@ done
 - `docs/` 디렉토리에 최소 1개 `.md` 파일 → WARNING (없으면)
 - `checklists/` 디렉토리 존재 → INFO (없으면)
 
+### 10. [REQUIRED] 도메인 키워드 참조 정합성
+
+`domain.json`의 `keywords.*.docs[]`가 실제 파일을 가리키는지 검증:
+
+```bash
+for domain_dir in .claude/domains/*/; do
+  domain=$(basename "$domain_dir")
+  [ "$domain" = "_base" ] && continue
+  [ -f "$domain_dir/domain.json" ] || continue
+
+  python3 -c "
+import json, os, sys
+d = json.load(open('$domain_dir/domain.json'))
+for kw, cfg in d.get('keywords', {}).items():
+    for doc in cfg.get('docs', []):
+        if doc.startswith('_base:'):
+            # _base 접두사 참조 → .claude/domains/_base/{path}
+            path = '.claude/domains/_base/' + doc.split(':', 1)[1]
+        else:
+            path = '$domain_dir/docs/' + doc
+        if not os.path.isfile(path):
+            print(f'ERROR: $domain — keywords.{kw}.docs 참조 누락: {doc} (경로: {path})')
+" 2>/dev/null
+done
+```
+
+**검증 항목:**
+- `keywords.*.docs[]`의 각 파일이 실제 존재 → ERROR (없으면)
+- `_base:` 접두사는 `.claude/domains/_base/` 기준으로 경로 해석
+- product.md 참조 버그 등 재발 방지
+
+### 11. [IMPORTANT] 스키마-데이터 정합성
+
+`.claude/state/`의 `project.json`, `backlog.json`이 해당 스키마를 준수하는지 검증:
+
+```bash
+# project.json 스키마 검증 (존재 시)
+if [ -f ".claude/state/project.json" ] && [ -f ".claude/schemas/project.schema.json" ]; then
+  python3 -c "
+import json
+schema = json.load(open('.claude/schemas/project.schema.json'))
+data = json.load(open('.claude/state/project.json'))
+required = schema.get('required', [])
+for field in required:
+    if field not in data:
+        print(f'ERROR: project.json — required 필드 누락: {field}')
+properties = schema.get('properties', {})
+for key in data:
+    if key not in properties:
+        print(f'WARN: project.json — 스키마에 미정의 필드: {key}')
+" 2>/dev/null
+fi
+
+# backlog.json 스키마 검증 (존재 시)
+if [ -f ".claude/state/backlog.json" ] && [ -f ".claude/schemas/backlog.schema.json" ]; then
+  python3 -c "
+import json
+schema = json.load(open('.claude/schemas/backlog.schema.json'))
+data = json.load(open('.claude/state/backlog.json'))
+# metadata 필수 필드
+meta_req = schema.get('properties', {}).get('metadata', {}).get('required', [])
+for field in meta_req:
+    if field not in data.get('metadata', {}):
+        print(f'ERROR: backlog.json — metadata.{field} 누락')
+# task 필수 필드
+task_props = schema.get('properties', {}).get('tasks', {}).get('additionalProperties', {})
+task_req = task_props.get('required', [])
+for tid, task in data.get('tasks', {}).items():
+    for field in task_req:
+        if field not in task:
+            print(f'ERROR: backlog.json — tasks.{tid}.{field} 누락')
+" 2>/dev/null
+fi
+```
+
+**검증 항목:**
+- `project.json`의 required 필드 존재 → ERROR (없으면)
+- `backlog.json`의 metadata/task required 필드 존재 → ERROR (없으면)
+- 스키마에 미정의 필드 → WARNING
+
+### 12. [IMPORTANT] 레지스트리-도메인 교차 검증
+
+`_registry.json`과 각 `domain.json`의 핵심 필드 일치 확인:
+
+```bash
+python3 -c "
+import json, sys
+reg = json.load(open('.claude/domains/_registry.json'))
+for entry in reg['domains']:
+    did = entry['id']
+    dj_path = f'.claude/domains/{did}/domain.json'
+    try:
+        dj = json.load(open(dj_path))
+    except:
+        print(f'ERROR: {did} — domain.json 로드 실패')
+        continue
+
+    # 필드 일치 검증
+    if entry.get('name') != dj.get('name'):
+        print(f'WARN: {did} — name 불일치: registry=\"{entry.get(\"name\")}\" vs domain.json=\"{dj.get(\"name\")}\"')
+    if entry.get('icon') != dj.get('icon'):
+        print(f'WARN: {did} — icon 불일치: registry=\"{entry.get(\"icon\")}\" vs domain.json=\"{dj.get(\"icon\")}\"')
+    if entry.get('description') != dj.get('description'):
+        print(f'WARN: {did} — description 불일치')
+
+    # keywords 교차 검증: registry keywords가 domain.json triggers에 포함되는지
+    reg_kws = set(entry.get('keywords', []))
+    dj_triggers = set()
+    for cfg in dj.get('keywords', {}).values():
+        dj_triggers.update(cfg.get('triggers', []))
+    missing = reg_kws - dj_triggers
+    if missing:
+        print(f'WARN: {did} — registry keywords가 domain.json triggers에 없음: {missing}')
+" 2>/dev/null
+```
+
+**검증 항목:**
+- `name`, `icon`, `description` 일치 → WARNING (불일치 시)
+- registry `keywords[]`가 domain.json `triggers[]`에 포함 → WARNING (누락 시)
+- `--fix` 모드: domain.json 기준으로 registry 자동 동기화
+
 ## 출력 포맷
 
 ```
@@ -216,8 +337,11 @@ done
 | 워크플로우 | 6 | 0 | 0 |
 | 커스텀 스킬 | 2 | 0 | 0 |
 | 도메인 완전성 | 4 | 0 | 0 |
+| 키워드 참조 | 12 | 0 | 0 |
+| 스키마-데이터 | 8 | 0 | 0 |
+| 레지스트리-도메인 | 6 | 0 | 0 |
 
-### 전체 결과: ✅ PASS (73 통과, 1 경고, 0 실패)
+### 전체 결과: ✅ PASS (99 통과, 1 경고, 0 실패)
 
 ### 경고 상세
 - ⚠️ [템플릿] 미사용 마커: {{CUSTOM_MARKER}} (TEMPLATE-ENGINE.md에 정의됨)
@@ -244,6 +368,7 @@ done
 자동 수정 가능 항목:
 - 레지스트리에 있으나 디렉토리 없는 도메인 → 레지스트리에서 제거
 - `metadata.version` 필드 누락 → 기본값 1 추가
+- 레지스트리-도메인 필드 불일치 → domain.json 기준으로 registry 동기화
 
 자동 수정 불가 항목 (수동 필요):
 - JSON 문법 오류

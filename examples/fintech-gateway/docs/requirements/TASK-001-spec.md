@@ -244,10 +244,14 @@ Authorization: Bearer {accessToken}
 }
 ```
 
-## 도메인 참고자료
+## 도메인 참고자료 (SSOT)
 
-- `.claude/domains/fintech/docs/token-auth.md`
-- `.claude/domains/fintech/docs/security-compliance.md`
+> **SSOT 원칙**: 아래 도메인 문서가 JWT 사양/에러코드의 진실점(Single Source of Truth)입니다.
+> 본 스펙 문서의 API 명세/에러코드는 구현 가이드용 요약이며, 불일치 시 도메인 문서를 우선합니다.
+
+- `.claude/domains/fintech/docs/token-auth.md` — JWT 토큰 구조, Token Rotation, 보안 규칙
+- `.claude/domains/fintech/docs/error-handling.md` — 에러 코드 전체 정의 (SSOT)
+- `.claude/domains/fintech/docs/security-compliance.md` — PCI-DSS, 암호화 규칙
 
 ## 수용 기준
 

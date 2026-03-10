@@ -1,0 +1,99 @@
+scenario:
+  name: "전체 기능 개발 워크플로우"
+  description: "기획 → 설계 → 개발 → 리뷰 → 머지 전체 플로우 검증"
+  workflow: "full-feature"
+
+steps:
+  - name: "기획"
+    skill: "skill-feature"
+    given:
+      - "project.json이 존재한다"
+      - "backlog.json이 유효한 JSON이다"
+    when:
+      - "사용자가 '새 기능 만들어줘'를 요청한다"
+    then:
+      - "요구사항 문서가 docs/requirements/ 에 생성된다"
+      - "backlog.json에 새 Task가 추가된다 (status: todo)"
+      - "사용자에게 승인을 요청한다"
+    files_changed:
+      - path: "docs/requirements/TASK-XXX-spec.md"
+        action: "create"
+      - path: ".claude/state/backlog.json"
+        action: "update"
+    on_failure:
+      - "project.json 없으면 skill-init 안내"
+
+  - name: "설계"
+    skill: "skill-plan"
+    given:
+      - "backlog.json에 todo 상태 Task가 존재한다"
+      - "요구사항 문서(spec.md)가 존재한다"
+    when:
+      - "skill-feature에서 자동 체이닝된다"
+    then:
+      - "Task status가 in_progress로 변경된다"
+      - "steps 배열에 스텝별 계획이 추가된다"
+      - "lockedFiles에 변경 대상 파일이 기록된다"
+      - "사용자에게 승인을 요청한다"
+    files_changed:
+      - path: ".claude/state/backlog.json"
+        action: "update"
+    on_failure:
+      - "todo Task 없으면 안내 메시지 출력"
+
+  - name: "개발 (스텝별 반복)"
+    skill: "skill-impl"
+    given:
+      - "Task가 in_progress 상태이다"
+      - "현재 스텝이 pending 상태이다"
+    when:
+      - "skill-plan에서 자동 체이닝된다"
+    then:
+      - "현재 스텝의 코드가 구현된다"
+      - "빌드 및 테스트가 통과한다"
+      - "PR이 생성된다"
+      - "스텝 status가 pr_created로 변경된다"
+      - "skill-review-pr이 자동 호출된다"
+    files_changed:
+      - path: "src/**"
+        action: "create"
+      - path: ".claude/state/backlog.json"
+        action: "update"
+    on_failure:
+      - "빌드 실패 시 수정 후 재시도"
+      - "라인 수 초과 시 스텝 분할 안내"
+
+  - name: "리뷰"
+    skill: "skill-review-pr"
+    given:
+      - "PR이 OPEN 상태이다"
+      - "PR이 Draft가 아니다"
+    when:
+      - "skill-impl에서 자동 체이닝된다"
+    then:
+      - "3개 subagent가 병렬 리뷰를 수행한다"
+      - "CRITICAL 0건이면 APPROVED 처리된다"
+      - "CRITICAL 1건 이상이면 REQUEST_CHANGES 처리된다"
+      - "PR에 리뷰 코멘트가 작성된다"
+    on_failure:
+      - "CRITICAL 발견 시 skill-fix 또는 REQUEST_CHANGES"
+
+  - name: "머지"
+    skill: "skill-merge-pr"
+    given:
+      - "PR이 리뷰 승인되었다"
+      - "CI 체크가 통과했다"
+    when:
+      - "skill-review-pr에서 자동 체이닝된다"
+    then:
+      - "PR이 Squash 머지된다"
+      - "스텝 status가 done으로 변경된다"
+      - "다음 스텝이 있으면 skill-impl이 호출된다"
+      - "모든 스텝이 완료되면 Task status가 done으로 변경된다"
+    files_changed:
+      - path: ".claude/state/backlog.json"
+        action: "update"
+      - path: ".claude/state/completed.json"
+        action: "update"
+    on_failure:
+      - "머지 충돌 시 수동 해결 안내"

@@ -1,6 +1,7 @@
 {
   "id": "ecommerce",
   "name": "이커머스",
+  "icon": "🛒",
   "version": "1.0.0",
   "description": "상품, 주문, 재고, 배송, 프로모션 등 이커머스 서비스 도메인",
   "defaultStack": {
@@ -32,6 +33,10 @@
     "product": {
       "triggers": ["상품", "카탈로그", "카테고리", "옵션"],
       "docs": ["product.md"]
+    },
+    "member": {
+      "triggers": ["회원", "회원가입", "로그인", "마이페이지", "탈퇴"],
+      "docs": ["member.md"]
     }
   },
   "errorCodePrefix": "EC",
