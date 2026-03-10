@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.28.0] - 2026-03-11
+
+### Added
+- ecommerce-shop: `SHOP-002-spec.md` 주문 처리 시스템 설계 명세 — 상태 머신 11가지, 재고 동시성(낙관적 락), 가격 계산(Zod 정수 강제), 에러 코드 5종, 테스트 15건, Production Readiness Gaps 11항목
+- ecommerce-shop: `CLAUDE.md` 프로젝트 지시문 — fintech-gateway와 대칭 구조 (에이전트 5종, 키워드 매핑 6종, 체크리스트 5관점, 에러 코드 체계)
+- ecommerce-shop: `backlog.json` SHOP-002에 steps 2개 추가 (주문 CRUD+상태머신 ~400줄, 가격계산+테스트 ~350줄)
+
+### Fixed
+- README.md: 버전 배지 `v1.25.0` → `v1.27.0` 정합성 수정
+- SHOP-002-spec.md: 에러 응답에서 재고 수량 노출 제거 (보안)
+- SHOP-002-spec.md: 금액 정수 강제 Zod `z.number().int()` 스키마 + `Math.max(0)` 음수 방지 추가
+- SHOP-002-spec.md: 테스트 10건 → 15건 확충 (상태전이 전수, 가격 스냅샷, 경계값, 쿠폰 동시성, 음수 방지)
+- SHOP-002-spec.md: Production Readiness Gaps 7건 → 11건 확충 (인증 상세, 멱등성, 암호화, 동의, 에스크로)
+- order-flow.md: REFUNDED 상태 누락 → 추가 (SSOT 정합성)
+
 ## [1.27.0] - 2026-03-10
 
 ### Added
