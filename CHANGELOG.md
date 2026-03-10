@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.27.0] - 2026-03-10
+
+### Added
+- skill-validate: Category 10 도메인 키워드 참조 정합성 — `keywords.*.docs[]` ↔ 실제 파일 ERROR 레벨 검증, `_base:` 접두사 경로 해석 지원
+- skill-validate: Category 11 스키마-데이터 정합성 — project.json/backlog.json이 스키마 required 필드를 준수하는지 검증
+- skill-validate: Category 12 레지스트리-도메인 교차 검증 — `_registry.json` ↔ `domain.json` 간 name/icon/description/keywords 일치 확인
+- domain.json: 3개 도메인(fintech/ecommerce/general)에 `icon` 필드 추가 — Category 9 검증 통과
+- ecommerce: `member.md` 신규 — 회원가입/로그인/마이페이지/탈퇴/법적 보관 의무
+- ecommerce: `product.md` 신규 — 상품 구조/상태 전이/카테고리/가격 정책
+- ecommerce: `member` keyword 추가 ("회원", "회원가입", "로그인", "마이페이지", "탈퇴")
+- general: keyword docs를 `_base:conventions/` 접두사 참조로 전환 — 중복 문서 방지, `_base/conventions/` 재활용
+- BDD 시나리오 구조화: `docs/scenarios/` — Given/When/Then YAML 형식 + full-feature.yaml 예시
+- workflow-guide: 판단 분기점 테이블 5건 + Troubleshooting 7건 추가
+- SSOT 원칙 적용: CLAUDE.md/TASK-001-spec.md에 도메인 docs 진실점 포인터 추가
+- 회귀 테스트 전략: `docs/regression-testing.md` — fintech-gateway Golden State 지정 + 검증 절차
+
+### Fixed
+- TASK-001-spec.md: refresh 에러 응답 내부코드(PG-GW-016) → 외부코드(TOKEN_INVALID) 변경
+- error-handling.md: SSOT에 PG-GW-012 (INVALID_CREDENTIALS) 누락 → 추가
+- _registry.json: lastUpdated 갱신 + description/compliance/keywords 동기화
+- ecommerce domain.json: "장바구니" trigger 추가 (registry-domain 불일치 해소)
+- fintech domain.json: "토큰/PG/VAN/가맹점" trigger 추가 (registry-domain 불일치 해소)
+
+### Changed
+- workflow-guide: 설계 스텝 표시 "Step 1,2,3" → "Step 1,2" 조정
+
 ## [1.26.0] - 2026-03-10
 
 ### Added
