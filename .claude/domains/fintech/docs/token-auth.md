@@ -53,6 +53,8 @@ API Gateway의 JWT 기반 인증 체계를 설명합니다.
 | 갱신 방식 | Refresh로 재발급 | Token Rotation |
 
 > **프로덕션 권장사항**: Refresh Token은 HttpOnly + Secure + SameSite Cookie로 전달하는 것을 권장합니다. 데모에서는 구현 간소화를 위해 JSON body 방식을 사용합니다.
+>
+> **JSON body 방식의 보안 제약**: localStorage/sessionStorage에 저장 시 XSS 공격으로 토큰 탈취가 가능합니다. 프로덕션 배포 전 반드시 Cookie 방식으로 전환하세요.
 
 ## Token Rotation
 
