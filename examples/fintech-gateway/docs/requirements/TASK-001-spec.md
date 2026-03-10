@@ -71,8 +71,9 @@ dependencies {
 - 보안 이벤트 로깅
 
 ### FR-005: 로그아웃
-- Access Token 블랙리스트 등록
+- Access Token 블랙리스트 등록 (`ConcurrentHashMap.newKeySet()` 기반, 스레드 안전)
 - 해당 Token Family 전체 무효화
+- 블랙리스트 TTL: 데모에서는 미적용 (Production Readiness Gaps #9 참조)
 
 ## 비기능 요구사항
 
@@ -110,10 +111,16 @@ value class RefreshToken(val value: String) {
 data class TokenPair(val accessToken: AccessToken, val refreshToken: RefreshToken)
 ```
 
-### 사용자 저장소
+### 사용자 저장소 (인터페이스 + 구현)
 ```kotlin
+// 인터페이스 (NFR-003 확장성: 추후 RDB 전환 시 구현체만 교체)
+interface UserRepository {
+    suspend fun findByEmail(email: String): User?
+    suspend fun findById(id: String): User?
+}
+
 @Repository
-class InMemoryUserRepository {
+class InMemoryUserRepository : UserRepository {
     private val users = ConcurrentHashMap<String, User>()
 
     init {
@@ -126,6 +133,9 @@ class InMemoryUserRepository {
             merchantId = "MID001"
         )
     }
+
+    override suspend fun findByEmail(email: String): User? = users[email]
+    override suspend fun findById(id: String): User? = users.values.find { it.id == id }
 }
 ```
 
@@ -141,10 +151,11 @@ fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder(12)
 class GlobalExceptionHandler {
     @ExceptionHandler(TokenException::class)
     fun handleTokenException(ex: TokenException): ResponseEntity<ErrorResponse> {
-        // 외부 3단계 에러 매핑
+        // 외부 에러 매핑 (내부 코드 노출 금지)
         val externalCode = when (ex) {
             is TokenException.Missing -> "TOKEN_MISSING"
             is TokenException.Expired -> "TOKEN_EXPIRED"
+            is TokenException.InvalidCredentials -> "INVALID_CREDENTIALS"
             else -> "TOKEN_INVALID"  // FORMAT, SIGNATURE, REUSED 등 통합
         }
         return ResponseEntity.status(ex.httpStatus).body(ErrorResponse(externalCode, ex.message))
@@ -194,9 +205,10 @@ class TokenMaskingConverter : ClassicConverter() {
 
 // Error Response (401 Unauthorized)
 {
-  "code": "PG-GW-012",
+  "code": "INVALID_CREDENTIALS",
   "message": "Invalid credentials"
 }
+// 내부 로그에만 PG-GW-012 기록 (외부 노출 금지)
 ```
 
 ### POST /api/v1/auth/refresh
@@ -290,7 +302,8 @@ Authorization: Bearer {accessToken}
 - `JwtServiceImpl.kt` (구현체)
 - `JwtTokenProvider.kt` (토큰 생성/검증)
 - `InMemoryTokenFamilyRepository.kt` (토큰 패밀리 저장소, CAS 패턴)
-- `InMemoryUserRepository.kt` (사용자 저장소)
+- `UserRepository.kt` (사용자 저장소 인터페이스)
+- `InMemoryUserRepository.kt` (사용자 저장소 구현체)
 
 ### Step 2: JWT 인증 필터, 컨트롤러, 설정 (~300 라인)
 - `JwtAuthenticationFilter.kt` (WebFlux WebFilter)

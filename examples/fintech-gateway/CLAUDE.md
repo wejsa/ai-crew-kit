@@ -155,6 +155,7 @@ Types: feat, fix, refactor, docs, test, chore
 | TOKEN_MISSING | 401 | PG-GW-001 |
 | TOKEN_EXPIRED | 401 | PG-GW-003 |
 | TOKEN_INVALID | 401 | PG-GW-002, 004, 016 통합 |
+| INVALID_CREDENTIALS | 401 | PG-GW-012 |
 
 ### 내부 에러 코드 (로그/모니터링용)
 
