@@ -48,8 +48,11 @@ API Gateway의 JWT 기반 인증 체계를 설명합니다.
 |------|--------------|---------------|
 | 만료 시간 | 1시간 | 7일 |
 | 알고리즘 | HS256 | HS256 |
-| 저장 위치 | 메모리/로컬 | HttpOnly Cookie |
+| 저장 위치 | 메모리/로컬 | 클라이언트 저장 |
+| 전달 방식 | Authorization 헤더 | JSON body |
 | 갱신 방식 | Refresh로 재발급 | Token Rotation |
+
+> **프로덕션 권장사항**: Refresh Token은 HttpOnly + Secure + SameSite Cookie로 전달하는 것을 권장합니다. 데모에서는 구현 간소화를 위해 JSON body 방식을 사용합니다.
 
 ## Token Rotation
 
@@ -130,7 +133,7 @@ class TokenRotationService(
 1. 사용자 인증 (ID/PW)
 2. Token Family 생성
 3. Access Token + Refresh Token 발급
-4. Refresh Token은 HttpOnly Cookie로 전달
+4. JSON Response Body로 전달
 ```
 
 ### API 요청
@@ -158,7 +161,7 @@ class TokenRotationService(
 ```
 1. 로그아웃 요청
 2. Token Family 무효화
-3. Refresh Token Cookie 삭제
+3. 클라이언트 토큰 폐기
 ```
 
 ## 전파 헤더
@@ -182,7 +185,7 @@ class TokenRotationService(
 | 비밀키 길이 | 256bit 이상 |
 | 토큰 로깅 금지 | 토큰 평문 로그 출력 금지 |
 | HTTPS 필수 | 프로덕션 환경 HTTPS |
-| Cookie 보안 | HttpOnly, Secure, SameSite |
+| Cookie 보안 | 프로덕션 RT Cookie 전환 시: HttpOnly, Secure, SameSite |
 
 ### 금지 사항
 
@@ -204,4 +207,4 @@ logger.debug("Token family: ${claims.tokenFamily}")
 | 형식 오류 | PG-GW-002 | 토큰 재발급 |
 | 만료 | PG-GW-003 | 갱신 시도 |
 | 서명 불일치 | PG-GW-004 | 재로그인 |
-| 토큰 재사용 | PG-GW-005 | 재로그인 + 경고 |
+| 토큰 재사용 | PG-GW-016 | 재로그인 + 경고 |

@@ -56,16 +56,18 @@
       "description": "Phase 정의 (key: phase 번호)",
       "additionalProperties": {
         "type": "object",
+        "required": ["name", "status"],
         "properties": {
-          "name": { "type": "string" },
-          "description": { "type": "string" },
+          "name": { "type": "string", "description": "Phase 이름" },
+          "description": { "type": "string", "description": "Phase 설명" },
           "status": {
             "type": "string",
             "enum": ["todo", "in_progress", "done"],
             "default": "todo",
             "description": "Phase 상태 — 소속 Task 기준 자동 갱신"
           }
-        }
+        },
+        "additionalProperties": false
       }
     },
     "tasks": {
