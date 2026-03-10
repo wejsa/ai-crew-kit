@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.25.1] - 2026-03-10
+
+### Fixed
+- backlog.json 스키마 정합성: `metadata.version` 필드 추가 (동시성 제어 필수), task `id` 필드 추가, `phase` 타입 integer로 수정, `specFile` 필드명 통일
+- project.json 스키마 정합성: `version` (required) 필드 추가, `metadata.version` 동시성 제어 필드 추가
+- backlog.schema.json: phases에 `required: ["name", "status"]` + `additionalProperties: false` 보강
+- 에러 코드 확정: Token Reuse Detection → PG-GW-016 (TOKEN_REUSED)으로 통일 (TASK-001-spec.md, token-auth.md, CLAUDE.md, error-handling.md)
+- Refresh Token 전달 방식 확정: 데모=JSON body 채택, 프로덕션=HttpOnly Cookie 권장사항 문서화 + XSS 보안 제약 경고 추가
+- 양쪽 예제(fintech-gateway, ecommerce-shop) 동일 적용
+
 ## [1.25.0] - 2026-03-09
 
 ### Added
