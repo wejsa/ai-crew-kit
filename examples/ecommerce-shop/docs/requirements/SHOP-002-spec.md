@@ -98,11 +98,22 @@ interface OrderPricing {
   shippingFee: number     // 배송비
   discountAmount: number  // 할인 금액
   couponDiscount: number  // 쿠폰 할인
-  finalAmount: number     // 최종 결제 금액
+  finalAmount: number     // 최종 결제 금액 (0원 미만 불가)
 }
+
+// Zod 검증 스키마 — 모든 금액 필드에 정수 강제
+const orderPricingSchema = z.object({
+  itemsTotal: z.number().int().nonnegative(),
+  shippingFee: z.number().int().nonnegative(),
+  discountAmount: z.number().int().nonnegative(),
+  couponDiscount: z.number().int().nonnegative(),
+  finalAmount: z.number().int().nonnegative(),
+})
 ```
 
 > **주의**: 금액 계산은 정수(원 단위)로 처리. 소수점 절사. DB 컬럼은 `DECIMAL(12,0)`.
+> TypeScript `number`는 부동소수점이므로, **Zod `z.number().int()` 검증 필수**.
+> 최종 금액: `Math.max(0, itemsTotal - discountAmount - couponDiscount + shippingFee)`
 
 ### FR-005: 주문 취소
 
@@ -168,12 +179,13 @@ interface OrderPricing {
 {
   "error": {
     "code": "INSUFFICIENT_STOCK",
-    "message": "재고가 부족합니다.",
-    "detail": "상품 'A'의 가용 재고: 1개, 요청 수량: 3개",
+    "message": "일부 상품의 재고가 부족합니다.",
     "timestamp": "2026-03-10T12:00:00Z"
   }
 }
 ```
+
+> **보안**: 외부 응답에 실제 재고 수량을 노출하지 않음 (재고 정보 수집 공격 방지). 내부 로그에만 상세 기록.
 
 > 내부 로그에만 상세 에러 코드(EC-0XX) 기록. 외부 응답은 범용 코드 사용.
 
@@ -268,7 +280,7 @@ interface OrderPricing {
 **구현 범위:**
 - 가격 계산 로직 (할인, 배송비, 쿠폰)
 - 쿠폰 유효성 검증
-- 테스트 10건
+- 테스트 15건
 - 에러 핸들링 미들웨어
 
 **산출물:**
@@ -279,7 +291,7 @@ interface OrderPricing {
 
 ---
 
-## 테스트 명세 (10건 이상)
+## 테스트 명세 (15건)
 
 | # | 테스트 | 유형 |
 |---|--------|------|
@@ -287,12 +299,17 @@ interface OrderPricing {
 | 2 | 주문 생성 실패 — 재고 부족 | 네거티브 |
 | 3 | 상태 전이 성공 (PAYMENT_PENDING → PAID) | 기본 |
 | 4 | 상태 전이 실패 — 무효 전이 (SHIPPING → CHECKOUT) | 네거티브 |
-| 5 | 주문 취소 — 결제 전 (재고 복원 확인) | 핵심 |
-| 6 | 주문 취소 — 결제 후 (환불 트리거 확인) | 핵심 |
-| 7 | 주문 취소 실패 — 배송 중 | 네거티브 |
-| 8 | 가격 계산 — 쿠폰 적용 | 기본 |
-| 9 | **동시 주문 — 2 요청 동시 재고 예약** | 동시성 |
-| 10 | **E2E — 주문 생성 → 결제 → 배송 → 완료** | 통합 |
+| 5 | **상태 전이 매트릭스 전수 검증** (파라미터화 테스트) | 핵심 |
+| 6 | 주문 취소 — 결제 전 (재고 복원 확인) | 핵심 |
+| 7 | 주문 취소 — 결제 후 (환불 트리거 확인) | 핵심 |
+| 8 | 주문 취소 실패 — 배송 중 | 네거티브 |
+| 9 | 가격 계산 — 쿠폰 적용 | 기본 |
+| 10 | **가격 스냅샷 불변** — 주문 후 상품 가격 변경 시 주문 금액 불변 | 핵심 |
+| 11 | **경계값** — 수량 0/음수, 빈 장바구니, 재고 정확 소진 | 경계값 |
+| 12 | **동시 주문 — 2 요청 동시 재고 예약** | 동시성 |
+| 13 | **동시 쿠폰 사용 — 2 요청 동시 적용 시 1건만 성공** | 동시성 |
+| 14 | **최종 금액 음수 방지** — 할인 > 상품가 시 finalAmount == 0 | 경계값 |
+| 15 | **E2E — 주문 생성 → 결제 → 배송 → 완료** | 통합 |
 
 ### 수용 기준
 
@@ -322,10 +339,14 @@ interface OrderPricing {
 
 | # | 항목 | 데모 | 프로덕션 |
 |---|------|------|----------|
-| 1 | 세션/인증 | 미구현 (userId 하드코딩) | JWT 인증 연동 |
-| 2 | 결제 연동 | Mock 처리 | PG사 실제 연동 |
-| 3 | 이벤트 발행 | 동기 호출 | RabbitMQ/Kafka |
-| 4 | 배송 연동 | Mock 처리 | 택배사 API |
-| 5 | 동시성 | 낙관적 락 | 분산 락 (Redis) |
-| 6 | 모니터링 | 콘솔 로그 | ELK/Datadog |
-| 7 | 배송비 | 고정 3,000원 | 택배사별 실시간 계산 |
+| 1 | 세션/인증 | `X-User-Id` 헤더 주입 | JWT 인증 + 소유자 검증 |
+| 2 | 결제 연동 | Mock 처리 | PG사 실제 연동 + 금액 검증 |
+| 3 | 결제 멱등성 | 미구현 | idempotency key 기반 이중 결제 방지 |
+| 4 | 이벤트 발행 | 동기 호출 | RabbitMQ/Kafka |
+| 5 | 배송 연동 | Mock 처리 | 택배사 API |
+| 6 | 동시성 | 낙관적 락 | 분산 락 (Redis) |
+| 7 | 배송지 암호화 | 평문 JSONB | AES-256-GCM 암호화 저장 |
+| 8 | 개인정보 동의 | 미구현 | 수집·이용 동의 + 제3자 제공 동의 |
+| 9 | 에스크로 | 미구현 | 10만원+ 거래 시 에스크로 선택권 |
+| 10 | 모니터링 | 콘솔 로그 | ELK/Datadog |
+| 11 | 배송비 | 고정 3,000원 | 택배사별 실시간 계산 |

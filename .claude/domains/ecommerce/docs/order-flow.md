@@ -37,6 +37,7 @@
 | COMPLETED | 주문 완료 | - |
 | CANCELLED | 주문 취소 | - |
 | RETURN | 반품/교환 | COMPLETED, REFUNDED |
+| REFUNDED | 환불 완료 | - |
 
 ## 주문 생성 플로우
 
