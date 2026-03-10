@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.26.0] - 2026-03-10
+
+### Added
+- TASK-001-spec: 의존성 GAV 고정 — Spring Cloud BOM 2024.0.0, jjwt 0.12.6, Kotlin 2.0.21, Spring Boot 3.3.5, MockK 1.13.13
+- TASK-001-spec: WebFlux 주의사항 — 서블릿 코드(`@Controller`, `MockMvc`, `HttpServletRequest`) 혼입 금지 명시
+- TASK-001-spec: 구성 요소 상세화 — 래퍼 타입(AccessToken/RefreshToken), InMemoryUserRepository, BCryptPasswordEncoder(cost 12), GlobalExceptionHandler, Logback eyJ 마스킹 필터
+- TASK-001-spec: UserRepository 인터페이스 분리 — NFR-003 확장성(추후 RDB 전환) 준수
+- TASK-001-spec: 테스트 명세 12건 추가 — 단위 9건, 동시성 1건, 보안 1건, E2E 1건 (WebTestClient 필수)
+- TASK-001-spec: 수용 기준 8항목 추가 — 브랜치 커버리지 80%, PCI-DSS, eyJ 마스킹, 래퍼 타입 등
+- TASK-001-spec: Production Readiness Gaps 9항목 — InMemory→Redis, HS256→RS256, JSON body→Cookie 등
+- TASK-001-spec: 블랙리스트 동시성 전략 — `ConcurrentHashMap.newKeySet()` 명시
+- CLAUDE.md: 에러 코드 외부 매핑에 `INVALID_CREDENTIALS` 추가 (PG-GW-012 내부 전용)
+- CLAUDE.md: 브랜치 커버리지 80%+ 목표, WebTestClient 필수 (MockMvc 금지) 명시
+
+### Changed
+- TASK-001-spec: 스텝 분리 3→2 합침 (Step 1: 스캐폴딩+모델+구현 ~450줄, Step 2: 필터+컨트롤러+테스트 ~300줄)
+- TASK-001-spec: 로그인 에러 외부코드 `PG-GW-012` → `INVALID_CREDENTIALS`로 변경 (내부코드 노출 방지)
+- project.json: infrastructure `docker-compose` → `none` 변경
+
 ## [1.25.1] - 2026-03-10
 
 ### Fixed
