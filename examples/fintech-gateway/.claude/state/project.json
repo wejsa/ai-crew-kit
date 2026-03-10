@@ -9,7 +9,7 @@
     "database": "mysql",
     "cache": "redis",
     "messageQueue": "none",
-    "infrastructure": "docker-compose"
+    "infrastructure": "none"
   },
   "agents": {
     "enabled": ["pm", "backend", "code-reviewer", "qa"],

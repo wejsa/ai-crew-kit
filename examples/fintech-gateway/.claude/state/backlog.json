@@ -33,17 +33,12 @@
       "steps": [
         {
           "number": 1,
-          "title": "JWT 서비스 인터페이스 및 모델",
+          "title": "스캐폴딩 + JWT 서비스 인터페이스/모델/구현",
           "status": "pending"
         },
         {
           "number": 2,
-          "title": "JWT 서비스 구현",
-          "status": "pending"
-        },
-        {
-          "number": 3,
-          "title": "JWT 인증 필터 및 설정",
+          "title": "JWT 인증 필터, 컨트롤러, 설정, 테스트",
           "status": "pending"
         }
       ],

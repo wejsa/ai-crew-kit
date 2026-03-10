@@ -147,6 +147,17 @@ Types: feat, fix, refactor, docs, test, chore
 
 ## 에러 코드 체계
 
+### 외부 응답 (클라이언트에게 노출)
+공격자 정보 유출 방지를 위해 외부에는 3단계로만 응답합니다.
+
+| 외부 코드 | HTTP | 내부 매핑 |
+|----------|------|----------|
+| TOKEN_MISSING | 401 | PG-GW-001 |
+| TOKEN_EXPIRED | 401 | PG-GW-003 |
+| TOKEN_INVALID | 401 | PG-GW-002, 004, 016 통합 |
+
+### 내부 에러 코드 (로그/모니터링용)
+
 | 코드 | HTTP | 설명 |
 |------|------|------|
 | PG-GW-001 | 401 | TOKEN_MISSING |
@@ -178,13 +189,16 @@ Types: feat, fix, refactor, docs, test, chore
 ## 테스트 규칙
 
 ### 커버리지 목표
-- 단위 테스트: 80%+
+- **브랜치 커버리지**: 80%+ (Jacoco 리포트 기준, 라인 커버리지만으로는 Token Rotation 분기 미검증)
 - 통합 테스트: 주요 플로우 100%
+- **테스트 프레임워크**: `WebTestClient` 사용 (MockMvc 금지 — WebFlux 기반)
 
-### 필수 테스트 항목
-- JWT 토큰 발급/검증
-- Token Rotation
-- Token Reuse Detection
+### 필수 테스트 항목 (12건 이상)
+- JWT 토큰 발급/검증 (성공 + 실패 3건)
+- Token Rotation (성공 + Reuse Detection)
+- 동시성 테스트 (2 스레드 동시 rotation)
+- 보안 테스트 (토큰 미로깅 검증)
+- E2E (로그인 → 갱신 → 로그아웃)
 
 
 <claude-mem-context>

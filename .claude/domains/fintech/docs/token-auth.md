@@ -77,19 +77,18 @@ class TokenRotationService(
         // 1. 토큰 검증
         val claims = jwtService.validateRefreshToken(refreshToken)
 
-        // 2. Token Family 조회
-        val family = tokenRepository.findFamily(claims.tokenFamily)
-            ?: throw TokenException.FamilyNotFound
-
-        // 3. 버전 확인 (Reuse Detection)
-        if (family.currentVersion != claims.tokenVersion) {
+        // 2. CAS 기반 원자적 버전 갱신 (Race Condition 방어)
+        //    ConcurrentHashMap.compute()로 check-then-act를 원자적으로 수행
+        val newVersion = tokenRepository.atomicRotate(
+            familyId = claims.tokenFamily,
+            expectedVersion = claims.tokenVersion
+        ) ?: run {
             // 토큰 재사용 감지 → 전체 무효화
             tokenRepository.revokeFamily(claims.tokenFamily)
             throw TokenException.TokenReused
         }
 
-        // 4. 새 토큰 발급
-        val newVersion = family.currentVersion + 1
+        // 3. 새 토큰 발급
         val newAccessToken = jwtService.generateAccessToken(claims.sub)
         val newRefreshToken = jwtService.generateRefreshToken(
             claims.sub,
@@ -97,10 +96,36 @@ class TokenRotationService(
             newVersion
         )
 
-        // 5. 버전 업데이트
-        tokenRepository.updateVersion(claims.tokenFamily, newVersion)
-
         return TokenPair(newAccessToken, newRefreshToken)
+    }
+}
+```
+
+### CAS 패턴 구현 (InMemoryTokenFamilyRepository)
+
+```kotlin
+class InMemoryTokenFamilyRepository : TokenRepository {
+    private val families = ConcurrentHashMap<String, TokenFamily>()
+
+    /**
+     * CAS(Compare-And-Swap) 기반 원자적 버전 갱신.
+     * 2 스레드가 동시에 같은 RT로 rotation을 시도해도
+     * compute()의 원자성 보장으로 하나만 성공한다.
+     *
+     * @return 새 버전 번호 (성공 시), null (버전 불일치 시)
+     */
+    fun atomicRotate(familyId: String, expectedVersion: Int): Int? {
+        var result: Int? = null
+        families.compute(familyId) { _, family ->
+            if (family == null || family.currentVersion != expectedVersion) {
+                result = null
+                family  // 변경 없이 반환
+            } else {
+                result = family.currentVersion + 1
+                family.copy(currentVersion = result!!)
+            }
+        }
+        return result
     }
 }
 ```
