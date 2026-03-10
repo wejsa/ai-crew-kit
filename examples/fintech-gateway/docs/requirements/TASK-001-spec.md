@@ -87,7 +87,7 @@ Access Token과 Refresh Token을 사용한 인증 플로우를 지원합니다.
 
 // Error Response (401 Unauthorized) - Token Reuse Detection
 {
-  "code": "PG-GW-003",
+  "code": "PG-GW-016",
   "message": "Token has been revoked"
 }
 ```

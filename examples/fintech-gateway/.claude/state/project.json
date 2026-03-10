@@ -2,6 +2,7 @@
   "name": "fintech-gateway",
   "description": "핀테크 도메인 API Gateway 서비스",
   "domain": "fintech",
+  "version": "1.0.0",
   "techStack": {
     "backend": "spring-boot-kotlin",
     "frontend": "none",
@@ -26,6 +27,10 @@
     "app": 10080,
     "db": 3306,
     "cache": 6379
+  },
+  "metadata": {
+    "version": 1,
+    "updatedAt": "2026-02-03T00:00:00Z"
   },
   "createdAt": "2026-02-03T00:00:00Z"
 }

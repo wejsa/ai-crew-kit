@@ -2,6 +2,7 @@
   "name": "ecommerce-shop",
   "description": "이커머스 온라인 쇼핑몰 서비스",
   "domain": "ecommerce",
+  "version": "1.0.0",
   "techStack": {
     "backend": "nodejs-typescript",
     "frontend": "nextjs",
@@ -27,6 +28,10 @@
     "api": 4000,
     "db": 5432,
     "cache": 6379
+  },
+  "metadata": {
+    "version": 1,
+    "updatedAt": "2026-02-15T00:00:00Z"
   },
   "createdAt": "2026-02-15T00:00:00Z",
   "kitVersion": "1.13.0"

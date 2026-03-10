@@ -156,6 +156,7 @@ Types: feat, fix, refactor, docs, test, chore
 | PG-GW-005 | 403 | ACCESS_DENIED |
 | PG-GW-006 | 429 | RATE_LIMIT_EXCEEDED |
 | PG-GW-012 | 401 | INVALID_CREDENTIALS |
+| PG-GW-016 | 401 | TOKEN_REUSED |
 
 ---
 
