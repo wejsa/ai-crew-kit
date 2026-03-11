@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.29.0] - 2026-03-11
+
+### Added
+- `shared-protocols.md`: 9개 공통 프로토콜 SSOT 문서 신규 생성 — Protocol A(project+backlog 검증), B(completed 검증), C(운영환경 검증), D(origin/develop 동기화), E(Worktree 감지), F(빌드 명령어 결정), G(에러 3줄 표준), H(AskUserQuestion 승인), I(진행 표시)
+- 독립 스킬 5개(retro, report, estimate, create, onboard)에 간소화 진행 표시 추가 (Protocol I)
+
+### Changed
+- 14개 스킬의 MUST-EXECUTE-FIRST 중복 검증(~20줄씩) → Protocol 참조로 교체 (순 -197줄 감소)
+- 에러 메시지 전체 3줄 표준화: ❌ 에러 / 원인 / 해결 (Protocol G)
+- 승인 프롬프트 Y/N → AskUserQuestion 통일 (Protocol H)
+- skill-feature, skill-plan: allowed-tools에 `AskUserQuestion` 추가 (Protocol H 정합성)
+
 ## [1.28.0] - 2026-03-11
 
 ### Added
