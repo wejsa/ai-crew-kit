@@ -35,12 +35,14 @@ domains/_base/                 ← 공통 기본값
   "name": "이커머스",
   "icon": "🛒",
   "version": "1.0.0",
-  "description": "이커머스, 마켓플레이스",
+  "description": "상품, 주문, 재고, 배송, 프로모션 등 이커머스 서비스 도메인",
 
   "defaultStack": {
     "backend": "spring-boot-kotlin",
+    "frontend": "nextjs",
     "database": "mysql",
     "cache": "redis",
+    "messageQueue": "rabbitmq",
     "infrastructure": "docker-compose"
   },
 
@@ -48,16 +50,16 @@ domains/_base/                 ← 공통 기본값
   "errorCodePrefix": "EC",
 
   "conventions": {
-    "taskPrefix": "SHOP",
-    "branchStrategy": "feature/{taskId}-step{N}",
-    "commitFormat": "<type>: {taskId} Step {N} - {description}"
+    "taskPrefix": "EC",
+    "branchStrategy": "git-flow",
+    "commitFormat": "conventional"
   },
 
-  "checklists": ["compliance.md", "domain-logic.md", "performance.md"],
+  "checklists": ["domain-logic.md", "compliance.md", "performance.md"],
 
   "keywords": {
     "order": {
-      "triggers": ["주문", "결제", "구매", "장바구니"],
+      "triggers": ["주문", "결제", "구매", "체크아웃", "장바구니"],
       "docs": ["order-flow.md", "payment-integration.md"]
     },
     "inventory": {
