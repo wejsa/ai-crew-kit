@@ -23,29 +23,18 @@ argument-hint: "[--full]"
 
 실패 시 즉시 중단 + 사용자 보고. 절대 다음 단계 진행 금지.
 
-```bash
-# [REQUIRED] 1. project.json 존재
-if [ ! -f ".claude/state/project.json" ]; then
-  echo "❌ project.json이 없습니다"
-  echo "   원인: 프로젝트가 초기화되지 않았습니다"
-  echo "   해결: /skill-init을 먼저 실행하세요"
-  exit 1
-fi
+**공통 프로토콜 적용** (`.claude/docs/shared-protocols.md` 참조):
+- Protocol A: project.json + backlog.json 기본 검증
 
-# [REQUIRED] 2. backlog.json 존재 + 유효 JSON
-if [ ! -f ".claude/state/backlog.json" ]; then
-  echo "❌ backlog.json이 없습니다"
-  echo "   원인: 백로그가 초기화되지 않았습니다"
-  echo "   해결: /skill-init을 먼저 실행하세요"
-  exit 1
-fi
-cat .claude/state/backlog.json | python3 -c "import sys,json; json.load(sys.stdin)" 2>/dev/null || {
-  echo "❌ backlog.json이 유효한 JSON이 아닙니다"
-  echo "   원인: JSON 파싱 실패"
-  echo "   해결: /skill-validate --fix를 실행하세요"
-  exit 1
-}
+## 진행 표시
+
+스킬 진입 시 Protocol I (독립 스킬) 적용:
 ```
+━━━ skill-report ━━━━━━━━━━━━━━━━━
+ 📍 프로젝트 메트릭 수집 중 (최근 7일)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+`--full` 모드일 때: "프로젝트 메트릭 수집 중 (전체 히스토리)"
 
 ## 실행 플로우
 

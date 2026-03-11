@@ -16,47 +16,9 @@ argument-hint: "\"{긴급 수정 설명}\""
 
 실패 시 즉시 중단 + 사용자 보고. 절대 다음 단계 진행 금지.
 
-```bash
-# [REQUIRED] 1. project.json 존재
-if [ ! -f ".claude/state/project.json" ]; then
-  echo "❌ project.json이 없습니다. /skill-init을 먼저 실행하세요."
-  exit 1
-fi
-
-# [REQUIRED] 2. clean working tree
-if [ -n "$(git status --porcelain)" ]; then
-  echo "❌ 커밋되지 않은 변경사항이 있습니다. 먼저 정리해주세요."
-  exit 1
-fi
-
-# [REQUIRED] 3. main 브랜치 접근 가능
-git rev-parse --verify main >/dev/null 2>&1 || {
-  echo "❌ main 브랜치가 존재하지 않습니다."
-  exit 1
-}
-
-# [REQUIRED] 4. VERSION 파일 존재
-if [ ! -f "VERSION" ]; then
-  echo "❌ VERSION 파일이 없습니다."
-  exit 1
-fi
-
-# [REQUIRED] 5. Worktree 모드 차단
-GIT_DIR=$(git rev-parse --git-dir 2>/dev/null)
-GIT_COMMON_DIR=$(git rev-parse --git-common-dir 2>/dev/null)
-if [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
-  MAIN_REPO=$(git rev-parse --git-common-dir | sed 's/\/.git$//')
-  echo "❌ Worktree 환경에서는 hotfix를 실행할 수 없습니다."
-  echo ""
-  echo "📌 이유: hotfix는 main/develop 브랜치를 직접 조작하므로"
-  echo "   워크트리의 독립 브랜치 구조와 충돌합니다."
-  echo ""
-  echo "💡 대안:"
-  echo "  1. 메인 레포에서 실행: cd $MAIN_REPO"
-  echo "  2. Claude Squad에서: cs switch main → 실행 → cs switch back"
-  exit 1
-fi
-```
+**공통 프로토콜 적용** (`.claude/docs/shared-protocols.md` 참조):
+- Protocol C: 운영 환경 검증 (project.json + clean tree + main + VERSION + Worktree 차단)
+  - Worktree 차단 메시지의 `{스킬명}` → `hotfix`
 
 ## 실행 로그 기록 (시작)
 

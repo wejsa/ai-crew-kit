@@ -27,29 +27,11 @@ argument-hint: "[TASK-ID|--summary|--lessons [list|search {keyword}|top]]"
 
 실패 시 즉시 중단 + 사용자 보고. 절대 다음 단계 진행 금지.
 
+**공통 프로토콜 적용** (`.claude/docs/shared-protocols.md` 참조):
+- Protocol B: 완료 Task 검증 (project.json + completed.json)
+
+**스킬 고유 검증:**
 ```bash
-# [REQUIRED] 1. project.json 존재
-if [ ! -f ".claude/state/project.json" ]; then
-  echo "❌ project.json이 없습니다"
-  echo "   원인: 프로젝트가 초기화되지 않았습니다"
-  echo "   해결: /skill-init을 먼저 실행하세요"
-  exit 1
-fi
-
-# [REQUIRED] 2. completed.json 존재 + 유효 JSON
-if [ ! -f ".claude/state/completed.json" ]; then
-  echo "❌ completed.json이 없습니다"
-  echo "   원인: 완료된 Task가 없습니다"
-  echo "   해결: Task를 완료한 후 다시 시도하세요 (/skill-impl → /skill-merge-pr 워크플로우)"
-  exit 1
-fi
-cat .claude/state/completed.json | python3 -c "import sys,json; json.load(sys.stdin)" 2>/dev/null || {
-  echo "❌ completed.json이 유효한 JSON이 아닙니다"
-  echo "   원인: JSON 파싱 실패"
-  echo "   해결: /skill-validate --fix를 실행하세요"
-  exit 1
-}
-
 # [REQUIRED] 3. 완료된 Task 존재 확인
 TASK_COUNT=$(python3 -c "import json; print(len(json.load(open('.claude/state/completed.json'))))")
 if [ "$TASK_COUNT" == "0" ]; then
@@ -59,6 +41,16 @@ if [ "$TASK_COUNT" == "0" ]; then
   exit 1
 fi
 ```
+
+## 진행 표시
+
+사전 조건 검증 완료 후, Protocol I (독립 스킬) 적용:
+```
+━━━ skill-retro ━━━━━━━━━━━━━━━━━━
+ 📍 {TASK-ID} 회고 분석 중
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+`--summary` 모드일 때: "전체 회고 요약 중", `--lessons` 모드일 때: "학습 항목 조회 중"
 
 ## 실행 플로우
 

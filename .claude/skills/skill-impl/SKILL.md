@@ -23,46 +23,25 @@ argument-hint: "[--next|--all]"
 
 실패 시 즉시 중단 + 사용자 보고. 절대 다음 단계 진행 금지.
 
+**공통 프로토콜 적용** (`.claude/docs/shared-protocols.md` 참조):
+- Protocol A: project.json + backlog.json 기본 검증
+- Protocol D: origin/develop 동기화
+
+**스킬 고유 검증:**
 ```bash
-# [REQUIRED] 1. project.json 존재
-if [ ! -f ".claude/state/project.json" ]; then
-  echo "❌ project.json이 없습니다. /skill-init을 먼저 실행하세요."
-  exit 1
-fi
-
-# [REQUIRED] 2. backlog.json 존재 + 유효 JSON
-if [ ! -f ".claude/state/backlog.json" ]; then
-  echo "❌ backlog.json이 없습니다. /skill-init을 먼저 실행하세요."
-  exit 1
-fi
-cat .claude/state/backlog.json | python3 -c "import sys,json; json.load(sys.stdin)" 2>/dev/null || {
-  echo "❌ backlog.json이 유효한 JSON이 아닙니다."
-  exit 1
-}
-
 # [REQUIRED] 3. in_progress Task 존재
 # backlog.json에서 status: in_progress인 Task가 있어야 함
 
 # [REQUIRED] 4. 계획 파일 존재: .claude/temp/{taskId}-plan.md
 if [ ! -f ".claude/temp/${TASK_ID}-plan.md" ]; then
-  echo "❌ 계획 파일이 없습니다. /skill-plan을 먼저 실행하세요."
+  echo "❌ 계획 파일이 없습니다"
+  echo "   원인: 설계 단계가 완료되지 않았습니다"
+  echo "   해결: /skill-plan을 먼저 실행하세요"
   exit 1
 fi
 
 # [REQUIRED] 5. 현재 스텝 상태: pending
 # backlog.json에서 steps[currentStep].status == "pending"
-
-# [REQUIRED] 6. origin/develop 동기화 검증
-git fetch origin develop --quiet
-BEHIND=$(git rev-list --count HEAD..origin/develop)
-if [ "$BEHIND" -gt 5 ]; then
-  echo "❌ origin/develop보다 ${BEHIND}커밋 뒤처져 있습니다."
-  echo "→ git merge origin/develop 실행 후 재시도하세요."
-  exit 1
-elif [ "$BEHIND" -gt 0 ]; then
-  echo "⚠️ origin/develop보다 ${BEHIND}커밋 뒤처짐 — 자동 동기화 중..."
-  git merge origin/develop --no-edit
-fi
 ```
 
 ### --next 사용 시 추가 조건

@@ -23,49 +23,19 @@ argument-hint: "{버전타입: patch|minor|major}"
 
 실패 시 즉시 중단 + 사용자 보고. 절대 다음 단계 진행 금지.
 
+**공통 프로토콜 적용** (`.claude/docs/shared-protocols.md` 참조):
+- Protocol A: project.json + backlog.json 기본 검증
+- Protocol E: Worktree 차단 모드 (`{스킬명}` → `release`)
+- Protocol C 중 clean tree 검증
+
+**스킬 고유 검증:**
 ```bash
-# [REQUIRED] 1. project.json 존재
-if [ ! -f ".claude/state/project.json" ]; then
-  echo "❌ project.json이 없습니다. /skill-init을 먼저 실행하세요."
-  exit 1
-fi
-
-# [REQUIRED] 2. backlog.json 존재 + 유효 JSON
-if [ ! -f ".claude/state/backlog.json" ]; then
-  echo "❌ backlog.json이 없습니다. /skill-init을 먼저 실행하세요."
-  exit 1
-fi
-cat .claude/state/backlog.json | python3 -c "import sys,json; json.load(sys.stdin)" 2>/dev/null || {
-  echo "❌ backlog.json이 유효한 JSON이 아닙니다."
-  exit 1
-}
-
-# [REQUIRED] 3. Worktree 환경 차단
-GIT_DIR=$(git rev-parse --git-dir 2>/dev/null)
-GIT_COMMON_DIR=$(git rev-parse --git-common-dir 2>/dev/null)
-if [ "$GIT_DIR" != "$GIT_COMMON_DIR" ]; then
-  MAIN_REPO=$(git rev-parse --git-common-dir | sed 's/\/.git$//')
-  echo "❌ Worktree 환경에서는 release를 실행할 수 없습니다."
-  echo ""
-  echo "📌 이유: release는 main/develop 브랜치를 직접 조작하므로"
-  echo "   워크트리의 독립 브랜치 구조와 충돌합니다."
-  echo ""
-  echo "💡 대안:"
-  echo "  1. 메인 레포에서 실행: cd $MAIN_REPO"
-  echo "  2. Claude Squad에서: cs switch main → 실행 → cs switch back"
-  exit 1
-fi
-
 # [REQUIRED] 4. develop 브랜치 확인
 CURRENT_BRANCH=$(git branch --show-current)
 if [ "$CURRENT_BRANCH" != "develop" ]; then
-  echo "❌ develop 브랜치에서만 실행 가능합니다 (현재: $CURRENT_BRANCH)."
-  exit 1
-fi
-
-# [REQUIRED] 5. Clean 상태 확인
-if [ -n "$(git status --porcelain)" ]; then
-  echo "❌ 커밋되지 않은 변경사항이 있습니다."
+  echo "❌ develop 브랜치에서만 실행 가능합니다 (현재: $CURRENT_BRANCH)"
+  echo "   원인: release는 develop에서 main으로 머지합니다"
+  echo "   해결: git checkout develop 실행 후 재시도하세요"
   exit 1
 fi
 

@@ -16,33 +16,25 @@ argument-hint: "{PR번호}"
 
 실패 시 즉시 중단 + 사용자 보고. 절대 다음 단계 진행 금지.
 
+**공통 프로토콜 적용** (`.claude/docs/shared-protocols.md` 참조):
+- Protocol A: project.json + backlog.json 기본 검증
+
+**스킬 고유 검증:**
 ```bash
-# [REQUIRED] 1. project.json 존재
-if [ ! -f ".claude/state/project.json" ]; then
-  echo "❌ project.json이 없습니다. /skill-init을 먼저 실행하세요."
-  exit 1
-fi
-
-# [REQUIRED] 2. backlog.json 존재 + 유효 JSON
-if [ ! -f ".claude/state/backlog.json" ]; then
-  echo "❌ backlog.json이 없습니다. /skill-init을 먼저 실행하세요."
-  exit 1
-fi
-cat .claude/state/backlog.json | python3 -c "import sys,json; json.load(sys.stdin)" 2>/dev/null || {
-  echo "❌ backlog.json이 유효한 JSON이 아닙니다."
-  exit 1
-}
-
 # [REQUIRED] 3. PR 번호 지정됨
 if [ -z "$PR_NUMBER" ]; then
-  echo "❌ PR 번호를 지정해주세요. 예: /skill-fix 123"
+  echo "❌ PR 번호를 지정해주세요"
+  echo "   원인: 필수 인수 누락"
+  echo "   해결: /skill-fix 123"
   exit 1
 fi
 
 # [REQUIRED] 4. PR 존재 + OPEN 상태
 PR_STATE=$(gh pr view $PR_NUMBER --json state --jq '.state' 2>/dev/null)
 if [ "$PR_STATE" != "OPEN" ]; then
-  echo "❌ PR #$PR_NUMBER 이 OPEN 상태가 아닙니다 (현재: $PR_STATE)."
+  echo "❌ PR #$PR_NUMBER 이 OPEN 상태가 아닙니다 (현재: $PR_STATE)"
+  echo "   원인: PR이 이미 머지되었거나 닫혔습니다"
+  echo "   해결: gh pr list로 열린 PR을 확인하세요"
   exit 1
 fi
 

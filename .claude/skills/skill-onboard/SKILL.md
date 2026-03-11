@@ -29,6 +29,16 @@ argument-hint: "[--scan-only]"
 | 도메인 | 사용자 선택 | 키워드 기반 추천 (사용자 확인) |
 | 기존 파일 | 없음 | 백업 후 생성 |
 
+## 진행 표시
+
+스킬 진입 시 Protocol I (독립 스킬, `.claude/docs/shared-protocols.md` 참조) 적용:
+```
+━━━ skill-onboard ━━━━━━━━━━━━━━━━
+ 📍 코드베이스 스캔 및 자동 설정 생성 중
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+`--scan-only` 모드일 때: "코드베이스 스캔 중 (설정 생성 없음)"
+
 ## 사전 조건 검증 (MUST-EXECUTE-FIRST)
 
 ```bash

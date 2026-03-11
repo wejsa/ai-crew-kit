@@ -2,7 +2,7 @@
 name: skill-feature
 description: 기능 기획 - 요구사항 정의 + 백로그 Task 등록. 사용자가 "새 기능 기획해줘" 또는 /skill-feature를 요청할 때 사용합니다.
 disable-model-invocation: true
-allowed-tools: Bash(git:*), Read, Write, Glob, Grep
+allowed-tools: Bash(git:*), Read, Write, Glob, Grep, AskUserQuestion
 argument-hint: "[기능명]"
 ---
 
@@ -162,12 +162,10 @@ Skill tool 사용: skill="skill-plan", args="{taskId}"
 
 ### 다음 단계
 요구사항 문서를 검토해주세요.
-승인하시면 백로그에 등록합니다.
 
-승인하시겠습니까? (Y/N)
-
-> Y: 백로그 등록 후 `/skill-plan` 자동 실행
-> N: 요구사항 수정
+AskUserQuestion으로 승인 요청 (Protocol H 참조):
+- "승인 — 백로그 등록 후 /skill-plan 자동 실행"
+- "거절 — 요구사항 수정"
 ```
 
 ## 주의사항

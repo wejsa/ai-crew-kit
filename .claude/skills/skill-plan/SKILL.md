@@ -2,7 +2,7 @@
 name: skill-plan
 description: 계획 수립 - Task 선택 + 설계 분석 + 스텝 분리 계획. 사용자가 "다음 작업 가져와", "계획 세워줘" 또는 /skill-plan을 요청할 때 사용합니다.
 disable-model-invocation: false
-allowed-tools: Bash(git:*), Read, Write, Glob, Grep, Task
+allowed-tools: Bash(git:*), Read, Write, Glob, Grep, Task, AskUserQuestion
 argument-hint: "[taskId]"
 ---
 
@@ -16,35 +16,9 @@ argument-hint: "[taskId]"
 
 실패 시 즉시 중단 + 사용자 보고. 절대 다음 단계 진행 금지.
 
-```bash
-# [REQUIRED] 1. project.json 존재
-if [ ! -f ".claude/state/project.json" ]; then
-  echo "❌ project.json이 없습니다. /skill-init을 먼저 실행하세요."
-  exit 1
-fi
-
-# [REQUIRED] 2. backlog.json 존재 + 유효 JSON
-if [ ! -f ".claude/state/backlog.json" ]; then
-  echo "❌ backlog.json이 없습니다. /skill-init을 먼저 실행하세요."
-  exit 1
-fi
-cat .claude/state/backlog.json | python3 -c "import sys,json; json.load(sys.stdin)" 2>/dev/null || {
-  echo "❌ backlog.json이 유효한 JSON이 아닙니다."
-  exit 1
-}
-
-# [REQUIRED] 3. origin/develop 동기화 검증
-git fetch origin develop --quiet
-BEHIND=$(git rev-list --count HEAD..origin/develop)
-if [ "$BEHIND" -gt 5 ]; then
-  echo "❌ origin/develop보다 ${BEHIND}커밋 뒤처져 있습니다."
-  echo "→ git merge origin/develop 실행 후 재시도하세요."
-  exit 1
-elif [ "$BEHIND" -gt 0 ]; then
-  echo "⚠️ origin/develop보다 ${BEHIND}커밋 뒤처짐 — 자동 동기화 중..."
-  git merge origin/develop --no-edit
-fi
-```
+**공통 프로토콜 적용** (`.claude/docs/shared-protocols.md` 참조):
+- Protocol A: project.json + backlog.json 기본 검증
+- Protocol D: origin/develop 동기화
 
 ## 경량 점검
 
@@ -428,11 +402,12 @@ Skill tool 사용: skill="skill-impl"
 설계와 스텝 계획을 검토해주세요.
 승인하시면 개발을 시작합니다.
 
-승인하시겠습니까?
+계획을 검토해주세요.
 
-> Y: 상태 업데이트 후 `/skill-impl` 자동 실행 (Step 1 시작)
-> N: 계획 거절 — Task 잠금 해제 후 종료
-> 수정사항 입력: 해당 부분만 반영하여 계획 수정 (예: "Step 2 파일 분리해줘", "API 응답 형식 변경")
+AskUserQuestion으로 승인 요청 (Protocol H 참조):
+- "승인 — 상태 업데이트 후 /skill-impl 자동 실행 (Step 1 시작)"
+- "거절 — Task 잠금 해제 후 종료"
+- "수정 — 수정사항을 입력해주세요 (예: Step 2 파일 분리, API 응답 형식 변경)"
 ```
 
 ## 라인 수 가이드라인
@@ -449,9 +424,9 @@ Skill tool 사용: skill="skill-impl"
 - 쓰기 후 JSON 유효성 검증 필수
 - 검증 실패 시 `git checkout -- .claude/state/backlog.json`으로 롤백
 
-상태 업데이트 시:
+상태 업데이트 시 Protocol E (조건 분기 모드) 적용:
 ```bash
-# Worktree 감지
+# Protocol E: Worktree 감지 (shared-protocols.md 참조)
 GIT_DIR=$(git rev-parse --git-dir 2>/dev/null)
 GIT_COMMON_DIR=$(git rev-parse --git-common-dir 2>/dev/null)
 

@@ -11,6 +11,15 @@ argument-hint: "<name> [description]"
 ## 실행 조건
 - 사용자가 `/skill-create {name} "{description}"` 또는 "커스텀 스킬 만들어줘: {name}" 요청 시
 
+## 진행 표시
+
+스킬 진입 시 Protocol I (독립 스킬, `.claude/docs/shared-protocols.md` 참조) 적용:
+```
+━━━ skill-create ━━━━━━━━━━━━━━━━━
+ 📍 커스텀 스킬 "{name}" 스캐폴딩 중
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
 ## 사전 조건 검증 (MUST-EXECUTE-FIRST)
 
 실패 시 즉시 중단 + 사용자 보고.
