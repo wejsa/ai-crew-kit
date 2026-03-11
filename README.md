@@ -6,7 +6,7 @@
 
 AI 에이전트 팀 기반 소프트웨어 개발 키트
 
-[![Version](https://img.shields.io/badge/version-v1.29.0-blue?style=flat-square)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v1.30.0-blue?style=flat-square)](./CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](./LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/wejsa/ai-crew-kit?style=flat-square)](https://github.com/wejsa/ai-crew-kit)
 [![Built with Claude Code](https://img.shields.io/badge/built_with-Claude_Code-blueviolet?style=flat-square)](https://claude.ai/download)
@@ -31,6 +31,19 @@ claude
 > 모든 설정을 직접 선택하려면 `/skill-init`을 사용하세요.
 
 초기화 과정에서 **도메인**, **기술 스택**, **에이전트 팀**을 선택하고, 프로젝트 전용 `README.md`와 `VERSION`(0.1.0)이 자동 생성됩니다.
+
+**이미 코드베이스가 있는 프로젝트라면:**
+
+```bash
+git clone https://github.com/wejsa/ai-crew-kit.git
+cp -r ai-crew-kit/.claude my-existing-project/
+cd my-existing-project
+claude
+/skill-onboard
+```
+
+> 코드베이스를 자동 스캔하여 기술 스택과 도메인을 감지하고 설정을 생성합니다.
+> 자세한 내용은 [기존 프로젝트 온보딩](./docs/getting-started.md#기존-프로젝트-온보딩)을 참조하세요.
 
 ---
 

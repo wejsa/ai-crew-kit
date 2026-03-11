@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.30.0] - 2026-03-11
+
+### Added
+- README.md "빠른 시작": 기존 프로젝트용 `/skill-onboard` 진입점 추가 (신규 사용자 발견성 개선)
+- `docs/getting-started.md`: 온보딩 섹션 확장 — 준비 단계, 실행 흐름 다이어그램, `--scan-only` 옵션, 온보딩 후 다음 단계
+- `examples/README.md`: "기존 프로젝트에 적용" 섹션 추가 (`/skill-onboard` + `--scan-only` 안내)
+
 ## [1.29.0] - 2026-03-11
 
 ### Added

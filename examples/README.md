@@ -45,6 +45,20 @@ cd my-new-project
 vi .claude/state/project.json
 ```
 
+### 기존 프로젝트에 적용
+
+```bash
+# AI Crew Kit 스킬을 기존 프로젝트에 복사
+cp -r ai-crew-kit/.claude my-existing-project/
+cd my-existing-project
+
+# 온보딩 실행 (코드베이스 자동 스캔 → 설정 생성)
+/skill-onboard
+
+# 적용 전 스캔 결과만 먼저 확인하려면:
+/skill-onboard --scan-only
+```
+
 ### 처음부터 시작
 
 ```bash
