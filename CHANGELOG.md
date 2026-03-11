@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.31.1] - 2026-03-12
+
+### Fixed
+- `examples/README.md`: ecommerce-shop 예제 목록 누락 수정 (v1.28.0에서 추가되었으나 목록 미갱신)
+
 ## [1.31.0] - 2026-03-11
 
 ### Added
