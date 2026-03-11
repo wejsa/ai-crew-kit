@@ -25,7 +25,29 @@ fintech-gateway/
 - JWT 인증 기능 예제
 - PM, backend, code-reviewer, qa 에이전트 활성화
 
-### 2. pg-gateway-backlog.json (레거시)
+### 2. ecommerce-shop
+
+이커머스 도메인의 온라인 쇼핑몰 프로젝트 예제입니다.
+
+```
+ecommerce-shop/
+├── .claude/state/
+│   ├── project.json      # 프로젝트 설정 (ecommerce 도메인)
+│   └── backlog.json      # 백로그 예시
+├── docs/requirements/
+│   ├── SHOP-001-spec.md  # 상품 카탈로그 요구사항
+│   └── SHOP-002-spec.md  # 주문 처리 시스템 요구사항
+├── CLAUDE.md             # 생성된 CLAUDE.md 예시
+└── README.md             # 프로젝트 설명
+```
+
+**특징:**
+- ecommerce 도메인 설정
+- Node.js (TypeScript) + Next.js 기술 스택
+- 주문 처리 + 상품 카탈로그 예제
+- PM, backend, frontend, code-reviewer, qa 에이전트 활성화
+
+### 3. pg-gateway-backlog.json (레거시)
 
 PG Gateway 마이그레이션 프로젝트의 실제 백로그 예시입니다.
 45개의 상세한 Task가 포함된 대규모 백로그 구조를 참고할 수 있습니다.
