@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.31.0] - 2026-03-11
+
+### Added
+- `docs/customization.md` 확장 (79→249줄) — domain.json 전체 구조 워크스루, 체크리스트 형식 가이드, Layered Override 상세 설명
+  - domain.json 주요 필드 설명 테이블 + keywords 동작 방식 워크스루
+  - 체크리스트 심각도(CRITICAL/MAJOR/MINOR) 설명 + 실전 예시
+  - 디렉토리 구조 트리, _registry.json 등록 예시, 도메인 생성 3가지 방법
+
+### Fixed
+- domain.json 문서 예시를 실제 `ecommerce/domain.json`과 일치시킴 (conventions, defaultStack 필드 정합성)
+
 ## [1.30.0] - 2026-03-11
 
 ### Added
