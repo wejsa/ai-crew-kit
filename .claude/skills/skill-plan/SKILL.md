@@ -2,7 +2,7 @@
 name: skill-plan
 description: 계획 수립 - Task 선택 + 설계 분석 + 스텝 분리 계획. 사용자가 "다음 작업 가져와", "계획 세워줘" 또는 /skill-plan을 요청할 때 사용합니다.
 disable-model-invocation: false
-allowed-tools: Bash(git:*), Read, Write, Glob, Grep, Task
+allowed-tools: Bash(git:*), Read, Write, Glob, Grep, Task, AskUserQuestion
 argument-hint: "[taskId]"
 ---
 

@@ -2,7 +2,7 @@
 name: skill-feature
 description: 기능 기획 - 요구사항 정의 + 백로그 Task 등록. 사용자가 "새 기능 기획해줘" 또는 /skill-feature를 요청할 때 사용합니다.
 disable-model-invocation: true
-allowed-tools: Bash(git:*), Read, Write, Glob, Grep
+allowed-tools: Bash(git:*), Read, Write, Glob, Grep, AskUserQuestion
 argument-hint: "[기능명]"
 ---
 
