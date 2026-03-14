@@ -95,7 +95,8 @@ execution-log.json: APPROVED → action="approved", REQUEST_CHANGES → action="
 
 #### --auto-fix 모드
 - CRITICAL 0개 → 일반 승인 플로우
-- CRITICAL 1개+ → `Skill tool: skill="skill-fix", args="{prNumber}"`
+- CRITICAL 1개+ → workflowState.fixLoopCount 증가 후 `Skill tool: skill="skill-fix", args="{prNumber}"`
+  - fixLoopCount 3회째 CRITICAL → skill-fix 호출 금지, REQUEST_CHANGES 즉시 중단 (루프 가드)
   - 직접 코드 수정 금지. skill-fix 없이 REQUEST_CHANGES 후 종료 금지.
 
 ## 출력
