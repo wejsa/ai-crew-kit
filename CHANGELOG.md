@@ -7,6 +7,111 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.31.1] - 2026-03-12
+
+### Fixed
+- `examples/README.md`: ecommerce-shop 예제 목록 누락 수정 (v1.28.0에서 추가되었으나 목록 미갱신)
+
+## [1.31.0] - 2026-03-11
+
+### Added
+- `docs/customization.md` 확장 (79→249줄) — domain.json 전체 구조 워크스루, 체크리스트 형식 가이드, Layered Override 상세 설명
+  - domain.json 주요 필드 설명 테이블 + keywords 동작 방식 워크스루
+  - 체크리스트 심각도(CRITICAL/MAJOR/MINOR) 설명 + 실전 예시
+  - 디렉토리 구조 트리, _registry.json 등록 예시, 도메인 생성 3가지 방법
+
+### Fixed
+- domain.json 문서 예시를 실제 `ecommerce/domain.json`과 일치시킴 (conventions, defaultStack 필드 정합성)
+
+## [1.30.0] - 2026-03-11
+
+### Added
+- README.md "빠른 시작": 기존 프로젝트용 `/skill-onboard` 진입점 추가 (신규 사용자 발견성 개선)
+- `docs/getting-started.md`: 온보딩 섹션 확장 — 준비 단계, 실행 흐름 다이어그램, `--scan-only` 옵션, 온보딩 후 다음 단계
+- `examples/README.md`: "기존 프로젝트에 적용" 섹션 추가 (`/skill-onboard` + `--scan-only` 안내)
+
+## [1.29.0] - 2026-03-11
+
+### Added
+- `shared-protocols.md`: 9개 공통 프로토콜 SSOT 문서 신규 생성 — Protocol A(project+backlog 검증), B(completed 검증), C(운영환경 검증), D(origin/develop 동기화), E(Worktree 감지), F(빌드 명령어 결정), G(에러 3줄 표준), H(AskUserQuestion 승인), I(진행 표시)
+- 독립 스킬 5개(retro, report, estimate, create, onboard)에 간소화 진행 표시 추가 (Protocol I)
+
+### Changed
+- 14개 스킬의 MUST-EXECUTE-FIRST 중복 검증(~20줄씩) → Protocol 참조로 교체 (순 -197줄 감소)
+- 에러 메시지 전체 3줄 표준화: ❌ 에러 / 원인 / 해결 (Protocol G)
+- 승인 프롬프트 Y/N → AskUserQuestion 통일 (Protocol H)
+- skill-feature, skill-plan: allowed-tools에 `AskUserQuestion` 추가 (Protocol H 정합성)
+
+## [1.28.0] - 2026-03-11
+
+### Added
+- ecommerce-shop: `SHOP-002-spec.md` 주문 처리 시스템 설계 명세 — 상태 머신 11가지, 재고 동시성(낙관적 락), 가격 계산(Zod 정수 강제), 에러 코드 5종, 테스트 15건, Production Readiness Gaps 11항목
+- ecommerce-shop: `CLAUDE.md` 프로젝트 지시문 — fintech-gateway와 대칭 구조 (에이전트 5종, 키워드 매핑 6종, 체크리스트 5관점, 에러 코드 체계)
+- ecommerce-shop: `backlog.json` SHOP-002에 steps 2개 추가 (주문 CRUD+상태머신 ~400줄, 가격계산+테스트 ~350줄)
+
+### Fixed
+- README.md: 버전 배지 `v1.25.0` → `v1.27.0` 정합성 수정
+- SHOP-002-spec.md: 에러 응답에서 재고 수량 노출 제거 (보안)
+- SHOP-002-spec.md: 금액 정수 강제 Zod `z.number().int()` 스키마 + `Math.max(0)` 음수 방지 추가
+- SHOP-002-spec.md: 테스트 10건 → 15건 확충 (상태전이 전수, 가격 스냅샷, 경계값, 쿠폰 동시성, 음수 방지)
+- SHOP-002-spec.md: Production Readiness Gaps 7건 → 11건 확충 (인증 상세, 멱등성, 암호화, 동의, 에스크로)
+- order-flow.md: REFUNDED 상태 누락 → 추가 (SSOT 정합성)
+
+## [1.27.0] - 2026-03-10
+
+### Added
+- skill-validate: Category 10 도메인 키워드 참조 정합성 — `keywords.*.docs[]` ↔ 실제 파일 ERROR 레벨 검증, `_base:` 접두사 경로 해석 지원
+- skill-validate: Category 11 스키마-데이터 정합성 — project.json/backlog.json이 스키마 required 필드를 준수하는지 검증
+- skill-validate: Category 12 레지스트리-도메인 교차 검증 — `_registry.json` ↔ `domain.json` 간 name/icon/description/keywords 일치 확인
+- domain.json: 3개 도메인(fintech/ecommerce/general)에 `icon` 필드 추가 — Category 9 검증 통과
+- ecommerce: `member.md` 신규 — 회원가입/로그인/마이페이지/탈퇴/법적 보관 의무
+- ecommerce: `product.md` 신규 — 상품 구조/상태 전이/카테고리/가격 정책
+- ecommerce: `member` keyword 추가 ("회원", "회원가입", "로그인", "마이페이지", "탈퇴")
+- general: keyword docs를 `_base:conventions/` 접두사 참조로 전환 — 중복 문서 방지, `_base/conventions/` 재활용
+- BDD 시나리오 구조화: `docs/scenarios/` — Given/When/Then YAML 형식 + full-feature.yaml 예시
+- workflow-guide: 판단 분기점 테이블 5건 + Troubleshooting 7건 추가
+- SSOT 원칙 적용: CLAUDE.md/TASK-001-spec.md에 도메인 docs 진실점 포인터 추가
+- 회귀 테스트 전략: `docs/regression-testing.md` — fintech-gateway Golden State 지정 + 검증 절차
+
+### Fixed
+- TASK-001-spec.md: refresh 에러 응답 내부코드(PG-GW-016) → 외부코드(TOKEN_INVALID) 변경
+- error-handling.md: SSOT에 PG-GW-012 (INVALID_CREDENTIALS) 누락 → 추가
+- _registry.json: lastUpdated 갱신 + description/compliance/keywords 동기화
+- ecommerce domain.json: "장바구니" trigger 추가 (registry-domain 불일치 해소)
+- fintech domain.json: "토큰/PG/VAN/가맹점" trigger 추가 (registry-domain 불일치 해소)
+
+### Changed
+- workflow-guide: 설계 스텝 표시 "Step 1,2,3" → "Step 1,2" 조정
+
+## [1.26.0] - 2026-03-10
+
+### Added
+- TASK-001-spec: 의존성 GAV 고정 — Spring Cloud BOM 2024.0.0, jjwt 0.12.6, Kotlin 2.0.21, Spring Boot 3.3.5, MockK 1.13.13
+- TASK-001-spec: WebFlux 주의사항 — 서블릿 코드(`@Controller`, `MockMvc`, `HttpServletRequest`) 혼입 금지 명시
+- TASK-001-spec: 구성 요소 상세화 — 래퍼 타입(AccessToken/RefreshToken), InMemoryUserRepository, BCryptPasswordEncoder(cost 12), GlobalExceptionHandler, Logback eyJ 마스킹 필터
+- TASK-001-spec: UserRepository 인터페이스 분리 — NFR-003 확장성(추후 RDB 전환) 준수
+- TASK-001-spec: 테스트 명세 12건 추가 — 단위 9건, 동시성 1건, 보안 1건, E2E 1건 (WebTestClient 필수)
+- TASK-001-spec: 수용 기준 8항목 추가 — 브랜치 커버리지 80%, PCI-DSS, eyJ 마스킹, 래퍼 타입 등
+- TASK-001-spec: Production Readiness Gaps 9항목 — InMemory→Redis, HS256→RS256, JSON body→Cookie 등
+- TASK-001-spec: 블랙리스트 동시성 전략 — `ConcurrentHashMap.newKeySet()` 명시
+- CLAUDE.md: 에러 코드 외부 매핑에 `INVALID_CREDENTIALS` 추가 (PG-GW-012 내부 전용)
+- CLAUDE.md: 브랜치 커버리지 80%+ 목표, WebTestClient 필수 (MockMvc 금지) 명시
+
+### Changed
+- TASK-001-spec: 스텝 분리 3→2 합침 (Step 1: 스캐폴딩+모델+구현 ~450줄, Step 2: 필터+컨트롤러+테스트 ~300줄)
+- TASK-001-spec: 로그인 에러 외부코드 `PG-GW-012` → `INVALID_CREDENTIALS`로 변경 (내부코드 노출 방지)
+- project.json: infrastructure `docker-compose` → `none` 변경
+
+## [1.25.1] - 2026-03-10
+
+### Fixed
+- backlog.json 스키마 정합성: `metadata.version` 필드 추가 (동시성 제어 필수), task `id` 필드 추가, `phase` 타입 integer로 수정, `specFile` 필드명 통일
+- project.json 스키마 정합성: `version` (required) 필드 추가, `metadata.version` 동시성 제어 필드 추가
+- backlog.schema.json: phases에 `required: ["name", "status"]` + `additionalProperties: false` 보강
+- 에러 코드 확정: Token Reuse Detection → PG-GW-016 (TOKEN_REUSED)으로 통일 (TASK-001-spec.md, token-auth.md, CLAUDE.md, error-handling.md)
+- Refresh Token 전달 방식 확정: 데모=JSON body 채택, 프로덕션=HttpOnly Cookie 권장사항 문서화 + XSS 보안 제약 경고 추가
+- 양쪽 예제(fintech-gateway, ecommerce-shop) 동일 적용
+
 ## [1.25.0] - 2026-03-09
 
 ### Added

@@ -15,10 +15,9 @@
   },
   "phases": {
     "PHASE-1": {
-      "title": "상품 및 주문 기본 기능",
-      "status": "todo",
-      "priority": "high",
-      "tasks": ["SHOP-001", "SHOP-002"]
+      "name": "상품 및 주문 기본 기능",
+      "description": "상품 카탈로그 API + 주문 처리 시스템 (상태 머신, 재고 차감)",
+      "status": "todo"
     }
   },
   "tasks": {
@@ -42,7 +41,23 @@
       "phase": 1,
       "dependencies": ["SHOP-001"],
       "specFile": "docs/requirements/SHOP-002-spec.md",
-      "createdAt": "2026-02-15T00:00:00Z"
+      "createdAt": "2026-02-15T00:00:00Z",
+      "steps": [
+        {
+          "number": 1,
+          "title": "주문 CRUD + 상태 머신",
+          "description": "Order/OrderItem 엔티티, 상태 머신, 주문 생성/조회/취소 API, 재고 예약",
+          "status": "pending",
+          "estimatedLines": 400
+        },
+        {
+          "number": 2,
+          "title": "가격 계산 + 테스트",
+          "description": "가격 계산 로직, 쿠폰 검증, 에러 핸들링, 테스트 10건",
+          "status": "pending",
+          "estimatedLines": 350
+        }
+      ]
     }
   }
 }
