@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.32.0] - 2026-03-15
+
+### Changed
+- CLAUDE.md 템플릿: Git 워크트리 프로토콜 결정 테이블 + 워크플로우 상태 추적 프로토콜 추가 (SSOT 강화)
+- 22개 SKILL.md 선언적 압축 (8,361줄 → 2,165줄, 74% 절감)
+  - bash 코드 블록 → 선언적 요구사항 전환
+  - CLAUDE.md 프로토콜 반복 제거 → 참조 + 단계명 힌트 2줄로 통일
+  - 출력 포맷 템플릿 → 필수 필드 목록으로 축소
+  - 워크플로우 체인당 토큰 ~54,500 → ~11,300 (79% 절감)
+- 모든 스킬의 기능 로직, 결정 트리, Tier S 명령(squash merge 플래그, Intent 스키마 등) 100% 보존
+
 ## [1.31.1] - 2026-03-12
 
 ### Fixed
