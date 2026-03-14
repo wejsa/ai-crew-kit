@@ -215,6 +215,27 @@ fi
 
 ---
 
+## 워크플로우 상태 추적 프로토콜 (필수)
+
+체이닝 스킬(plan, impl, review-pr, fix, merge-pr, feature) 진입/완료 시 해당 Task의 `workflowState`를 업데이트한다:
+
+**진입 시:**
+```json
+"workflowState": {
+  "currentSkill": "{현재 스킬명}",
+  "lastCompletedSkill": "{이전 스킬명}",
+  "prNumber": "{PR 번호 또는 null}",
+  "fixLoopCount": "{N, skill-fix 전용, 루프 가드용}",
+  "autoChainArgs": "{체이닝 인자}",
+  "updatedAt": "{현재 ISO 8601}"
+}
+```
+
+**완료 시:** `currentSkill`을 다음 스킬로, `lastCompletedSkill`을 현재 스킬로 갱신.
+**Task 완료 시:** `workflowState: null`로 초기화.
+
+---
+
 ## 컨텍스트 한계 관리 (필수)
 
 컨텍스트 사용량이 **70% 이상**이 되면 현재 작업을 즉시 중단하고 **연속 계획 파일**을 작성한 뒤 세션을 종료한다.
@@ -461,6 +482,22 @@ Types:
 
 예: feat: {{TASK_PREFIX}}-010 Step 1 - 서비스 구현
 ```
+
+---
+
+## Git 워크트리 프로토콜
+
+워크트리 감지: `git rev-parse --git-dir` ≠ `git rev-parse --git-common-dir`
+
+| 작업 | 일반 모드 | 워크트리 모드 |
+|------|----------|-------------|
+| develop 동기화 | `git checkout develop && git pull` | `git fetch origin develop && git merge origin/develop` |
+| push | `git push origin develop` | `git push -u origin HEAD` |
+| PR merge | `gh pr merge --squash --delete-branch` | `gh pr merge --squash` (NEVER --delete-branch) |
+| 머지 후 동기화 | `git checkout develop && git pull --prune` | `git fetch origin develop --prune && git merge origin/develop` |
+| 상태 파일 반영 | develop에 직접 커밋 | **fetch+merge 먼저** → 워크트리 커밋 → push → 메인 리포에 cp → 커밋 → push |
+| 브랜치 생성 | `git checkout -b feature/...` | 불필요 (CS 브랜치 직접 사용) |
+| merge 후 step 재검증 | 불필요 | backlog.json 재읽기 → step이 done/merged면 다음 step 스킵 |
 
 ---
 
