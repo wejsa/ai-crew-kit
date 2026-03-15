@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.33.0] - 2026-03-15
+
+### Changed
+- 컨텍스트 한계 관리: 70% 강제 중단 → compact 허용 + 상태 파일 조건부 복구 + 작업 계속 진행 (76줄 → 12줄)
+- compact 후 복구: 3파일 무조건 읽기 → 조건부 읽기 (backlog만 항상, plan/project는 필요 시)
+
+### Added
+- customization.md: CUSTOM_SECTION 활용 예시 2건 (compact 알림 절충안, 프로젝트 코딩 규칙)
+
 ## [1.32.1] - 2026-03-15
 
 ### Fixed
