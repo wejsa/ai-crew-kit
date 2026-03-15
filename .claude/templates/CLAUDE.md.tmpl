@@ -242,10 +242,10 @@ fi
 컨텍스트 압축(compact)은 자연 현상이다. **작업을 중단하지 않고 계속 진행한다.**
 
 ### compact 후 복구 절차
-시스템이 컨텍스트를 압축하면, 이전 대화의 세부 내용이 축약된다. 다음 파일을 재읽기하여 작업 상태를 복원한다:
-1. `.claude/state/backlog.json` — 현재 Task, step 상태, workflowState
-2. `.claude/temp/{taskId}-plan.md` — 진행 중인 계획 상세
-3. `.claude/state/project.json` — 프로젝트 설정, 도메인, 빌드 명령
+시스템이 컨텍스트를 압축하면, 이전 대화의 세부 내용이 축약된다. 현재 진행 중인 작업에 필요한 파일만 재읽기한다:
+- **항상**: `.claude/state/backlog.json` — 현재 Task, step 상태, workflowState (핵심 상태)
+- **impl/review/merge 중일 때만**: `.claude/temp/{taskId}-plan.md` — 계획 상세
+- **빌드/설정 필요 시만**: `.claude/state/project.json` — 도메인, 빌드 명령
 
 ### 새 세션 시작 시
 `.claude/temp/continuation-plan.md` 존재 시 → 읽고 남은 작업부터 자동 재개 → 완료 후 삭제

@@ -248,3 +248,36 @@ mkdir -p .claude/domains/my-domain/{docs,checklists}
 ```
 
 `.claude/skills/custom/` 디렉토리에 생성되며, `CLAUDE.md`의 `CUSTOM_SECTION`에 자동 등록됩니다. 프레임워크 업그레이드 시에도 커스텀 스킬은 보존됩니다.
+
+---
+
+## CUSTOM_SECTION 활용 예시
+
+`CLAUDE.md`의 `<!-- CUSTOM_SECTION_START -->` ~ `<!-- CUSTOM_SECTION_END -->` 사이에 프로젝트 고유 규칙을 추가할 수 있습니다. 도메인 전환이나 프레임워크 업그레이드 시에도 이 영역은 자동 보존됩니다.
+
+### 예시: 컨텍스트 압축 시 사용자 알림
+
+기본 동작은 compact 발생 시 상태 파일을 재읽기하고 작업을 계속 진행합니다. 압축 발생을 알림 받고 싶다면 CUSTOM_SECTION에 추가하세요:
+
+```markdown
+<!-- CUSTOM_SECTION_START -->
+## 컨텍스트 압축 알림 (프로젝트 규칙)
+
+compact 감지 시 다음을 수행한다:
+1. 상태 파일 재읽기 (backlog.json, plan 파일)
+2. 사용자에게 알림: "⚠️ 컨텍스트 압축 발생 — 상태 복구 완료. 이전 대화 세부 맥락이 축약되었을 수 있습니다."
+3. 사용자가 "계속" 또는 "중단" 선택
+<!-- CUSTOM_SECTION_END -->
+```
+
+### 예시: 프로젝트 고유 코딩 규칙
+
+```markdown
+<!-- CUSTOM_SECTION_START -->
+## 프로젝트 코딩 규칙
+
+- 모든 API 응답은 `ApiResponse<T>` 래퍼 사용
+- 예외는 `@ControllerAdvice`에서 일괄 처리
+- 로그는 구조화 로깅 (JSON 포맷)
+<!-- CUSTOM_SECTION_END -->
+```
