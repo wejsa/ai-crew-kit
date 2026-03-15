@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.32.1] - 2026-03-15
+
+### Fixed
+- skill-plan/feature: allowed-tools에 AskUserQuestion 누락 복구 (v1.29.0 merge 충돌 해소 시 유실)
+- 컨텍스트 한계 관리: 모델별 총 컨텍스트 크기 확인 절차 추가 (Opus 1M을 200k로 오인하여 조기 중단 방지)
+
+### Removed
+- 고아 파일 shared-protocols.md 삭제 (v1.32.0 압축으로 미참조 상태)
+
 ## [1.32.0] - 2026-03-15
 
 ### Changed
