@@ -125,9 +125,24 @@ argument-hint: "[--dry-run] [--source <git-url|local-path>] [--version <tag>] [-
 
 ### Step 13: CLAUDE.md/README.md 재생성
 
-- 13-0. 마커 자동 삽입: 재생성 후 `CUSTOM_SECTION` 마커 없으면 파일 끝에 자동 추가 + 백업 커스텀 내용 복원
-- 13-1. CLAUDE.md: 템플릿 로드 → 마커 치환 → 커스텀 섹션 삽입
-- 13-2. README.md: 동일 패턴
+> ⚠️ **서브 에이전트 위임 금지** — 메인 에이전트가 직접 수행한다. 서브 에이전트는 템플릿 변경 맥락이 없어 구 버전을 복사할 위험이 있다.
+
+**13-0. CUSTOM_SECTION 확인**: Step 10에서 임시 저장한 CUSTOM_SECTION 내용을 사용한다 (이 시점에서 기존 CLAUDE.md를 다시 읽지 않는다)
+
+**13-1. 결정적 치환 (CLAUDE.md)**:
+1. **새 템플릿**(`templates/CLAUDE.md.tmpl`) 전체를 Read로 로드
+2. 마커(`{{...}}`)를 Layered Override 값으로 문자열 치환
+3. `{{CUSTOM_SECTION}}`에 13-0에서 추출한 내용 삽입
+4. 치환 완료된 전체 내용을 Write로 CLAUDE.md에 기록
+5. ❌ **이전 CLAUDE.md를 참조하지 않는다** — CUSTOM_SECTION 외의 내용은 오직 템플릿에서만 생성
+
+**13-2. 결정적 치환 (README.md)**: 동일 패턴
+
+**13-3. 재생성 검증**:
+1. 새 템플릿에서 비-마커 고유 문장 3개를 샘플 추출
+2. 재생성된 CLAUDE.md에서 해당 문장 존재 확인 (Grep)
+3. 구 템플릿에만 있던 삭제 대상 키워드가 잔존하는지 네거티브 체크 (`CUSTOM_SECTION` 내부 제외)
+4. 불일치 시 → 13-1부터 재시도 (최대 1회)
 
 ### Step 14: 완료 처리
 

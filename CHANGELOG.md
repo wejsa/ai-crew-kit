@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.33.1] - 2026-03-16
+
+### Fixed
+- skill-upgrade Step 13: CLAUDE.md 재생성 시 서브 에이전트 위임 금지 + 결정적 치환 원칙 적용 (구 버전 복사 방지)
+- TEMPLATE-ENGINE.md: 결정적 치환 원칙 명시 (기존 CLAUDE.md는 CUSTOM_SECTION 추출에만 사용)
+
+### Added
+- skill-upgrade Step 13-3: 재생성 검증 게이트 (포지티브/네거티브 체크 + 재시도)
+- TEMPLATE-ENGINE.md: 재생성 정합성 검증 규칙 (upgrade 시 템플릿 반영 확인)
+
 ## [1.33.0] - 2026-03-15
 
 ### Changed

@@ -425,6 +425,10 @@ def extract_custom_section(existing_claude_md: str) -> str:
 
 ### 커스텀 섹션 보존하며 재생성
 
+> ⚠️ **결정적 치환 원칙**: 기존 CLAUDE.md는 CUSTOM_SECTION 추출 용도로만 참조한다.
+> 마커 외의 모든 텍스트는 **오직 템플릿(CLAUDE.md.tmpl)에서만** 생성한다.
+> 기존 CLAUDE.md의 비-커스텀 내용을 복사하거나 참조해서는 안 된다.
+
 ```python
 def generate_claude_md_with_preservation(
     project_json_path: str,
@@ -433,30 +437,31 @@ def generate_claude_md_with_preservation(
     """
     커스텀 섹션을 보존하며 CLAUDE.md 재생성
 
+    ⚠️ 결정적 치환: 기존 CLAUDE.md는 CUSTOM_SECTION 추출에만 사용.
+    나머지는 전적으로 템플릿에서 생성한다.
+
     Args:
         project_json_path: project.json 경로
-        existing_claude_md_path: 기존 CLAUDE.md 경로 (커스텀 섹션 추출용)
+        existing_claude_md_path: 기존 CLAUDE.md 경로 (CUSTOM_SECTION 추출 전용)
 
     Returns:
         생성된 CLAUDE.md 내용
     """
-    # 1. 기존 CLAUDE.md에서 커스텀 섹션 추출
+    # 1. 기존 CLAUDE.md에서 CUSTOM_SECTION만 추출 (이것만 참조)
     custom_section = ""
     if os.path.exists(existing_claude_md_path):
         with open(existing_claude_md_path, 'r', encoding='utf-8') as f:
             existing_content = f.read()
         custom_section = extract_custom_section(existing_content)
 
-    # 2. 새 CLAUDE.md 생성 (기존 로직)
+    # 2. 새 CLAUDE.md 생성 — 템플릿에서만 생성 (기존 CLAUDE.md 참조 금지)
     new_content = generate_claude_md(project_json_path)
 
     # 3. 커스텀 섹션 복원
     if custom_section:
-        # {{CUSTOM_SECTION}} 또는 빈 커스텀 섹션을 기존 내용으로 교체
         START_MARKER = "<!-- CUSTOM_SECTION_START -->"
         END_MARKER = "<!-- CUSTOM_SECTION_END -->"
 
-        # 마커 사이 내용을 커스텀 섹션으로 교체
         start_idx = new_content.find(START_MARKER)
         end_idx = new_content.find(END_MARKER)
 
@@ -706,6 +711,14 @@ project.json 또는 domain.json에 해당 값을 추가하세요.
 2. 코드 블록 닫힘 확인
 3. 테이블 형식 확인
 4. 빈 섹션 경고
+
+### 재생성 정합성 검증 (upgrade 시)
+
+템플릿 변경이 CLAUDE.md에 올바르게 반영됐는지 검증:
+
+1. **포지티브 체크**: 새 템플릿의 비-마커 고유 문장 3개를 샘플 추출 → 재생성된 CLAUDE.md에서 존재 확인
+2. **네거티브 체크**: 이전 버전 템플릿에만 있던 삭제 대상 문장이 잔존하는지 확인 (`CUSTOM_SECTION` 내부 제외)
+3. **불일치 시**: 재생성 재시도 (최대 1회) — 템플릿만 참조, 기존 CLAUDE.md 참조 금지
 
 ---
 
