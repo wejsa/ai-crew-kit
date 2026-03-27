@@ -44,6 +44,7 @@ AI Crew Kit의 CLAUDE.md 자동 생성 엔진입니다.
 | `{{TASK_PREFIX}}` | project.json → conventions.taskPrefix | domain.defaultTaskPrefix | Task ID 접두사 |
 | `{{PR_LINE_LIMIT}}` | project.json → conventions.prLineLimit | 500 | PR 라인 제한 |
 | `{{TEST_COVERAGE}}` | project.json → conventions.testCoverage | 80 | 테스트 커버리지 목표 |
+| `{{WORKFLOW_PROFILE}}` | project.json → conventions.workflowProfile | "standard" | 워크플로우 프로필 (standard/fast) |
 
 ### 블록 마커
 
@@ -58,6 +59,7 @@ AI Crew Kit의 CLAUDE.md 자동 생성 엔진입니다.
 | `{{DOMAIN_ERROR_CODES}}` | error-codes.json 기반 | 에러 코드 테이블 |
 | `{{DOMAIN_COMPLIANCE}}` | domain.compliance 기반 | 컴플라이언스 목록 |
 | `{{CUSTOM_SECTION}}` | project.json → customSections | 사용자 정의 섹션 |
+| `{{WORKFLOW_CHAINING_RULES}}` | workflowProfile 기반 | 프로필별 자동 체이닝 규칙 테이블 |
 
 ---
 
@@ -238,57 +240,130 @@ def generate_docs_mapping(domain_config: dict) -> str:
 | 취소, 환불 | `refund-cancel.md` |
 ```
 
-### CONVENTIONS_SECTION
+### CONVENTIONS_SECTION (레이지 로딩 — 트리거 테이블)
 
 ```python
 def generate_conventions_section(project: dict, domain: dict) -> str:
     """
-    코딩 컨벤션 섹션 생성
-    기술 스택에 따라 적절한 컨벤션 로드
+    컨벤션 레이지 로딩 트리거 테이블 생성
+    컨벤션 전체 내용을 인라인하지 않고, 트리거 조건 + 파일 경로 참조 테이블을 생성한다.
+    스킬 실행 시 해당 트리거에 매칭되면 Read 도구로 파일을 로드한다.
     """
-    tech_stack = project.get("techStack", {})
-    backend = tech_stack.get("backend", "")
+    domain_id = domain.get("id", "general")
 
-    # 백엔드 스택별 컨벤션 파일 선택
-    if "kotlin" in backend.lower():
-        return load_convention_template("kotlin")
-    elif "java" in backend.lower():
-        return load_convention_template("java")
-    elif "node" in backend.lower() or "typescript" in backend.lower():
-        return load_convention_template("typescript")
-    elif "go" in backend.lower():
-        return load_convention_template("go")
-    else:
-        return load_convention_template("default")
+    # _base 컨벤션 + 도메인 docs를 조합하여 트리거 테이블 생성
+    base_conventions = [
+        ("API 엔드포인트 설계/수정", ".claude/domains/_base/conventions/api-design.md", "필수"),
+        ("DB 스키마/쿼리 작성", ".claude/domains/_base/conventions/database.md", "필수"),
+        ("Redis 키/TTL 설정", ".claude/domains/_base/conventions/cache.md", "필수"),
+        ("테스트 작성", ".claude/domains/_base/conventions/testing.md", "필수"),
+        ("보안 관련 코드", ".claude/domains/_base/conventions/security.md", "필수"),
+        ("메시지 큐 사용", ".claude/domains/_base/conventions/message-queue.md", "필수"),
+        ("배포 설정 변경", ".claude/domains/_base/conventions/deployment.md", "필수"),
+        ("네이밍 규칙 적용", ".claude/domains/_base/conventions/naming.md", "필수"),
+        ("프로젝트 구조 변경", ".claude/domains/_base/conventions/project-structure.md", "필수"),
+        ("로깅 코드 작성", ".claude/domains/_base/conventions/logging.md", "권장"),
+        ("모니터링 설정", ".claude/domains/_base/conventions/monitoring.md", "권장"),
+        ("에러 핸들링 코드", ".claude/domains/_base/conventions/error-handling.md", "권장"),
+        ("Git 워크플로우", ".claude/domains/_base/conventions/git-workflow.md", "권장"),
+    ]
+
+    # 도메인별 docs 추가 (domain.json의 keywords에서 추출)
+    domain_docs = []
+    for keyword_group in domain.get("keywords", {}).values():
+        for doc in keyword_group.get("docs", []):
+            trigger = ", ".join(keyword_group.get("triggers", []))
+            path = f".claude/domains/{domain_id}/docs/{doc}"
+            domain_docs.append((trigger, path, "필수"))
+
+    all_entries = base_conventions + domain_docs
+
+    lines = [
+        "## 도메인 컨벤션 참조 (필요 시 Read)",
+        "",
+        "| 트리거 조건 | 참조 파일 | 필수/권장 |",
+        "|------------|----------|----------|",
+    ]
+
+    for trigger, path, level in all_entries:
+        lines.append(f"| {trigger} | `{path}` | {level} |")
+
+    lines.append("")
+    lines.append('⚠️ "필수" 파일은 해당 트리거 조건에서 반드시 Read 도구로 읽은 후 작업할 것.')
+
+    return "\n".join(lines)
 ```
 
-### DOMAIN_ERROR_CODES
+### WORKFLOW_CHAINING_RULES (프로필별 체이닝 규칙)
+
+```python
+def generate_workflow_chaining_rules(project: dict) -> str:
+    """
+    워크플로우 프로필(standard/fast)에 따라 자동 체이닝 규칙 테이블 생성
+    """
+    profile = project.get("conventions", {}).get("workflowProfile", "standard")
+
+    if profile == "fast":
+        # fast: review-pr/fix 단계 생략, impl → merge-pr 직행
+        return "\n".join([
+            "| 완료 스킬 | 조건 | 자동 호출 |",
+            "|-----------|------|----------|",
+            "| skill-feature | 사용자 승인 | → skill-plan |",
+            "| skill-plan | 사용자 \"Y\" 승인 | → skill-impl |",
+            "| skill-impl | PR 생성 + 빌드/테스트 통과 | → skill-merge-pr {PR번호} |",
+            "| skill-merge-pr | 남은 스텝 있음 | → skill-impl --next |",
+            "| skill-merge-pr | 마지막 스텝 | Task 완료 처리 후 종료 |",
+            "| skill-hotfix | - | 자동 체이닝 없음 (독립 실행) |",
+            "| skill-rollback | - | 자동 체이닝 없음 (독립 실행) |",
+            "| skill-retro | - | 자동 체이닝 없음 (독립 실행) |",
+            "| skill-report | - | 자동 체이닝 없음 (독립 실행) |",
+            "| skill-onboard | - | 자동 체이닝 없음 (독립 실행) |",
+            "| skill-estimate | - | 자동 체이닝 없음 (독립 실행) |",
+            "| skill-create | - | 자동 체이닝 없음 (독립 실행) |",
+        ])
+    else:
+        # standard: 전체 체이닝 (review-pr/fix 포함)
+        return "\n".join([
+            "| 완료 스킬 | 조건 | 자동 호출 |",
+            "|-----------|------|----------|",
+            "| skill-feature | 사용자 승인 | → skill-plan |",
+            "| skill-plan | 사용자 \"Y\" 승인 | → skill-impl |",
+            "| skill-impl | PR 생성 완료 | → skill-review-pr {PR번호} --auto-fix |",
+            "| skill-review-pr | APPROVED | → skill-merge-pr {PR번호} |",
+            "| skill-review-pr | CRITICAL + --auto-fix | → skill-fix {PR번호} |",
+            "| skill-review-pr | REQUEST_CHANGES | ❌ 멈춤 (수정 대기) |",
+            "| skill-fix | 수정 완료 | → skill-review-pr {PR번호} --auto-fix |",
+            "| skill-merge-pr | 남은 스텝 있음 | → skill-impl --next |",
+            "| skill-merge-pr | 마지막 스텝 | Task 완료 처리 후 종료 |",
+            "| skill-hotfix | - | 자동 체이닝 없음 (독립 실행) |",
+            "| skill-rollback | - | 자동 체이닝 없음 (독립 실행) |",
+            "| skill-retro | - | 자동 체이닝 없음 (독립 실행) |",
+            "| skill-report | - | 자동 체이닝 없음 (독립 실행) |",
+            "| skill-onboard | - | 자동 체이닝 없음 (독립 실행) |",
+            "| skill-estimate | - | 자동 체이닝 없음 (독립 실행) |",
+            "| skill-create | - | 자동 체이닝 없음 (독립 실행) |",
+        ])
+```
+
+### DOMAIN_ERROR_CODES (레이지 로딩 — 파일 경로 참조)
 
 ```python
 def generate_error_codes_section(domain_id: str) -> str:
     """
-    도메인 에러 코드 테이블 생성
+    에러 코드 파일 경로 참조 생성
+    전체 에러 코드 테이블을 인라인하지 않고 파일 경로만 안내한다.
     """
     error_codes_path = f".claude/domains/{domain_id}/error-codes/error-codes.json"
 
     if not os.path.exists(error_codes_path):
         return ""
 
-    error_codes = load_json(error_codes_path)
-
-    lines = [
-        "## 에러 코드 체계",
+    return "\n".join([
+        "## 에러 코드 참조",
         "",
-        "| 코드 | HTTP | 설명 |",
-        "|------|------|------|"
-    ]
-
-    for code, info in error_codes.items():
-        http_status = info.get("httpStatus", 500)
-        description = info.get("description", "")
-        lines.append(f"| {code} | {http_status} | {description} |")
-
-    return "\n".join(lines)
+        f"에러 코드 추가/수정 시: `{error_codes_path}` 필수 참조 (Read 도구로 로드)",
+        f"에러 핸들링 가이드: `.claude/domains/{domain_id}/docs/error-handling.md`",
+    ])
 ```
 
 ### DOMAIN_COMPLIANCE
@@ -350,6 +425,10 @@ def extract_custom_section(existing_claude_md: str) -> str:
 
 ### 커스텀 섹션 보존하며 재생성
 
+> ⚠️ **결정적 치환 원칙**: 기존 CLAUDE.md는 CUSTOM_SECTION 추출 용도로만 참조한다.
+> 마커 외의 모든 텍스트는 **오직 템플릿(CLAUDE.md.tmpl)에서만** 생성한다.
+> 기존 CLAUDE.md의 비-커스텀 내용을 복사하거나 참조해서는 안 된다.
+
 ```python
 def generate_claude_md_with_preservation(
     project_json_path: str,
@@ -358,30 +437,31 @@ def generate_claude_md_with_preservation(
     """
     커스텀 섹션을 보존하며 CLAUDE.md 재생성
 
+    ⚠️ 결정적 치환: 기존 CLAUDE.md는 CUSTOM_SECTION 추출에만 사용.
+    나머지는 전적으로 템플릿에서 생성한다.
+
     Args:
         project_json_path: project.json 경로
-        existing_claude_md_path: 기존 CLAUDE.md 경로 (커스텀 섹션 추출용)
+        existing_claude_md_path: 기존 CLAUDE.md 경로 (CUSTOM_SECTION 추출 전용)
 
     Returns:
         생성된 CLAUDE.md 내용
     """
-    # 1. 기존 CLAUDE.md에서 커스텀 섹션 추출
+    # 1. 기존 CLAUDE.md에서 CUSTOM_SECTION만 추출 (이것만 참조)
     custom_section = ""
     if os.path.exists(existing_claude_md_path):
         with open(existing_claude_md_path, 'r', encoding='utf-8') as f:
             existing_content = f.read()
         custom_section = extract_custom_section(existing_content)
 
-    # 2. 새 CLAUDE.md 생성 (기존 로직)
+    # 2. 새 CLAUDE.md 생성 — 템플릿에서만 생성 (기존 CLAUDE.md 참조 금지)
     new_content = generate_claude_md(project_json_path)
 
     # 3. 커스텀 섹션 복원
     if custom_section:
-        # {{CUSTOM_SECTION}} 또는 빈 커스텀 섹션을 기존 내용으로 교체
         START_MARKER = "<!-- CUSTOM_SECTION_START -->"
         END_MARKER = "<!-- CUSTOM_SECTION_END -->"
 
-        # 마커 사이 내용을 커스텀 섹션으로 교체
         start_idx = new_content.find(START_MARKER)
         end_idx = new_content.find(END_MARKER)
 
@@ -420,16 +500,18 @@ def generate_claude_md(project_json_path: str) -> str:
         "TASK_PREFIX": resolve_task_prefix(project, domain),
         "PR_LINE_LIMIT": resolve_pr_line_limit(project, domain),
         "TEST_COVERAGE": resolve_test_coverage(project, domain),
+        "WORKFLOW_PROFILE": project.get("conventions", {}).get("workflowProfile", "standard"),
     }
 
     # 4. 블록 마커 값 준비
     block_values = {
         "TECH_STACK_SECTION": generate_tech_stack_section(project.get("techStack", {})),
         "AGENTS_SECTION": generate_agents_section(project.get("agents", {})),
-        "CONVENTIONS_SECTION": generate_conventions_section(project, domain),
+        "CONVENTIONS_SECTION": generate_conventions_section(project, domain),  # 레이지 로딩 트리거 테이블
         "DOMAIN_DOCS_MAPPING": generate_docs_mapping(domain),
-        "DOMAIN_ERROR_CODES": generate_error_codes_section(domain_id),
+        "DOMAIN_ERROR_CODES": generate_error_codes_section(domain_id),  # 레이지 로딩 파일 참조
         "DOMAIN_COMPLIANCE": generate_compliance_section(domain),
+        "WORKFLOW_CHAINING_RULES": generate_workflow_chaining_rules(project),  # 프로필별 체이닝 규칙
         "CUSTOM_SECTION": "",  # 초기 생성 시 빈 값, 보존 시 extract_custom_section()으로 대체
     }
 
@@ -502,6 +584,58 @@ CLAUDE.md 재생성 제안
 
 도메인 템플릿이 있으면 우선 사용합니다.
 
+### 코드 템플릿 스택 기반 자동 선택
+
+코드 템플릿(`.tmpl`)은 백엔드 스택에 따라 자동 선택됩니다.
+
+**파일 확장자 규칙:**
+| 스택 | 확장자 | 예시 |
+|------|--------|------|
+| spring-boot-kotlin | `.kt.tmpl` | `state-machine.kt.tmpl` |
+| spring-boot-java | `.java.tmpl` | `state-machine.java.tmpl` |
+| nodejs-typescript | `.ts.tmpl` | `state-machine.ts.tmpl` |
+| go | `.go.tmpl` | `state-machine.go.tmpl` |
+
+**선택 로직:**
+```python
+def select_template(template_name: str, tech_stack: dict, domain: str) -> str:
+    """
+    스택 기반 템플릿 파일 선택
+
+    1. project.json의 techStack.backend 확인
+    2. 해당 확장자의 템플릿 파일 검색
+    3. 없으면 .kt.tmpl 폴백 (기본)
+    """
+    backend = tech_stack.get("backend", "spring-boot-kotlin")
+
+    ext_map = {
+        "spring-boot-kotlin": ".kt.tmpl",
+        "spring-boot-java": ".java.tmpl",
+        "nodejs-typescript": ".ts.tmpl",
+        "go": ".go.tmpl",
+    }
+
+    ext = ext_map.get(backend, ".kt.tmpl")
+    template_path = f".claude/domains/{domain}/templates/{template_name}{ext}"
+
+    if os.path.exists(template_path):
+        return template_path
+
+    # 폴백: Kotlin 템플릿
+    fallback = f".claude/domains/{domain}/templates/{template_name}.kt.tmpl"
+    return fallback if os.path.exists(fallback) else None
+```
+
+**사용 시점:**
+- `skill-plan` — 설계 분석 시 관련 템플릿 참조
+- `skill-impl` — 코드 생성 시 템플릿 기반 스캐폴딩
+
+**현재 지원 현황:**
+| 도메인 | `.kt.tmpl` | `.ts.tmpl` | `.java.tmpl` | `.go.tmpl` |
+|--------|-----------|-----------|-------------|-----------|
+| fintech | 5개 | 4개 | - | - |
+| ecommerce | 3개 | 3개 | - | - |
+
 ### PR Body 템플릿
 
 PR 생성 시 사용되는 body 템플릿입니다.
@@ -517,11 +651,9 @@ PR 생성 시 사용되는 body 템플릿입니다.
 | 마커 | 출처 | 기본값 | 설명 |
 |------|------|--------|------|
 | `{{TASK_TITLE}}` | 런타임 | "" | Task 제목 |
-| `{{TASK_ID}}` | 런타임 | "" | Task ID |
 | `{{STEP_NUMBER}}` | 런타임 | "1" | 현재 스텝 번호 |
 | `{{STEP_TOTAL}}` | 런타임 | "1" | 전체 스텝 수 |
 | `{{CHANGES_LIST}}` | 런타임 (git diff) | "" | 변경 사항 목록 |
-| `{{TEST_COVERAGE}}` | project.json > conventions | 80 | 커버리지 목표 |
 
 #### 사용 시점
 - `skill-impl` → PR 생성 시 자동 로드
@@ -579,6 +711,14 @@ project.json 또는 domain.json에 해당 값을 추가하세요.
 2. 코드 블록 닫힘 확인
 3. 테이블 형식 확인
 4. 빈 섹션 경고
+
+### 재생성 정합성 검증 (upgrade 시)
+
+템플릿 변경이 CLAUDE.md에 올바르게 반영됐는지 검증:
+
+1. **포지티브 체크**: 새 템플릿의 비-마커 고유 문장 3개를 샘플 추출 → 재생성된 CLAUDE.md에서 존재 확인
+2. **네거티브 체크**: 이전 버전 템플릿에만 있던 삭제 대상 문장이 잔존하는지 확인 (`CUSTOM_SECTION` 내부 제외)
+3. **불일치 시**: 재생성 재시도 (최대 1회) — 템플릿만 참조, 기존 CLAUDE.md 참조 금지
 
 ---
 

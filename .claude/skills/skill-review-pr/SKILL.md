@@ -1,8 +1,8 @@
 ---
 name: skill-review-pr
-description: PR 리뷰 - GitHub PR에 대한 5관점 통합 리뷰 수행
+description: PR 리뷰 - GitHub PR에 대한 5관점 통합 리뷰 수행. 사용자가 "PR 리뷰해줘" 또는 /skill-review-pr을 요청할 때 사용합니다.
 disable-model-invocation: false
-allowed-tools: Bash(git:*), Bash(gh:*), Read, Glob, Grep, Task
+allowed-tools: Bash(git:*), Bash(gh:*), Read, Glob, Grep, Task, AskUserQuestion
 argument-hint: "{PR번호} [--auto-fix]"
 ---
 
@@ -10,406 +10,99 @@ argument-hint: "{PR번호} [--auto-fix]"
 
 ## 실행 조건
 - 사용자가 `/skill-review-pr {번호}` 또는 "PR {번호} 리뷰해줘" 요청 시
+- `--auto-fix`: CRITICAL 이슈 자동 수정 후 재리뷰
 
-## 명령어 옵션
-```
-/skill-review-pr 123           # PR 리뷰
-/skill-review-pr 123 --auto-fix # CRITICAL 이슈 자동 수정 후 재리뷰
-```
+## 사전 조건 (MUST-EXECUTE-FIRST — 하나라도 실패 시 STOP)
+1. project.json 존재
+2. backlog.json 존재 + 유효 JSON
+3. PR 번호 지정됨
+4. PR 존재 + OPEN 상태 (`gh pr view --json state`)
+5. Draft 아님
+
+## 경량 점검
+CLAUDE.md "경량 점검 프로토콜" 3단계 실행: ①PR-backlog 일치 ②Stale 감지 ③Intent 복구
+
+## 워크플로우 진행 표시
+CLAUDE.md 진행 표시 프로토콜. 현재 단계: "코드 리뷰 중 (보안/도메인/테스트 3관점)"
+
+## 워크플로우 상태 추적
+CLAUDE.md 상태 추적 패턴. currentSkill="skill-review-pr"
+
+## 리뷰 전 컨벤션 로딩
+1. PR 변경 파일 확인 (`gh pr view {N} --json files`)
+2. CLAUDE.md 트리거 테이블로 매칭 컨벤션 식별
+3. 도메인 체크리스트 Read: `_base/checklists/common.md`(필수) + `{domain}/checklists/`
 
 ## 실행 플로우
 
 ### 1. PR 정보 수집
-```bash
-# PR 상세 정보
-gh pr view 123 --json title,body,author,state,baseRefName,headRefName,files,additions,deletions
-
-# PR 변경 내용
-gh pr diff 123
-
-# PR 체크 상태
-gh pr checks 123
-```
+`gh pr view {N} --json title,body,author,state,baseRefName,headRefName,files,additions,deletions`
+`gh pr diff {N}`, `gh pr checks {N}`
 
 ### 2. 체크리스트 검증
-
-#### 자동 검증 항목
 | 항목 | 검증 방법 | 필수 |
 |------|----------|------|
-| 빌드 성공 | CI 결과 확인 | ✅ |
-| 테스트 통과 | CI 결과 확인 | ✅ |
-| 린트 통과 | CI 결과 확인 | ⚠️ |
+| 빌드 성공 | CI 결과 | ✅ |
+| 테스트 통과 | CI 결과 | ✅ |
+| 린트 통과 | CI 결과 | ⚠️ |
 | 라인 수 제한 | diff 분석 | ⚠️ |
-| 충돌 없음 | mergeable 확인 | ✅ |
-
-```
-## ✅ 체크리스트
-
-- [x] 빌드 성공
-- [x] 테스트 통과 (45/45)
-- [x] 린트 통과
-- [x] 라인 수 적정 (287 라인)
-- [x] 충돌 없음
-```
-
-### 3. 5관점 병렬 리뷰 (Task sub-agent)
-
-#### 3.1 사전 준비 (현재 세션)
-
-**Step 1: 도메인 확인**
-```bash
-cat .claude/state/project.json
-```
-→ `domain` 필드 추출
-
-**Step 2: PR diff 수집**
-```bash
-gh pr diff {number}
-```
-→ 변수 `{diff}`에 저장
-
-#### 3.2 병렬 리뷰 실행
-
-3개 전문 subagent를 **하나의 메시지에서 동시 호출**하여 병렬 실행.
-각 Task는 `.claude/agents/pr-reviewer-*.md`의 지침을 Read로 로드하여 따릅니다.
-
-**Task 1: 보안 + 컴플라이언스**
-```
-Task tool (subagent_type: "general-purpose"):
-  prompt: |
-    .claude/agents/pr-reviewer-security.md 파일을 Read로 읽고,
-    해당 지침에 따라 아래 PR을 리뷰하세요.
-
-    PR #{number}: {title}
-    브랜치: {head} → {base}
-    도메인: {domain}
-
-    ## PR Diff
-    {diff}
-```
-
-**Task 2: 도메인 + 아키텍처**
-```
-Task tool (subagent_type: "general-purpose"):
-  prompt: |
-    .claude/agents/pr-reviewer-domain.md 파일을 Read로 읽고,
-    해당 지침에 따라 아래 PR을 리뷰하세요.
-
-    PR #{number}: {title}
-    브랜치: {head} → {base}
-    도메인: {domain}
-
-    ## PR Diff
-    {diff}
-```
-
-**Task 3: 테스트 품질**
-```
-Task tool (subagent_type: "general-purpose"):
-  prompt: |
-    .claude/agents/pr-reviewer-test.md 파일을 Read로 읽고,
-    해당 지침에 따라 아래 PR을 리뷰하세요.
-
-    PR #{number}: {title}
-    브랜치: {head} → {base}
-    도메인: {domain}
-
-    ## PR Diff
-    {diff}
-```
-
-#### 3.3 오류 처리
-
-| 상황 | 대응 |
-|------|------|
-| Task 1개 실패/타임아웃 | 해당 관점 "⚠️ 검토 불가 (Task 실패)" 표기, 나머지 결과로 진행 |
-| Task 결과 형식 불일치 | 결과를 "비정형" 분류, 텍스트 그대로 포함하여 수동 확인 요청 |
-| 2개 이상 Task 실패 | 전체 리뷰 중단, 수동 리뷰 요청 |
-
-#### 3.4 결과 병합
-
-3개 sub-agent 결과를 수집하여 통합 리뷰 테이블 생성:
-
-| 관점 | 담당 Task | CRITICAL | MAJOR | MINOR |
-|------|----------|----------|-------|-------|
-| 1️⃣ 컴플라이언스 | Task 1 | | | |
-| 2️⃣ 도메인 | Task 2 | | | |
-| 3️⃣ 아키텍처 | Task 2 | | | |
-| 4️⃣ 보안 | Task 1 | | | |
-| 5️⃣ 테스트 | Task 3 | | | |
-
-병합 규칙:
-- 이슈 ID 재채번: CRITICAL → C001~, MAJOR → H001~, MINOR → M001~
-- 위반 항목 통합 테이블 생성 (체크리스트, 항목, 심각도, 파일:라인)
-- CRITICAL 1개 이상 → 전체 REQUEST_CHANGES
-
-### 4. PR 코멘트 작성
-
-#### 전체 요약 코멘트
-```bash
-gh pr comment 123 --body "$(cat <<EOF
-## 📝 코드 리뷰 결과
-
-### 요약
-| 관점 | 상태 | 이슈 |
-|------|------|------|
-| 컴플라이언스 | ✅ | 0개 |
-| 도메인 | ⚠️ | 2개 |
-| 아키텍처 | ✅ | 0개 |
-| 보안 | ✅ | 0개 |
-| 테스트 | ⚠️ | 1개 |
-
-### 체크리스트 검토 결과
-**적용된 체크리스트:**
-- _base: common.md, security-basic.md, architecture.md
-- {domain}: {domain checklists}
-
-**위반 항목:**
-| 심각도 | 체크리스트 | 항목 | 파일 |
-|--------|-----------|------|------|
-| {CRITICAL/MAJOR} | {출처} | {항목명} | {파일:라인} |
-
-### 주요 이슈
-1. **[MAJOR]** 예외 처리 누락 - \`Service.kt:45\`
-2. **[MINOR]** 테스트 케이스 추가 권장
-
-### 결론
-수정 사항 반영 후 재검토 요청드립니다.
-EOF
-)"
-```
-
-#### 인라인 코멘트 (이슈별)
-```bash
-gh api repos/{owner}/{repo}/pulls/123/comments \
-  -f body="🟠 **MAJOR**: 예외 처리가 누락되었습니다.
-
-\`\`\`kotlin
-// 권장 수정
-try {
-    service.execute()
-} catch (e: Exception) {
-    logger.error(\"Failed to execute\", e)
-    throw ServiceException(e)
-}
-\`\`\`" \
-  -f path="src/main/kotlin/Service.kt" \
-  -f line=45 \
-  -f side="RIGHT"
-```
-
-### 5. 리뷰 결정
-
-#### 승인 조건
-- CRITICAL 이슈: 0개
-- MAJOR 이슈: 0개 또는 논의 후 승인
-
-#### 자기 PR 감지
-```bash
-# PR 작성자와 현재 사용자 비교
-PR_AUTHOR=$(gh pr view {number} --json author --jq '.author.login')
-CURRENT_USER=$(gh api user --jq '.login')
-
-if [ "$PR_AUTHOR" == "$CURRENT_USER" ]; then
-  IS_SELF_PR=true
-else
-  IS_SELF_PR=false
-fi
-```
-
-#### 리뷰 제출
-```bash
-# 자기 PR인 경우 (GitHub 정책상 승인 불가)
-if [ "$IS_SELF_PR" == "true" ]; then
-  gh pr review 123 --comment --body "✅ 셀프 리뷰 완료. CRITICAL 이슈 없음."
-  # 승인 SKIP → 바로 머지 진행
-fi
-
-# 다른 사람 PR인 경우
-if [ "$IS_SELF_PR" == "false" ]; then
-  # 승인
-  gh pr review 123 --approve --body "LGTM! 코드 품질이 좋습니다."
-fi
-
-# 변경 요청 (자기/타인 무관)
-gh pr review 123 --request-changes --body "위 이슈들 수정 후 재검토 요청드립니다."
-```
-
-### 6. skill-merge-pr 자동 호출 (승인 시)
-
-**리뷰 결과가 APPROVED일 때 반드시 수행:**
-```
-Skill tool 사용: skill="skill-merge-pr", args="{prNumber}"
-```
-
-**조건:**
-- APPROVED 상태일 때만 자동 호출
-- REQUEST_CHANGES면 수정 대기 (자동 호출 안 함)
-
-**중요:**
-- 리뷰 제출 후 APPROVED 판정 시 skill-merge-pr 호출
-- skill-merge-pr 호출 없이 직접 머지 진행 **금지**
-- 반드시 Skill tool을 사용하여 skill-merge-pr 스킬 실행
-
-**출력 예시 (APPROVED - 타인 PR):**
-```
-✅ 리뷰 완료: APPROVED
-🔄 PR 머지를 자동 시작합니다...
-```
-
-**출력 예시 (APPROVED - 자기 PR):**
-```
-✅ 리뷰 완료: 셀프 리뷰 (승인 불필요)
-📝 리뷰 코멘트 추가됨
-🔄 PR 머지를 자동 시작합니다...
-```
-
-**출력 예시 (REQUEST_CHANGES):**
-```
-⚠️ 리뷰 완료: REQUEST_CHANGES
-수정 후 `/skill-review-pr {number}` 재실행
-```
-
-### 7. 옵션별 워크플로우
-
-#### 7.1 기본 모드 (--auto-fix 없음)
-
-```
-/skill-review-pr {number}
-    │
-    ├─[1] PR 정보 수집
-    ├─[2] 자기 PR 여부 확인
-    ├─[3] 체크리스트 검증
-    ├─[4] 5관점 병렬 리뷰 (3 sub-agent)
-    ├─[5] PR 코멘트 작성
-    ├─[6] 리뷰 결정
-    │
-    ▼
-┌─────────────────────────────────────┐
-│         CRITICAL 이슈 존재?          │
-└─────────────────────────────────────┘
-    │
-    ├─ YES → REQUEST_CHANGES → ⏸️ 종료
-    │            └─ 출력: "수정 후 /skill-review-pr {number} 재실행"
-    │
-    └─ NO  → 자기 PR인가?
-              │
-              ├─ YES → --comment "셀프 리뷰 완료"
-              │        승인 SKIP → skill-merge-pr 호출
-              │
-              └─ NO  → --approve "LGTM!"
-                       skill-merge-pr 호출
-```
-
-**분기 조건:**
-- CRITICAL 이슈 1개 이상 → REQUEST_CHANGES
-- CRITICAL 이슈 0개 + 자기 PR → COMMENT 후 머지
-- CRITICAL 이슈 0개 + 타인 PR → APPROVE 후 머지
-
-#### 7.2 자동수정 모드 (--auto-fix)
-
-```
-/skill-review-pr {number} --auto-fix
-    │
-    ├─[1] PR 정보 수집
-    ├─[2] 체크리스트 검증
-    ├─[3] 5관점 병렬 리뷰 (3 sub-agent)
-    │
-    ▼
-┌─────────────────────────────────────┐
-│         CRITICAL 이슈 존재?          │
-└─────────────────────────────────────┘
-    │
-    ├─ NO  → [4] PR 코멘트 작성
-    │        [5] APPROVED
-    │        [6] skill-merge-pr 호출
-    │
-    └─ YES → [4] skill-fix 호출 (Skill tool)
-             │
-             └─ skill-fix 완료 후 자동으로
-                skill-review-pr 재호출됨
-```
-
-**분기 조건:**
-- CRITICAL 이슈 0개 → 일반 승인 플로우
-- CRITICAL 이슈 1개 이상 → skill-fix 호출
-
-#### 7.3 skill-fix 호출 방법
-
-**반드시 Skill tool 사용:**
-```
-Skill tool 사용: skill="skill-fix", args="{prNumber}"
-```
-
-**출력 (skill-fix 호출 시):**
-```
-⚠️ CRITICAL 이슈 {N}개 발견
-🔧 자동 수정을 시작합니다...
-🔄 `/skill-fix {number}` 실행 중...
-```
-
-**금지 사항:**
-- --auto-fix 시 직접 코드 수정 금지
-- skill-fix 없이 REQUEST_CHANGES 후 종료 금지
-
-## 출력 포맷
-
-```
-## 🔍 PR 리뷰: #{number}
-
-### PR 정보
-- **제목**: {제목}
-- **작성자**: {author}
-- **브랜치**: {head} → {base}
-- **변경**: +{additions} / -{deletions}
-
-### 체크리스트
-- [x] 빌드 성공
-- [x] 테스트 통과
-- [ ] 린트 통과 ⚠️
-- [x] 라인 수 적정
-
-### 리뷰 결과
-| 관점 | 상태 | CRITICAL | MAJOR | MINOR |
-|------|------|----------|-------|-------|
-| 컴플라이언스 | ✅ | 0 | 0 | 0 |
-| 도메인 | ⚠️ | 0 | 1 | 1 |
-| 아키텍처 | ✅ | 0 | 0 | 1 |
-| 보안 | ✅ | 0 | 0 | 0 |
-| 테스트 | ⚠️ | 0 | 1 | 0 |
-
-### 주요 피드백
-1. 🟠 **[M001]** {파일}:{라인} - {설명}
-2. 🟡 **[m001]** {파일}:{라인} - {설명}
-
-### 결정
-- **리뷰 결과**: {APPROVED | Request Changes}
-- **필수 수정**: {N}개
-- **선택 수정**: {N}개
-
-### 자동 진행 (APPROVED 시)
-🔄 `/skill-merge-pr {number}` 자동 실행 중...
-
-### 다음 단계 (REQUEST_CHANGES 시)
-수정 후 `/skill-review-pr {number}` 재실행
-```
-
-## 에이전트 활용
-
-PR 리뷰 시 3개 전문 subagent를 병렬 호출합니다:
-
-| subagent | 파일 | 관점 | 도구 |
-|----------|------|------|------|
-| pr-reviewer-security | `.claude/agents/pr-reviewer-security.md` | 1️⃣ + 4️⃣ | Read, Glob, Grep |
-| pr-reviewer-domain | `.claude/agents/pr-reviewer-domain.md` | 2️⃣ + 3️⃣ | Read, Glob, Grep |
-| pr-reviewer-test | `.claude/agents/pr-reviewer-test.md` | 5️⃣ | Read, Glob, Grep |
-
-각 subagent는 독립 컨텍스트에서 실행되며, 체크리스트를 직접 Read하여 로드합니다.
-PR diff는 호출 시 프롬프트에 포함되어 전달됩니다.
+| 충돌 없음 | mergeable | ✅ |
+
+### 3. 5관점 병렬 리뷰 (3 sub-agent)
+도메인 확인 + PR diff 수집 후, **하나의 메시지에서 3개 Task 동시 호출**:
+
+| sub-agent | 파일 | 관점 |
+|-----------|------|------|
+| pr-reviewer-security | `.claude/agents/pr-reviewer-security.md` | 보안 + 컴플라이언스 |
+| pr-reviewer-domain | `.claude/agents/pr-reviewer-domain.md` | 도메인 + 아키텍처 |
+| pr-reviewer-test | `.claude/agents/pr-reviewer-test.md` | 테스트 품질 |
+
+각 Task: Read로 agent 파일 로드 후 지침에 따라 리뷰. PR diff는 프롬프트에 포함.
+
+| 항목 | 값 |
+|------|-----|
+| timeout | 60초 |
+| retry | 0회 (--auto-fix 시 자동 1회 재시도 후 스킵) |
+| fallback | "⚠️ {에이전트명} 분석 불가 — 수동 확인 필요" |
+
+**오류 처리**:
+- 1개 실패: AskUserQuestion (재시도/스킵/중단). --auto-fix 시 자동 재시도→실패시 스킵
+- 2개+ 실패: 즉시 중단
+
+### 4. 결과 병합
+이슈 ID 재채번: CRITICAL→C001~, MAJOR→H001~, MINOR→M001~
+위반 항목 통합 테이블 (체크리스트, 항목, 심각도, 파일:라인)
+CRITICAL 1개 이상 → 전체 REQUEST_CHANGES
+
+### 5. PR 코멘트 작성
+`gh pr comment` — 전체 요약 (관점별 상태/이슈 수, 체크리스트 결과, 주요 피드백)
+`gh api repos/.../pulls/{N}/comments` — 이슈별 인라인 코멘트 (심각도, 설명, 권장 수정 코드)
+
+### 6. 리뷰 결정
+**자기 PR 감지**: PR author == 현재 user → 승인 불가, COMMENT로 대체
+- CRITICAL 0개 + 타인 PR → `gh pr review --approve`
+- CRITICAL 0개 + 자기 PR → `gh pr review --comment` (승인 SKIP)
+- CRITICAL 1개+ → `gh pr review --request-changes`
+
+### 6.5 실행 로그
+execution-log.json: APPROVED → action="approved", REQUEST_CHANGES → action="request_changes"
+
+### 7. 다음 스킬
+
+#### 기본 모드
+- APPROVED → `Skill tool: skill="skill-merge-pr", args="{prNumber}"`
+- REQUEST_CHANGES → 종료, "수정 후 재실행" 안내
+
+#### --auto-fix 모드
+- CRITICAL 0개 → 일반 승인 플로우
+- CRITICAL 1개+ → workflowState.fixLoopCount 증가 후 `Skill tool: skill="skill-fix", args="{prNumber}"`
+  - fixLoopCount 3회째 CRITICAL → skill-fix 호출 금지, REQUEST_CHANGES 즉시 중단 (루프 가드)
+  - 직접 코드 수정 금지. skill-fix 없이 REQUEST_CHANGES 후 종료 금지.
+
+## 출력
+필수 포함: PR 번호/제목/작성자/브랜치, 체크리스트 결과, 관점별 리뷰 테이블(CRITICAL/MAJOR/MINOR 수), 주요 피드백 목록, 결정(APPROVED/REQUEST_CHANGES), 다음 자동 스킬
 
 ## 주의사항
-- PR이 Draft 상태면 리뷰 불가
-- CI 실패 시 리뷰 보류 권장
+- Draft PR은 리뷰 불가
 - CRITICAL 이슈는 반드시 수정 필요
-- auto-fix는 신중하게 사용
-- **자기 PR은 GitHub 정책상 승인 불가 → COMMENT로 대체 후 머지 진행**
+- 자기 PR은 GitHub 정책상 승인 불가 → COMMENT 후 머지 진행

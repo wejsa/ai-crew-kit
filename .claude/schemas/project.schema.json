@@ -19,7 +19,7 @@
     },
     "domain": {
       "type": "string",
-      "enum": ["fintech", "ecommerce", "healthcare", "saas", "general", "custom"],
+      "enum": ["fintech", "ecommerce", "general", "custom"],
       "description": "도메인 유형"
     },
     "techStack": {
@@ -131,6 +131,43 @@
           "enum": ["ko", "en"],
           "default": "ko",
           "description": "기본 언어"
+        },
+        "workflowProfile": {
+          "type": "string",
+          "enum": ["standard", "fast"],
+          "default": "standard",
+          "description": "standard: 전체 체이닝 (review 포함), fast: 프로토타입용 (리뷰 생략)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "orchestrator": {
+      "type": "object",
+      "description": "외부 오케스트레이터 설정 (Claude Squad 등). 미지정 시 자동 감지.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["auto", "claude-squad", "none"],
+          "default": "auto"
+        }
+      },
+      "additionalProperties": false
+    },
+    "buildCommands": {
+      "type": "object",
+      "description": "빌드/테스트/린트 명령어 설정. 미지정 시 techStack 기반 자동 결정.",
+      "properties": {
+        "build": {
+          "type": "string",
+          "description": "빌드 명령어 (예: ./gradlew build, npm run build, go build ./...)"
+        },
+        "test": {
+          "type": "string",
+          "description": "테스트 명령어 (예: ./gradlew test, npm test, go test ./...)"
+        },
+        "lint": {
+          "type": "string",
+          "description": "린트 명령어 (예: ./gradlew ktlintCheck, npm run lint, golangci-lint run)"
         }
       },
       "additionalProperties": false
@@ -171,6 +208,22 @@
         }
       }
     },
+    "metadata": {
+      "type": "object",
+      "description": "동시성 제어용 메타데이터 (backlog.json과 동일 패턴)",
+      "properties": {
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "낙관적 동시성 제어용 — 쓰기 시 1 증가"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "마지막 수정 일시"
+        }
+      }
+    },
     "createdAt": {
       "type": "string",
       "format": "date-time",
@@ -179,7 +232,7 @@
     "updatedAt": {
       "type": "string",
       "format": "date-time",
-      "description": "수정 일시"
+      "description": "수정 일시 (하위호환용, metadata.updatedAt 우선)"
     },
     "version": {
       "type": "string",
@@ -194,6 +247,34 @@
     "kitSource": {
       "type": "string",
       "description": "AI Crew Kit 소스 저장소 URL 또는 로컬 경로"
+    },
+    "healthCheck": {
+      "type": "object",
+      "description": "건강 검진 설정 (/skill-health-check)",
+      "properties": {
+        "exclude": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "비활성화할 검사 항목 ID 목록"
+        },
+        "thresholds": {
+          "type": "object",
+          "properties": {
+            "criticalMinScore": { "type": "integer", "default": 70 },
+            "autoBacklogSeverity": { "type": "string", "enum": ["CRITICAL", "MAJOR"], "default": "CRITICAL" }
+          },
+          "additionalProperties": false
+        },
+        "schedule": {
+          "type": "object",
+          "properties": {
+            "recommendedFrequency": { "type": "string", "default": "weekly" },
+            "autoRunOnMerge": { "type": "boolean", "default": true }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false,
@@ -221,6 +302,11 @@
         "prLineLimit": 500,
         "testCoverage": 80,
         "language": "ko"
+      },
+      "buildCommands": {
+        "build": "./gradlew build",
+        "test": "./gradlew test",
+        "lint": "./gradlew ktlintCheck"
       },
       "ports": {
         "gateway": 10080,

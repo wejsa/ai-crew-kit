@@ -17,17 +17,70 @@
 |------|------|------|
 | 기능 개발 | `feature/{taskId}-{설명}` | `feature/TASK-001-user-auth` |
 | 버그 수정 | `bugfix/{taskId}-{설명}` | `bugfix/TASK-002-login-error` |
-| 긴급 수정 | `hotfix/{taskId}-{설명}` | `hotfix/TASK-003-security-patch` |
+| 긴급 수정 | `hotfix/HOT-{NNN}-{설명}` | `hotfix/HOT-001-security-patch` |
+| 롤백 | `revert/{대상}` | `revert/v1.2.3`, `revert/-123` |
 | 스텝 개발 | `feature/{taskId}-step{N}` | `feature/TASK-001-step1` |
 
 ### 브랜치 생성 규칙
 
 ```bash
-# develop에서 분기
+# develop에서 분기 (일반 개발)
 git checkout develop
 git pull origin develop
 git checkout -b feature/{taskId}-step{N}
 ```
+
+### 긴급 수정 (Hotfix) 플로우
+
+**hotfix는 main에서 직접 분기하는 유일한 예외 케이스:**
+
+```bash
+# 1. main에서 분기
+git checkout main
+git pull origin main
+git checkout -b hotfix/HOT-{NNN}-{설명}
+
+# 2. 수정 + 테스트
+# 3. PR 생성 (--base main)
+gh pr create --base main --title "hotfix: HOT-{NNN} - {설명}"
+
+# 4. 보안 리뷰 → 머지 → 패치 버전 범프 → 태그
+# 5. develop 백머지
+git checkout develop && git merge main
+```
+
+### 롤백 (Revert) 플로우
+
+```bash
+# 1. main에서 분기
+git checkout main
+git pull origin main
+git checkout -b revert/{대상}
+
+# 2. git revert (히스토리 보존)
+git revert {SHA} --mainline 1 --no-edit  # merge commit인 경우
+
+# 3. PR 생성 (--base main)
+gh pr create --base main --title "revert: {대상} 롤백"
+
+# 4. 머지 → 패치 버전 범프 → 태그
+# 5. develop 백머지
+git checkout develop && git merge main
+```
+
+### Worktree 모드 (Claude Squad 등)
+
+git worktree 환경에서는 develop checkout이 불가하므로, 현재 브랜치(CS 브랜치)를 feature 브랜치로 직접 사용한다.
+
+| 일반 모드 | Worktree 모드 |
+|----------|--------------|
+| `git checkout develop && git pull` | `git fetch origin develop && git merge origin/develop` |
+| `git checkout -b feature/X` | 브랜치 생성 없음 (현재 브랜치 사용) |
+| `gh pr merge --squash --delete-branch` | `gh pr merge --squash` (브랜치 유지) |
+| 머지 후 `git checkout develop` | 머지 후 `git merge origin/develop` |
+| `git push origin develop` (상태) | `git push origin HEAD` |
+
+감지: `git rev-parse --git-dir` ≠ `--git-common-dir` → worktree
 
 ### 브랜치 병합
 
@@ -201,7 +254,7 @@ Thumbs.db
 
 | 금지 항목 | 이유 |
 |----------|------|
-| `main` 직접 푸시 | 코드 리뷰 우회 |
+| `main` 직접 푸시 | 코드 리뷰 우회 (hotfix/rollback PR은 `--base main` 예외) |
 | `--force` 푸시 (공유 브랜치) | 다른 작업 손실 |
 | 큰 바이너리 파일 커밋 | 저장소 크기 증가 |
 | 민감정보 커밋 | 보안 위험 |
