@@ -16,6 +16,7 @@
 | `/skill-hotfix` | main 긴급 수정 | "긴급 수정해줘" |
 | `/skill-rollback` | 릴리스 롤백 | "v1.2.3 롤백해줘" |
 | `/skill-report` | 프로젝트 메트릭 리포트 | "리포트 생성해줘" |
+| `/skill-health-check` | 코드베이스 건강 검진 | "헬스체크 해줘" |
 
 ## 전체 명령어 목록
 
@@ -29,6 +30,10 @@
 | `/skill-status` | 현재 상태 확인 |
 | `/skill-status --health` | 시스템 건강 점검 |
 | `/skill-status --health --fix` | 건강 점검 + Orphan 자동 복구 |
+| `/skill-health-check` | 코드베이스 건강 검진 (점수 + 등급) |
+| `/skill-health-check --quick` | CRITICAL 항목만 빠른 검사 |
+| `/skill-health-check --scope {카테고리}` | 특정 카테고리만 검사 |
+| `/skill-health-check --fix` | 자동 수정 포함 검사 |
 | `/skill-backlog` | 백로그 조회/관리 |
 | `/skill-onboard` | 기존 프로젝트에 AI Crew Kit 적용 |
 | `/skill-onboard --scan-only` | 스캔만 수행 (설정 생성 없음) |
@@ -101,3 +106,14 @@
 | "참고자료 보여줘" | `/skill-docs` |
 | "스킬 만들어줘" | `/skill-create` |
 | "프로젝트 온보딩해줘" | `/skill-onboard` |
+| "헬스체크 해줘" | `/skill-health-check` |
+
+## 어떤 검증 도구를 사용해야 하나요?
+
+| 상황 | 명령어 | 소요 시간 |
+|------|--------|----------|
+| 매일 세션 시작할 때 | `/skill-status --health` | ~5초 |
+| "뭔가 이상한데?" 싶을 때 | `/skill-health-check --quick` | ~15초 |
+| 릴리스 전 전수 점검 | `/skill-health-check` | ~30초 |
+| 프레임워크 업그레이드 후 | `/skill-validate` (자동 실행됨) | ~10초 |
+| 주간 팀 리포트 | `/skill-report` | ~30초 |

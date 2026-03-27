@@ -247,6 +247,34 @@
     "kitSource": {
       "type": "string",
       "description": "AI Crew Kit 소스 저장소 URL 또는 로컬 경로"
+    },
+    "healthCheck": {
+      "type": "object",
+      "description": "건강 검진 설정 (/skill-health-check)",
+      "properties": {
+        "exclude": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "비활성화할 검사 항목 ID 목록"
+        },
+        "thresholds": {
+          "type": "object",
+          "properties": {
+            "criticalMinScore": { "type": "integer", "default": 70 },
+            "autoBacklogSeverity": { "type": "string", "enum": ["CRITICAL", "MAJOR"], "default": "CRITICAL" }
+          },
+          "additionalProperties": false
+        },
+        "schedule": {
+          "type": "object",
+          "properties": {
+            "recommendedFrequency": { "type": "string", "default": "weekly" },
+            "autoRunOnMerge": { "type": "boolean", "default": true }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false,

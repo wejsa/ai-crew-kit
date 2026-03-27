@@ -6,7 +6,7 @@
 
 AI 에이전트 팀 기반 소프트웨어 개발 키트
 
-[![Version](https://img.shields.io/badge/version-v1.33.1-blue?style=flat-square)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v1.34.0-blue?style=flat-square)](./CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](./LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/wejsa/ai-crew-kit?style=flat-square)](https://github.com/wejsa/ai-crew-kit)
 [![Built with Claude Code](https://img.shields.io/badge/built_with-Claude_Code-blueviolet?style=flat-square)](https://claude.ai/download)
@@ -71,8 +71,25 @@ claude
 | `/skill-hotfix` | main 긴급 수정 | "긴급 수정해줘" |
 | `/skill-rollback` | 릴리스 롤백 | "v1.2.3 롤백해줘" |
 | `/skill-report` | 프로젝트 메트릭 리포트 | "리포트 생성해줘" |
+| `/skill-health-check` | 코드베이스 건강 검진 | "헬스체크 해줘" |
 
-전체 22개 명령어와 자연어 매핑은 [스킬 레퍼런스](./docs/skill-reference.md)를 참조하세요.
+전체 23개 명령어와 자연어 매핑은 [스킬 레퍼런스](./docs/skill-reference.md)를 참조하세요.
+
+---
+
+## 🏥 건강 검진 (Health Check)
+
+에이전트가 생성한 코드와 문서 간 드리프트를 탐지하고, 엔트로피 축적을 조기에 발견합니다.
+
+| 카테고리 | 설명 | 기본 가중치 |
+|----------|------|------------|
+| doc-sync | 문서 ↔ 코드 동기화 | 35% |
+| state-integrity | 상태 파일 정합성 | 25% |
+| security | 기본 보안 검사 | 25% |
+| agent-config | 에이전트 설정 유효성 | 15% |
+| compliance | 컴플라이언스 준수 (fintech) | 도메인 선택 시 자동 추가 |
+
+`/skill-health-check --fix`로 자동 수정 가능한 항목을 즉시 반영할 수 있습니다.
 
 ---
 

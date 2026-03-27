@@ -2,7 +2,7 @@
 name: skill-merge-pr
 description: PR 머지 - 승인된 PR을 Squash 머지하고 상태 업데이트. 사용자가 "PR 머지해줘" 또는 /skill-merge-pr을 요청할 때 사용합니다.
 disable-model-invocation: false
-allowed-tools: Bash(git:*), Bash(gh:*), Read, Write, Glob
+allowed-tools: Bash(git:*), Bash(gh:*), Read, Write, Glob, Skill
 argument-hint: "{PR번호}"
 ---
 
@@ -44,6 +44,21 @@ CLAUDE.md 워크트리 프로토콜 참조:
 
 ### 3. 로컬 동기화
 CLAUDE.md 워크트리 프로토콜의 "머지 후 동기화" 참조.
+
+### 3.5 Post-Merge Health Gate
+
+project.json의 healthCheck.autoRunOnMerge로 제어 (기본값: true. false 시 스킵).
+project.json이 없으면 스킵.
+
+1. /skill-health-check --quick 자동 실행
+2. 결과 확인:
+   - 모든 CRITICAL PASS → 정상 진행
+   - CRITICAL FAIL → WARNING 출력:
+     "⚠️ 머지 후 health check에서 CRITICAL 이슈 발견: {이슈 목록}"
+     "즉시 수정 필요. /skill-health-check로 상세 확인하세요."
+   - WARNING은 머지를 롤백하지 않음 (이미 완료). 알림만 제공.
+3. 점수 추세 확인 (health-history.json이 있고 이전 기록이 있으면):
+   - 10점 이상 하락 → "📉 Health score가 {이전}점 → {현재}점으로 하락했습니다."
 
 ### 4. 상태 업데이트
 `skill-backlog` 쓰기 프로토콜 준수 (metadata.version +1, JSON 검증).

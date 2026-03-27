@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.34.0] - 2026-03-27
+
+### Added
+- `/skill-health-check` 코드베이스 건강 검진 (22개 검사 항목, 점수 + 등급 + 이력 추적)
+- 기본 보안 검사 4개 항목 (민감정보, SQL Injection, CORS, API 인증 — 전체 도메인)
+- fintech 도메인 컴플라이언스 검사 4개 항목 (감사 로그, 멱등성, 금액 정밀도, 트랜잭션)
+- `health-history.schema.json` 검사 이력 스키마
+- `/skill-merge-pr` Post-Merge Health Gate (CRITICAL 자동 감지)
+- `/skill-release` 사전 Health Gate (선택적)
+- `/skill-status --health` → `/skill-health-check` 에스컬레이션 안내
+- `docs/skill-reference.md` 검증 도구 선택 가이드
+
+### Changed
+- `project.schema.json`에 `healthCheck` 설정 필드 추가
+
 ## [1.33.1] - 2026-03-16
 
 ### Fixed

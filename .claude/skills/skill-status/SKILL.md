@@ -53,6 +53,10 @@ Stale 감지 시 복구 안내: `/skill-impl` (재개) 또는 `/skill-backlog up
 
 문제 발견 시 원인+해결방법 출력 (예: `/skill-validate --fix`, `git pull origin develop`)
 
+#### 에스컬레이션 안내
+점검 결과에서 3개 이상 경고가 발견되면 출력 하단에 안내:
+"💡 심층 검진이 필요할 수 있습니다: /skill-health-check"
+
 #### --health --fix: Orphan Intent 자동 정리
 - 대상: 생성 후 30분+ 경과 intent 파일 (python3 mtime 기반 필터링)
 - 정리 플로우 (AskUserQuestion 없이 자동):

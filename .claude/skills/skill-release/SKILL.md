@@ -2,7 +2,7 @@
 name: skill-release
 description: 릴리스 - 빌드 검증 + API spec 스냅샷 + 버전 범프 + CHANGELOG + main 머지 + 태그 생성. /skill-release로 호출합니다.
 disable-model-invocation: true
-allowed-tools: Bash(git:*), Bash(gh:*), Bash(cat:*), Bash(./gradlew:*), Bash(npm:*), Bash(yarn:*), Bash(go:*), Bash(swag:*), Read, Write, Edit, Glob, AskUserQuestion
+allowed-tools: Bash(git:*), Bash(gh:*), Bash(cat:*), Bash(./gradlew:*), Bash(npm:*), Bash(yarn:*), Bash(go:*), Bash(swag:*), Read, Write, Edit, Glob, AskUserQuestion, Skill
 argument-hint: "{버전타입: patch|minor|major}"
 ---
 
@@ -25,6 +25,10 @@ argument-hint: "{버전타입: patch|minor|major}"
 4. develop 브랜치 확인
 5. Clean 상태 (uncommitted changes 없음)
 6. `git fetch origin`
+7. Health Gate (선택): project.json에 healthCheck 설정이 있으면
+   /skill-health-check --quick 실행. CRITICAL 0건이어야 진행.
+   healthCheck 설정이 없거나 실패 시에도 AskUserQuestion으로 계속 여부 확인.
+   (릴리스를 차단하지 않음 — 사용자 판단에 맡김)
 
 ## 실행 플로우
 
