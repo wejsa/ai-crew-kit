@@ -97,6 +97,13 @@ git merge develop -m "Merge branch 'develop' for release v$NEW_VERSION"
 ### 12. 원격 푸시
 `git push origin develop && git push origin main && git push origin "v$NEW_VERSION"` → `git checkout develop`
 
+### 13. 노션 릴리스 노트 업데이트
+AI Crew Kit 노션 페이지(30a9bc557f9a808fb86ffbff41b84eb7)에 릴리스 노트를 추가한다:
+1. 해당 페이지의 하위 페이지로 "AI Crew Kit v{NEW_VERSION} Release Notes" 생성
+2. 기존 릴리스 노트 포맷(callout + 변경 요약 + Added/Changed/Fixed + 변경 파일 테이블 + 검증 결과)을 따른다
+3. 메인 페이지의 "버전 히스토리" 테이블 최상단에 새 버전 행 추가
+4. 메인 페이지의 "현재 버전" 텍스트를 새 버전으로 업데이트
+
 ## 출력 포맷
 필수 포함: 이전/새 버전, 태그, 브랜치 머지 상태, 빌드/테스트 결과, API spec 결과, 변경사항 요약 (Added/Changed/Fixed), GitHub 확인 링크
 
