@@ -57,6 +57,12 @@ Stale 감지 시 복구 안내: `/skill-impl` (재개) 또는 `/skill-backlog up
 점검 결과에서 3개 이상 경고가 발견되면 출력 하단에 안내:
 "💡 심층 검진이 필요할 수 있습니다: /skill-health-check"
 
+#### 검진 주기 안내
+health-history.json이 존재하고 project.json의 healthCheck.suppressReminder가 true가 아니면, 마지막 전체 검진(mode가 fix/quick-fix가 아닌) 날짜를 확인한다.
+- 7일 이상 경과: "📅 마지막 건강 검진이 {N}일 전입니다. /skill-health-check 권장"
+- 14일 이상 경과: "⏰ 건강 검진이 {N}일간 미실행. /skill-health-check --fix 권장"
+- health-history.json이 없거나 기록이 없으면: 안내하지 않음
+
 #### --health --fix: Orphan Intent 자동 정리
 - 대상: 생성 후 30분+ 경과 intent 파일 (python3 mtime 기반 필터링)
 - 정리 플로우 (AskUserQuestion 없이 자동):

@@ -58,6 +58,7 @@ project.json이 없으면 스킵.
      "즉시 수정 필요. /skill-health-check로 상세 확인하세요."
    - WARNING은 머지를 롤백하지 않음 (이미 완료). 알림만 제공.
 3. 점수 추세 확인 (health-history.json이 있고 이전 기록이 있으면):
+   - health-history.json이 없거나 이전 기록이 없으면 추세 비교를 스킵하고 현재 결과만 표시한다.
    - 10점 이상 하락 → "📉 Health score가 {이전}점 → {현재}점으로 하락했습니다."
 
 ### 4. 상태 업데이트

@@ -52,10 +52,45 @@
 
 ---
 
-## 전체 구현 순서 (2 스텝)
+## 리뷰 반영 사항 (2026-03-29 에이전트팀 3라운드 리뷰)
+
+### Phase 1 소급 수정 (v1.35.0에 통합)
+
+| ID | 수정 내용 | 대상 |
+|----|----------|------|
+| C-1 | 전 항목 SKIP 카테고리 → 점수 계산 제외 (가중치 재분배) | SKILL.md Phase C |
+| C-2 | autoFix 실패/거절 시 FAIL 기록, fixesApplied 미포함 | SKILL.md Phase B |
+| C-3 | drift gate: 이력 없으면 추세 비교 스킵 | skill-merge-pr |
+| C-5 | schema mode → enum 제한 | health-history.schema.json |
+| B-3 | SEC-01 패턴 확장: apiKey, token, bearer, authorization 추가 | SKILL.md SEC-01 |
+| B-4 | SEC-02 범위 확장: JPA @Query, JDBC 문자열 결합도 탐지 대상 명시 | SKILL.md SEC-02 |
+
+### Phase 2 필수 조건 (리뷰에서 추가)
+
+| ID | 요구사항 | 추가량 |
+|----|----------|--------|
+| A-1 | streak 판정 명확화: SKIP은 streak 미중단, ERROR는 FAIL 취급, --fix 제외, PASS 시 리셋 | +4줄 |
+| D-1 | --fix dry-run: 수정 대상 목록 먼저 표시 후 AskUserQuestion 일괄 승인 | +3줄 |
+| A-2 | history 50건 초과 시 oldest 삭제 | +1줄 |
+| A-3 | 검진 안내는 project.json `healthCheck.suppressReminder: true`로 비활성화 가능 | +2줄 |
+
+### 수정된 라인 수 추정
 
 ```
-Step 1: skill-health-check 확장 (추세 경보 + "정리해줘" 트리거)
+원래 Phase 2 계획:                 +29줄
+리뷰 필수 조건:                    +10줄
+Phase 1 소급 수정:                 +7줄
+────────────────────────────────────
+총계:                              ~46줄 (신규 파일 0, 스킬 수 23 유지)
+```
+
+---
+
+## 전체 구현 순서 (3 스텝)
+
+```
+Step 0: Phase 1 소급 수정 (SKILL.md, schema, skill-merge-pr)
+Step 1: skill-health-check 확장 (추세 경보 + "정리해줘" 트리거 + --fix dry-run)
 Step 2: skill-status 검진 주기 안내 + 문서 업데이트
 ```
 
@@ -73,6 +108,41 @@ Step 2: skill-status 검진 주기 안내 + 문서 업데이트
 | 4 | `CHANGELOG.md` + `VERSION` + `README.md` | v1.35.0 | +10줄 |
 
 **합계: +29줄, 신규 파일 0개, 스킬 수 23개 유지**
+
+---
+
+## Step 0: Phase 1 소급 수정
+
+### 0-1. SKILL.md Phase C 제로 분모 수정 (C-1)
+
+Phase C step 1에 추가:
+- 카테고리의 모든 항목이 SKIP이면 (PASS+FAIL+ERROR=0) 해당 카테고리는 가중 평균에서 제외한다 (남은 카테고리로 가중치 재분배).
+
+### 0-2. SKILL.md Phase B autoFix 실패 처리 (C-2)
+
+Phase B step 4에 추가:
+- autoFix 실행이 실패하거나 사용자가 거절하면 원래 상태를 유지하고 FAIL로 기록한다. fixesApplied에는 성공한 항목만 포함한다.
+
+### 0-3. SEC-01 패턴 확장 (B-3)
+
+SEC-01 패턴 목록에 추가:
+- log.*apiKey, log.*token, log.*bearer, log.*authorization
+- 제외: 타입 선언 (class.*Password, interface.*Secret 등 정의부)
+
+### 0-4. SEC-02 범위 확장 (B-4)
+
+SEC-02에 추가:
+- MyBatis XML 외에 JPA @Query의 SpEL 파라미터 직접 삽입, JDBC string concatenation도 탐지 대상. techStack 맥락에 따라 확장.
+
+### 0-5. skill-merge-pr drift gate 보완 (C-3)
+
+Post-Merge Health Gate에 추가:
+- health-history.json이 없거나 이전 기록이 없으면 추세 비교를 스킵하고 현재 결과만 표시한다.
+
+### 0-6. health-history.schema.json mode enum (C-5)
+
+mode 필드를 string → enum으로 변경:
+`"mode": { "type": "string", "enum": ["full", "quick", "scope", "fix", "quick-fix"] }`
 
 ---
 
@@ -95,7 +165,7 @@ Step 2: skill-status 검진 주기 안내 + 문서 업데이트
   - "정리해줘", "cleanup" → --fix 모드로 자동 전환
 ```
 
-### 1-2. 추세 경보 추가
+### 1-2. 추세 경보 추가 (A-1 반영: streak 판정 명확화)
 
 #### 프롬프트
 
@@ -110,8 +180,28 @@ Step 2: skill-status 검진 주기 안내 + 문서 업데이트
    - 전체 점수 3회 연속 하락 → "⚠️ Health score 지속 하락: {N1}점 → {N2}점 → {N3}점"
    - 특정 카테고리 failCap 이하 3회 연속 → "⚠️ {카테고리} 집중 점검 필요"
    - history가 3회 미만이면 추세 분석을 스킵한다.
-   - --fix 모드 실행 기록(mode에 "fix" 포함)은 추세 비교에서 별도 취급한다
-     (fix 직후 점수 급등을 "자연 개선"과 구분하기 위해).
+   - streak 판정 규칙:
+     - SKIP은 streak를 중단하지 않는다 (해당 항목이 체크된 실행만 카운트).
+     - ERROR는 FAIL로 간주한다.
+     - mode가 "fix" 또는 "quick-fix"인 실행은 추세 비교에서 제외한다
+       (fix 직후 점수 급등을 "자연 개선"과 구분하기 위해).
+     - PASS가 나오면 해당 항목의 streak를 리셋한다.
+5. history 배열이 50건 초과 시 oldest부터 삭제한다 (A-2).
+
+기존 내용은 수정하지 마라.
+```
+
+### 1-3. --fix dry-run 확인 추가 (D-1)
+
+#### 프롬프트
+
+```
+.claude/skills/skill-health-check/SKILL.md의 Phase B step 4에 다음을 추가해줘:
+
+- --fix 모드 진입 시 먼저 전체 검사를 실행하고, autoFix 대상 항목 목록을
+  요약 표시한 후 AskUserQuestion으로 일괄 승인을 받는다.
+  개별 confirm:true 항목은 실행 시 추가 확인한다.
+  사용자가 거절하면 --fix 없이 리포트만 출력한다.
 
 기존 내용은 수정하지 마라.
 ```
@@ -119,7 +209,7 @@ Step 2: skill-status 검진 주기 안내 + 문서 업데이트
 ### 검증
 
 ```bash
-grep -n "정리해줘\|추세 경보\|3회 연속" .claude/skills/skill-health-check/SKILL.md
+grep -n "정리해줘\|추세 경보\|3회 연속\|dry-run\|일괄 승인\|50건" .claude/skills/skill-health-check/SKILL.md
 ```
 
 ---
@@ -135,10 +225,11 @@ grep -n "정리해줘\|추세 경보\|3회 연속" .claude/skills/skill-health-c
 "에스컬레이션 안내" 섹션 아래에 다음을 추가해줘:
 
 #### 검진 주기 안내
-health-history.json이 존재하면 마지막 전체 검진(mode에 "fix" 미포함) 날짜를 확인한다.
+health-history.json이 존재하면 마지막 전체 검진(mode에 "fix"/"quick-fix" 미포함) 날짜를 확인한다.
 - 7일 이상 경과: "📅 마지막 건강 검진이 {N}일 전입니다. /skill-health-check 권장"
 - 14일 이상 경과: "⏰ 건강 검진이 {N}일간 미실행. /skill-health-check --fix 권장"
 - health-history.json이 없거나 기록이 없으면: 안내하지 않음
+- project.json의 healthCheck.suppressReminder가 true이면: 안내하지 않음 (A-3)
 
 기존 내용은 수정하지 마라.
 ```
@@ -200,12 +291,14 @@ wc -l .claude/skills/skill-health-check/SKILL.md
 git add -A
 git commit -m "feat: add trend alerts and cleanup trigger to health-check (v1.35.0)
 
-- Add trend alerts: 3-consecutive FAIL detection, score decline warning
-- Add '정리해줘' natural language trigger → --fix auto-switch
-- Add check interval notification in skill-status (7d/14d)
+- Phase 1 retroactive: zero-denominator fix, SEC-01/02 pattern expansion, mode enum
+- Add trend alerts: 3-consecutive FAIL detection, score decline warning, streak rules
+- Add '정리해줘' natural language trigger → --fix auto-switch with dry-run confirmation
+- Add check interval notification in skill-status (7d/14d, suppressReminder option)
+- Add history pruning (50-entry cap)
 - No new skills or agents — minimal extension of existing tools"
 
-git tag -a v1.35.0 -m "v1.35.0: GC의 손 — 추세 경보 + 정리 트리거"
+git tag -a v1.35.0 -m "v1.35.0: GC의 손 — 추세 경보 + 정리 트리거 + Phase 1 소급 수정"
 ```
 
 ---

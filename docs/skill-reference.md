@@ -107,6 +107,7 @@
 | "스킬 만들어줘" | `/skill-create` |
 | "프로젝트 온보딩해줘" | `/skill-onboard` |
 | "헬스체크 해줘" | `/skill-health-check` |
+| "정리해줘" | `/skill-health-check --fix` |
 
 ## 어떤 검증 도구를 사용해야 하나요?
 
@@ -116,4 +117,5 @@
 | "뭔가 이상한데?" 싶을 때 | `/skill-health-check --quick` | ~15초 |
 | 릴리스 전 전수 점검 | `/skill-health-check` | ~30초 |
 | 프레임워크 업그레이드 후 | `/skill-validate` (자동 실행됨) | ~10초 |
+| 문제를 수정할 때 | `/skill-health-check --fix` | ~30초 |
 | 주간 팀 리포트 | `/skill-report` | ~30초 |

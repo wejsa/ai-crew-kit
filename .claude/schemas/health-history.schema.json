@@ -32,7 +32,7 @@
           },
           "criticalFails": { "type": "array", "items": { "type": "string" } },
           "fixesApplied": { "type": "array", "items": { "type": "string" } },
-          "mode": { "type": "string" }
+          "mode": { "type": "string", "enum": ["full", "quick", "scope", "fix", "quick-fix"] }
         }
       }
     }

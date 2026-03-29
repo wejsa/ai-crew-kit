@@ -1,6 +1,6 @@
 ---
 name: skill-health-check
-description: 코드베이스 건강 검진 - 문서↔코드 동기화, 상태 정합성, 기본 보안, 에이전트 설정, 도메인 컴플라이언스 검증. 사용자가 "헬스체크 해줘" 또는 /skill-health-check를 요청할 때 사용합니다.
+description: 코드베이스 건강 검진 - 문서↔코드 동기화, 상태 정합성, 기본 보안, 에이전트 설정, 도메인 컴플라이언스 검증. 사용자가 "헬스체크 해줘", "정리해줘" 또는 /skill-health-check를 요청할 때 사용합니다.
 disable-model-invocation: false
 allowed-tools: Bash(git:*), Bash(grep:*), Bash(find:*), Bash(python3:*), Read, Glob, Grep, Write
 argument-hint: "[--quick|--scope <category>|--fix]"
@@ -10,6 +10,7 @@ argument-hint: "[--quick|--scope <category>|--fix]"
 
 ## 실행 조건
 - /skill-health-check 또는 "건강 검진해줘", "전체 검진해줘", "헬스체크 돌려줘"
+- "정리해줘", "cleanup" → --fix 모드로 자동 전환
 
 ## 기존 도구와의 관계
 - /skill-status --health: 운영 준비 경량 점검 (JSON 유효성, orphan intent). 매일 사용.
@@ -46,11 +47,14 @@ argument-hint: "[--quick|--scope <category>|--fix]"
 3. 결과: PASS | FAIL | SKIP | ERROR
 4. FAIL인 항목에 대해:
    - backlog 등록 대상이면 backlog.json에 Task 등록
-   - --fix 모드이고 autoFix 가능하면 자동 수정 실행 (confirm 필요 시 AskUserQuestion)
+   - --fix 모드 진입 시 먼저 전체 검사를 실행하고, autoFix 대상 항목 목록을 요약 표시한 후 AskUserQuestion으로 일괄 승인을 받는다. 사용자가 거절하면 --fix 없이 리포트만 출력한다.
+   - 승인 후 개별 confirm:true 항목은 실행 시 추가 확인한다.
+   - autoFix 실행이 실패하거나 사용자가 거절하면 원래 상태를 유지하고 FAIL로 기록한다. fixesApplied에는 성공한 항목만 포함한다.
 
 ### Phase C: 점수 계산
 1. 카테고리별 점수 = (PASS 수 / (PASS + FAIL + ERROR 수)) × 100
    - SKIP은 분모에서 제외
+   - 카테고리의 모든 항목이 SKIP이면 (PASS+FAIL+ERROR=0) 해당 카테고리는 가중 평균에서 제외한다 (남은 카테고리로 가중치 재분배).
    - 해당 카테고리에 CRITICAL FAIL이 하나라도 있으면 점수 상한 = failCap
 2. 전체 점수 = Σ(카테고리 점수 × 가중치) / Σ(가중치)
 3. 등급 판정: _category.json의 gradeThresholds 참조
@@ -63,6 +67,13 @@ argument-hint: "[--quick|--scope <category>|--fix]"
    - 이전 기록 대비 변화량 표시
    - 3회 연속 FAIL인 항목은 severity 자동 상향 제안
 3. health-history.json 기록은 항상 마지막에 수행 (중간 실패해도 기존 이력 보존)
+4. 추세 경보 (history에 3회 이상 기록이 있을 때):
+   - 동일 항목 3회 연속 FAIL → "⚠️ {항목ID}가 3회 연속 실패 중. severity 상향을 고려하세요."
+   - 전체 점수 3회 연속 하락 → "⚠️ Health score 지속 하락: {N1}점 → {N2}점 → {N3}점"
+   - 특정 카테고리 failCap 이하 3회 연속 → "⚠️ {카테고리} 집중 점검 필요"
+   - history가 3회 미만이면 추세 분석을 스킵한다.
+   - streak 판정 규칙: SKIP은 streak 미중단 (체크된 실행만 카운트), ERROR는 FAIL 취급, mode가 fix/quick-fix인 실행은 제외, PASS 시 streak 리셋.
+5. history 배열이 50건 초과 시 oldest부터 삭제한다.
 
 ### 콘솔 출력 형식
 
@@ -195,17 +206,20 @@ argument-hint: "[--quick|--scope <category>|--fix]"
 #### SEC-01. 민감정보 로깅 금지 (CRITICAL)
 - 검사: 로그 출력문에서 민감정보 패턴 탐지 (하나라도 매칭되면 FAIL)
   - 패턴: log.*password, log.*cardNumber, log.*creditCard, log.*cvv,
-    log.*ssn, log.*주민등록, logger.*secret, println.*password
+    log.*ssn, log.*주민등록, logger.*secret, println.*password,
+    log.*apiKey, log.*token, log.*bearer, log.*authorization
+  - 제외: 타입 선언 (class.*Password, interface.*Secret 등 정의부는 무시)
   - FAIL 시 매칭 위치를 리포트에 포함
 - 참조: _base/checklists/security-basic.md "로깅 금지"
 - FAIL 시: backlog 자동 등록
 - autoFix: 불가 (보안 관련은 수동 수정 필수)
 
 #### SEC-02. SQL Injection 위험 (CRITICAL)
-- 검사: MyBatis XML에서 안전하지 않은 파라미터 바인딩 탐지
-  - 사전 조건: src/**/*.xml 파일 존재 (MyBatis 사용 프로젝트)
-  - 패턴: ${...} 중 #{...}가 아닌 것
-  - tableName, columnName, orderBy 관련은 제외 (동적 바인딩 허용)
+- 검사: SQL 쿼리에서 안전하지 않은 파라미터 바인딩 탐지
+  - MyBatis XML: src/**/*.xml에서 ${...} 중 #{...}가 아닌 것 (tableName, columnName, orderBy 제외)
+  - JPA @Query: SpEL 파라미터 직접 삽입 (문자열 결합으로 쿼리 생성)
+  - JDBC: jdbcTemplate/createNativeQuery에서 string concatenation 사용
+  - techStack 맥락에 따라 해당 패턴 적용 (대상 파일 0건이면 SKIP)
   - 매칭 위치 리포트 포함
 - 참조: _base/checklists/security-basic.md "SQL Injection"
 - FAIL 시: backlog 자동 등록

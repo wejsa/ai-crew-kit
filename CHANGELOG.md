@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.35.0] - 2026-03-29
+
+### Added
+- 추세 경보: 3회 연속 FAIL 항목 감지, 점수 하락 추세, 카테고리 failCap 경고
+- "정리해줘" 자연어 매핑 → `/skill-health-check --fix` 자동 전환 (dry-run 확인 포함)
+- `/skill-status` 검진 주기 안내 (7일/14일 경과 시, suppressReminder 설정 가능)
+- history 50건 초과 시 자동 정리 (oldest 삭제)
+- streak 판정 규칙 명확화 (SKIP 미중단, ERROR=FAIL, fix 제외, PASS 리셋)
+
+### Fixed
+- Phase C 점수 계산: 전 항목 SKIP 카테고리 제로 분모 방지 (가중치 재분배)
+- Phase B autoFix: 실패/거절 시 FAIL 기록, fixesApplied에 성공 항목만 포함
+- SEC-01 패턴 확장: apiKey, token, bearer, authorization 추가 + 타입 선언 제외
+- SEC-02 범위 확장: JPA @Query, JDBC string concatenation 탐지 대상 추가
+- Post-Merge Health Gate: 이력 없을 때 추세 비교 스킵
+- health-history.schema.json: mode 필드 enum 제한 (full/quick/scope/fix/quick-fix)
+
 ## [1.34.0] - 2026-03-27
 
 ### Added
