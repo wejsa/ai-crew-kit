@@ -46,7 +46,10 @@ argument-hint: "[--quick|--scope <category>|--fix]"
 2. 검사 실행
 3. 결과: PASS | FAIL | SKIP | ERROR
 4. FAIL인 항목에 대해:
-   - backlog 등록 대상이면 backlog.json에 Task 등록
+   - CRITICAL FAIL → backlog.json에 bugfix Task 자동 등록 (priority: critical)
+   - MAJOR FAIL → backlog.json에 improvement Task 자동 등록 (priority: major)
+   - MINOR FAIL → 리포트에만 표시 (backlog 미등록)
+   - backlog.json이 없으면 backlog 등록을 스킵한다
    - --fix 모드 진입 시 먼저 전체 검사를 실행하고, autoFix 대상 항목 목록을 요약 표시한 후 AskUserQuestion으로 일괄 승인을 받는다. 사용자가 거절하면 --fix 없이 리포트만 출력한다.
    - 승인 후 개별 confirm:true 항목은 실행 시 추가 확인한다.
    - autoFix 실행이 실패하거나 사용자가 거절하면 원래 상태를 유지하고 FAIL로 기록한다. fixesApplied에는 성공한 항목만 포함한다.
