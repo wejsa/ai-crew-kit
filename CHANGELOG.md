@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.35.1] - 2026-03-29
+
+### Added
+- `/skill-health-check` CRITICAL/MAJOR FAIL 시 backlog.json에 Task 자동 등록 (MINOR은 리포트만)
+- `/skill-review-pr` 경량 리뷰 판정 (Trivial PR Fast Path): additions+deletions ≤ 30 && src/ 변경 0건 && 보안 키워드 미포함 시 3-agent 리뷰 스킵
+
 ## [1.35.0] - 2026-03-29
 
 ### Added
