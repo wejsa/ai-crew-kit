@@ -33,6 +33,20 @@ CLAUDE.md 상태 추적 패턴. currentSkill="skill-review-pr"
 2. CLAUDE.md 트리거 테이블로 매칭 컨벤션 식별
 3. 도메인 체크리스트 Read: `_base/checklists/common.md`(필수) + `{domain}/checklists/`
 
+## 경량 리뷰 판정 (Trivial PR Fast Path)
+
+PR 정보 수집(Step 1) 후 아래 조건을 **모두** 만족하면 3-agent 리뷰를 스킵하고 직접 리뷰한다:
+1. 변경 줄 수: additions + deletions ≤ 30
+2. 변경 파일: src/ 코드 파일 변경 0건 (문서, 설정, 버전 파일만 변경)
+3. 변경 내용: 보안 키워드 미포함 (password, secret, token, auth, cors, sql, inject)
+
+**경량 리뷰 플로우**: Step 1 → Step 2(체크리스트) → Step 4~7 (서브에이전트 스킵, 직접 diff 확인 후 결정)
+리포트에 "ℹ️ Trivial PR — 경량 리뷰 적용" 표시.
+
+조건 미충족 시 일반 플로우(3-agent 병렬 리뷰) 진행.
+
+---
+
 ## 실행 플로우
 
 ### 1. PR 정보 수집
