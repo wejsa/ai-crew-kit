@@ -2,7 +2,6 @@
 name: pr-reviewer-domain
 description: PR 리뷰 시 도메인 로직 및 아키텍처 관점 전문 검토. skill-review-pr에서 자동 호출됨.
 tools: Read, Glob, Grep
-model: opus
 color: 🟣
 ---
 
@@ -22,8 +21,8 @@ domain 값은 호출 시 프롬프트에서 전달됩니다.
 
 ## 리뷰 절차
 
-1. PR diff 전체를 Read로 확인
-2. 체크리스트 파일을 Read로 로드
+1. 체크리스트 파일을 Read로 로드
+2. `/tmp/pr-{N}-diff.txt`를 Read로 확인 (프롬프트가 아닌 파일 경로로 전달됨)
 3. 도메인 참고자료(.claude/domains/{domain}/docs/)가 있으면 관련 문서 확인
 4. 변경 코드의 도메인 로직 정합성 검증
 5. 아키텍처 패턴 준수 여부 확인

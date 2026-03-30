@@ -99,6 +99,10 @@ step status → "pr_created", prNumber 기록. assignedAt 갱신 (lock heartbeat
 | 문서 영향도 | 항상 | docs-impact-analyzer | 60초 |
 | 테스트 품질 | agents.enabled에 "qa" 포함 | agent-qa | 60초 |
 
+**에이전트 프롬프트 구성 (토큰 절감)**:
+- 프롬프트에 포함: 변경 파일 목록, PR 번호, 브랜치명
+- 프롬프트에 포함하지 않음: PR diff 전체, 소스 코드 전체 (에이전트가 필요 시 자체 Read)
+
 각 Task `run_in_background: true`. 실패 시 "⚠️ 분석 불가" 출력 후 진행.
 
 ## --all 옵션

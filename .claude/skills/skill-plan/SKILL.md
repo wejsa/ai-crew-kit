@@ -56,6 +56,10 @@ Task 선택 직후 **즉시** backlog.json 업데이트 + push:
 agents.enabled에 "db-designer" 포함 시에만 실행.
 Task tool (`run_in_background: true`)로 agent-db-designer 실행, 섹션 3 완료 후 결과 수거.
 
+**에이전트 프롬프트 구성 (토큰 절감)**:
+- 프롬프트에 포함: taskId, domain, spec 파일 경로
+- 프롬프트에 포함하지 않음: spec 전체 내용, project.json 전체 (에이전트가 필요 시 자체 Read)
+
 | 항목 | 값 |
 |------|-----|
 | timeout | 60초 |

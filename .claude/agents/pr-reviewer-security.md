@@ -2,7 +2,6 @@
 name: pr-reviewer-security
 description: PR 리뷰 시 보안 및 컴플라이언스 관점 전문 검토. skill-review-pr에서 자동 호출됨.
 tools: Read, Glob, Grep
-model: opus
 color: 🔴
 ---
 
@@ -22,11 +21,12 @@ domain 값은 호출 시 프롬프트에서 전달됩니다.
 
 ## 리뷰 절차
 
-1. PR diff 전체를 Read로 확인
-2. 체크리스트 파일을 Read로 로드
+1. 체크리스트 파일을 Read로 로드
+2. `/tmp/pr-{N}-diff.txt`를 Read로 확인 (프롬프트가 아닌 파일 경로로 전달됨)
 3. 변경 파일 유형 분류 (소스, 설정, 의존성, 인프라)
 4. 유형별 심각도 판정 기준에 따라 이슈 식별
-5. 수정 코드 예시를 포함하여 결과 작성
+5. 필요 시 변경된 파일의 전체 소스도 Read로 추가 확인
+6. 수정 코드 예시를 포함하여 결과 작성
 
 ## 심각도 판정 기준
 
