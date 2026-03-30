@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.35.2] - 2026-03-30
+
+### Changed
+- 6개 에이전트 `model: opus` 제거 → 부모 모델 자동 상속 (Pro→sonnet, Max→opus 자동 적용)
+- PR diff 배달 방식 변경: 프롬프트 3회 포함 → `/tmp/` 파일 저장 + 경로 전달 (부모 컨텍스트 토큰 ~67% 절감)
+- diff 파일 생명주기 관리: 생성→공유→갱신(auto-fix시)→유지→정리(머지시)
+- skill-plan/skill-impl 에이전트 프롬프트 경량화 (경로/목록만 전달, 에이전트 자체 Read)
+
+### Removed
+- pr-reviewer-test의 domain-logic.md 중복 로드 (pr-reviewer-domain이 담당)
+
 ## [1.35.1] - 2026-03-29
 
 ### Added
