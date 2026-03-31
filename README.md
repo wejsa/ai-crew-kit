@@ -6,7 +6,7 @@
 
 AI 에이전트 팀 기반 소프트웨어 개발 키트
 
-[![Version](https://img.shields.io/badge/version-v1.35.2-blue?style=flat-square)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v1.36.0-blue?style=flat-square)](./CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](./LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/wejsa/ai-crew-kit?style=flat-square)](https://github.com/wejsa/ai-crew-kit)
 [![Built with Claude Code](https://img.shields.io/badge/built_with-Claude_Code-blueviolet?style=flat-square)](https://claude.ai/download)
@@ -65,7 +65,7 @@ claude
 | `/skill-feature` | 새 기능 기획 | "새 기능 기획해줘" |
 | `/skill-plan` | 설계 및 스텝 계획 | "다음 작업 가져와줘" |
 | `/skill-impl` | 코드 구현 + PR 생성 | "개발 진행해줘" |
-| `/skill-review-pr` | PR 리뷰 | "PR 123 리뷰해줘" |
+| `/skill-review-pr` | PR 리뷰 ([모드 설정](./docs/skill-reference.md#개발-워크플로우)) | "PR 123 리뷰해줘" |
 | `/skill-merge-pr` | PR 머지 | "PR 123 머지해줘" |
 | `/skill-retro` | 완료 Task 회고 | "회고 해줘" |
 | `/skill-hotfix` | main 긴급 수정 | "긴급 수정해줘" |

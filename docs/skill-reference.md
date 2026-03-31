@@ -49,6 +49,12 @@
 | `/skill-review` | 코드 리뷰 |
 | `/skill-review-pr {번호}` | PR 리뷰 |
 | `/skill-review-pr {번호} --auto-fix` | PR 리뷰 + CRITICAL 이슈 자동 수정 |
+| `/skill-review-pr {번호} --mode standard` | standard 모드로 리뷰 (일회성) |
+| `/skill-review-pr config` | 리뷰 모드 설정 확인 |
+| `/skill-review-pr config --mode standard` | 프리셋 변경 (domain+security) |
+| `/skill-review-pr config --mode full` | 프리셋 변경 (전체 3 에이전트) |
+| `/skill-review-pr config --agents domain,test` | 커스텀 에이전트 조합 |
+| `/skill-review-pr config --reset` | 디폴트(full) 복원 |
 | `/skill-fix {번호}` | CRITICAL 이슈 수정 |
 | `/skill-merge-pr {번호}` | PR 머지 |
 

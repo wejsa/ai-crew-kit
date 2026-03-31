@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.0] - 2026-03-31
+
+### Added
+- `/skill-review-pr config` 서브커맨드: 리뷰 모드 설정 관리 (조회/변경/초기화)
+- 리뷰 모드 2단계: `full` (domain+security+test, 디폴트) / `standard` (domain+security)
+- 커스텀 에이전트 조합: `--agents domain,test` 형태로 자유 구성 (domain 필수)
+- PR 단위 모드 오버라이드: `--mode standard|full` 옵션
+- 리뷰 결과 헤더에 실행/미실행 에이전트 목록 표시
+
+### Changed
+- Trivial PR Fast Path 기준 완화: 30줄 → 50줄 (경량 리뷰 대상 확대)
+- Step 3 리뷰 엔진: 고정 3-agent → 모드 기반 N-agent 선택적 실행
+
 ## [1.35.2] - 2026-03-30
 
 ### Changed
