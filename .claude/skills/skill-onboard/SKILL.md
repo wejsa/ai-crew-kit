@@ -36,6 +36,7 @@ argument-hint: "[--scan-only]"
 
 **백엔드**: package.json → nodejs-typescript / build.gradle.kts → spring-boot-kotlin / build.gradle → spring-boot-java / pom.xml → spring-boot-java / go.mod → go
 **프론트엔드**: package.json 의존성 (next/react/vue/nuxt) + next.config.*/vue.config.* 감지
+**패키지 매니저**: bun.lockb → bun / pnpm-lock.yaml → pnpm / yarn.lock → yarn / package-lock.json → npm (복수 시 bun>pnpm>yarn>npm)
 **데이터베이스**: docker-compose + 의존성 (postgres/mysql/mongodb)
 **캐시/메시지큐**: docker-compose + 의존성 (redis/rabbitmq/kafka)
 **인프라**: docker-compose.yml → docker-compose / k8s/ → kubernetes / Dockerfile만 → docker-compose

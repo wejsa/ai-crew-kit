@@ -2,8 +2,8 @@
 name: skill-impl
 description: 구현 - 스텝별 개발 + PR 생성. 사용자가 "개발 진행해줘", "구현해줘" 또는 /skill-impl을 요청할 때 사용합니다.
 disable-model-invocation: false
-allowed-tools: Bash(git:*), Bash(./gradlew:*), Bash(npm:*), Bash(yarn:*), Read, Write, Edit, Glob, Grep, Task
-argument-hint: "[--next|--all|--retry|--skip]"
+allowed-tools: Bash(git:*), Bash(./gradlew:*), Bash(npm:*), Bash(yarn:*), Bash(pnpm:*), Bash(bun:*), Read, Write, Edit, Glob, Grep, Task
+argument-hint: "[--next|--all|--retry|--skip|--micro \"설명\"]"
 ---
 
 # skill-impl: 구현
@@ -14,13 +14,14 @@ argument-hint: "[--next|--all|--retry|--skip]"
 - `--all`: 모든 스텝 연속 실행 (skipped 스텝은 건너뜀)
 - `--retry`: 실패한 현재 스텝 재시작
 - `--skip`: 빌드 실패 스텝 건너뛰기
+- `--micro "설명"`: 소규모 작업 경량 경로 (plan 생략, 바로 구현→PR)
 
 ## 사전 조건 (MUST-EXECUTE-FIRST — 하나라도 실패 시 STOP)
 1. project.json 존재
 2. backlog.json 존재 + 유효 JSON
-3. in_progress Task 존재
-4. 계획 파일 `.claude/temp/{taskId}-plan.md` 존재
-5. 현재 스텝 status == pending
+3. in_progress Task 존재 (`--micro` 시 자동 생성하므로 면제)
+4. 계획 파일 `.claude/temp/{taskId}-plan.md` 존재 (`--micro` 시 면제)
+5. 현재 스텝 status == pending (`--micro` 시 자동 설정)
 6. origin/develop 동기화: >5 뒤처짐 → STOP, 1-5 → 자동 merge
 - `--next` 추가 조건: 이전 스텝 PR 머지 완료 **또는 skipped** + develop 최신 동기화
 
@@ -68,6 +69,17 @@ CLAUDE.md 워크트리 프로토콜 참조.
 | nodejs-typescript | `npm run build` | `npm test` | `npm run lint` |
 | go | `go build ./...` | `go test ./...` | `golangci-lint run` |
 
+**패키지 매니저 자동 감지** (Lock 파일 기준, `buildCommands` 미설정 시):
+
+| Lock 파일 | 매니저 | 빌드 | 테스트 | 린트 |
+|-----------|--------|------|--------|------|
+| `bun.lockb` | bun | `bun run build` | `bun test` | `bun run lint` |
+| `pnpm-lock.yaml` | pnpm | `pnpm build` | `pnpm test` | `pnpm lint` |
+| `yarn.lock` | yarn | `yarn build` | `yarn test` | `yarn lint` |
+| `package-lock.json` | npm | `npm run build` | `npm test` | `npm run lint` |
+
+복수 Lock 파일 존재 시 위 우선순위(bun > pnpm > yarn > npm) 적용.
+
 실패 시 수정 후 재실행, 3회 실패 시 사용자 보고.
 
 ### 5.5 의존성 취약점 검사 (선택)
@@ -107,6 +119,23 @@ step status → "pr_created", prNumber 기록. assignedAt 갱신 (lock heartbeat
 
 각 Task `run_in_background: true`. 실패 시 "⚠️ 분석 불가" 출력 후 진행.
 
+## --micro 옵션 (경량 경로)
+소규모 작업(파일 ≤3개, ~100줄)을 plan 없이 바로 구현한다.
+
+### Micro 워크플로우
+1. **backlog 자동 등록**: type AI 추론(bug/chore/feature), priority AI 추론, steps=[{number:1, title:"Micro 구현", status:"pending"}], micro:true
+2. **plan 생략**: 계획 파일 미생성, 사전 조건 면제
+3. **코드 구현**: 일반 Step 3과 동일
+4. **라인 수 검증 (Micro 전용)**:
+   - ≤ 150줄: 정상
+   - 150~300줄: 경고 "Micro 범위 초과. Standard 전환할까요?"
+   - > 300줄: 차단 "Standard 경로 필요. /skill-plan 실행"
+5. **빌드 & 테스트**: 일반과 동일
+6. **커밋 & PR**: `{type}: {taskId} - {설명}` (type은 AI 추론)
+7. **리뷰**: Trivial Fast Path 조건 매칭 시 경량 리뷰, 미매칭 시 일반 리뷰 폴백
+
+자연어: "OO 고쳐줘" / "OO 버그 수정해줘" → 규모 추정 → Micro 판단 시 자동 전환. 확신 못 하면 Standard.
+
 ## --retry 옵션
 실패한 현재 스텝을 처음부터 재시작한다. skill-impl 실패 시에만 사용 가능.
 1. 현재 스텝의 `step.status` → `"pending"` 리셋
@@ -139,6 +168,6 @@ step status → "pr_created", prNumber 기록. assignedAt 갱신 (lock heartbeat
 CLAUDE.md "에러 복구 프로토콜" 참조. 미존재 시 3회 재시도 후 사용자 보고.
 
 ## 주의사항
-- 계획 파일 없이 구현 금지 (--retry/--skip 제외)
+- 계획 파일 없이 구현 금지 (--micro/--retry/--skip 제외)
 - 빌드/테스트 통과 필수
 - 병렬 작업 시 파일 충돌 주의

@@ -181,6 +181,11 @@
           "type": ["string", "null"],
           "format": "date-time",
           "description": "Task 완료 시각"
+        },
+        "micro": {
+          "type": "boolean",
+          "default": false,
+          "description": "Micro Task 여부 (skill-impl --micro로 생성)"
         }
       },
       "additionalProperties": false

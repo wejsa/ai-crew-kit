@@ -266,6 +266,10 @@ def generate_conventions_section(project: dict, domain: dict) -> str:
         ("모니터링 설정", ".claude/domains/_base/conventions/monitoring.md", "권장"),
         ("에러 핸들링 코드", ".claude/domains/_base/conventions/error-handling.md", "권장"),
         ("Git 워크플로우", ".claude/domains/_base/conventions/git-workflow.md", "권장"),
+        ("*.tsx, *.jsx, *.vue 파일 수정", ".claude/domains/_base/conventions/frontend-component.md", "필수"),
+        ("*.test.tsx, *.spec.tsx, *.stories.tsx", ".claude/domains/_base/conventions/frontend-testing.md", "필수"),
+        ("*.css, *.scss, tailwind.config.*", ".claude/domains/_base/conventions/frontend-styling.md", "필수"),
+        ("*Store*, *Context*, use*.ts hooks", ".claude/domains/_base/conventions/frontend-state.md", "권장"),
     ]
 
     # 도메인별 docs 추가 (domain.json의 keywords에서 추출)

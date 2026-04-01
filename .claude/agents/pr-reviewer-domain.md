@@ -97,6 +97,18 @@ domain 값은 호출 시 프롬프트에서 전달됩니다.
 - **순환 참조**: Entity/DTO 간 양방향 참조로 직렬화 무한 루프 → CRITICAL
 - **벌크 처리**: 대량 데이터 건별 처리 (반복 INSERT/UPDATE) → MAJOR
 
+## 프론트엔드 검증 포인트
+
+PR 변경 파일에 `.tsx`, `.jsx`, `.vue`, `.svelte` 확장자가 포함된 경우에만 실행. 백엔드 전용 PR에서는 스킵.
+
+| 체크 항목 | 기준 | 심각도 |
+|----------|------|--------|
+| a11y 기본 | `<img>` alt 누락, `<button>` 내 텍스트 없음, role 미지정 | MAJOR |
+| 컴포넌트 크기 | 단일 파일 300줄 초과 | MINOR |
+| Prop drilling | 동일 prop이 3단계+ 전달 | MINOR |
+| 테스트 존재 | `*.tsx` → `*.test.tsx` 또는 `*.stories.tsx` 존재 | MINOR |
+| 인라인 스타일 | 동적 계산 외 `style={{}}` 사용 | MINOR |
+
 ## 아키텍처 검증 포인트
 
 ### 계층 분리 확인

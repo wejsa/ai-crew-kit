@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.38.0] - 2026-04-01
+
+### Added
+- `skill-impl --micro "설명"`: 소규모 작업 경량 경로 (plan 생략, 바로 구현→PR)
+- Micro 전용 라인 제한: ≤150줄 정상, 150~300줄 경고, >300줄 차단→Standard 전환
+- 프론트엔드 컨벤션 4개: `frontend-component.md`, `frontend-testing.md`, `frontend-styling.md`, `frontend-state.md`
+- 패키지 매니저 자동 감지: yarn.lock, pnpm-lock.yaml, bun.lockb (우선순위: bun>pnpm>yarn>npm)
+- pr-reviewer-domain 프론트엔드 검증: a11y(MAJOR), 컴포넌트 크기, prop drilling, 테스트 존재, 인라인 스타일
+- `backlog.schema.json`: task.micro boolean 필드 (Micro Task 식별)
+- 자연어 매핑 3개: "OO 고쳐줘", "OO 버그 수정해줘", "간단하게 OO 추가해줘" → --micro
+- TEMPLATE-ENGINE.md 컨벤션 트리거 테이블에 프론트엔드 4개 항목 등록
+
+### Changed
+- `skill-impl` 빌드 테이블: yarn/pnpm/bun 명령어 + Lock 파일 감지 로직 추가
+- `skill-impl` allowed-tools: `Bash(pnpm:*)`, `Bash(bun:*)` 추가
+- `skill-onboard` 스캔 대상: 패키지 매니저 Lock 파일 3종 추가
+- `skill-report` Throughput: Micro Task 비율 메트릭 추가
+
 ## [1.37.0] - 2026-04-01
 
 ### Added

@@ -31,7 +31,7 @@ argument-hint: "[--full]"
 ### 2. 메트릭 분석 (4축)
 
 #### 2.1 Throughput (처리량)
-완료 Task 수, 평균 리드타임, 스텝 완료율, Task 처리 속도(Task/일), Task type별 분포 (feature/bug/chore/spike)
+완료 Task 수, 평균 리드타임, 스텝 완료율, Task 처리 속도(Task/일), Task type별 분포 (feature/bug/chore/spike), Micro Task 비율 (micro:true / 전체)
 
 #### 2.2 Quality (품질)
 CRITICAL 비율, 수정 라운드 평균, 첫 리뷰 통과율, 리뷰 코멘트 밀도
