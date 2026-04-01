@@ -2,7 +2,7 @@
 name: skill-impl
 description: 구현 - 스텝별 개발 + PR 생성. 사용자가 "개발 진행해줘", "구현해줘" 또는 /skill-impl을 요청할 때 사용합니다.
 disable-model-invocation: false
-allowed-tools: Bash(git:*), Bash(./gradlew:*), Bash(npm:*), Bash(yarn:*), Bash(pnpm:*), Bash(bun:*), Read, Write, Edit, Glob, Grep, Task
+allowed-tools: Bash(git:*), Bash(./gradlew:*), Bash(mvn:*), Bash(./mvnw:*), Bash(npm:*), Bash(yarn:*), Bash(pnpm:*), Bash(bun:*), Bash(python:*), Bash(pytest:*), Bash(ruff:*), Bash(poetry:*), Bash(pip:*), Bash(npx:*), Bash(go:*), Bash(golangci-lint:*), Read, Write, Edit, Glob, Grep, Task
 argument-hint: "[--next|--all|--retry|--skip|--micro \"설명\"]"
 ---
 
@@ -66,8 +66,17 @@ CLAUDE.md 워크트리 프로토콜 참조.
 | 스택 | 빌드 | 테스트 | 린트 |
 |------|------|--------|------|
 | spring-boot-kotlin | `./gradlew build` | `./gradlew test` | `./gradlew ktlintCheck` |
+| spring-boot-java (Gradle) | `./gradlew build` | `./gradlew test` | `./gradlew checkstyleMain` |
+| spring-boot-java (Maven) | `mvn package` | `mvn test` | `mvn checkstyle:check` |
 | nodejs-typescript | `npm run build` | `npm test` | `npm run lint` |
+| python-fastapi | - | `pytest` | `ruff check .` |
+| python-django | `python manage.py check` | `pytest` | `ruff check .` |
 | go | `go build ./...` | `go test ./...` | `golangci-lint run` |
+| nextjs | `next build` | `vitest` 또는 `jest` | `next lint` |
+| react-vite | `vite build` | `vitest` | `eslint .` |
+| vue-nuxt | `nuxt build` | `vitest` | `eslint .` |
+| vue | `vite build` | `vitest` | `eslint .` |
+| astro | `astro build` | `vitest` | `eslint .` |
 
 **패키지 매니저 자동 감지** (Lock 파일 기준, `buildCommands` 미설정 시):
 

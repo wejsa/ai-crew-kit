@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.38.1] - 2026-04-01
+
+### Added
+- 스택 인식 확장: Python(FastAPI/Django), React Vite, Vue, Vue-Nuxt, Astro, Next.js 분리 (4종→11종)
+- `--quick` 빈 디렉토리 폴백: 감지 실패 시 프로젝트 유형 1회 질문 (5개 선택지)
+- Step 4 선택지에 `none` 옵션: 백엔드 전용/프론트엔드 전용 프로젝트 지원
+- DB 선택지 확장: postgresql, mongodb, sqlite, none
+- Maven 빌드 지원: `pom.xml` 감지, `mvn package/test/checkstyle:check` 빌드 테이블
+- `skill-impl` allowed-tools: go, golangci-lint, mvn, mvnw, python, pytest, ruff, poetry, pip, npx 추가
+
+### Changed
+- 에이전트 팀 구성: "backend 항상 필수" → 스택 기반 자동 결정 (백엔드만/프론트엔드만/풀스택)
+- `skill-onboard` 빌드 명령어 감지: Python, Next.js, React Vite, Vue, Nuxt, Astro 전체 추가
+- `skill-onboard` 스캔 대상: Python 패키지 매니저(poetry/pipenv/pip) 추가
+
 ## [1.38.0] - 2026-04-01
 
 ### Added

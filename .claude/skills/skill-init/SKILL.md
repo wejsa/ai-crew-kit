@@ -27,15 +27,37 @@ argument-hint: "[--quick] [--reset]"
 | Step 2: 프로젝트 정보 | AskUserQuestion 2회 | 디렉토리명 → name, 설명 빈칸 |
 | Step 3: 도메인 선택 | AskUserQuestion 1회 | 자동 감지 → fallback: general |
 | Step 4: 기술 스택 | AskUserQuestion 5+회 | `_registry.json`의 domain.defaultStack |
-| Step 5: 에이전트 팀 | AskUserQuestion multi-select | 기본 3개: pm, backend, code-reviewer |
+| Step 5: 에이전트 팀 | AskUserQuestion multi-select | 스택 기반 자동: pm + backend/frontend + code-reviewer |
 | Step 5.5: 워크플로우 프로필 | AskUserQuestion 1회 | standard 기본값 |
 | Step 6-7 | 그대로 | + "설정 변경: /skill-init --reset" 안내 |
 
 ### --quick 자동 감지
-- package.json → nodejs-typescript
-- build.gradle.kts → spring-boot-kotlin / build.gradle → spring-boot-java
-- go.mod → go
-- 감지 실패 → general 도메인 + defaultStack
+
+**백엔드**:
+- `build.gradle.kts` → spring-boot-kotlin
+- `build.gradle` → spring-boot-java
+- `pom.xml` → spring-boot-java (Maven)
+- `go.mod` → go
+- `pyproject.toml` / `requirements.txt` → python (FastAPI/Django 자동 판별)
+- `package.json` + express/fastify/nestjs 의존성 → nodejs-typescript
+
+**프론트엔드** (package.json 의존성 또는 설정 파일):
+- `next.config.*` → nextjs
+- `vite.config.*` + react 의존성 → react-vite
+- `nuxt.config.*` → vue-nuxt
+- `astro.config.*` → astro
+- `vue.config.*` / vue 의존성 → vue
+
+**감지 실패 시 (빈 디렉토리)**: 1회 질문으로 프로젝트 유형 결정:
+```
+감지된 파일이 없습니다. 프로젝트 유형을 선택하세요:
+1. 웹 프론트엔드 (React/Next.js/Vue/Astro)
+2. 웹 백엔드 API (Spring Boot/Express/FastAPI)
+3. 풀스택 (프론트+백엔드)
+4. 정적 사이트
+5. 직접 설정 (/skill-init)
+```
+선택 후 해당 유형의 기본 스택 적용. 나머지는 --quick 기본값 유지.
 
 ---
 
@@ -62,10 +84,25 @@ AskUserQuestion: 프로젝트 이름, 설명
 ### Step 4: 기술 스택 선택
 도메인별 defaultStack 기본값 제안 → AskUserQuestion: 백엔드, 프론트엔드, DB, 캐시, 인프라
 
+**백엔드 선택지**: spring-boot-kotlin, spring-boot-java, nodejs-typescript, python-fastapi, python-django, go, **none** (프론트엔드 전용)
+**프론트엔드 선택지**: nextjs, react-vite, vue-nuxt, vue, astro, **none** (백엔드 전용)
+**DB 선택지**: mysql, postgresql, mongodb, sqlite, **none** (BaaS 사용 시)
+
+백엔드와 프론트엔드 모두 `none`은 불가 (최소 하나 선택)
+
 ### Step 5: 에이전트 팀 구성
-AskUserQuestion multi-select:
-- 필수: pm, backend, code-reviewer
-- 선택: planner, db-designer, frontend (프론트엔드 스택 선택 시 자동), qa, docs
+스택에 따라 필수 에이전트를 자동 결정한 뒤, 추가 에이전트를 AskUserQuestion으로 선택.
+
+**필수 에이전트 (스택 기반 자동)**:
+
+| 스택 구성 | 필수 에이전트 |
+|-----------|-------------|
+| 백엔드만 (프론트엔드=none) | pm, backend, code-reviewer |
+| 프론트엔드만 (백엔드=none) | pm, frontend, code-reviewer |
+| 풀스택 (백엔드+프론트엔드) | pm, backend, frontend, code-reviewer |
+
+**선택 에이전트** (AskUserQuestion multi-select):
+planner, db-designer, qa, docs
 
 ### Step 5.5: 워크플로우 프로필 선택
 AskUserQuestion: Standard (권장, 전체 체이닝) / Fast (리뷰 생략, 프로토타입용)

@@ -34,19 +34,26 @@ argument-hint: "[--scan-only]"
 
 ### Step 1: 코드베이스 스캔
 
-**백엔드**: package.json → nodejs-typescript / build.gradle.kts → spring-boot-kotlin / build.gradle → spring-boot-java / pom.xml → spring-boot-java / go.mod → go
-**프론트엔드**: package.json 의존성 (next/react/vue/nuxt) + next.config.*/vue.config.* 감지
+**백엔드**: build.gradle.kts → spring-boot-kotlin / build.gradle → spring-boot-java / pom.xml → spring-boot-java / go.mod → go / pyproject.toml/requirements.txt → python (FastAPI/Django 판별) / package.json + express/fastify/nestjs → nodejs-typescript
+**프론트엔드**: next.config.* → nextjs / vite.config.* + react → react-vite / nuxt.config.* → vue-nuxt / astro.config.* → astro / vue.config.*/vue 의존성 → vue
 **패키지 매니저**: bun.lockb → bun / pnpm-lock.yaml → pnpm / yarn.lock → yarn / package-lock.json → npm (복수 시 bun>pnpm>yarn>npm)
+**Python 패키지**: poetry.lock → poetry / Pipfile.lock → pipenv / requirements.txt → pip
 **데이터베이스**: docker-compose + 의존성 (postgres/mysql/mongodb)
 **캐시/메시지큐**: docker-compose + 의존성 (redis/rabbitmq/kafka)
 **인프라**: docker-compose.yml → docker-compose / k8s/ → kubernetes / Dockerfile만 → docker-compose
 
 **빌드 명령어 감지** (techStack 기반):
 - spring/kotlin → ./gradlew build/test/ktlintCheck
-- java → ./gradlew build/test/checkstyleMain
+- java → ./gradlew build/test/checkstyleMain (Maven: mvn package/test)
 - node/typescript → npm run build/test/lint (package.json scripts 확인)
 - go → go build/test + golangci-lint
-- Maven → mvn package/test
+- python-fastapi → pytest / ruff check .
+- python-django → python manage.py check / pytest / ruff check .
+- nextjs → next build / vitest 또는 jest / next lint
+- react-vite → vite build / vitest / eslint .
+- vue-nuxt → nuxt build / vitest / eslint .
+- vue → vite build / vitest / eslint .
+- astro → astro build / vitest / eslint .
 
 **도메인 추천**: `_registry.json` keywords와 매칭 (디렉토리명 3점, 파일명 2점, README/설명 1점 → 최고점 추천, 동점이면 general)
 
@@ -58,7 +65,7 @@ AskUserQuestion: "결과 정확" / "기술 스택 수정" / "도메인 변경"
 `--scan-only` 모드: 여기서 종료
 
 ### Step 3: 추가 정보 수집
-AskUserQuestion: 프로젝트 이름 (디렉토리명 기본값), 설명, 에이전트 구성 (skill-init Step 5 동일), Task 접두사
+AskUserQuestion: 프로젝트 이름 (디렉토리명 기본값), 설명, 에이전트 구성 (skill-init Step 5 동일 — 스택 기반 필수 자동 결정 + 선택 추가), Task 접두사
 
 ### Step 4: 기존 파일 백업
 README.md → README.md.bak / CLAUDE.md → CLAUDE.md.bak (존재 시)
