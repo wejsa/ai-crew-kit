@@ -3,15 +3,17 @@ name: skill-impl
 description: 구현 - 스텝별 개발 + PR 생성. 사용자가 "개발 진행해줘", "구현해줘" 또는 /skill-impl을 요청할 때 사용합니다.
 disable-model-invocation: false
 allowed-tools: Bash(git:*), Bash(./gradlew:*), Bash(npm:*), Bash(yarn:*), Read, Write, Edit, Glob, Grep, Task
-argument-hint: "[--next|--all]"
+argument-hint: "[--next|--all|--retry|--skip]"
 ---
 
 # skill-impl: 구현
 
 ## 실행 조건
 - 사용자가 `/skill-impl` 또는 "개발 진행해줘" 요청 시
-- `--next`: 다음 스텝 (이전 PR 머지 확인 필수)
-- `--all`: 모든 스텝 연속 실행
+- `--next`: 다음 스텝 (이전 PR 머지 또는 skipped 확인 필수)
+- `--all`: 모든 스텝 연속 실행 (skipped 스텝은 건너뜀)
+- `--retry`: 실패한 현재 스텝 재시작
+- `--skip`: 빌드 실패 스텝 건너뛰기
 
 ## 사전 조건 (MUST-EXECUTE-FIRST — 하나라도 실패 시 STOP)
 1. project.json 존재
@@ -20,7 +22,7 @@ argument-hint: "[--next|--all]"
 4. 계획 파일 `.claude/temp/{taskId}-plan.md` 존재
 5. 현재 스텝 status == pending
 6. origin/develop 동기화: >5 뒤처짐 → STOP, 1-5 → 자동 merge
-- `--next` 추가 조건: 이전 스텝 PR 머지 완료 + develop 최신 동기화
+- `--next` 추가 조건: 이전 스텝 PR 머지 완료 **또는 skipped** + develop 최신 동기화
 
 ## 경량 점검
 CLAUDE.md "경량 점검 프로토콜" 3단계 실행: ①PR-backlog 일치 ②Stale 감지 ③Intent 복구
@@ -105,8 +107,23 @@ step status → "pr_created", prNumber 기록. assignedAt 갱신 (lock heartbeat
 
 각 Task `run_in_background: true`. 실패 시 "⚠️ 분석 불가" 출력 후 진행.
 
+## --retry 옵션
+실패한 현재 스텝을 처음부터 재시작한다. skill-impl 실패 시에만 사용 가능.
+1. 현재 스텝의 `step.status` → `"pending"` 리셋
+2. 기존 PR 처리: PR OPEN → close + 브랜치 삭제 / PR MERGED → 거부 ("이미 머지된 스텝은 retry 불가") / PR 없음 → 브랜치 삭제
+3. `workflowState.currentSkill` → `"skill-impl"`, `fixLoopCount` → 0
+4. 정상 플로우 재실행
+
+## --skip 옵션
+빌드 실패 스텝을 건너뛴다. 빌드 실패 상태에서만 사용 가능 (정상 흐름에서는 거부).
+1. 경고: "Step {N}을 스킵합니다. 이후 스텝에서 빌드 실패가 발생할 수 있습니다."
+2. 사용자 확인
+3. `step.status` → `"skipped"`, `currentStep` +1
+4. 다음 스텝 실행 또는 Task 완료 처리
+- skill-report에서 "스킵된 스텝" 메트릭으로 집계
+
 ## --all 옵션
-모든 스텝 연속 실행: impl → review-pr → merge-pr → impl --next (반복)
+모든 스텝 연속 실행: impl → review-pr → merge-pr → impl --next (반복). skipped 스텝은 건너뜀.
 중단 조건: CRITICAL auto-fix 실패, 빌드 3회 실패, 라인 수 초과
 
 ## lockedFiles 관리
@@ -118,7 +135,10 @@ step status → "pr_created", prNumber 기록. assignedAt 갱신 (lock heartbeat
 ## 출력
 필수 포함: Task ID, Step N/M, 변경 파일 수(생성/수정/삭제), 빌드/테스트/린트 결과, PR 링크, 백그라운드 분석 결과, 다음 자동 스킬, 남은 스텝 수
 
+## 에러 복구
+CLAUDE.md "에러 복구 프로토콜" 참조. 미존재 시 3회 재시도 후 사용자 보고.
+
 ## 주의사항
-- 계획 파일 없이 구현 금지
+- 계획 파일 없이 구현 금지 (--retry/--skip 제외)
 - 빌드/테스트 통과 필수
 - 병렬 작업 시 파일 충돌 주의

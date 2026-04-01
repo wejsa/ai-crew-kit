@@ -184,7 +184,10 @@ argument-hint: "[--quick|--scope <category>|--fix]"
   - 중복 Task ID 존재 여부
   - 의존성(dependsOn) 참조가 실제 존재하는 Task ID인지
   - 순환 의존성 여부
-  - status 값이 허용된 enum인지 (todo, in_progress, done, blocked)
+  - task.status 값이 허용된 enum인지 (todo, in_progress, done, blocked, archived)
+  - step.status 값이 허용된 enum인지 (pending, in_progress, pr_created, merged, done, skipped)
+  - task.type 값이 허용된 enum인지 (feature, bug, chore, spike) — 미설정 시 유효
+  - **archived Task 제외**: status="archived"인 Task는 건강 검진 대상에서 제외 (카운트만 표시)
 - FAIL 시: backlog 자동 등록
 - autoFix: 불가 (수동 수정 안내)
 

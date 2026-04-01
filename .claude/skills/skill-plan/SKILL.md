@@ -111,6 +111,9 @@ backlog.json 업데이트: assignedAt 리셋, lockedFiles, steps 배열, current
 ## 출력
 필수 포함: Task ID/제목/Phase/우선순위, 설계 요약, 스텝 테이블(Step/제목/예상라인/주요파일), 계획 파일 경로, 승인 선택지(Y/N/수정)
 
+## 에러 복구
+CLAUDE.md "에러 복구 프로토콜" 참조. 미존재 시 3회 재시도 후 사용자 보고.
+
 ## 주의사항
 - 계획 파일은 Git 제외 (`.claude/temp/`)
 - 승인 전 코드 작성 금지

@@ -216,6 +216,9 @@ execution-log.json: APPROVED → action="approved", REQUEST_CHANGES → action="
    설정 변경: /skill-review-pr config --mode full
 ```
 
+## 에러 복구
+CLAUDE.md "에러 복구 프로토콜" 참조. 미존재 시 3회 재시도 후 사용자 보고.
+
 ## 주의사항
 - Draft PR은 리뷰 불가
 - CRITICAL 이슈는 반드시 수정 필요

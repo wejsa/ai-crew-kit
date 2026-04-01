@@ -101,8 +101,14 @@
         },
         "status": {
           "type": "string",
-          "enum": ["todo", "in_progress", "done", "blocked"],
+          "enum": ["todo", "in_progress", "done", "blocked", "archived"],
           "description": "Task 상태"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["feature", "bug", "chore", "spike"],
+          "default": "feature",
+          "description": "Task 유형 (미지정 시 feature)"
         },
         "priority": {
           "type": "string",
@@ -194,7 +200,7 @@
         },
         "status": {
           "type": "string",
-          "enum": ["pending", "in_progress", "pr_created", "merged", "done"],
+          "enum": ["pending", "in_progress", "pr_created", "merged", "done", "skipped"],
           "description": "스텝 상태"
         },
         "files": {

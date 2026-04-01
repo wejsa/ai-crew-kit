@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.37.0] - 2026-04-01
+
+### Added
+- 에러 복구 프로토콜: CLAUDE.md.tmpl에 10가지 에러 유형별 표준 복구 가이드 인라인
+- `skill-impl --retry`: 실패한 스텝 재시작 (PR close + 브랜치 정리 + 재실행)
+- `skill-impl --skip`: 빌드 실패 스텝 건너뛰기 (step.status="skipped")
+- `/skill-backlog dashboard`: Phase별 진행률 + in_progress + blocked + 다음 착수 가능 Task
+- `/skill-backlog archive`: Task soft delete (status="archived", list 기본 제외)
+- `/skill-backlog batch`: 다중 Task 일괄 변경 (dry-run + 확인 + 원자적 실행)
+- `/skill-backlog deps`: 의존성 텍스트 트리 + `--reverse` 영향도 분석
+- `task.type` 필드: feature | bug | chore | spike (add 시 AI 추론)
+- `docs/getting-started.md` "첫 기능 만들기" 5단계 워크스루
+- 자연어 매핑 13개 추가 (--retry, --skip, dashboard, deps, archive, batch 등)
+
+### Changed
+- `skill-backlog update` 옵션 확장: --title, --description, --phase, --type, --reason
+- `skill-backlog list` 필터 확장: --type, --assignee=me, --stale
+- `skill-impl --next/--all`: skipped 스텝 호환 (이전 스텝이 skipped면 다음 진행 허용)
+- `backlog.schema.json`: task.status에 "archived", step.status에 "skipped" 추가
+- `skill-health-check`: archived Task 건강 검진 제외, archived/skipped/type enum 인식
+- `skill-status`: archived 카운트 별도 표시
+- `skill-report`: Task type별 분포 + 스킵 비율 메트릭 추가
+- 5개 핵심 스킬에 에러 복구 프로토콜 참조 + fallback 추가
+
 ## [1.36.0] - 2026-03-31
 
 ### Added

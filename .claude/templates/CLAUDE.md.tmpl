@@ -91,12 +91,24 @@ fi
 | 자연어 | 스킬 | 동작 |
 |--------|------|------|
 | "상태 확인해줘" | `/skill-status` | 프로젝트 상태 확인 |
-| "백로그 보여줘" | `/skill-backlog` | 백로그 조회 |
+| "백로그 보여줘" | `/skill-backlog list` | 백로그 조회 |
+| "버그만 보여줘" | `/skill-backlog list --type=bug` | 버그 타입 필터 |
+| "내 작업 보여줘" | `/skill-backlog list --assignee=me` | 내 할당 필터 |
+| "오래된 작업 보여줘" | `/skill-backlog list --stale=7d` | 장기 미변경 필터 |
+| "대시보드 보여줘" | `/skill-backlog dashboard` | Phase 진행률 현황 |
+| "의존성 보여줘" | `/skill-backlog deps` | 의존성 트리 |
+| "{ID} 보관해줘" | `/skill-backlog archive {ID}` | Task soft delete |
+| "일괄 변경해줘" | `/skill-backlog batch` | 다중 Task 일괄 변경 |
+| "버그 등록해줘: {설명}" | `/skill-backlog add "{설명}" --type=bug` | 버그 등록 |
+| "Task 추가해줘: {제목}" | `/skill-backlog add "{제목}"` | Task 등록 (type AI 추론) |
+| "{ID} 수정해줘" | `/skill-backlog update {ID}` | Task 대화형 수정 |
 | "다음 작업 가져와줘" | `/skill-plan` | Task 선택 + 설계 + 스텝 계획 |
 | "새 기능 기획해줘: {기능명}" | `/skill-feature {기능명}` | 새 기능 기획 + 요구사항 문서 |
 | "개발 진행해줘" | `/skill-impl` | Step 1 개발 -> PR 생성 |
 | "다음 스텝 진행해줘" | `/skill-impl --next` | 다음 스텝 개발 -> PR 생성 |
 | "전체 개발 진행해줘" | `/skill-impl --all` | 모든 스텝 연속 개발 |
+| "이어서 진행해줘" | `/skill-impl --retry` | 실패한 스텝 재시작 |
+| "스텝 건너뛰기" | `/skill-impl --skip` | 빌드 실패 스텝 건너뛰기 |
 | "{경로} 코드 리뷰해줘" | `/skill-review {경로}` | 코드 경로 종합 리뷰 |
 | "PR {번호} 리뷰해줘" | `/skill-review-pr {번호}` | PR 리뷰 |
 | "PR {번호} 머지해줘" | `/skill-merge-pr {번호}` | PR 머지 |
@@ -233,6 +245,42 @@ fi
 
 **완료 시:** `currentSkill`을 다음 스킬로, `lastCompletedSkill`을 현재 스킬로 갱신.
 **Task 완료 시:** `workflowState: null`로 초기화.
+
+---
+
+## 에러 복구 프로토콜 (필수)
+
+스킬 실행 중 에러 발생 시, 반드시 아래 형식으로 안내한다:
+
+```
+❌ [{에러 유형}]: {구체적 원인}
+
+📋 현재 상태:
+   - Task: {TASK-ID} Step {N}/{M}
+   - 브랜치: {현재 브랜치}
+   - 마지막 성공 지점: {단계명}
+
+🔧 복구 방법:
+   1. [권장] {가장 안전한 방법}
+   2. {대안 방법}
+   3. [최후수단] {리셋 방법}
+```
+
+자동 복구 가능한 에러는 자동 시도 후 결과를 보고한다.
+자동 복구 불가 시 복구 방법을 제시하고 사용자 선택을 대기한다.
+
+| 에러 유형 | 자동 복구 | 수동 복구 |
+|----------|----------|----------|
+| 빌드 실패 (1-2회) | 자동 재시도 | - |
+| 빌드 실패 (3회) | - | [권장] 에러 로그 확인 후 수정 / `--retry` / [최후수단] `--skip` |
+| JSON 파싱 에러 | `git checkout` 복원 | [권장] 자동 복원 수락 / 수동 수정 |
+| Git push 충돌 | `pull --rebase` 시도 | [권장] 자동 rebase 수락 / 충돌 수동 해결 |
+| PR 생성 실패 | 원인별 분기 | [권장] `gh auth status` 확인 / 재시도 |
+| gh auth 만료 | `gh auth refresh` 안내 | [권장] `! gh auth refresh` 실행 |
+| 세션 끊김 | intent 기반 복구 제안 | [권장] `/skill-status` 후 안내 / 수동 상태 초기화 |
+| lock TTL 만료 | 자동 연장 제안 | [권장] 연장 수락 / `--extend-lock` / [최후수단] `unlock --force` |
+| 컨텍스트 압축 | workflowState 복원 | [권장] `/skill-status` → 맥락 복원 |
+| subagent 타임아웃 | 스킵 후 진행 | [권장] 결과 없이 진행 수락 / 수동 재실행 |
 
 ---
 

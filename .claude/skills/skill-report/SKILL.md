@@ -22,7 +22,7 @@ argument-hint: "[--full]"
 
 | 소스 | 수집 항목 |
 |------|----------|
-| backlog.json | Task 상태별 수량 (total/todo/in_progress/done/blocked/critical) |
+| backlog.json | Task 상태별 수량 (total/todo/in_progress/done/blocked/archived), type별 분포, skipped step 수 |
 | completed.json | 완료 Task 수, 완료 시각 |
 | execution-log.json | 실행 로그 항목 수 (존재 시) |
 | `gh pr list` | 머지 PR (additions/deletions/reviews), 열린 PR |
@@ -31,13 +31,13 @@ argument-hint: "[--full]"
 ### 2. 메트릭 분석 (4축)
 
 #### 2.1 Throughput (처리량)
-완료 Task 수, 평균 리드타임, 스텝 완료율, Task 처리 속도(Task/일)
+완료 Task 수, 평균 리드타임, 스텝 완료율, Task 처리 속도(Task/일), Task type별 분포 (feature/bug/chore/spike)
 
 #### 2.2 Quality (품질)
 CRITICAL 비율, 수정 라운드 평균, 첫 리뷰 통과율, 리뷰 코멘트 밀도
 
 #### 2.3 Code (코드)
-PR 평균 크기, 커밋 빈도, PR 크기 분포 (S<100/M100~300/L300~500/XL500+), 커밋 타입 분포 (feat/fix/refactor/docs/test/chore)
+PR 평균 크기, 커밋 빈도, PR 크기 분포 (S<100/M100~300/L300~500/XL500+), 커밋 타입 분포 (feat/fix/refactor/docs/test/chore), 스킵 비율 (skipped step / total step)
 
 #### 2.4 Health (건강도)
 오픈 Task, 블록 Task, Stale 워크플로우(30분+), 오래된 PR(3일+)
