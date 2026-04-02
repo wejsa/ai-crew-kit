@@ -112,6 +112,22 @@ class PaymentSaga {
 | 스레드 풀 분리 | I/O 작업은 별도 스레드 풀 사용 | HIGH |
 | 백프레셔 | 과부하 시 처리량 조절 | MEDIUM |
 | 이벤트 기반 | 동기 호출 대신 이벤트 발행 고려 | MEDIUM |
+| Python: async 일관성 | async 라우터에서 sync DB 호출 금지 (이벤트 루프 블로킹) | CRITICAL |
+| Python: context manager | SQLAlchemy 세션은 `async with session:` 필수 | CRITICAL |
+| Python: CPU 작업 | CPU 바운드는 `run_in_executor` 사용 | HIGH |
+
+## Python 아키텍처
+
+`.py` 파일 변경 시 추가 확인:
+
+| 항목 | 설명 | 심각도 |
+|------|------|--------|
+| FastAPI response_model | API 응답에 Pydantic 모델 필수, dict 반환 금지 | CRITICAL |
+| FastAPI Depends | DB/인증은 `Depends()` 패턴 사용, 전역 인스턴스 금지 | HIGH |
+| Pydantic 스키마 분리 | Create/Response/Update 용도별 분리 | MAJOR |
+| Django views 얇게 | views.py에 비즈니스 로직 금지, services.py 분리 | HIGH |
+| Django 앱 간 참조 | 앱 간 import는 services 레이어에서만 | MAJOR |
+| 환경설정 | `pydantic-settings` 사용, `os.environ` 직접 접근 금지 | MAJOR |
 
 ## API 설계
 

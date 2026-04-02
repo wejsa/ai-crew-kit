@@ -32,6 +32,10 @@
 | 경계값 테스트 | null, empty, max 값 테스트 | MINOR |
 | 테스트 격리 | 테스트 간 의존성 없음 | MAJOR |
 | 테스트 명명 | 테스트 의도가 명확한 이름 | MINOR |
+| Python: pytest fixture | conftest.py에 DB/client fixture 정의 (트랜잭션 롤백) | MAJOR |
+| Python: async 테스트 | `pytest-asyncio` + `asyncio_mode = "auto"` 설정 | MAJOR |
+| Python: API 테스트 | `httpx.AsyncClient` + `ASGITransport` 사용 (FastAPI) | MAJOR |
+| Python: 외부 호출 Mock | `requests` 직접 호출 금지, `respx` 또는 `httpx.MockTransport` 사용 | MAJOR |
 
 ## 의존성 관리
 

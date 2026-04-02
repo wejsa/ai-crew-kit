@@ -61,6 +61,24 @@ claude
 
 > **--quick 모드**: 2~5단계를 자동 감지/기본값으로 건너뛰어 즉시 시작합니다. 나중에 `/skill-init --reset`으로 재설정할 수 있습니다.
 
+### Python 프로젝트로 시작하기
+
+```bash
+# FastAPI 프로젝트 (비동기 REST API)
+/skill-init
+# → 도메인: general
+# → 백엔드: python-fastapi
+# → 자동 생성: pyproject.toml, app/ 구조, tests/conftest.py, alembic/
+
+# Django 프로젝트 (관리자 패널 + REST API)
+/skill-init
+# → 도메인: general
+# → 백엔드: python-django
+# → 자동 생성: pyproject.toml, manage.py, config/, apps/
+```
+
+> Python 컨벤션 4개 (`python-project-structure`, `python-testing`, `python-dependency`, `python-patterns`)가 자동으로 적용됩니다.
+
 ## 기존 프로젝트 온보딩
 
 이미 코드베이스가 있는 프로젝트에 AI Crew Kit을 적용하려면 `/skill-onboard`를 사용합니다.

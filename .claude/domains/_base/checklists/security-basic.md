@@ -16,11 +16,14 @@
 
 | 항목 | 설명 | 심각도 |
 |------|------|--------|
-| SQL Injection | PreparedStatement 또는 ORM 사용 | CRITICAL |
+| SQL Injection | PreparedStatement, ORM, 파라미터 바인딩 사용 | CRITICAL |
 | XSS 방지 | 출력 시 HTML 이스케이프 | CRITICAL |
 | Path Traversal | 파일 경로 검증 | CRITICAL |
 | 입력 길이 | 최대 길이 제한 | MAJOR |
 | 타입 검증 | 예상 타입과 일치 여부 확인 | MAJOR |
+| Python: f-string SQL 금지 | `f"SELECT..."` 금지, `text()` + bindparams 필수 | CRITICAL |
+| Python: eval/exec 금지 | 사용자 입력 코드 실행 금지 | CRITICAL |
+| Python: pickle 역직렬화 | 신뢰할 수 없는 데이터 `pickle.loads` 금지 | CRITICAL |
 
 ## 민감정보 보호
 
@@ -30,6 +33,8 @@
 | 로깅 금지 | 비밀번호, 토큰, API 키 로깅 금지 | CRITICAL |
 | 마스킹 | 민감정보 출력 시 마스킹 | MAJOR |
 | 환경변수 | 민감정보는 환경변수로 관리 | MAJOR |
+| Python: pydantic-settings | `os.environ` 직접 접근 대신 `pydantic-settings` 사용 | MAJOR |
+| Python: CORS wildcard | `allow_origins=["*"]` 프로덕션 금지 | CRITICAL |
 
 ## 통신 보안
 

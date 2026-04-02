@@ -12,6 +12,30 @@
 
 각 도메인에는 전용 **체크리스트**, **참고자료**, **코드 템플릿**이 포함됩니다.
 
+## 지원 기술 스택
+
+### 백엔드
+
+| 스택 | 빌드 | 테스트 | 특징 |
+|------|------|--------|------|
+| Spring Boot (Kotlin) | `./gradlew build` | `./gradlew test` | 기본 스택, 가장 풍부한 컨벤션 |
+| Spring Boot (Java) | `./gradlew build` | `./gradlew test` | Maven도 지원 |
+| Node.js (TypeScript) | `npm run build` | `npm test` | Express/Fastify/NestJS |
+| **Python (FastAPI)** | `pip install -e '.[dev]'` | `pytest --cov=app` | 비동기 API, Pydantic, SQLAlchemy |
+| **Python (Django)** | `pip install -e '.[dev]'` | `pytest --cov` | DRF, Django ORM, 관리자 패널 |
+| Go | `go build ./...` | `go test ./...` | Gin/Echo |
+
+### 프론트엔드
+
+| 스택 | 유형 | 빌드 |
+|------|------|------|
+| Next.js | SSR/SSG | `npm run build` |
+| React + Vite | SPA | `npm run build` |
+| Vue / Nuxt | SPA/SSR | `npm run build` |
+| Astro | 정적 사이트 | `npm run build` |
+
+> Python 상세 컨벤션: `python-project-structure.md`, `python-testing.md`, `python-dependency.md`, `python-patterns.md` 참조
+
 ## 에이전트 팀
 
 ### 에이전트 구조
@@ -30,7 +54,7 @@
 ├─────────────┤  ├─────────────┤  ├─────────────┤
 │ planner     │  │ backend     │  │ code-reviewer│
 │ db-designer │  │ frontend    │  │ qa          │
-│             │  │ devops      │  │ docs        │
+│             │  │             │  │ docs        │
 └─────────────┘  └─────────────┘  └─────────────┘
 ```
 
@@ -46,7 +70,6 @@
 | **agent-db-designer** | DB 설계 분석 (sub-agent) | 선택적 |
 | **agent-qa** | 테스트 품질 분석 (sub-agent) | 선택적 |
 | **agent-docs** | 문서 자동화 | 선택적 |
-| **agent-devops** | CI/CD, 인프라 | 선택적 |
 
 ### Sub-Agent (스킬에서 자동 호출)
 

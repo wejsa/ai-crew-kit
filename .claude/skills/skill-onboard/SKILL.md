@@ -35,6 +35,12 @@ argument-hint: "[--scan-only]"
 ### Step 1: 코드베이스 스캔
 
 **백엔드**: build.gradle.kts → spring-boot-kotlin / build.gradle → spring-boot-java / pom.xml → spring-boot-java / go.mod → go / pyproject.toml/requirements.txt → python (FastAPI/Django 판별) / package.json + express/fastify/nestjs → nodejs-typescript
+
+**Python FastAPI vs Django 자동 판별**:
+- `manage.py` 존재 OR `django` in dependencies → `python-django`
+- `fastapi` in dependencies OR `uvicorn` in dependencies → `python-fastapi`
+- 둘 다 없으면 `app/main.py` 존재 → `python-fastapi` / `config/settings/` 존재 → `python-django`
+- 판별 불가 → AskUserQuestion으로 직접 선택
 **프론트엔드**: next.config.* → nextjs / vite.config.* + react → react-vite / nuxt.config.* → vue-nuxt / astro.config.* → astro / vue.config.*/vue 의존성 → vue
 **패키지 매니저**: bun.lockb → bun / pnpm-lock.yaml → pnpm / yarn.lock → yarn / package-lock.json → npm (복수 시 bun>pnpm>yarn>npm)
 **Python 패키지**: poetry.lock → poetry / Pipfile.lock → pipenv / requirements.txt → pip

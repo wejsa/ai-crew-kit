@@ -29,6 +29,8 @@ Controller (API) → Service (Application) → Repository (Infrastructure)
 
 ## 스택별 패키지 구조
 
+> **Python 프로젝트**: `python-project-structure.md` 참조 (FastAPI, Django 전용 구조)
+
 ### Spring Boot (Kotlin/Java)
 
 ```
@@ -108,6 +110,33 @@ internal/
     └── logger.go
 pkg/                        # Public packages (외부 사용 가능)
 └── {shared}/
+```
+
+### Python (FastAPI / Django)
+
+> 상세 구조는 `python-project-structure.md` 참조
+
+**FastAPI**:
+```
+app/
+├── main.py           # FastAPI 인스턴스
+├── api/              # Router (엔드포인트)
+├── services/         # Business logic
+├── models/           # SQLAlchemy 모델
+├── schemas/          # Pydantic DTO
+├── repositories/     # Data access
+└── core/             # DB, Security, Exceptions
+```
+
+**Django (DRF)**:
+```
+config/               # 프로젝트 설정
+apps/{domain}/
+├── views.py          # APIView / ViewSet (얇게)
+├── services.py       # 비즈니스 로직
+├── models.py         # Django ORM
+├── serializers.py    # DRF 시리얼라이저
+└── repositories.py   # 복잡한 쿼리
 ```
 
 ## 공통 디렉토리

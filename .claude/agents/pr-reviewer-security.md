@@ -104,7 +104,28 @@ logger\.(info|debug|warn|error).*[Kk]ey
 
 # 취약한 암호화
 (MD5|SHA1|DES)\b
+
+# Python 특화
+logging\.(info|debug|warning|error).*[Tt]oken  # Python 로깅
+logging\.(info|debug|warning|error).*[Pp]assword
+os\.environ\[                      # 환경변수 직접 접근 (pydantic-settings 권장)
+f"SELECT.*\{                       # f-string SQL Injection
+text\(.*\+                         # SQLAlchemy text() 문자열 연결
+allow_origins.*\*                  # CORS wildcard
 ```
+
+### Python 보안 추가 검토
+`.py` 파일이 포함된 PR에서 추가 확인:
+
+| 패턴 | 심각도 | 설명 |
+|------|--------|------|
+| `os.environ[` 직접 접근 | MAJOR | `pydantic-settings` 사용 권장 (타입 검증, 기본값) |
+| `allow_origins=["*"]` | CRITICAL | 프로덕션 CORS wildcard 금지 |
+| `f"SELECT` / `f"INSERT` / `f"UPDATE` | CRITICAL | f-string SQL Injection |
+| `text(` + 문자열 연결 | CRITICAL | SQLAlchemy raw SQL 파라미터 바인딩 필수 |
+| `hashlib.md5` / `hashlib.sha1` | MAJOR | 비밀번호 해싱에 부적합 (bcrypt/argon2 사용) |
+| `pickle.loads` | CRITICAL | 신뢰할 수 없는 데이터 역직렬화 금지 |
+| `eval(` / `exec(` | CRITICAL | 사용자 입력 코드 실행 금지 |
 
 ### 설정 파일 검토 포인트
 - application.yml / .env: 비밀키 평문 여부
@@ -114,7 +135,7 @@ logger\.(info|debug|warn|error).*[Kk]ey
 
 ## 의존성 취약점 분석
 
-PR diff에 의존성 파일 변경(package.json, build.gradle, go.mod 등)이 포함된 경우:
+PR diff에 의존성 파일 변경(package.json, build.gradle, go.mod, pyproject.toml, requirements.txt 등)이 포함된 경우:
 1. 새로 추가된 의존성 식별
 2. 버전 다운그레이드 여부 확인 → MAJOR 경고
 3. 알려진 취약점 매핑:

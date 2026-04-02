@@ -132,7 +132,27 @@ Infrastructure (RepositoryImpl/ExternalClient)
 import.*infrastructure
 import.*client
 import.*external
+
+# Python: Router에서 Repository 직접 접근
+from.*repositories.*import     # api/ 내 파일에서 repositories import
+from.*repository.*import       # api/ 내 파일에서 repository import
+
+# Python: views.py에 비즈니스 로직 (Django)
+# views.py 내 복잡한 ORM 쿼리, 비즈니스 분기 → services.py로 분리 필요
 ```
+
+### Python 아키텍처 추가 검토
+
+`.py` 파일이 포함된 PR에서 추가 확인:
+
+| 패턴 | 심각도 | 설명 |
+|------|--------|------|
+| API 응답에 `dict` 반환 | CRITICAL | Pydantic `response_model` 필수 (FastAPI) |
+| `Depends()` 없이 전역 DB 인스턴스 | MAJOR | FastAPI DI 패턴 필수 |
+| `session.commit()` without context manager | CRITICAL | SQLAlchemy `async with session:` 필수 |
+| async 함수 내 sync DB 호출 | CRITICAL | 이벤트 루프 블로킹 |
+| Django views.py에 ORM 쿼리 직접 작성 | MAJOR | services.py / repositories.py로 분리 |
+| models.py에서 외부 서비스 호출 | CRITICAL | 도메인 모델 독립성 위반 |
 
 ### 트랜잭션 범위 확인
 - @Transactional 메서드 내 외부 호출 여부

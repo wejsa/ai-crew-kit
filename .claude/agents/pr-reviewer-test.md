@@ -92,6 +92,14 @@ src/services/order.service.ts
 # Go
 internal/service/order.go
 → internal/service/order_test.go
+
+# Python (FastAPI)
+app/services/order_service.py
+→ tests/services/test_order_service.py
+
+# Python (Django)
+apps/orders/services.py
+→ apps/orders/tests/test_services.py
 ```
 
 ## 도메인별 필수 테스트 항목
@@ -134,7 +142,26 @@ setTimeout.*test
 companion object.*var
 static.*var.*=
 beforeAll.*insert
+
+# Python 특화
+time\.sleep.*test               # 테스트 내 sleep (비결정적)
+def test_.*:\s*pass             # 빈 테스트 함수
+def test_.*:\s*\.\.\.           # Ellipsis만 있는 빈 테스트
+requests\.get\(|requests\.post\(  # 외부 API 직접 호출 (Mock 필요)
 ```
+
+### Python 테스트 추가 검토
+
+`.py` 테스트 파일이 포함된 PR에서 추가 확인:
+
+| 패턴 | 심각도 | 설명 |
+|------|--------|------|
+| `conftest.py`에 DB fixture 없음 | MAJOR | 트랜잭션 롤백 기반 DB 격리 필수 |
+| `asyncio_mode = "auto"` 미설정 | MAJOR | async 테스트에 `pytest-asyncio` 설정 필수 |
+| `httpx.AsyncClient` 대신 `requests` 사용 | MAJOR | FastAPI 테스트는 `httpx` + `ASGITransport` 사용 |
+| `app.dependency_overrides` 미사용 | MAJOR | FastAPI 테스트에서 의존성 오버라이드 필수 |
+| 테스트 간 DB 상태 공유 | CRITICAL | 각 테스트는 독립된 DB 상태로 실행 |
+| `time.sleep()` 사용 | MAJOR | `pytest-freezegun` 또는 mock 사용 |
 
 ## 출력 형식 (반드시 준수)
 

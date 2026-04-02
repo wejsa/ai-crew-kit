@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.40.0] - 2026-04-03
+
+### Added
+- Python 퍼스트클래스 생태계: FastAPI/Django를 Spring Boot와 동등 수준으로 지원
+  - `python-project-structure.md`: FastAPI/Django 프로젝트 구조 컨벤션
+  - `python-testing.md`: pytest 중심 테스팅 가이드 (fixture, 피라미드, 커버리지)
+  - `python-dependency.md`: pyproject.toml, poetry/pip, Alembic 마이그레이션
+  - `python-patterns.md`: Pydantic DI, async, SQLAlchemy, 예외 처리 패턴
+- Python 코드 리뷰 규칙: 아키텍처(5건), 보안(3건), 테스트(4건) 항목 추가
+- Sub-agent Python 리뷰: pr-reviewer-security/domain/test에 Python 탐지 패턴 및 검증 테이블
+- 체크리스트 Python 항목: security-basic(5건), architecture(9건), common(4건) 추가
+- `skill-init` Python 초기화: 스택 선택 가이드 + 스캐폴딩 상세 (pyproject.toml, app/ 구조)
+- `skill-onboard` Python 자동 감지: FastAPI vs Django 판별 휴리스틱 4단계
+
+### Removed
+- `agent-devops` 제거 (ADR-009): 사용률 0%, 스킬 연동 0건, 예제 2/2 비활성
+  - 삭제: `.claude/agents/agent-devops.md` (520줄)
+  - 참조 제거: CLAUDE-example, concepts.md, 예제 2개
+  - 유지: `deployment.md` 컨벤션 (독립 참조 문서)
+
+### Changed
+- `agent-backend.md`: Python 빌드/테스트 명령, 패키지 구조, 코딩 가이드 추가
+- `project-structure.md`: Python (FastAPI/Django) 구조 추가 + 상세 컨벤션 참조
+- `docs/concepts.md`: 지원 기술 스택 섹션 신설 (6개 백엔드 + 5개 프론트엔드)
+- `docs/getting-started.md`: Python 프로젝트 시작 가이드 추가
+
 ## [1.39.0] - 2026-04-02
 
 ### Added

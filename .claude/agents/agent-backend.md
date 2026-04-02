@@ -47,6 +47,7 @@
 // project.json에서 기술 스택 로드
 const techStack = project.techStack.backend;
 // "spring-boot-kotlin" | "spring-boot-java" | "nodejs-typescript" | "go"
+// | "python-fastapi" | "python-django"
 
 // 스택별 명령어 결정
 const commands = getStackCommands(techStack);
@@ -60,6 +61,8 @@ const commands = getStackCommands(techStack);
 | `spring-boot-java` | `./gradlew build` | `./gradlew test` | `./gradlew checkstyleMain` |
 | `nodejs-typescript` | `npm run build` | `npm test` | `npm run lint` |
 | `go` | `go build ./...` | `go test ./...` | `golangci-lint run` |
+| `python-fastapi` | `pip install -e '.[dev]'` | `pytest --cov=app` | `ruff check . && mypy app/` |
+| `python-django` | `pip install -e '.[dev]'` | `pytest --cov` | `ruff check . && mypy .` |
 
 ### 스택별 패키지 구조
 
@@ -94,6 +97,35 @@ internal/
 ├── repository/       # Data access
 ├── model/            # Domain models
 └── config/           # Configuration
+```
+
+#### Python (FastAPI)
+```
+app/
+├── main.py           # FastAPI 인스턴스, 라우터 등록
+├── config.py         # pydantic-settings 설정
+├── api/              # Router (엔드포인트)
+│   ├── deps.py       # 공용 의존성 (get_db, get_current_user)
+│   └── v1/
+├── services/         # Business logic
+├── models/           # SQLAlchemy 모델
+├── schemas/          # Pydantic DTO
+├── repositories/     # Data access
+└── core/             # DB, Security, Exceptions
+```
+
+#### Python (Django)
+```
+config/               # 프로젝트 설정 (settings, urls, wsgi)
+apps/
+└── {domain}/
+    ├── models.py     # Django ORM 모델
+    ├── serializers.py  # DRF 시리얼라이저
+    ├── views.py      # APIView / ViewSet
+    ├── services.py   # 비즈니스 로직
+    ├── repositories.py # 복잡한 쿼리
+    └── urls.py       # 앱별 URL
+common/               # 공용 유틸 (exceptions, permissions)
 ```
 
 ---
@@ -225,6 +257,63 @@ type TokenResponse struct {
     TokenType   string `json:"tokenType"`
     ExpiresIn   int64  `json:"expiresIn"`
 }
+```
+
+### Python (FastAPI)
+
+```python
+# Pydantic 스키마 분리 (Create/Response/Update)
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+    name: str
+
+class UserResponse(BaseModel):
+    id: int
+    email: str
+    name: str
+    model_config = ConfigDict(from_attributes=True)
+
+# FastAPI 의존성 주입
+@router.get("/users/me", response_model=UserResponse)
+async def get_me(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await user_service.get(db, current_user.id)
+
+# SQLAlchemy async — context manager 필수
+async with async_session() as session:
+    async with session.begin():
+        session.add(user)
+
+# 환경 설정 — pydantic-settings (os.environ 직접 접근 금지)
+class Settings(BaseSettings):
+    database_url: str
+    jwt_secret: str
+    model_config = SettingsConfigDict(env_file=".env")
+```
+
+> Python 상세 컨벤션: `python-project-structure.md`, `python-testing.md`, `python-dependency.md`, `python-patterns.md` 참조.
+
+### Python (Django)
+
+```python
+# views.py는 얇게 — 비즈니스 로직은 services.py로
+class UserViewSet(ModelViewSet):
+    serializer_class = UserSerializer
+
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = user_service.create_user(serializer.validated_data)
+        return Response(UserSerializer(user).data, status=201)
+
+# services.py — 비즈니스 로직
+def create_user(data: dict) -> User:
+    if User.objects.filter(email=data["email"]).exists():
+        raise DuplicateEmailError()
+    return User.objects.create(**data)
 ```
 
 ---

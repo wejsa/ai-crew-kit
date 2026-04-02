@@ -61,7 +61,6 @@ fi
 - `agent-planner` (기획)
 - `agent-docs` (문서화)
 - `agent-db-designer` (DB 설계)
-- `agent-devops` (인프라)
 
 필요 시 `project.json`의 `agents.enabled`에 추가하여 활성화할 수 있습니다.
 

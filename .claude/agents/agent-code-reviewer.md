@@ -161,6 +161,13 @@ function loadChecklists(domain) {
 | 의존성 | 순환 의존 없음, 적절한 추상화 | HIGH |
 | 계층 분리 | 책임 분리, 단일 책임 원칙 | MEDIUM |
 
+#### Python 특화 항목
+- FastAPI: API 응답에 `response_model` (Pydantic) 필수, dict 반환 금지 (CRITICAL)
+- FastAPI: 의존성 주입은 `Depends()` 패턴, 전역 인스턴스 금지 (HIGH)
+- Django: views.py에 비즈니스 로직 금지, services.py로 분리 (HIGH)
+- SQLAlchemy 세션은 context manager(`async with`) 필수 (CRITICAL)
+- async/sync 혼용 금지 — 하나의 모듈에서 일관성 유지 (WARNING)
+
 ### 4️⃣ 보안 관점
 
 **소스**: `_base/checklists/security-basic.md` + `{domain}/checklists/security.md`
@@ -180,6 +187,11 @@ function loadChecklists(domain) {
 - 카드번호 마스킹
 - Token Reuse Detection
 
+#### Python 특화 항목
+- `os.environ` 직접 접근 금지 → `pydantic-settings` 사용 (WARNING)
+- CORS `allow_origins=["*"]` 프로덕션 금지 (CRITICAL)
+- SQL raw query 시 `text()` + 파라미터 바인딩 필수 (CRITICAL)
+
 ### 5️⃣ 테스트 품질 관점
 
 **소스**: `_base/checklists/common.md` (테스트 섹션)
@@ -193,6 +205,12 @@ function loadChecklists(domain) {
 | 동시성 테스트 | 멀티스레드 안전성 | HIGH |
 | 통합 테스트 | 컴포넌트 간 상호작용 | MEDIUM |
 | 경계값 테스트 | 경계 조건 검증 | MEDIUM |
+
+#### Python 특화 항목
+- pytest fixture 격리 (테스트 간 상태 공유 금지) (HIGH)
+- async 테스트에 `pytest-asyncio` 사용 (WARNING)
+- API 테스트에 `httpx.AsyncClient` 사용 (WARNING)
+- DB fixture에 트랜잭션 롤백 패턴 적용 (HIGH)
 
 ---
 
