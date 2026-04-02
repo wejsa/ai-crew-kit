@@ -1,5 +1,5 @@
 {
-  "description": "project.json 스키마 마이그레이션 정의",
+  "description": "project.json 스키마 마이그레이션 + 신규 기능 안내 정의",
   "migrations": [
     {
       "from": "*",
@@ -16,6 +16,31 @@
           "path": "kitSource",
           "default": "${KIT_SOURCE}",
           "required": false
+        }
+      ]
+    },
+    {
+      "from": "*",
+      "to": "1.39.0",
+      "changes": [
+        {
+          "type": "add_field",
+          "path": "backlog.step.prLineLimit",
+          "default": null,
+          "required": false
+        }
+      ]
+    }
+  ],
+  "features": [
+    {
+      "version": "1.39.0",
+      "items": [
+        {
+          "title": "스텝별 PR 라인 제한 자동 조정",
+          "description": "/skill-plan이 스텝 특성(마이그레이션, 서비스 구현, 테스트 등)에 따라 prLineLimit을 자동 설정합니다.",
+          "action": "none",
+          "detail": "별도 설정 불필요. 다음 /skill-plan 실행 시 자동 적용됩니다."
         }
       ]
     }

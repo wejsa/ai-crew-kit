@@ -53,12 +53,12 @@ CLAUDE.md 워크트리 프로토콜 참조.
 계획에 따라 파일 생성/수정, 테스트 작성, 문서 업데이트(필요 시)
 
 ### 4. 라인 수 검증
-`project.json`의 `conventions.workflowProfile` 확인:
+**라인 제한 결정**: `step.prLineLimit` > `project.json conventions.prLineLimit` > 500 (폴백 체인)
 
-| 프로필 | 진행 | 경고 | 차단 |
-|--------|------|------|------|
-| standard | <300 | 300-500 / 500-700(강력) | >700 |
-| fast | <500 | 500-1000 | >1000 |
+| 프로필 | 진행 | 경고 | 강력 경고 | 차단 |
+|--------|------|------|----------|------|
+| standard | <limit×0.6 | limit×0.6~limit | limit~limit×1.4 | >limit×1.4 |
+| fast | <limit | limit~min(limit×2,1000) | — | >min(limit×2,1000) |
 
 ### 5. 빌드 & 테스트
 `project.json`의 `buildCommands` 우선 → 미설정 시 `techStack` 기반 폴백:

@@ -62,6 +62,11 @@ coverage/
 # Docker
 docker-compose.override.yml
 
-# Internal planning docs
-docs/roadmap-*.md
-docs/tier1-*.md
+# Internal planning docs — README에서 참조하는 6개만 추적, 나머지 제외
+docs/*
+!docs/getting-started.md
+!docs/skill-reference.md
+!docs/concepts.md
+!docs/workflow-guide.md
+!docs/customization.md
+!docs/upgrade-guide.md

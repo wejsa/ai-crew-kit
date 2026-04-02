@@ -213,6 +213,12 @@
           "items": { "type": "string" },
           "description": "스텝에서 수정하는 파일 목록"
         },
+        "prLineLimit": {
+          "type": "integer",
+          "minimum": 50,
+          "maximum": 1000,
+          "description": "스텝별 PR 라인 제한 (미설정 시 project.json conventions.prLineLimit 폴백)"
+        },
         "prNumber": {
           "type": ["integer", "null"],
           "description": "생성된 PR 번호"

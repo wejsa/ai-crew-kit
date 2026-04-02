@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.39.0] - 2026-04-02
+
+### Added
+- 스텝별 `prLineLimit` 오버라이드: skill-plan이 스텝 특성에 따라 자동 설정 (50~1000)
+  - 폴백 체인: step.prLineLimit > conventions.prLineLimit > 500
+  - 프로필별 동적 기준: standard limit×0.6/limit/limit×1.4, fast limit/limit×2
+- `skill-upgrade` 신규 기능 안내 (Step 15.5): 업그레이드 시 새 기능을 action별로 안내
+  - `migrations.json`에 `features` 배열 추가 (action: none/recommend/required)
+
+### Changed
+- `backlog.schema.json`: step 정의에 `prLineLimit` 필드 추가 (optional, minimum 50)
+- `skill-plan` §4: 스텝 분리 시 prLineLimit 자동 설정 가이드라인 (마이그레이션→100~200, 서비스→500~800, 테스트→700~1000)
+- `skill-impl` §4: 라인 검증 동적화 (고정 테이블 → 폴백 체인 + 비율 기반 산정)
+- `CLAUDE.md.tmpl`: 라인 제한 섹션 동적 테이블로 교체 + 자동 조정 안내
+
 ## [1.38.1] - 2026-04-01
 
 ### Added
