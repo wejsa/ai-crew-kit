@@ -1,12 +1,12 @@
 <div align="center">
 
-# AI Crew Kit v1.40.0
+# AI Crew Kit v1.41.0
 
 **도메인 선택 → 자동 셋업 → 에이전트 팀 즉시 가동**
 
 AI 에이전트 팀 기반 소프트웨어 개발 키트
 
-[![Version](https://img.shields.io/badge/version-v1.39.0-blue?style=flat-square)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v1.41.0-blue?style=flat-square)](./CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](./LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/wejsa/ai-crew-kit?style=flat-square)](https://github.com/wejsa/ai-crew-kit)
 [![Built with Claude Code](https://img.shields.io/badge/built_with-Claude_Code-blueviolet?style=flat-square)](https://claude.ai/download)
@@ -14,6 +14,8 @@ AI 에이전트 팀 기반 소프트웨어 개발 키트
 [빠른 시작](#-빠른-시작) · [도메인](#-지원-도메인) · [명령어](#-주요-명령어) · [문서](#-상세-문서)
 
 </div>
+
+> **프레임워크 철학** — AI Crew Kit은 **"어떻게 짜는지"가 아니라 "어떤 프로세스로 만드는지"**를 관리합니다. 코드 작성과 기술 판단은 Claude가 담당하고, 프레임워크는 워크플로우 자동화·품질 게이트·팀 컨벤션을 제공합니다. REST, WebSocket, GraphQL, gRPC 등 모든 프로토콜의 코드를 Claude가 작성할 수 있으며, 프레임워크는 그 과정의 품질을 보장합니다.
 
 ---
 

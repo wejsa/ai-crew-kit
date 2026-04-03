@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.41.0] - 2026-04-04
+
+### Added
+- 프레임워크 정체성 명시: "프로세스 관리 프레임워크"로서의 역할 경계 문서화
+  - CLAUDE.md.tmpl: `프레임워크 역할 경계` 섹션 — 프레임워크(워크플로우·품질게이트·컨벤션) vs Claude(코드작성·기술판단) 분리 명시
+  - README.md: 프레임워크 철학 한 문단 추가
+  - docs/concepts.md: `설계 철학: 프레임워크와 AI의 역할 분리` 섹션 — 분리 이유 3가지, 프레임워크가 하지 않는 것 목록
+- `security.md` 비-REST 프로토콜 보안 가이드: WebSocket(`wss://`, Origin 검증, 핸드셰이크 인증), SSE, gRPC 보안 요구사항
+- `skill-feature` Step 2.5 통신 방식 확인: 실시간 요구사항 감지 시 프로토콜(REST/WebSocket/SSE/gRPC) 선택 유도, spec에 통신방식 항목 반영
+
+### Fixed
+- TEMPLATE-ENGINE.md `ext_map` 버그: `backend:"none"` (프론트엔드 전용) 시 `.kt.tmpl` 폴백 → `None` 반환으로 수정
+- TEMPLATE-ENGINE.md `ext_map` Python 누락: `python-fastapi`, `python-django` → `.py.tmpl` 매핑 추가
+
 ## [1.40.0] - 2026-04-03
 
 ### Added

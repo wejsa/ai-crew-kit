@@ -599,6 +599,9 @@ CLAUDE.md 재생성 제안
 | spring-boot-java | `.java.tmpl` | `state-machine.java.tmpl` |
 | nodejs-typescript | `.ts.tmpl` | `state-machine.ts.tmpl` |
 | go | `.go.tmpl` | `state-machine.go.tmpl` |
+| python-fastapi | `.py.tmpl` | `state-machine.py.tmpl` |
+| python-django | `.py.tmpl` | `state-machine.py.tmpl` |
+| none (프론트엔드 전용) | — | 코드 템플릿 불필요 |
 
 **선택 로직:**
 ```python
@@ -612,11 +615,17 @@ def select_template(template_name: str, tech_stack: dict, domain: str) -> str:
     """
     backend = tech_stack.get("backend", "spring-boot-kotlin")
 
+    # backend="none"이면 코드 템플릿 불필요 (프론트엔드 전용 프로젝트)
+    if backend == "none":
+        return None
+
     ext_map = {
         "spring-boot-kotlin": ".kt.tmpl",
         "spring-boot-java": ".java.tmpl",
         "nodejs-typescript": ".ts.tmpl",
         "go": ".go.tmpl",
+        "python-fastapi": ".py.tmpl",
+        "python-django": ".py.tmpl",
     }
 
     ext = ext_map.get(backend, ".kt.tmpl")

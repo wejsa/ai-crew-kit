@@ -184,3 +184,11 @@ class CorsConfig : WebMvcConfigurer {
     }
 }
 ```
+
+## 비-REST 프로토콜 보안
+
+| 프로토콜 | 보안 요구사항 |
+|----------|-------------|
+| WebSocket | `wss://` 전용 (`ws://` 금지), 서버사이드 Origin 헤더 검증 필수, 핸드셰이크 시 인증 (쿠키 또는 첫 메시지 JWT) |
+| SSE | TLS 필수, 인증 토큰을 URL 쿼리 파라미터에 포함 금지 (헤더 사용) |
+| gRPC | TLS 채널 암호화 필수, 내부 서비스 간 mTLS 권장 |
