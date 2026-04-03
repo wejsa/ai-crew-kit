@@ -4,14 +4,14 @@
 
 **도메인 선택 → 자동 셋업 → 에이전트 팀 즉시 가동**
 
-AI 에이전트 팀 기반 소프트웨어 개발 키트
+AI 에이전트 팀 기반 소프트웨어 개발 프로세스 관리 프레임워크
 
 [![Version](https://img.shields.io/badge/version-v1.41.0-blue?style=flat-square)](./CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](./LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/wejsa/ai-crew-kit?style=flat-square)](https://github.com/wejsa/ai-crew-kit)
 [![Built with Claude Code](https://img.shields.io/badge/built_with-Claude_Code-blueviolet?style=flat-square)](https://claude.ai/download)
 
-[빠른 시작](#-빠른-시작) · [도메인](#-지원-도메인) · [명령어](#-주요-명령어) · [문서](#-상세-문서)
+[빠른 시작](#-빠른-시작) · [지원 스택](#-지원-기술-스택) · [도메인](#-지원-도메인) · [명령어](#-주요-명령어) · [문서](#-상세-문서)
 
 </div>
 
@@ -49,6 +49,19 @@ claude
 
 ---
 
+## 🛠 지원 기술 스택
+
+| 구분 | 스택 |
+|------|------|
+| **백엔드** | Spring Boot (Kotlin · Java), Node.js (TypeScript), Python (FastAPI · Django), Go |
+| **프론트엔드** | Next.js, React (Vite), Vue, Nuxt, Astro |
+| **데이터베이스** | MySQL, PostgreSQL, MongoDB |
+| **인프라** | Redis, RabbitMQ, Docker Compose |
+
+> 프레임워크는 기술 스택에 중립적입니다. 위 스택은 빌드/테스트 자동 감지와 컨벤션이 제공되는 목록이며, Claude는 이 외의 기술(WebSocket, GraphQL, gRPC, Elasticsearch 등)도 자유롭게 구현합니다.
+
+---
+
 ## 🌐 지원 도메인
 
 | 도메인 | 설명 | 기본 스택 | 컴플라이언스 |
@@ -77,7 +90,7 @@ claude
 | `/skill-report` | 프로젝트 메트릭 리포트 | "리포트 생성해줘" |
 | `/skill-health-check` | 코드베이스 건강 검진 | "헬스체크 해줘" |
 
-전체 23개 명령어와 자연어 매핑은 [스킬 레퍼런스](./docs/skill-reference.md)를 참조하세요.
+전체 명령어와 자연어 매핑은 [스킬 레퍼런스](./docs/skill-reference.md)를 참조하세요.
 
 ---
 
@@ -99,13 +112,13 @@ claude
 
 ## 💡 핵심 원칙
 
-> **Domain-Driven Kit** — 도메인 선택이 전체 키트 동작 결정
->
-> **Layered Override** — `_base` → `{domain}` → `project.json` 순서로 설정 적용
->
-> **Agent Orchestration** — PM이 워크플로우에 따라 에이전트 자동 분배
->
-> **Zero-Config Start** — `/skill-init` 한 번으로 즉시 가동
+| 원칙 | 설명 |
+|------|------|
+| **프로세스 관리** | 프레임워크는 워크플로우·품질 게이트·컨벤션을 담당하고, 코드 작성·기술 판단은 Claude가 담당 |
+| **Domain-Driven Kit** | 도메인 선택이 컨벤션, 체크리스트, 참고 문서 전체를 결정 |
+| **Layered Override** | `_base` → `{domain}` → `project.json` 순서로 설정 적용 |
+| **Agent Orchestration** | PM이 워크플로우에 따라 에이전트 자동 분배 |
+| **Zero-Config Start** | `/skill-init` 한 번으로 즉시 가동 |
 
 ---
 
@@ -115,10 +128,11 @@ claude
 |------|------|
 | [설치 및 시작하기](./docs/getting-started.md) | 설치 상세, 초기화 흐름, 온보딩, **첫 기능 만들기** |
 | [핵심 개념](./docs/concepts.md) | 도메인, 에이전트 팀, 디렉토리 구조, 실행 모델 |
-| [스킬 레퍼런스](./docs/skill-reference.md) | 22개 스킬 전체 목록, 자연어 매핑 |
+| [스킬 레퍼런스](./docs/skill-reference.md) | 23개 스킬 전체 목록, 자연어 매핑 |
 | [워크플로우 가이드](./docs/workflow-guide.md) | 자동 체이닝, 7가지 워크플로우, 품질 게이트, Git 전략 |
 | [도메인 확장](./docs/customization.md) | 참고자료/체크리스트 추가, 새 도메인 생성, Layered Override |
 | [프레임워크 업그레이드](./docs/upgrade-guide.md) | 업그레이드, 보존 항목, 롤백 |
+| [예제 프로젝트](./examples/) | fintech-gateway, ecommerce-shop 예제 |
 
 ---
 
@@ -129,7 +143,7 @@ claude
 | **필수** | [Claude Code](https://claude.ai/download) CLI |
 | **권장** | Git 2.30+ |
 
-> Node.js, Python 등 외부 런타임은 불필요합니다. Claude Code가 모든 것을 처리합니다.
+> 프레임워크 자체는 외부 런타임 없이 동작합니다. 프로젝트 빌드/테스트에 필요한 런타임(Node.js, Python, Go, JDK 등)은 선택한 기술 스택에 따라 별도 설치합니다.
 
 ---
 
