@@ -45,6 +45,20 @@
       "maturity": "stable"
     },
     {
+      "id": "healthcare",
+      "name": "헬스케어 / 의료",
+      "icon": "🏥",
+      "description": "PHI 보호, 진료기록, 처방, 환자 동의, 보험 청구 등 헬스케어 서비스 도메인",
+      "defaultStack": {
+        "backend": "spring-boot-kotlin",
+        "database": "postgresql",
+        "cache": "redis"
+      },
+      "compliance": ["HIPAA", "의료법", "개인정보보호법", "생명윤리법", "진료기록보존규정"],
+      "keywords": ["환자", "진료", "PHI", "처방", "EMR", "EHR", "HIPAA", "비식별화", "동의서", "감사로그", "보험청구", "응급", "patient", "prescription", "FHIR", "consent", "audit", "billing", "emergency", "appointment"],
+      "maturity": "stable"
+    },
+    {
       "id": "general",
       "name": "범용",
       "icon": "🔧",

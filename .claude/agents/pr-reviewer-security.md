@@ -76,6 +76,16 @@ domain 값은 호출 시 프롬프트에서 전달됩니다.
 - 개인정보 수집 동의 로직 누락 → CRITICAL
 - 청약 철회 불가 사유 미고지 → MAJOR
 
+### healthcare
+- PHI 평문 저장 (암호화 미적용) → CRITICAL
+- PHI 로그 출력 (환자명, 진료번호, 진단코드) → CRITICAL
+- PHI 비암호화 전송 (이메일/팩스) → CRITICAL
+- 환자-의료진 관계 미검증 PHI 접근 → CRITICAL
+- 감사 로그 미기록 (PHI 조회/수정/삭제) → CRITICAL
+- Break-the-Glass 사유 미기록 → MAJOR
+- 동의 없는 제3자 PHI 제공 → CRITICAL
+- BAA 없는 서브프로세서에 PHI 전달 → MAJOR
+
 ### general
 - 기본 관리자 비밀번호 미변경 (admin/admin) → CRITICAL
 - 디버그 모드 프로덕션 환경 활성화 → MAJOR

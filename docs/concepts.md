@@ -9,6 +9,7 @@
 | 🏦 **fintech** | 결제, 정산, 오픈뱅킹, 마이데이터 | Spring Boot + MySQL + Redis | PCI-DSS, 전자금융감독규정, 오픈뱅킹규정, 신용정보법 |
 | 🛒 **ecommerce** | 이커머스, 마켓플레이스, 구독 커머스 | Spring Boot + Next.js + MySQL + Redis | 전자상거래법, 소비자보호법, 통신판매중개의무 |
 | ☁️ **saas** | 멀티테넌시, 구독 결제, SaaS 플랫폼 | Spring Boot + PostgreSQL + Redis | GDPR, SOC2, 정보통신망법 |
+| 🏥 **healthcare** | PHI 보호, 진료기록, 처방, 보험 청구 | Spring Boot + PostgreSQL + Redis | HIPAA, 의료법, 생명윤리법 |
 | 🔧 **general** | 범용 프로젝트 | Spring Boot + MySQL | - |
 
 각 도메인에는 전용 **체크리스트**, **참고자료**, **코드 템플릿**이 포함됩니다.

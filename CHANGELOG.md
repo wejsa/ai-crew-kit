@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.43.0] - 2026-04-04
+
+### Added
+- **Healthcare 신규 도메인** — PHI 보호, 진료기록, 처방, 환자 동의, 보험 청구 전용 도메인
+  - `domain.json`: 10 keyword 그룹 (64 트리거), compliance 5개 (HIPAA, 의료법, 개인정보보호법, 생명윤리법, 진료기록보존규정), PostgreSQL 기본 스택
+  - docs/ 7개:
+    - `phi-data-handling.md`: PHI 18개 식별자, 비식별화(Safe Harbor/Expert Determination), 저장/전송/로깅 규칙, 보존/폐기 기간
+    - `access-control.md`: 역할 계층(System Admin→의사→간호사→약사→접수→환자), 접근 제어 매트릭스, 환자-의료진 관계 접근, Break-the-Glass(4시간 자동 만료), HL7 FHIR 리소스 매핑
+    - `audit-trail.md`: HIPAA Security Rule 감사, 필수 기록 이벤트 10종, 감사 로그 12 필드, 불변성(append-only), 보존 10년
+    - `consent-management.md`: 동의 상태머신(6 states, +denied), 동의 유형 4종, 철회 처리, 응급 예외, 미성년자 동의
+    - `prescription-flow.md`: 처방 상태머신(8 states, +expired), DUR 검증 7항목, 용량 검증, 마약류 특별 규정
+    - `appointment-flow.md`: 예약 상태머신(6 states), 접수/수납 플로우, No-show 처리
+    - `billing-claims.md`: 청구 상태머신(7 states, +rejected/appealed), 급여/비급여, 심사/삭감 대응
+  - checklists/ 3개:
+    - `security.md`: PHI 암호화, 로깅 금지, 접근 통제, Break-the-Glass, 전송 보안 (12 CRITICAL)
+    - `compliance.md`: HIPAA Privacy/Security Rule, 의료법, 개인정보보호법(민감정보 제23조), 생명윤리법, 진료기록 보존 (10 CRITICAL)
+    - `domain-logic.md`: 처방/예약/동의 상태 전이, DUR 약물 상호작용, 진료기록 무결성, 환자 식별 (8 CRITICAL)
+- `pr-reviewer-domain.md`: healthcare 중점 검토 항목 8개 (PHI 접근, 처방 전이, 동의 검증, 진료기록 무결성, 감사 로그)
+- `pr-reviewer-security.md`: healthcare 보안 검토 항목 8개 (PHI 평문 저장, 로그 출력, 비암호화 전송, 동의 없는 제공)
+- `project.schema.json`: domain enum에 "healthcare" 추가
+
 ## [1.42.0] - 2026-04-04
 
 ### Added

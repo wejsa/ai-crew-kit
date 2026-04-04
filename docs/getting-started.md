@@ -46,6 +46,7 @@ claude
     │       ├── 🏦 fintech (결제/정산/오픈뱅킹/마이데이터)
     │       ├── 🛒 ecommerce (이커머스/마켓플레이스/구독)
     │       ├── ☁️ saas (멀티테넌트/구독결제/RBAC)
+    │       ├── 🏥 healthcare (PHI/진료기록/처방/HIPAA)
     │       └── 🔧 general (범용)
     │
     ├── 4. 기술 스택 선택 (Backend, DB, Cache 등)
