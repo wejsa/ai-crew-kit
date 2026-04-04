@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.41.1] - 2026-04-04
+
+### Added
+- ecommerce 도메인 마켓플레이스 확장
+  - `marketplace.md`: 셀러 상태머신(6 states), 멀티셀러 주문 분리, 서브오더 상태머신, 커미션 모델, 셀러 등급 체계
+  - `seller-settlement.md`: 정산 상태머신(8 states), 정산 주기(D+N), 정산 계산 구조, 반품/환불 처리, 정산 리포트
+  - `subscription-commerce.md`: 구독 상태머신(6 states), 결제 주기, 결제 실패 재시도(3회), 프로레이션 계산
+- ecommerce 체크리스트 확장
+  - `domain-logic.md`: 마켓플레이스 섹션(CRITICAL 4건), 구독 커머스 섹션(CRITICAL 1건)
+  - `compliance.md`: 통신판매중개업자 의무 섹션(CRITICAL 3건)
+- ecommerce `domain.json` keywords 2개 추가 (marketplace, subscription), compliance에 통신판매중개업법 추가
+
 ## [1.41.0] - 2026-04-04
 
 ### Added

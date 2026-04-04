@@ -100,7 +100,29 @@ fun updateStock(id: String, quantity: Int) {
 | 환불 금액 계산 | 할인 배분 고려한 정확한 환불액 | CRITICAL |
 | 쿠폰 복원 | 조건 충족 시 쿠폰 재발급 | MINOR |
 
+## 마켓플레이스
+
+| 항목 | 설명 | 심각도 |
+|------|------|--------|
+| 셀러간 재고 분리 | 셀러 A 재고 변동이 셀러 B에 영향 없음 | CRITICAL |
+| 서브오더 분리 | 멀티셀러 주문 시 셀러별 서브오더 생성 | CRITICAL |
+| 정산 분리 | 플랫폼 수수료와 셀러 정산액 분리 계산 | CRITICAL |
+| 수수료 BigDecimal | 수수료 계산 시 BigDecimal + HALF_UP | MAJOR |
+| 셀러 상태 전이 | 허용된 상태 전이만 수행 (marketplace.md 참조) | MAJOR |
+| 정산 상태 전이 | 허용된 상태 전이만 수행 (seller-settlement.md 참조) | MAJOR |
+| 크로스셀러 접근 방지 | 셀러가 다른 셀러의 주문/정산 데이터 접근 불가 | CRITICAL |
+
+## 구독 커머스
+
+| 항목 | 설명 | 심각도 |
+|------|------|--------|
+| 구독 상태 전이 | 허용된 상태 전이만 수행 (subscription-commerce.md 참조) | CRITICAL |
+| 결제 재시도 한도 | 최대 3회 재시도 후 canceled 전이 | MAJOR |
+| 프로레이션 BigDecimal | 일할 계산 시 BigDecimal + HALF_UP | MAJOR |
+| 빌링키 만료 처리 | 빌링키 만료 시 결제 실패 → 사용자 알림 | MAJOR |
+| 일시정지 기한 | 연속 90일 초과 시 자동 해지 | MINOR |
+
 ## 사용 방법
 
 이 체크리스트는 이커머스 도메인 코드 리뷰 시 자동으로 적용됩니다.
-재고 동시성, 상태 전이 오류는 CRITICAL로 즉시 수정이 필요합니다.
+재고 동시성, 상태 전이 오류, 크로스셀러 접근은 CRITICAL로 즉시 수정이 필요합니다.

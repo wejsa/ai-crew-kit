@@ -2,8 +2,8 @@
   "id": "ecommerce",
   "name": "이커머스",
   "icon": "🛒",
-  "version": "1.0.0",
-  "description": "상품, 주문, 재고, 배송, 프로모션 등 이커머스 서비스 도메인",
+  "version": "1.1.0",
+  "description": "상품, 주문, 재고, 배송, 프로모션, 마켓플레이스, 구독 커머스 도메인",
   "defaultStack": {
     "backend": "spring-boot-kotlin",
     "frontend": "nextjs",
@@ -12,7 +12,7 @@
     "messageQueue": "rabbitmq",
     "infrastructure": "docker-compose"
   },
-  "compliance": ["전자상거래법", "소비자보호법", "개인정보보호법"],
+  "compliance": ["전자상거래법", "소비자보호법", "개인정보보호법", "통신판매중개업법"],
   "keywords": {
     "order": {
       "triggers": ["주문", "결제", "구매", "체크아웃", "장바구니"],
@@ -37,6 +37,14 @@
     "member": {
       "triggers": ["회원", "회원가입", "로그인", "마이페이지", "탈퇴"],
       "docs": ["member.md"]
+    },
+    "marketplace": {
+      "triggers": ["마켓플레이스", "셀러", "판매자", "입점", "수수료", "멀티셀러"],
+      "docs": ["marketplace.md", "seller-settlement.md"]
+    },
+    "subscription": {
+      "triggers": ["구독", "정기배송", "정기결제", "구독커머스", "빌링"],
+      "docs": ["subscription-commerce.md"]
     }
   },
   "errorCodePrefix": "EC",
