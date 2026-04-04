@@ -107,7 +107,7 @@ domains/_base/                 ← 공통 기본값
 │   └── checklists/         # 공통 체크리스트
 ├── fintech/
 │   ├── domain.json         # 도메인 설정
-│   ├── docs/               # 참고자료 (7개)
+│   ├── docs/               # 참고자료 (9개)
 │   │   ├── payment-flow.md
 │   │   ├── token-auth.md
 │   │   └── ...
