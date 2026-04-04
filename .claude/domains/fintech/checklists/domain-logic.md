@@ -145,7 +145,8 @@ fun cancelPayment(paymentId: String): Payment {
 | 전송요구 상태 전이 | 허용된 상태 전이만 수행 (mydata.md 참조) | CRITICAL |
 | 동의 범위 검증 | 수집 데이터가 동의 범위 내인지 확인 | CRITICAL |
 | 만료 데이터 삭제 | 동의 유효기간 만료 데이터 자동 삭제 배치 | MAJOR |
-| 전송 실패 재시도 | 최대 3회 재시도 후 expired 전이 | MAJOR |
+| 전송 실패 재시도 | 최대 3회 재시도 후 failed 전이 (expired는 동의 유효기간 만료 전용) | MAJOR |
+| 재동의 검증 | 수집 범위 변경 시 재동의 획득 확인 | MAJOR |
 
 ## 사용 방법
 

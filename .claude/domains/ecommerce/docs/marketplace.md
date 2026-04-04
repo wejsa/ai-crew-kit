@@ -8,7 +8,8 @@
 
 ```
 pending → under_review → active → suspended → terminated
-                ↘ rejected           ↗ (위반 시)
+              ↘ rejected    ↓         ↗ (위반 시)
+              (재신청→pending) ↘ terminated (자진 탈퇴/계약 만료)
 ```
 
 | 상태 | 설명 | 전이 조건 |
@@ -61,6 +62,19 @@ created → paid → shipping → delivered → confirmed → settled
                                 ↘ return_requested → returned → refunded
 ```
 
+#### 서브오더 허용 전이
+
+| From | To | 조건 |
+|------|----|------|
+| created | paid | 원 주문 결제 완료 |
+| paid | shipping | 셀러 발송 처리 |
+| shipping | delivered | 배송 완료 확인 |
+| delivered | confirmed | 구매 확정 (수동 또는 자동 N일 후) |
+| delivered | return_requested | 구매자 반품 요청 |
+| confirmed | settled | 정산 완료 |
+| return_requested | returned | 반품 수거 완료 |
+| returned | refunded | 환불 처리 완료 |
+
 각 서브오더는 **원 주문과 독립적으로** 상태가 전이됩니다. 원 주문의 상태는 서브오더 상태의 집계입니다:
 - 모든 서브오더 delivered → 원 주문 delivered
 - 일부 서브오더 shipping → 원 주문 partially_shipped
@@ -78,8 +92,10 @@ created → paid → shipping → delivered → confirmed → settled
 
 ```
 판매가 × 수수료율 = 플랫폼 수수료
-판매가 - 플랫폼 수수료 - 배송비(셀러 부담 시) = 셀러 정산액
+판매가 - 플랫폼 수수료 - 결제 수수료(PG 분담분) - 배송비(셀러 부담 시) = 셀러 정산액
 ```
+
+> 상세 정산 계산(프로모션 분담금, 반품 차감 등)은 `seller-settlement.md` 참조
 
 - 모든 금액 계산은 **BigDecimal** 사용 필수
 - 수수료율은 소수점 2자리까지 (예: 12.50%)

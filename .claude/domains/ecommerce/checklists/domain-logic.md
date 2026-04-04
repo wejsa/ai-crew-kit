@@ -110,6 +110,7 @@ fun updateStock(id: String, quantity: Int) {
 | 수수료 BigDecimal | 수수료 계산 시 BigDecimal + HALF_UP | MAJOR |
 | 셀러 상태 전이 | 허용된 상태 전이만 수행 (marketplace.md 참조) | MAJOR |
 | 정산 상태 전이 | 허용된 상태 전이만 수행 (seller-settlement.md 참조) | MAJOR |
+| 정산 조정 후 재확정 | adjusted 상태에서 confirmed로 재전이 경로 존재 확인 | CRITICAL |
 | 크로스셀러 접근 방지 | 셀러가 다른 셀러의 주문/정산 데이터 접근 불가 | CRITICAL |
 
 ## 구독 커머스
@@ -120,7 +121,7 @@ fun updateStock(id: String, quantity: Int) {
 | 결제 재시도 한도 | 최대 3회 재시도 후 canceled 전이 | MAJOR |
 | 프로레이션 BigDecimal | 일할 계산 시 BigDecimal + HALF_UP | MAJOR |
 | 빌링키 만료 처리 | 빌링키 만료 시 결제 실패 → 사용자 알림 | MAJOR |
-| 일시정지 기한 | 연속 90일 초과 시 자동 해지 | MINOR |
+| 일시정지 자동 해지 | 연속 90일 초과 시 paused→canceled 자동 전이 | MAJOR |
 
 ## 사용 방법
 

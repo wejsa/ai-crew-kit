@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.41.3] - 2026-04-04
+
+### Fixed
+- ecommerce 도메인 리뷰 수정 (ERROR 6건, WARN 8건)
+  - `marketplace.md`: 셀러 상태머신 다이어그램 수정 (active→terminated, rejected 노드 누락), 서브오더 허용 전이 테이블 추가, 수수료 공식에 PG 수수료 추가
+  - `seller-settlement.md`: adjusted 상태 탈출 경로 추가 (adjusted→confirmed), 허용 전이 테이블 추가, 프로모션 분담금 규칙 명확화
+  - `subscription-commerce.md`: 상태머신 다이어그램 전면 재작성, paused→canceled(90일 초과) 전이 추가, created→canceled(최초 결제 실패) 전이 추가, 재시도 횟수 명확화 (3회 재시도=총 4회 시도)
+  - `domain-logic.md`: adjusted 재확정 체크리스트 항목 CRITICAL 추가, 일시정지 기한 MINOR→MAJOR 상향
+  - `compliance.md`: 분쟁 해결 MAJOR→CRITICAL 상향, 판매자 신원 확인 정부 등록부 대조 추가, 통신판매중개업법→전자상거래법(통신판매중개의무) 명칭 수정
+  - `domain.json`: compliance 명칭 수정, marketplace에 정산 트리거 추가, subscription에 일시정지/재개/프로레이션/일할계산 트리거 추가
+- fintech 도메인 리뷰 수정 (ERROR 5건, WARN 7건)
+  - `open-banking.md`: canceled 상태 테이블 정의 추가, 종료 상태 명시, 에러 코드 A0400~A0899 예약 대역 추가, 이체 API(출금/입금) SLA 5초 추가, 수취인→예금주 용어 통일
+  - `mydata.md`: 동의 철회 규칙 명확화 (즉시 전송 중단 + 5영업일 이내 삭제)
+  - `compliance.md`: 동의 철회 "즉시"→"즉시 전송 중단 + 5영업일 이내 삭제" 수정, 타임아웃 SLA 상세화, 동의 이력 5년 보존 항목 추가
+  - `domain-logic.md`: 전송 실패 후 expired→failed 상태 수정 (expired는 동의 유효기간 만료 전용), 재동의 검증 항목 추가
+  - `domain.json`: open-banking 트리거에 이체 추가
+
+### Changed
+- README.md: 도메인 테이블에 오픈뱅킹/마이데이터/마켓플레이스/구독 커머스 반영, 컴플라이언스 확장 표시
+
 ## [1.41.2] - 2026-04-04
 
 ### Added

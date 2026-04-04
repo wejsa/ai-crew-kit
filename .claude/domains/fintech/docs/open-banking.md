@@ -61,7 +61,9 @@
 |-----|------|-------------|
 | /account/balance/fin_num | 잔액 조회 | 3초 |
 | /account/transaction_list/fin_num | 거래내역 조회 | 5초 |
-| /account/holder/fin_num | 수취인 조회 | 3초 |
+| /account/holder/fin_num | 수취인(예금주) 조회 | 3초 |
+| /transfer/withdraw/fin_num | 출금이체 | 5초 |
+| /transfer/deposit/fin_num | 입금이체 | 5초 |
 
 ### 호출 규칙
 
@@ -95,11 +97,12 @@ requested → withdrawn → deposited → completed
 | requested | 이체 요청 접수 | 출금이체 API 호출 |
 | withdrawn | 출금 완료 | 입금이체 API 호출 |
 | deposited | 입금 완료 | 이체 완료 처리 |
-| completed | 이체 완료 | — |
+| completed | 이체 완료 (종료 상태) | — |
 | withdraw_failed | 출금 실패 | 사유 코드 확인 → 재시도 또는 취소 |
+| canceled | 이체 취소 (종료 상태) | 출금 실패 후 재시도 포기 시 |
 | deposit_failed | 입금 실패 | 출금 원복(환불) 처리 |
 | refunding | 환불 진행 중 | 출금 원복 API 호출 |
-| refunded | 환불 완료 | — |
+| refunded | 환불 완료 (종료 상태) | — |
 
 ### 이체 필수 검증
 
@@ -119,6 +122,7 @@ requested → withdrawn → deposited → completed
 | A0100~A0199 | 인증/권한 오류 | 토큰 갱신 또는 재인증 |
 | A0200~A0299 | 계좌 오류 | 계좌 상태 확인 |
 | A0300~A0399 | 한도 초과 | 한도 안내 |
+| A0400~A0899 | 예약 대역 (현재 미사용) | 향후 확장용, 수신 시 시스템 오류로 처리 |
 | A0900~A0999 | 시스템 오류 | 재시도 후 장애 리포트 |
 
 ## 참고사항

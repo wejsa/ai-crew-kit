@@ -9,7 +9,7 @@
 ```
 pending → calculated → confirmed → transferred → completed
                           ↘ disputed → resolved → confirmed
-                                                 ↘ adjusted
+                                                 ↘ adjusted → confirmed
 ```
 
 | 상태 | 설명 | 전이 조건 |
@@ -22,6 +22,20 @@ pending → calculated → confirmed → transferred → completed
 | adjusted | 정산액 조정 | 이의 인정 시 재산출 |
 | transferred | 이체 완료 | 지급 배치 실행 |
 | completed | 정산 완료 | 이체 확인 + 세금계산서 발행 |
+
+### 허용 전이
+
+| From | To | 조건 |
+|------|----|------|
+| pending | calculated | 정산 배치 실행 (D+N 도래) |
+| calculated | confirmed | 셀러 이의 없음 (이의 제기 기한 경과) |
+| confirmed | transferred | 지급 배치 실행 |
+| transferred | completed | 이체 확인 + 세금계산서 발행 |
+| confirmed | disputed | 셀러 이의 제기 |
+| disputed | resolved | 운영팀 검토 완료 (이의 기각) |
+| disputed | adjusted | 운영팀 검토 완료 (이의 인정, 재산출) |
+| resolved | confirmed | 기각 확정 → 원래 정산액 유지 |
+| adjusted | confirmed | 재산출 완료 → 조정된 정산액으로 확정 |
 
 ## 정산 주기
 
@@ -38,7 +52,7 @@ pending → calculated → confirmed → transferred → completed
 총 판매액 (서브오더 합계)
   - 플랫폼 수수료 (카테고리별 × 등급 할인)
   - 결제 수수료 (PG 수수료 분담분)
-  - 프로모션 분담금 (플랫폼 주도 할인의 셀러 부담분)
+  - 프로모션 분담금 (플랫폼 주도 할인의 셀러 부담분, 프로모션 계약에 따라 0~100%)
   + 배송비 수취분 (구매자 부담 배송비 중 셀러 몫)
   - 반품/환불 차감분 (정산 기간 내 발생한 환불)
   = 셀러 정산액

@@ -7,10 +7,13 @@
 ## 구독 상태 머신
 
 ```
-created → active → paused → active (재개)
-              ↘ past_due → active (결제 성공)
-              ↘ past_due → canceled (결제 실패 N회)
-              ↘ canceled → expired (유예 기간 종료)
+created → active ⇄ paused (일시정지/재개)
+  ↘          ↓         ↘ canceled (90일 초과)
+  canceled   past_due       ↓
+ (최초결제실패) ↓         expired (유예 30일 종료)
+             active (재결제 성공)
+             ↓
+             canceled (재시도 3회 실패) → expired
 ```
 
 | 상태 | 설명 | 전이 조건 |
@@ -27,12 +30,14 @@ created → active → paused → active (재개)
 | From | To | 조건 |
 |------|----|------|
 | created | active | 최초 결제 성공 |
+| created | canceled | 최초 결제 실패 (빌링키 오류 등) |
 | active | paused | 사용자 일시정지 요청 |
 | active | past_due | 정기 결제 실패 |
 | active | canceled | 사용자 해지 요청 |
 | paused | active | 사용자 재개 요청 |
+| paused | canceled | 일시정지 90일 초과 (자동 해지) |
 | past_due | active | 재시도 결제 성공 |
-| past_due | canceled | 재시도 3회 실패 |
+| past_due | canceled | 재시도 3회 실패 (최초 실패 포함 총 4회 시도) |
 | canceled | expired | 유예 기간(30일) 종료 |
 
 ## 결제 주기
@@ -46,12 +51,13 @@ created → active → paused → active (재개)
 
 ### 결제 실패 재시도
 
-| 재시도 | 시점 | 행동 |
-|--------|------|------|
-| 1차 | 실패 후 1일 | 자동 재시도 |
-| 2차 | 실패 후 3일 | 자동 재시도 + 이메일 알림 |
-| 3차 | 실패 후 7일 | 자동 재시도 + SMS 알림 |
-| 실패 확정 | 3차 실패 | canceled 전이, 배송 중단 |
+| 시도 | 시점 | 행동 |
+|------|------|------|
+| 최초 결제 | 결제 예정일 | 정기 결제 시도 → 실패 시 past_due 전이 |
+| 재시도 1차 | 최초 실패 후 +1일 | 자동 재시도 |
+| 재시도 2차 | 최초 실패 후 +3일 | 자동 재시도 + 이메일 알림 |
+| 재시도 3차 | 최초 실패 후 +7일 | 자동 재시도 + SMS 알림 |
+| 실패 확정 | 3차 재시도 실패 | canceled 전이 (총 4회 시도), 배송 중단 |
 
 ## 정기 배송 관리
 

@@ -12,7 +12,7 @@
     "messageQueue": "rabbitmq",
     "infrastructure": "docker-compose"
   },
-  "compliance": ["전자상거래법", "소비자보호법", "개인정보보호법", "통신판매중개업법"],
+  "compliance": ["전자상거래법", "소비자보호법", "개인정보보호법", "전자상거래법(통신판매중개의무)"],
   "keywords": {
     "order": {
       "triggers": ["주문", "결제", "구매", "체크아웃", "장바구니"],
@@ -39,11 +39,11 @@
       "docs": ["member.md"]
     },
     "marketplace": {
-      "triggers": ["마켓플레이스", "셀러", "판매자", "입점", "수수료", "멀티셀러"],
+      "triggers": ["마켓플레이스", "셀러", "판매자", "입점", "수수료", "멀티셀러", "정산"],
       "docs": ["marketplace.md", "seller-settlement.md"]
     },
     "subscription": {
-      "triggers": ["구독", "정기배송", "정기결제", "구독커머스", "빌링"],
+      "triggers": ["구독", "정기배송", "정기결제", "구독커머스", "빌링", "일시정지", "재개", "프로레이션", "일할계산"],
       "docs": ["subscription-commerce.md"]
     }
   },
