@@ -34,6 +34,16 @@ pending → under_review → active → suspended → terminated
 | suspended | terminated | 시정 기한 초과 |
 | active | terminated | 셀러 자진 탈퇴 또는 계약 만료 |
 
+### 셀러 상태 변경 시 서브오더 처리
+
+| 셀러 상태 | 신규 주문 | 진행 중 서브오더 | 정산 |
+|-----------|----------|----------------|------|
+| active | 허용 | 정상 처리 | 정상 |
+| suspended | 차단 | 배송 완료까지 허용 (신규 발송 차단) | 보류 (HOLD) |
+| terminated | 차단 | 플랫폼 직접 이행 또는 강제 환불 | 잔여 정산 후 종료 |
+
+> **terminated 전이 선행 조건**: 진행 중 서브오더(created~shipping)가 있으면 terminated 전이가 차단됩니다. 모든 서브오더가 종료 상태(confirmed, returned, refunded)에 도달해야 terminated가 가능합니다.
+
 ## 멀티셀러 주문 분리
 
 하나의 주문에 여러 셀러의 상품이 포함되면 **셀러별 서브오더**로 분리합니다.
@@ -67,7 +77,9 @@ created → paid → shipping → delivered → confirmed → settled
 | From | To | 조건 |
 |------|----|------|
 | created | paid | 원 주문 결제 완료 |
+| created | cancelled | 원 주문 결제 취소 또는 타임아웃 |
 | paid | shipping | 셀러 발송 처리 |
+| paid | cancel_requested | 발송 전 취소 요청 |
 | shipping | delivered | 배송 완료 확인 |
 | delivered | confirmed | 구매 확정 (수동 또는 자동 N일 후) |
 | delivered | return_requested | 구매자 반품 요청 |

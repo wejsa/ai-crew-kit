@@ -72,5 +72,14 @@
       "keywords": [],
       "maturity": "stable"
     }
-  ]
+  ],
+  "keywordPolicy": {
+    "resolution": "active-domain-first",
+    "description": "키워드 충돌 시 현재 활성 도메인의 키워드가 우선합니다. 활성 도메인이 없으면 가장 구체적인 키워드 매칭 도메인을 선택합니다.",
+    "knownOverlaps": [
+      { "keyword": "결제", "domains": ["ecommerce", "fintech", "saas"], "note": "ecommerce=주문결제, fintech=PG/카드결제, saas=구독결제" },
+      { "keyword": "정산", "domains": ["ecommerce", "fintech"], "note": "ecommerce=셀러정산, fintech=가맹점정산" },
+      { "keyword": "구독", "domains": ["ecommerce", "saas"], "note": "ecommerce=정기배송, saas=SaaS플랜" }
+    ]
+  }
 }

@@ -1,0 +1,11 @@
+{
+  "description": "SaaS 도메인 헬스체크 카테고리 (가중치 오버라이드)",
+  "categories": {
+    "doc-sync": { "weight": 20 },
+    "state-integrity": { "weight": 15 },
+    "security": { "weight": 15 },
+    "agent-config": { "weight": 10 },
+    "tenant-isolation": { "weight": 40, "failCap": 30, "description": "테넌트 격리, RLS, 크로스테넌트 방지" }
+  },
+  "thresholds": { "HEALTHY": 90, "NEEDS_ATTENTION": 70, "AT_RISK": 50, "CRITICAL": 0 }
+}

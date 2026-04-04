@@ -37,6 +37,8 @@ pending → calculated → confirmed → transferred → completed
 | resolved | confirmed | 기각 확정 → 원래 정산액 유지 |
 | adjusted | confirmed | 재산출 완료 → 조정된 정산액으로 확정 |
 
+> **지급 배치 제외 규칙**: 이체 배치(confirmed → transferred) 실행 시, `disputed` 상태인 건은 반드시 제외합니다. 이체 직전 상태 재확인으로 경합 조건을 방지합니다.
+
 ## 정산 주기
 
 | 주기 | 설명 | 적용 대상 |

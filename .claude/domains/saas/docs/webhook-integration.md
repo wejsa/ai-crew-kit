@@ -40,7 +40,7 @@ enabled → disabled (사용자 비활성화)
 |------|------|
 | 최소 1회 배달 | at-least-once 보장 (수신 측 멱등성 필요) |
 | 타임아웃 | 5초 이내 HTTP 2xx 응답 필요 |
-| 재시도 | 실패 시 exponential backoff (1분, 5분, 30분, 2시간, 24시간) |
+| 재시도 | 실패 시 progressive backoff (1분, 5분, 30분, 2시간, 24시간) |
 | 최대 재시도 | 5회 재시도 후 이벤트 DROP + 로그 기록 |
 | 연속 실패 | 10회 연속 실패 시 웹훅 suspended + 테넌트 Admin 알림 |
 

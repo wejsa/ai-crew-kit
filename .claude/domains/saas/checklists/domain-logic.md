@@ -62,7 +62,7 @@ SaaS 비즈니스 로직 검증 체크리스트입니다.
 
 | 항목 | 설명 | 심각도 |
 |------|------|--------|
-| 배달 재시도 | 실패 시 exponential backoff 5회 재시도 | MAJOR |
+| 배달 재시도 | 실패 시 progressive backoff 5회 재시도 | MAJOR |
 | 서명 검증 | HMAC-SHA256 서명 생성, timestamp 5분 이내 | MAJOR |
 | 페이로드 PII 금지 | 웹훅 페이로드에 개인정보 포함 금지 (ID만 전달) | MAJOR |
 | 연속 실패 suspended | 10회 연속 실패 시 웹훅 자동 비활성화 | MINOR |

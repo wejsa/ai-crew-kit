@@ -280,6 +280,10 @@ enum class PaymentStatus {
 }
 ```
 
+> **fintech 도메인 연동 시**: fintech PG Gateway와 연동하는 프로젝트에서는 결제 상태 매핑이 필요합니다.
+> PENDING→INITIATED, COMPLETED→CAPTURED, CANCELLED→CANCELLED, FAILED→FAILED.
+> 상세 결제 상태(AUTHORIZED/CAPTURED 분리)는 [fintech 도메인](../../fintech/docs/payment-flow.md)을 참조하세요.
+
 ## 참고사항
 
 - PG사 결제창은 보안상 iframe이 아닌 리다이렉트 방식 권장

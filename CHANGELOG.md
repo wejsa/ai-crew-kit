@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.43.2] - 2026-04-05
+
+### Added
+- **에러 코드 체계** — ecommerce(29코드), saas(25코드), healthcare(26코드) error-codes.json 신규
+- **헬스체크 카테고리** — ecommerce(inventory-consistency), saas(tenant-isolation), healthcare(phi-protection) health/_category.json 신규
+- **키워드 충돌 해소** — _registry.json에 keywordPolicy 추가 (결제/정산/구독 3건 충돌 문서화)
+
+### Fixed
+- **도메인 시뮬레이션 B등급 이슈 수정** — 상태 머신 엣지 케이스, 컴플라이언스, 크로스도메인 개선
+  - **ecommerce**: 셀러 terminated 서브오더 처리 정책, 서브오더 created→cancelled/paid→cancel_requested 전이 추가, 정산 disputed 이체 배치 제외 규칙, 구독 적용 범위 명시, fintech 결제 매핑 참조
+  - **fintech**: FDS 심각도 MAJOR→CRITICAL, 제3자 제공 심각도 CRITICAL 통일, 마이데이터 토큰 로깅 금지 항목 추가
+  - **saas**: 구독 canceled→active 복구 전이 추가, 인보이스 전이 검증, progressive backoff 용어 수정, 제3자 제공 CRITICAL 통일, 구독 적용 범위 명시
+  - **healthcare**: 예약 이중 예약 방지 제약 조건 추가
+
 ## [1.43.1] - 2026-04-05
 
 ### Fixed

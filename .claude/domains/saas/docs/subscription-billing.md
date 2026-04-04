@@ -1,5 +1,7 @@
 # 구독 결제
 
+> **적용 범위**: 이 구독 모델은 **SaaS 서비스 접근 과금**(플랜 기반 기능/자원 제한) 전용입니다. 물리적 상품 정기 배송은 [이커머스 도메인](../../ecommerce/docs/subscription-commerce.md)을 참조하세요.
+
 ## 개요
 
 SaaS 플랫폼의 구독 과금 모델, 상태 관리, 플랜 변경, 인보이스를 정의합니다. 물리적 상품 정기 배송(ecommerce 구독 커머스)과 구분되는 서비스 접근 기반 구독입니다.
@@ -48,6 +50,7 @@ trialing → active ⇄ past_due → canceled → terminated
 | past_due | canceled | 재시도 3회 실패 (총 4회 시도) |
 | paused | active | 사용자 재개 요청 + 결제 성공 |
 | paused | canceled | 일시정지 90일 초과 |
+| canceled | active | 유예 기간 내 해지 철회 + 결제 성공 |
 | canceled | terminated | 유예 기간 종료 (현재 결제 주기 끝) |
 
 ## 결제 주기
