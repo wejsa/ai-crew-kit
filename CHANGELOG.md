@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.41.2] - 2026-04-04
+
+### Added
+- fintech 도메인 오픈뱅킹/마이데이터 확장
+  - `open-banking.md`: 이용기관 등록, 사용자 인증(OAuth 2.0), 토큰 관리, 계좌 조회/이체 플로우, 이체 상태머신(8 states), 에러 코드 대역
+  - `mydata.md`: 전송요구 상태머신(8 states), 데이터 수집 범위, 동의 관리, 데이터 보관/폐기 규칙, API 규격
+- fintech 체크리스트 확장
+  - `compliance.md`: 오픈뱅킹 규정(CRITICAL 4건), 마이데이터 규정(CRITICAL 3건)
+  - `domain-logic.md`: 오픈뱅킹 연동(CRITICAL 3건), 마이데이터 연동(CRITICAL 2건)
+- fintech `domain.json` keywords 2개 추가 (open-banking, mydata), compliance에 오픈뱅킹규정·신용정보법 추가
+
 ## [1.41.1] - 2026-04-04
 
 ### Added
