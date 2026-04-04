@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.42.0] - 2026-04-04
+
+### Added
+- **SaaS 신규 도메인** — 멀티테넌시, 구독 결제, 사용량 과금 등 SaaS 플랫폼 전용 도메인
+  - `domain.json`: 8 keyword 그룹 (52 트리거), compliance 4개 (GDPR, 개인정보보호법, SOC2, 정보통신망법), PostgreSQL 기본 스택
+  - docs/ 6개:
+    - `tenant-isolation.md`: 테넌트 격리 전략(DB/스키마/RLS), 테넌트 상태머신(4 states), RBAC 역할 계층, API 키 관리, 리전 데이터 레지던시
+    - `subscription-billing.md`: 구독 상태머신(7 states), 과금 모델 5종(flat/seat/usage/tiered/hybrid), 프로레이션, 인보이스
+    - `onboarding-provisioning.md`: 가입/프로비저닝 플로우, 트라이얼 관리, 셀프서비스 설정
+    - `data-lifecycle.md`: 데이터 분류, GDPR 삭제권/이동권, 테넌트 오프보딩(90일 보존), 감사 로그 스키마
+    - `usage-metering.md`: 사용량 미터링, 쿼터(소프트/하드), 초과 과금, 피처 게이팅
+    - `webhook-integration.md`: 테넌트 웹훅 설정, at-least-once 배달, HMAC-SHA256 서명 검증
+  - checklists/ 3개:
+    - `tenant-security.md`: 테넌트 격리 14 CRITICAL, 크로스테넌트 방지, 세션 격리
+    - `compliance.md`: GDPR/PIPA/SOC2/정보통신망법, 감사 로그 필수 필드, 데이터 보존/폐기
+    - `domain-logic.md`: 구독 상태 전이, 과금 BigDecimal, 프로레이션, 미터링, 피처 게이팅, Noisy Neighbor 방지
+
 ## [1.41.3] - 2026-04-04
 
 ### Fixed

@@ -31,6 +31,20 @@
       "maturity": "stable"
     },
     {
+      "id": "saas",
+      "name": "SaaS / B2B",
+      "icon": "☁️",
+      "description": "멀티테넌시, 구독 결제, 사용량 과금, RBAC, 웹훅 등 SaaS 플랫폼 도메인",
+      "defaultStack": {
+        "backend": "spring-boot-kotlin",
+        "database": "postgresql",
+        "cache": "redis"
+      },
+      "compliance": ["GDPR", "개인정보보호법", "SOC2", "정보통신망법"],
+      "keywords": ["테넌트", "멀티테넌트", "구독", "플랜", "과금", "RBAC", "권한", "웹훅", "SLA", "쿼터", "tenant", "multi-tenant", "subscription", "billing", "webhook", "workspace", "organization"],
+      "maturity": "stable"
+    },
+    {
       "id": "general",
       "name": "범용",
       "icon": "🔧",
