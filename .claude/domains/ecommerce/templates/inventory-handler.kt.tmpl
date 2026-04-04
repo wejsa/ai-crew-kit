@@ -117,7 +117,7 @@ class InventoryReservation(
     val createdAt: Instant = Instant.now(),
     var updatedAt: Instant = Instant.now(),
 
-    val expiresAt: Instant = Instant.now().plusSeconds(900)  // 15분 후 만료
+    val expiresAt: Instant = Instant.now().plusSeconds(1800)  // 30분 후 만료
 )
 
 enum class ReservationStatus {

@@ -37,14 +37,14 @@ val fee = amount * 0.03  // 부동소수점 연산 금지
 
 ```kotlin
 enum class PaymentStatus {
-    INITIATED, AUTHORIZED, CAPTURED, CANCELLED, REFUNDED, FAILED
+    INITIATED, AUTHORIZED, CAPTURED, CANCELLED, REFUNDED, PARTIAL_REFUND, FAILED, EXPIRED
 }
 
 val validTransitions = mapOf(
-    INITIATED to setOf(AUTHORIZED, FAILED),
+    INITIATED to setOf(AUTHORIZED, FAILED, EXPIRED),
     AUTHORIZED to setOf(CAPTURED, CANCELLED, FAILED),
-    CAPTURED to setOf(REFUNDED, CANCELLED),
-    // CANCELLED, REFUNDED, FAILED는 종료 상태
+    CAPTURED to setOf(REFUNDED, PARTIAL_REFUND),
+    // CANCELLED, REFUNDED, PARTIAL_REFUND, FAILED, EXPIRED는 종료 상태
 )
 
 fun validateTransition(from: PaymentStatus, to: PaymentStatus): Boolean {
@@ -102,6 +102,7 @@ fun cancelPayment(paymentId: String): Payment {
 | 정산 금액 검증 | 거래금액 - 수수료 = 정산금액 | CRITICAL |
 | 정산 데이터 불변 | 확정된 정산 데이터 수정 불가 | MAJOR |
 | 대사 검증 | 카드사 데이터와 대사 | MAJOR |
+| 정산 상태 전이 | 허용된 상태 전이만 수행 (settlement.md 허용 전이 테이블 참조) | CRITICAL |
 
 ## 타임존 처리
 

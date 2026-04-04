@@ -8,6 +8,13 @@
  * Created: {{CREATED_AT}}
  */
 
+/**
+ * 주의: 프로덕션에서는 부동소수점(number) 대신 정수 연산 또는
+ * decimal.js 등 정밀 연산 라이브러리를 사용하세요.
+ * - 모든 금액은 원(KRW) 단위 정수로 처리 권장
+ * - 할인율 등 비율 계산 시 Math.floor()로 절사
+ */
+
 // --- 타입 정의 ---
 
 export interface OrderItemInput {

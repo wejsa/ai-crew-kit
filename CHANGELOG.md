@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.43.1] - 2026-04-05
+
+### Fixed
+- **도메인 시뮬레이션 A등급 이슈 수정** — 5개 도메인 상태 머신/문서 정합성 45건 해결
+  - **fintech**: 정산 상태 전이 테이블 신규 작성, 환불 상태 머신 SSOT 통일(refund-cancel.md), 결제 전이 domain-logic.md↔payment-flow.md 동기화, 마이데이터 retrying→failed 다이어그램 수정, README에 open-banking/mydata 문서 추가
+  - **ecommerce**: 주문 상태 머신 11→13개 통일(문서↔템플릿), 주문↔결제 상태 매핑 테이블 추가, 재고 예약 TTL KT 15→30분 통일, TS 가격 계산 BigDecimal 대안 안내, README 참고 문서 5건 추가, domain-logic.md 전이 테이블 동기화
+  - **saas**: 인보이스 허용 전이 테이블 추가, 구독↔테넌트 상태 연동 규칙 정의, glossary.md 17개 용어 추가
+  - **healthcare**: glossary.md 23개 의료 용어 추가
+  - **cross-domain**: 4개 도메인 domain.json에 `_base` 체크리스트(common, security-basic, architecture) 참조 추가
+
 ## [1.43.0] - 2026-04-04
 
 ### Added

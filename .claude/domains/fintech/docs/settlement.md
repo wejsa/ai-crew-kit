@@ -133,6 +133,24 @@ enum class SettlementStatus {
 }
 ```
 
+### 허용 전이
+
+| From | To | 조건 |
+|------|-----|------|
+| PENDING | CALCULATING | D+N 도래, 배치 시작 |
+| CALCULATING | CONFIRMED | 수수료 계산 완료 + 대사 일치 |
+| CALCULATING | FAILED | 계산 오류 또는 대사 불일치 |
+| CONFIRMED | PROCESSING | 이체 배치 실행 |
+| CONFIRMED | HOLD | 분쟁 제기 또는 규제 보류 |
+| PROCESSING | COMPLETED | 이체 완료 확인 |
+| PROCESSING | FAILED | 이체 실패 |
+| FAILED | PENDING | 재정산 요청 (수동) |
+| HOLD | CONFIRMED | 보류 해제 |
+| HOLD | FAILED | 보류 후 정산 취소 |
+
+> **종료 상태**: COMPLETED
+> **트리거**: 거래 CAPTURED 이벤트 발생 시 해당 가맹점의 정산 레코드(PENDING)가 자동 생성됨
+
 ## 참고사항
 
 - 금액 계산 시 반드시 `BigDecimal` 사용 (정밀도 유지)

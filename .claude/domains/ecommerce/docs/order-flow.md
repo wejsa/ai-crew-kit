@@ -6,38 +6,84 @@
 
 ## 주문 상태 머신
 
+> 장바구니(CART)는 주문과 별도 도메인으로 관리합니다. 주문은 CHECKOUT 상태에서 시작합니다.
+
+> 결제 대기(PAYMENT_PENDING/AWAITING_DEPOSIT)는 Payment 엔티티의 상태로 관리하며, 주문<->결제 상태 매핑은 아래 섹션을 참조하세요.
+
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                                                              │
-│  CART → CHECKOUT → PAYMENT_PENDING → PAID → PREPARING       │
-│          │              │            │          │           │
-│          ▼              ▼            ▼          ▼           │
-│       CANCELLED     CANCELLED   CANCELLED   SHIPPING        │
-│                                               │              │
-│                                               ▼              │
-│                                           DELIVERED          │
-│                                               │              │
-│                                               ▼              │
-│                                     COMPLETED / RETURN       │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│  CHECKOUT ──→ PAID ──→ PREPARING ──→ READY_TO_SHIP ──→ SHIPPING    │
+│     │           │          │               │                │       │
+│     ▼           ▼          ▼               ▼                ▼       │
+│  CANCELLED  CANCEL_REQ  CANCEL_REQ    CANCEL_REQ        DELIVERED   │
+│                 │                                           │       │
+│                 ▼                                           ▼       │
+│             CANCELLED / PREPARING(거부)          CONFIRMED / RETURN_REQ │
+│                                                            │       │
+│                                                            ▼       │
+│                                                  RETURNING / DELIVERED(거부) │
+│                                                      │              │
+│                                                      ▼              │
+│                                                  RETURNED           │
+│                                                      │              │
+│                                                      ▼              │
+│                                                  REFUNDED           │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 ### 상태 정의
 
 | 상태 | 설명 | 다음 상태 |
 |------|------|----------|
-| CART | 장바구니 | CHECKOUT |
-| CHECKOUT | 주문서 작성 | PAYMENT_PENDING, CANCELLED |
-| PAYMENT_PENDING | 결제 대기 | PAID, CANCELLED |
-| PAID | 결제 완료 | PREPARING, CANCELLED |
-| PREPARING | 상품 준비 | SHIPPING, CANCELLED |
+| CHECKOUT | 주문서 작성 중 | PAID, CANCELLED |
+| PAID | 결제 완료 | PREPARING, CANCEL_REQUESTED |
+| PREPARING | 상품 준비 중 | READY_TO_SHIP, CANCEL_REQUESTED |
+| READY_TO_SHIP | 발송 준비 완료 | SHIPPING, CANCEL_REQUESTED |
 | SHIPPING | 배송 중 | DELIVERED |
-| DELIVERED | 배송 완료 | COMPLETED, RETURN |
-| COMPLETED | 주문 완료 | - |
-| CANCELLED | 주문 취소 | - |
-| RETURN | 반품/교환 | COMPLETED, REFUNDED |
+| DELIVERED | 배송 완료 | CONFIRMED, RETURN_REQUESTED |
+| CONFIRMED | 구매 확정 | - |
+| CANCEL_REQUESTED | 취소 요청 (셀러 확인 대기) | CANCELLED, PREPARING |
+| CANCELLED | 취소 완료 | - |
+| RETURN_REQUESTED | 반품 요청 | RETURNING, DELIVERED |
+| RETURNING | 반품 진행 중 | RETURNED |
+| RETURNED | 반품 완료 | REFUNDED |
 | REFUNDED | 환불 완료 | - |
+
+### 허용 전이
+
+| From | To | 조건 |
+|------|-----|------|
+| CHECKOUT | PAID | 결제 성공 |
+| CHECKOUT | CANCELLED | 주문 취소 (결제 전) |
+| PAID | PREPARING | 결제 확인 후 상품 준비 |
+| PAID | CANCEL_REQUESTED | 취소 요청 (결제 후) |
+| PREPARING | READY_TO_SHIP | 포장 완료 |
+| PREPARING | CANCEL_REQUESTED | 취소 요청 (발송 전) |
+| READY_TO_SHIP | SHIPPING | 택배사 인수 |
+| READY_TO_SHIP | CANCEL_REQUESTED | 취소 요청 (발송 전) |
+| CANCEL_REQUESTED | CANCELLED | 취소 승인 + 결제 취소 + 재고 복원 |
+| CANCEL_REQUESTED | PREPARING | 취소 거부 (셀러) |
+| SHIPPING | DELIVERED | 배송 완료 확인 |
+| DELIVERED | CONFIRMED | 구매 확정 (자동/수동) |
+| DELIVERED | RETURN_REQUESTED | 반품 요청 |
+| RETURN_REQUESTED | RETURNING | 반품 승인 |
+| RETURN_REQUESTED | DELIVERED | 반품 거부 |
+| RETURNING | RETURNED | 반품 수거 완료 |
+| RETURNED | REFUNDED | 환불 처리 완료 |
+
+## 주문<->결제 상태 매핑
+
+| 결제 상태 (Payment) | 주문 상태 (Order) | 설명 |
+|---------------------|-------------------|------|
+| PENDING | CHECKOUT | 결제 진행 전 |
+| AWAITING_DEPOSIT | CHECKOUT | 가상계좌 입금 대기 |
+| COMPLETED | PAID | 결제 성공 -> 주문 확정 |
+| FAILED | CANCELLED | 결제 실패 -> 주문 취소 + 재고 해제 |
+| CANCELLED | CANCELLED | 결제 취소 -> 주문 취소 |
+| PARTIAL_CANCELLED | (변경 없음) | 부분 환불 -- 주문 상태 유지 |
+
+> 결제 상태는 [payment-integration.md](payment-integration.md)에서 관리합니다.
 
 ## 주문 생성 플로우
 
@@ -105,12 +151,12 @@ suspend fun processPayment(orderId: String, paymentInfo: PaymentInfo): Order {
 
 | 상태 | 취소 가능 | 처리 |
 |------|----------|------|
-| CHECKOUT | ✅ | 예약 해제 |
-| PAYMENT_PENDING | ✅ | 예약 해제 |
-| PAID | ✅ | 결제 취소 + 재고 복원 |
-| PREPARING | ⚠️ | 출고 전까지 가능 |
-| SHIPPING | ❌ | 반품으로 처리 |
-| DELIVERED | ❌ | 반품으로 처리 |
+| CHECKOUT | 즉시 취소 | 예약 해제 |
+| PAID | CANCEL_REQUESTED | 취소 요청 → 셀러 승인 후 결제 취소 + 재고 복원 |
+| PREPARING | CANCEL_REQUESTED | 취소 요청 → 셀러 승인 후 결제 취소 + 재고 복원 |
+| READY_TO_SHIP | CANCEL_REQUESTED | 취소 요청 → 셀러 승인 후 결제 취소 + 재고 복원 |
+| SHIPPING | 취소 불가 | 반품으로 처리 |
+| DELIVERED | 취소 불가 | 반품으로 처리 |
 
 ### 취소 처리
 

@@ -18,7 +18,8 @@
 requested → consented → transmitting → completed
               ↘ rejected (동의 거부)
                            ↘ failed → retrying → completed
-                                                ↘ expired
+                                                ↘ failed (3회 초과)
+* completed, transmitting → expired (동의 유효기간 만료 시)
 ```
 
 | 상태 | 설명 | 전이 조건 |

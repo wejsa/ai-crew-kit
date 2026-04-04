@@ -41,6 +41,8 @@
 | [security-compliance.md](docs/security-compliance.md) | PCI-DSS, 전금법 준수 |
 | [error-handling.md](docs/error-handling.md) | 에러 코드 + 재시도 전략 |
 | [api-design.md](docs/api-design.md) | API 설계 가이드 |
+| [open-banking.md](docs/open-banking.md) | 오픈뱅킹 이체 플로우 |
+| [mydata.md](docs/mydata.md) | 마이데이터 전송요구 플로우 |
 
 ## 체크리스트
 

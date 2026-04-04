@@ -54,6 +54,9 @@
     "commitFormat": "conventional"
   },
   "checklists": [
+    "_base:common.md",
+    "_base:security-basic.md",
+    "_base:architecture.md",
     "domain-logic.md",
     "compliance.md",
     "performance.md"

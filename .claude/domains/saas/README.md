@@ -12,6 +12,7 @@
 | data-lifecycle.md | GDPR 삭제권, 데이터 내보내기, 보존/폐기 |
 | usage-metering.md | 사용량 미터링, 쿼터, 피처 게이팅 |
 | webhook-integration.md | 테넌트 웹훅 설정, 배달 보장, 서명 검증 |
+| glossary.md | SaaS 도메인 용어집 (테넌트, 프로레이션, 쿼터 등) |
 
 ## 체크리스트
 

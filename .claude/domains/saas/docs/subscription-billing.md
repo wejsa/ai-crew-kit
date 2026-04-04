@@ -112,6 +112,19 @@ trialing → active ⇄ past_due → canceled → terminated
 | void | 취소 (발행 오류) |
 | refunded | 환불 |
 
+### 인보이스 허용 전이
+
+| From | To | 조건 |
+|------|-----|------|
+| draft | finalized | 청구 주기 도래, 항목 확정 |
+| draft | void | 생성 오류, 수동 폐기 |
+| finalized | paid | 결제 성공 |
+| finalized | void | 결제 전 취소 |
+| paid | refunded | 전액 환불 처리 |
+
+> **종료 상태**: paid, void, refunded
+> **제약**: paid → draft 역전이 금지 (결제 완료 후 인보이스 수정 불가)
+
 ## 참고사항
 
 - 구독 상태 변경은 반드시 이력 테이블에 기록 (변경 전/후 + 사유 + 시각)
@@ -119,3 +132,16 @@ trialing → active ⇄ past_due → canceled → terminated
 - canceled 유예 기간: 현재 결제 주기 종료일까지
 - terminated 후 데이터 보존은 `data-lifecycle.md` 참조
 - 테넌트 상태와의 관계: 구독 canceled → 유예 종료 → 테넌트 suspended (30일 후 terminated) → 데이터 보존 90일 후 완전 삭제 (data-lifecycle.md 참조)
+
+## 구독↔테넌트 상태 연동
+
+| 구독 이벤트 | 테넌트 반응 | 타이밍 |
+|------------|------------|--------|
+| trialing → active | 테넌트 active 유지 | 즉시 |
+| active → paused | 테넌트 active 유지 (접근 수준만 읽기 전용) | 즉시 |
+| paused → active | 테넌트 읽기 전용 해제 | 결제 성공 즉시 |
+| active → canceled | 테넌트 active 유지 (유예 기간) | 현재 결제 주기 종료까지 |
+| canceled → terminated | 테넌트 suspended 전이 | 유예 기간 종료 시점 |
+| 테넌트 suspended 30일 경과 | 테넌트 terminated 전이 | 자동 |
+
+> **핵심 규칙**: 구독 canceled 유예 기간 중에는 테넌트 상태가 active로 유지되며, API 키도 유효합니다. 테넌트 suspended 전이는 구독 terminated 시점에 발생합니다.

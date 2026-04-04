@@ -39,6 +39,11 @@
 | [shipping.md](docs/shipping.md) | 배송 프로세스 |
 | [promotion.md](docs/promotion.md) | 프로모션/쿠폰 |
 | [payment-integration.md](docs/payment-integration.md) | 결제 연동 |
+| [marketplace.md](docs/marketplace.md) | 마켓플레이스 (멀티셀러) |
+| [seller-settlement.md](docs/seller-settlement.md) | 셀러 정산 |
+| [subscription-commerce.md](docs/subscription-commerce.md) | 구독 커머스 |
+| [member.md](docs/member.md) | 회원 관리 |
+| [product.md](docs/product.md) | 상품 관리 |
 
 ## 체크리스트
 

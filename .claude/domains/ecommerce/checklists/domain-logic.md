@@ -45,12 +45,22 @@ fun updateStock(id: String, quantity: Int) {
 | From | To | 조건 |
 |------|-----|------|
 | CHECKOUT | PAID | 결제 성공 |
-| CHECKOUT | CANCELLED | 사용자 취소 |
-| PAID | PREPARING | 자동 전이 |
-| PAID | CANCELLED | 배송 전 취소 |
-| PREPARING | SHIPPING | 출고 처리 |
-| SHIPPING | DELIVERED | 배송 완료 |
-| DELIVERED | RETURN | 반품 접수 |
+| CHECKOUT | CANCELLED | 주문 취소 (결제 전) |
+| PAID | PREPARING | 결제 확인 후 상품 준비 |
+| PAID | CANCEL_REQUESTED | 취소 요청 (결제 후) |
+| PREPARING | READY_TO_SHIP | 포장 완료 |
+| PREPARING | CANCEL_REQUESTED | 취소 요청 (발송 전) |
+| READY_TO_SHIP | SHIPPING | 택배사 인수 |
+| READY_TO_SHIP | CANCEL_REQUESTED | 취소 요청 (발송 전) |
+| CANCEL_REQUESTED | CANCELLED | 취소 승인 + 결제 취소 + 재고 복원 |
+| CANCEL_REQUESTED | PREPARING | 취소 거부 (셀러) |
+| SHIPPING | DELIVERED | 배송 완료 확인 |
+| DELIVERED | CONFIRMED | 구매 확정 (자동/수동) |
+| DELIVERED | RETURN_REQUESTED | 반품 요청 |
+| RETURN_REQUESTED | RETURNING | 반품 승인 |
+| RETURN_REQUESTED | DELIVERED | 반품 거부 |
+| RETURNING | RETURNED | 반품 수거 완료 |
+| RETURNED | REFUNDED | 환불 처리 완료 |
 
 ## 가격 계산
 

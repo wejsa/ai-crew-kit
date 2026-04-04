@@ -73,15 +73,10 @@
 | 부분 환불 | 일부 금액 환불 | 차액 정산 |
 | 포인트 환불 | 포인트로 환불 | 별도 정산 |
 
-### 환불 상태 머신
+### 환불 상태
+> 환불 상태 머신은 [refund-cancel.md](refund-cancel.md)에서 SSOT로 관리합니다.
 
-```
-REQUESTED → PROCESSING → COMPLETED
-    │           │
-    └───────────┴──────▶ FAILED → RETRY
-                              │
-                              └──▶ CANCELLED
-```
+**상태**: REQUESTED → PENDING → PROCESSING → COMPLETED / FAILED / CANCELLED
 
 ## 상태 머신
 
@@ -108,6 +103,8 @@ enum class TransactionStatus {
 | INITIATED | FAILED | 승인 실패 |
 | AUTHORIZED | CAPTURED | 매입 요청 |
 | AUTHORIZED | CANCELLED | 당일 취소 |
+| INITIATED | EXPIRED | 승인 타임아웃 |
+| AUTHORIZED | FAILED | 매입 실패 |
 | CAPTURED | REFUNDED | 전체 환불 |
 | CAPTURED | PARTIAL_REFUND | 부분 환불 |
 
