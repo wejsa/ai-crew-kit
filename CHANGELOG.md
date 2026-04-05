@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.43.4] - 2026-04-05
+
+### Added
+- **주석 처리된 코드 금지 컨벤션** — 테스트 파일에서 assertion/검증 코드 주석 처리 금지 (빌드 게이트 우회 방지)
+  - `testing.md`: 규칙 + 근거 추가
+  - `common.md`: 체크리스트 항목 추가 (MAJOR)
+
 ## [1.43.3] - 2026-04-05
 
 ### Fixed

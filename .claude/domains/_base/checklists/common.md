@@ -32,6 +32,7 @@
 | 경계값 테스트 | null, empty, max 값 테스트 | MINOR |
 | 테스트 격리 | 테스트 간 의존성 없음 | MAJOR |
 | 테스트 명명 | 테스트 의도가 명확한 이름 | MINOR |
+| 주석 처리된 코드 | 테스트 파일에 주석 처리된 assertion/검증 코드 금지 (빌드 게이트 우회 방지) | MAJOR |
 | Python: pytest fixture | conftest.py에 DB/client fixture 정의 (트랜잭션 롤백) | MAJOR |
 | Python: async 테스트 | `pytest-asyncio` + `asyncio_mode = "auto"` 설정 | MAJOR |
 | Python: API 테스트 | `httpx.AsyncClient` + `ASGITransport` 사용 (FastAPI) | MAJOR |
