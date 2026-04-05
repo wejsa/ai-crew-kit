@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.43.3] - 2026-04-05
+
+### Fixed
+- **Python 스택 스키마 누락** — `project.schema.json` backend enum에 `python-fastapi`, `python-django` 추가 (기존 5개 → 7개)
+- **--quick 모드 스택 강제 지정 제거** — 빈 디렉토리에서 `defaultStack`(Spring Boot) 강제 적용 → 백엔드 프레임워크 직접 선택 폴백으로 변경
+
 ## [1.43.2] - 2026-04-05
 
 ### Added

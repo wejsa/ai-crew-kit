@@ -109,7 +109,7 @@
     {
       "code": "SAAS-016",
       "httpStatus": 422,
-      "name": "SUBSCRIPTION_CANCELLED",
+      "name": "SUBSCRIPTION_CANCELED",
       "message": "이미 해지된 구독입니다",
       "description": "해지 완료된 구독에 변경 시도"
     },
@@ -192,7 +192,7 @@
     },
     {
       "code": "SAAS-044",
-      "httpStatus": 429,
+      "httpStatus": 502,
       "name": "WEBHOOK_RETRY_EXHAUSTED",
       "message": "웹훅 재시도 횟수를 초과했습니다",
       "description": "최대 재시도 후에도 전송 실패"

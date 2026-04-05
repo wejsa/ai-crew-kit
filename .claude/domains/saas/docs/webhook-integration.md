@@ -16,8 +16,8 @@
 ### 웹훅 상태 머신
 
 ```
-enabled → disabled (사용자 비활성화)
-  ↘ suspended (연속 실패) → enabled (사용자 재활성화)
+enabled ⇄ disabled (사용자 활성/비활성화)
+  ↘ suspended → enabled (사용자 재활성화)
 ```
 
 ## 이벤트 유형

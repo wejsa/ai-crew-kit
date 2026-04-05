@@ -8,8 +8,8 @@
 
 ```
 created → submitted → adjudicated → settled
-               ↘ rejected → resubmitted → adjudicated
-                                  ↘ appealed → adjudicated
+               ↘              ↘ appealed → adjudicated (재심사)
+          rejected → resubmitted → adjudicated
 ```
 
 | 상태 | 설명 |

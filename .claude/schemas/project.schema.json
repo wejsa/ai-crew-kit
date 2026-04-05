@@ -28,7 +28,7 @@
       "properties": {
         "backend": {
           "type": "string",
-          "enum": ["spring-boot-kotlin", "spring-boot-java", "nodejs-typescript", "go", "none"],
+          "enum": ["spring-boot-kotlin", "spring-boot-java", "nodejs-typescript", "python-fastapi", "python-django", "go", "none"],
           "default": "spring-boot-kotlin",
           "description": "백엔드 프레임워크"
         },

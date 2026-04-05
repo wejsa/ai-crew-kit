@@ -26,7 +26,7 @@ argument-hint: "[--quick] [--reset]"
 | Step 1: 환경 검증 | 그대로 | 그대로 |
 | Step 2: 프로젝트 정보 | AskUserQuestion 2회 | 디렉토리명 → name, 설명 빈칸 |
 | Step 3: 도메인 선택 | AskUserQuestion 1회 | 자동 감지 → fallback: general |
-| Step 4: 기술 스택 | AskUserQuestion 5+회 | `_registry.json`의 domain.defaultStack |
+| Step 4: 기술 스택 | AskUserQuestion 5+회 | 자동 감지 → 감지 실패 시 백엔드 1회 질문 |
 | Step 5: 에이전트 팀 | AskUserQuestion multi-select | 스택 기반 자동: pm + backend/frontend + code-reviewer |
 | Step 5.5: 워크플로우 프로필 | AskUserQuestion 1회 | standard 기본값 |
 | Step 6-7 | 그대로 | + "설정 변경: /skill-init --reset" 안내 |
@@ -48,16 +48,19 @@ argument-hint: "[--quick] [--reset]"
 - `astro.config.*` → astro
 - `vue.config.*` / vue 의존성 → vue
 
-**감지 실패 시 (빈 디렉토리)**: 1회 질문으로 프로젝트 유형 결정:
+**감지 실패 시 (빈 디렉토리)**: 백엔드 프레임워크 1회 질문:
 ```
-감지된 파일이 없습니다. 프로젝트 유형을 선택하세요:
-1. 웹 프론트엔드 (React/Next.js/Vue/Astro)
-2. 웹 백엔드 API (Spring Boot/Express/FastAPI)
-3. 풀스택 (프론트+백엔드)
-4. 정적 사이트
-5. 직접 설정 (/skill-init)
+감지된 파일이 없습니다. 백엔드를 선택하세요:
+1. Spring Boot (Kotlin)
+2. Spring Boot (Java)
+3. Node.js (TypeScript)
+4. Python (FastAPI)
+5. Python (Django)
+6. Go
+7. 없음 (프론트엔드 전용)
+8. 직접 설정 (/skill-init)
 ```
-선택 후 해당 유형의 기본 스택 적용. 나머지는 --quick 기본값 유지.
+선택 후 해당 백엔드 + 도메인 기본 DB/캐시/인프라 적용. 프론트엔드는 `none` 기본 (7번 선택 시 프론트엔드 추가 질문).
 
 ---
 

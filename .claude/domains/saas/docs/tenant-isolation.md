@@ -55,9 +55,9 @@ HTTP 요청 → 인증 미들웨어 (JWT에서 tenantId 추출)
 
 ```
 provisioning → active ⇄ suspended → terminated
-                 ↓                      ↑
-                 terminated ←───────────┘
-               (자진 해지)
+  ↓              ↓                      ↑
+  terminated     terminated ←───────────┘
+  (실패 롤백)    (자진 해지)
 ```
 
 | 상태 | 설명 | 전이 조건 |
