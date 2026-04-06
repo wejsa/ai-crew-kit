@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.44.0] - 2026-04-07
+
+### Added
+- **서비스 설명 기반 기술 스택 추천** (Issue #14) — skill-init에 Step 2.5 추가
+  - 자연어 서비스 설명 입력 → 도메인 + 풀 스택 자동 추천 (키워드 점수제 매칭)
+  - 6개 컴포넌트 의사결정 테이블 (Backend, Frontend, Database, Cache, MQ, Infrastructure)
+  - 3가지 분기: 수락(A) / 일부 수정(B) / 직접 선택(C) — 경력자 기존 플로우 100% 보존
+  - 초심자 질문 횟수 8+회 → 4회로 감소
+  - --quick 모드: 디렉토리명 키워드 매칭 추가 (추가 질문 없음)
+  - 케이스별 흐름 요약 테이블 문서화 (7개 시나리오)
+
 ## [1.43.4] - 2026-04-05
 
 ### Added
