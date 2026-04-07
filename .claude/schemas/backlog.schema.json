@@ -101,7 +101,7 @@
         },
         "status": {
           "type": "string",
-          "enum": ["todo", "in_progress", "done", "blocked", "archived"],
+          "enum": ["todo", "in_progress", "done", "blocked", "paused", "archived"],
           "description": "Task 상태"
         },
         "type": {
@@ -186,6 +186,16 @@
           "type": "boolean",
           "default": false,
           "description": "Micro Task 여부 (skill-impl --micro로 생성)"
+        },
+        "pauseReason": {
+          "type": ["string", "null"],
+          "maxLength": 200,
+          "description": "일시정지 사유 (status가 paused일 때만 유효)"
+        },
+        "pausedAt": {
+          "type": ["string", "null"],
+          "format": "date-time",
+          "description": "일시정지 시각"
         }
       },
       "additionalProperties": false

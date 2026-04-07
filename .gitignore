@@ -70,3 +70,4 @@ docs/*
 !docs/workflow-guide.md
 !docs/customization.md
 !docs/upgrade-guide.md
+!docs/eject-guide.md

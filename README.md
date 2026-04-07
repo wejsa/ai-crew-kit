@@ -1,12 +1,12 @@
 <div align="center">
 
-# AI Crew Kit v1.44.0
+# AI Crew Kit v1.45.0
 
 **도메인 선택 → 자동 셋업 → 에이전트 팀 즉시 가동**
 
 AI 에이전트 팀 기반 소프트웨어 개발 프로세스 관리 프레임워크
 
-[![Version](https://img.shields.io/badge/version-v1.43.0-blue?style=flat-square)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v1.45.0-blue?style=flat-square)](./CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](./LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/wejsa/ai-crew-kit?style=flat-square)](https://github.com/wejsa/ai-crew-kit)
 [![Built with Claude Code](https://img.shields.io/badge/built_with-Claude_Code-blueviolet?style=flat-square)](https://claude.ai/download)
@@ -135,6 +135,7 @@ claude
 | [도메인 확장](./docs/customization.md) | 참고자료/체크리스트 추가, 새 도메인 생성, Layered Override |
 | [프레임워크 업그레이드](./docs/upgrade-guide.md) | 업그레이드, 보존 항목, 롤백 |
 | [예제 프로젝트](./examples/) | fintech-gateway, ecommerce-shop 예제 |
+| [프레임워크 제거 (Eject)](./docs/eject-guide.md) | 제거 절차, 보존 항목, 체크리스트 |
 
 ---
 

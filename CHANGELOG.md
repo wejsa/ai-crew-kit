@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.45.0] - 2026-04-07
+
+### Added
+- **UX 마찰 10건 일괄 해소** — TFT 대규모 분석 기반 개선
+  - CLAUDE.md 30초 요약 (Quick Reference) 섹션 추가 — 온보딩 시간 단축
+  - 에러 정보 SSOT 통합 — troubleshooting.md 중앙화, workflow-guide는 참조 링크
+  - Trivial Fix 경로 (--micro) 문서화 — workflow-guide에 플로우차트 + 기준표
+  - 워크플로우 프로필 비교 테이블 — standard vs fast 비교 명시
+  - skill-impl `--dry-run` 옵션 — 빌드/테스트만 검증, PR 미생성
+  - Eject 가이드 (`docs/eject-guide.md`) — 프레임워크 제거 절차 + 체크리스트
+  - 스킬 티어 분류 — 일상(Daily) 6개 / 주간(Weekly) 5개 / 설정(Setup) 8개
+  - Task 일시정지 (`paused` 상태) — `--pause`/`--resume` + `pauseReason`/`pausedAt` 필드
+  - Lock 자동정리 — skill-plan/impl 진입 시 TTL 만료 Task 자동 해제
+
+### Fixed
+- README.md 버전 뱃지 불일치 (v1.43.0 → v1.45.0)
+
 ## [1.44.0] - 2026-04-07
 
 ### Added

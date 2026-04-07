@@ -27,6 +27,27 @@
 
 ---
 
+## 30초 요약 (Quick Reference)
+
+### 매일 쓰는 4가지
+
+| 하고 싶은 것 | 명령 |
+|-------------|------|
+| 다음 작업 시작 | "다음 작업 가져와줘" → `/skill-plan` → `/skill-impl` |
+| 소규모 수정 | "OO 고쳐줘" → `/skill-impl --micro "설명"` |
+| PR 리뷰 + 머지 | "PR 123 리뷰해줘" → 자동 체이닝 |
+| 상태 확인 | "상태 확인해줘" → `/skill-status` |
+
+### 3가지 주의사항
+1. **계획 승인 전 코드 작성 금지** — plan → 승인 → impl 순서 필수
+2. **빌드/테스트 통과 필수** — PR 생성 전 자동 검증
+3. **자동 체이닝 중 멈추지 않음** — impl → review → merge 자동 진행
+
+### 문제 발생 시
+→ `.claude/docs/troubleshooting.md` 참조
+
+---
+
 ## 세션 시작 시 필수
 
 ```bash
@@ -85,6 +106,7 @@ fi
 /skill-feature        # 새 기능 기획 (요구사항 + backlog 등록)
 /skill-plan           # 다음 작업 + 설계 + 스텝 분리 계획 수립
 /skill-impl           # 스텝 개발 + PR 생성
+/skill-impl --micro "OO"  # 소규모 수정 (plan 생략, ≤3 파일)
 /skill-review         # 코드 리뷰
 /skill-review-pr {num}  # PR 코드 리뷰
 /skill-merge-pr {num}   # PR 머지
@@ -116,6 +138,8 @@ fi
 | "버그 등록해줘: {설명}" | `/skill-backlog add "{설명}" --type=bug` | 버그 등록 |
 | "Task 추가해줘: {제목}" | `/skill-backlog add "{제목}"` | Task 등록 (type AI 추론) |
 | "{ID} 수정해줘" | `/skill-backlog update {ID}` | Task 대화형 수정 |
+| "{ID} 일시정지해줘" | `/skill-backlog update {ID} --pause "사유"` | Task 일시정지 |
+| "{ID} 재개해줘" | `/skill-backlog update {ID} --resume` | 일시정지 Task 재개 |
 | "다음 작업 가져와줘" | `/skill-plan` | Task 선택 + 설계 + 스텝 계획 |
 | "새 기능 기획해줘: {기능명}" | `/skill-feature {기능명}` | 새 기능 기획 + 요구사항 문서 |
 | "개발 진행해줘" | `/skill-impl` | Step 1 개발 -> PR 생성 |
@@ -126,6 +150,8 @@ fi
 | "OO 고쳐줘" | `/skill-impl --micro "OO"` | 소규모 수정 (규모 자동 판단) |
 | "OO 버그 수정해줘" | `/skill-impl --micro "OO"` | 버그 Micro 경로 |
 | "간단하게 OO 추가해줘" | `/skill-impl --micro "OO"` | 소규모 추가 Micro 경로 |
+| "빌드만 확인해줘" | `/skill-impl --dry-run` | 빌드/테스트 검증만 (PR 미생성) |
+| "테스트 돌려봐" | `/skill-impl --dry-run` | 빌드/테스트 검증만 |
 | "{경로} 코드 리뷰해줘" | `/skill-review {경로}` | 코드 경로 종합 리뷰 |
 | "PR {번호} 리뷰해줘" | `/skill-review-pr {번호}` | PR 리뷰 |
 | "PR {번호} 머지해줘" | `/skill-merge-pr {번호}` | PR 머지 |
@@ -298,6 +324,8 @@ fi
 | lock TTL 만료 | 자동 연장 제안 | [권장] 연장 수락 / `--extend-lock` / [최후수단] `unlock --force` |
 | 컨텍스트 압축 | workflowState 복원 | [권장] `/skill-status` → 맥락 복원 |
 | subagent 타임아웃 | 스킵 후 진행 | [권장] 결과 없이 진행 수락 / 수동 재실행 |
+
+> 📖 **상세 에러 가이드**: `.claude/docs/troubleshooting.md` 참조
 
 ---
 

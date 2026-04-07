@@ -18,9 +18,19 @@
 | `/skill-report` | 프로젝트 메트릭 리포트 | "리포트 생성해줘" |
 | `/skill-health-check` | 코드베이스 건강 검진 | "헬스체크 해줘" |
 
+## 스킬 티어 (사용 빈도 기준)
+
+| 티어 | 스킬 | 설명 |
+|------|------|------|
+| 🔵 **일상 (Daily)** | status, plan, impl, review-pr, merge-pr, hotfix | 매일 사용하는 핵심 워크플로우 |
+| 🟢 **주간 (Weekly)** | feature, backlog, report, health-check, retro | 주기적 관리 + 분석 |
+| ⚙️ **설정 (Setup)** | init, onboard, domain, upgrade, create, estimate, docs, validate | 초기 설정 + 확장 |
+
+> 처음이라면 **일상 티어 6개**만 익히면 됩니다. 나머지는 필요할 때 참조하세요.
+
 ## 전체 명령어 목록
 
-### 프로젝트 관리
+### 프로젝트 관리 ⚙️
 
 | 명령어 | 설명 |
 |--------|------|
@@ -38,7 +48,7 @@
 | `/skill-onboard` | 기존 프로젝트에 AI Crew Kit 적용 |
 | `/skill-onboard --scan-only` | 스캔만 수행 (설정 생성 없음) |
 
-### 개발 워크플로우
+### 개발 워크플로우 🔵
 
 | 명령어 | 설명 |
 |--------|------|
@@ -58,7 +68,7 @@
 | `/skill-fix {번호}` | CRITICAL 이슈 수정 |
 | `/skill-merge-pr {번호}` | PR 머지 |
 
-### 운영/인프라
+### 운영/인프라 🔵
 
 | 명령어 | 설명 |
 |--------|------|
@@ -66,7 +76,7 @@
 | `/skill-rollback {태그\|PR번호}` | 릴리스/PR 롤백 |
 | `/skill-release` | 버전 릴리스 |
 
-### 분석/문서
+### 분석/문서 🟢
 
 | 명령어 | 설명 |
 |--------|------|
@@ -78,7 +88,7 @@
 | `/skill-report --full` | 전체 히스토리 리포트 |
 | `/skill-estimate` | 작업 복잡도 추정 |
 
-### 설정/확장
+### 설정/확장 ⚙️
 
 | 명령어 | 설명 |
 |--------|------|

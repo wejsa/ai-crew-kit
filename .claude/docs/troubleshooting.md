@@ -214,6 +214,40 @@ git push origin develop
 
 ---
 
+## skill-fix 루프 (2회 초과)
+
+**증상**: CRITICAL 이슈가 auto-fix 후에도 반복 발견되어 워크플로우가 중단됨
+
+**원인**: 자동 수정으로 해결할 수 없는 근본적 설계 문제 (보안 취약점, 아키텍처 위반 등)
+
+**해결**:
+1. REQUEST_CHANGES 출력 내용 확인
+2. CRITICAL 이슈 목록에서 수동 수정 필요 항목 파악
+3. 코드 수정 후 커밋 → push
+4. `/skill-review-pr {번호}` 재실행
+
+> 루프 가드: 같은 PR에 대해 skill-fix는 **최대 2회**만 실행됩니다. 3회째 CRITICAL 발견 시 REQUEST_CHANGES 후 즉시 중단합니다.
+
+---
+
+## origin/develop과 다수 커밋 차이
+
+**증상**: "origin/develop과 5커밋 이상 차이" 경고 또는 push 실패
+
+**원인**: 다른 세션에서 develop에 다수 커밋이 추가된 후 로컬이 동기화되지 않음
+
+**해결**:
+```bash
+git fetch origin develop
+git merge origin/develop
+# 충돌 시 develop(최신) 우선으로 해결
+git push origin develop
+```
+
+> 장시간 작업 시 주기적으로 `git fetch origin develop`을 실행하여 차이를 줄이세요.
+
+---
+
 ## 진단 명령 요약
 
 | 명령 | 용도 |

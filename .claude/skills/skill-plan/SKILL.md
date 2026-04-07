@@ -33,12 +33,28 @@ CLAUDE.md 상태 추적 패턴. currentSkill="skill-plan"
 
 ## 실행 플로우
 
+### 0.5 잠금 자동 정리 (Lock Auto-cleanup)
+
+Task 선택 전에 모든 `in_progress` Task를 스캔:
+
+1. 각 Task의 `assignedAt` + (`lockTTL` ?? 3600) < 현재 시각인지 검사
+2. 만료된 Task 발견 시:
+   - `status` → `"todo"`, `assignee` → `null`, `assignedAt` → `null`, `lockedFiles` → `[]`
+   - `workflowState` → `null`
+   - `metadata.version` 1 증가
+   - 로그: `🔓 잠금 만료 자동 해제: {TASK-ID} "{제목}" (만료: {N}분 전)`
+3. 여러 Task 만료 시 모두 한 번에 처리 후 커밋+push
+4. `status: paused` Task는 대상에서 제외 (일시정지는 의도적)
+
 ### 1. Task 선택
 **자동 선택 기준** (taskId 미지정 시):
 1. `status: todo` 중 `dependencies` 충족 + `lockedFiles` 충돌 없는 Task
 2. `priority` 높은 순 → 같으면 `phase` 낮은 순
 - 의존성 미충족 → `blocked` 표시
 - 같은 파일 수정 중인 `in_progress` Task → 경고
+- `status: paused` Task 감지 시 → "일시정지 Task {ID} 재개할까요?" 확인
+  - 재개: `status → in_progress`, `pauseReason → null`, `pausedAt → null`
+  - 유지: 다음 todo Task 선택
 
 ### 1.5 조기 잠금 (중복 선택 방지)
 Task 선택 직후 **즉시** backlog.json 업데이트 + push:

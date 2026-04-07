@@ -3,7 +3,7 @@ name: skill-impl
 description: 구현 - 스텝별 개발 + PR 생성. 사용자가 "개발 진행해줘", "구현해줘" 또는 /skill-impl을 요청할 때 사용합니다.
 disable-model-invocation: false
 allowed-tools: Bash(git:*), Bash(./gradlew:*), Bash(mvn:*), Bash(./mvnw:*), Bash(npm:*), Bash(yarn:*), Bash(pnpm:*), Bash(bun:*), Bash(python:*), Bash(pytest:*), Bash(ruff:*), Bash(poetry:*), Bash(pip:*), Bash(npx:*), Bash(go:*), Bash(golangci-lint:*), Read, Write, Edit, Glob, Grep, Task
-argument-hint: "[--next|--all|--retry|--skip|--micro \"설명\"]"
+argument-hint: "[--next|--all|--retry|--skip|--micro \"설명\"|--dry-run]"
 ---
 
 # skill-impl: 구현
@@ -15,6 +15,7 @@ argument-hint: "[--next|--all|--retry|--skip|--micro \"설명\"]"
 - `--retry`: 실패한 현재 스텝 재시작
 - `--skip`: 빌드 실패 스텝 건너뛰기
 - `--micro "설명"`: 소규모 작업 경량 경로 (plan 생략, 바로 구현→PR)
+- `--dry-run`: 빌드/테스트만 실행하고 PR 미생성 (브랜치 유지)
 
 ## 사전 조건 (MUST-EXECUTE-FIRST — 하나라도 실패 시 STOP)
 1. project.json 존재
@@ -24,6 +25,13 @@ argument-hint: "[--next|--all|--retry|--skip|--micro \"설명\"]"
 5. 현재 스텝 status == pending (`--micro` 시 자동 설정)
 6. origin/develop 동기화: >5 뒤처짐 → STOP, 1-5 → 자동 merge
 - `--next` 추가 조건: 이전 스텝 PR 머지 완료 **또는 skipped** + develop 최신 동기화
+
+## 잠금 자동 정리 (Lock Auto-cleanup)
+사전 조건 검사 중, 현재 작업 Task **외**의 `in_progress` Task를 스캔:
+1. `assignedAt` + (`lockTTL` ?? 3600) < 현재 시각 → 만료 감지
+2. 만료된 Task: `status` → `"todo"`, `assignee`/`assignedAt`/`lockedFiles` 초기화
+3. 로그: `🔓 잠금 만료 자동 해제: {TASK-ID}`
+4. 현재 작업 Task는 제외 (자기 자신의 lock은 정리하지 않음)
 
 ## 경량 점검
 CLAUDE.md "경량 점검 프로토콜" 3단계 실행: ①PR-backlog 일치 ②Stale 감지 ③Intent 복구
@@ -144,6 +152,21 @@ step status → "pr_created", prNumber 기록. assignedAt 갱신 (lock heartbeat
 7. **리뷰**: Trivial Fast Path 조건 매칭 시 경량 리뷰, 미매칭 시 일반 리뷰 폴백
 
 자연어: "OO 고쳐줘" / "OO 버그 수정해줘" → 규모 추정 → Micro 판단 시 자동 전환. 확신 못 하면 Standard.
+
+## --dry-run 옵션
+
+빌드와 테스트가 통과하는지만 확인한다. PR을 생성하지 않는다.
+
+1. **환경 준비**: 일반 플로우와 동일 (브랜치 생성/체크아웃)
+2. **코드 구현**: 일반 Step 3과 동일
+3. **빌드 & 테스트**: 일반 Step 5와 동일
+4. **결과 출력**: 빌드/테스트/린트 결과 요약
+5. **PR 미생성**: 커밋은 로컬에만 유지, push 안 함
+6. **상태 미변경**: backlog.json step status 변경 안 함
+7. **브랜치 유지**: 이후 `--retry`로 PR 포함 재실행 가능
+
+> `--dry-run`은 `--micro`와 조합 가능: `/skill-impl --micro "OO" --dry-run`
+> `--all`/`--next`와 조합 시 현재 스텝만 실행 (다음 스텝으로 진행하지 않음)
 
 ## --retry 옵션
 실패한 현재 스텝을 처음부터 재시작한다. skill-impl 실패 시에만 사용 가능.

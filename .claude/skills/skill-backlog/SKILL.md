@@ -100,7 +100,7 @@ argument-hint: "[list|add|update|priority|unlock|dashboard|archive|batch|deps] [
 
 ## 상태 값 / 우선순위 / 타입
 
-상태: `todo` | `in_progress` | `done` | `blocked` | `archived`
+상태: `todo` | `in_progress` | `done` | `blocked` | `paused` | `archived`
 우선순위: `critical`(긴급) | `high` | `medium` | `low`
 타입: `feature` | `bug` | `chore` | `spike` (미지정 시 `feature` 폴백)
 
@@ -120,6 +120,8 @@ type별 기본 priority: feature→medium, bug→high, chore→low, spike→medi
 - `--phase`: Phase 변경
 - `--type`: 타입 변경
 - `--reason`: 변경 사유 (blocked 상태 전환 시 권장)
+- `--pause "사유"`: Task 일시정지 (`in_progress` → `paused`, `pauseReason`/`pausedAt` 기록)
+- `--resume`: Task 재개 (`paused` → `in_progress`, `pauseReason`/`pausedAt` 초기화)
 
 ## dashboard 서브커맨드
 
