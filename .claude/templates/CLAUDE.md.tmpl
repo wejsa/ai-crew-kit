@@ -520,6 +520,16 @@ Types:
 
 워크트리 감지: `git rev-parse --git-dir` ≠ `git rev-parse --git-common-dir`
 
+지원 오케스트레이터 (모두 동일한 분기 로직 사용):
+
+| 오케스트레이터 | 진입 방법 | 워크트리 경로 | 브랜치 |
+|--------------|---------|-------------|--------|
+| **Claude Code 네이티브** (v2.1.49+) | `claude --worktree <name>` 또는 `-w <name>` | `.claude/worktrees/<name>/` | `worktree-<name>` |
+| **Claude Squad** | `cs new` 등 외부 도구 | 외부 도구 결정 | 외부 도구 결정 |
+| **수동 worktree** | `git worktree add ...` | 사용자 지정 | 사용자 지정 |
+
+> 네이티브 worktree 사용 시 `.claude/worktrees/`는 `.gitignore`로 추적 제외되어야 한다 (상태 파일 경합 방지).
+
 | 작업 | 일반 모드 | 워크트리 모드 |
 |------|----------|-------------|
 | develop 동기화 | `git checkout develop && git pull` | `git fetch origin develop && git merge origin/develop` |
@@ -527,7 +537,7 @@ Types:
 | PR merge | `gh pr merge --squash --delete-branch` | `gh pr merge --squash` (NEVER --delete-branch) |
 | 머지 후 동기화 | `git checkout develop && git pull --prune` | `git fetch origin develop --prune && git merge origin/develop` |
 | 상태 파일 반영 | develop에 직접 커밋 | **fetch+merge 먼저** → 워크트리 커밋 → push → 메인 리포에 cp → 커밋 → push |
-| 브랜치 생성 | `git checkout -b feature/...` | 불필요 (CS 브랜치 직접 사용) |
+| 브랜치 생성 | `git checkout -b feature/...` | 불필요 (현재 워크트리 브랜치 직접 사용) |
 | merge 후 step 재검증 | 불필요 | backlog.json 재읽기 → step이 done/merged면 다음 step 스킵 |
 
 ---

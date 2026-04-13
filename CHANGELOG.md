@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Claude Code v2.1.49+ 네이티브 git worktree 지원** — `claude --worktree <name>` (`-w`) 호환
+  - `.gitignore`: `.claude/worktrees/` 추적 제외 (상태 파일 경합 방지)
+  - `project.schema.json`: `orchestrator.type` enum에 `claude-code-native` 추가
+  - `CLAUDE.md.tmpl`: Git 워크트리 프로토콜에 오케스트레이터 비교 테이블 추가
+  - `git-workflow.md`: Worktree 모드 섹션을 Claude Code 네이티브 / Claude Squad / 수동 worktree로 일반화
+  - README 요구사항: Claude Code v2.1.49+ 권장 명시
+
+> 기존 worktree 분기 로직(`git rev-parse --git-dir != --git-common-dir`)이 네이티브 worktree도 자동 감지하므로 스킬 본문 변경 없이 호환됨.
+
 ## [1.45.0] - 2026-04-07
 
 ### Added
