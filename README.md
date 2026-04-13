@@ -144,9 +144,11 @@ claude
 | 구분 | 요구사항 |
 |------|---------|
 | **필수** | [Claude Code](https://claude.ai/download) CLI |
-| **권장** | Git 2.30+ |
+| **권장** | Claude Code v2.1.49+ (네이티브 git worktree 지원), Git 2.30+ |
 
 > 프레임워크 자체는 외부 런타임 없이 동작합니다. 프로젝트 빌드/테스트에 필요한 런타임(Node.js, Python, Go, JDK 등)은 선택한 기술 스택에 따라 별도 설치합니다.
+
+> 병렬 작업 시 `claude --worktree <name>` (Claude Code v2.1.49+) 또는 Claude Squad 같은 외부 오케스트레이터를 사용할 수 있습니다. 모든 스킬이 워크트리 환경을 자동 감지합니다.
 
 ---
 

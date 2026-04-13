@@ -52,6 +52,9 @@ test-output/
 .claude/plans/
 memory/
 
+# Claude Code native worktrees (claude --worktree <name>, v2.1.49+)
+.claude/worktrees/
+
 # Node (if any frontend testing)
 node_modules/
 

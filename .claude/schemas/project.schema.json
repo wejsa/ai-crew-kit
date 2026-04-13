@@ -143,12 +143,13 @@
     },
     "orchestrator": {
       "type": "object",
-      "description": "외부 오케스트레이터 설정 (Claude Squad 등). 미지정 시 자동 감지.",
+      "description": "워크트리 오케스트레이터 설정 (Claude Code 네이티브 worktree, Claude Squad 등). 미지정 시 자동 감지.",
       "properties": {
         "type": {
           "type": "string",
-          "enum": ["auto", "claude-squad", "none"],
-          "default": "auto"
+          "enum": ["auto", "claude-code-native", "claude-squad", "none"],
+          "default": "auto",
+          "description": "auto: git 메타데이터로 자동 감지, claude-code-native: Claude Code v2.1.49+ `claude --worktree` (.claude/worktrees/<name>/), claude-squad: 외부 Claude Squad 도구, none: 워크트리 미사용"
         }
       },
       "additionalProperties": false

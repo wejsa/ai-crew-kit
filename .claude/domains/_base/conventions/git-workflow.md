@@ -68,19 +68,26 @@ gh pr create --base main --title "revert: {대상} 롤백"
 git checkout develop && git merge main
 ```
 
-### Worktree 모드 (Claude Squad 등)
+### Worktree 모드 (Claude Code 네이티브 / Claude Squad 등)
 
-git worktree 환경에서는 develop checkout이 불가하므로, 현재 브랜치(CS 브랜치)를 feature 브랜치로 직접 사용한다.
+git worktree 환경에서는 develop checkout이 불가하므로, 현재 워크트리 브랜치를 feature 브랜치로 직접 사용한다.
+
+**진입 방법**:
+- **Claude Code 네이티브** (v2.1.49+): `claude --worktree <name>` 또는 `-w <name>` → `.claude/worktrees/<name>/`에 워크트리 생성, `worktree-<name>` 브랜치 사용
+- **Claude Squad**: 외부 도구 (`cs new` 등)로 worktree 생성 후 진입
+- **수동**: `git worktree add` 직접 사용
 
 | 일반 모드 | Worktree 모드 |
 |----------|--------------|
 | `git checkout develop && git pull` | `git fetch origin develop && git merge origin/develop` |
-| `git checkout -b feature/X` | 브랜치 생성 없음 (현재 브랜치 사용) |
+| `git checkout -b feature/X` | 브랜치 생성 없음 (현재 워크트리 브랜치 사용) |
 | `gh pr merge --squash --delete-branch` | `gh pr merge --squash` (브랜치 유지) |
 | 머지 후 `git checkout develop` | 머지 후 `git merge origin/develop` |
 | `git push origin develop` (상태) | `git push origin HEAD` |
 
-감지: `git rev-parse --git-dir` ≠ `--git-common-dir` → worktree
+감지: `git rev-parse --git-dir` ≠ `--git-common-dir` → worktree (오케스트레이터 종류 무관, 자동 적용)
+
+> 네이티브 worktree 사용 시 `.gitignore`에 `.claude/worktrees/`가 등록되어 있어야 한다 (상태 파일 경합 방지).
 
 ### 브랜치 병합
 
