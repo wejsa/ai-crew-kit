@@ -2,6 +2,7 @@
 name: agent-db-designer
 description: DB 설계 분석 전문 서브에이전트. skill-plan에서 병렬 Task로 자동 호출됨.
 tools: Read, Glob, Grep
+isolation: worktree
 color: 🟠
 ---
 
