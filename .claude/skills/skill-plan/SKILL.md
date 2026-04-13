@@ -70,7 +70,12 @@ Task 선택 직후 **즉시** backlog.json 업데이트 + push:
 
 ### 3.0 DB 설계 분석 (병렬)
 agents.enabled에 "db-designer" 포함 시에만 실행.
-Task tool (`run_in_background: true`)로 agent-db-designer 실행, 섹션 3 완료 후 결과 수거.
+Task tool로 agent-db-designer 실행, 섹션 3 완료 후 결과 수거.
+
+**Task 호출 옵션**:
+- `run_in_background: true` — 섹션 3과 병렬 실행
+- `isolation: "worktree"` — 격리된 worktree에서 실행 (Claude Code v2.1.49+, agent-db-designer frontmatter에도 동일 설정 — 이중 안전)
+- agent-db-designer는 읽기 전용이므로 worktree가 자동 정리된다
 
 **에이전트 프롬프트 구성 (토큰 절감)**:
 - 프롬프트에 포함: taskId, domain, spec 파일 경로
