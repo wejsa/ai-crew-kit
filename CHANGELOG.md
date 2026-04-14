@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.45.1] - 2026-04-14
+
 ### Added
 - **Claude Code v2.1.49+ 네이티브 git worktree 지원** — `claude --worktree <name>` (`-w`) 호환
   - `.gitignore`: `.claude/worktrees/` 추적 제외 (상태 파일 경합 방지)
