@@ -122,6 +122,10 @@ argument-hint: "[--dry-run] [--source <git-url|local-path>] [--version <tag>] [-
 - 12-2. domain.json 커스텀 항목 머지 (중복 키는 사용자 값 우선)
 - 12-3. settings.json 머지: allow 합집합(중복 제거) + 기존 deny 보존
 - 12-4. project.json: kitVersion 업데이트, kitSource 설정, migrations 적용
+- 12-5. 프로젝트 파일 마이그레이션 (migrations.json의 `add_gitignore_entry` 타입):
+  - 대상 entry가 `.gitignore`에 없으면 주석(`comment`)과 함께 추가
+  - `git ls-files --error-unmatch <entry>` 검사 → 이미 추적 중인 파일 감지 시 `trackedWarning` 메시지 출력 (자동 제거하지 않고 사용자 안내만)
+  - 이미 존재하면 no-op
 
 ### Step 13: CLAUDE.md/README.md 재생성
 

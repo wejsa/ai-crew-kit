@@ -30,6 +30,18 @@
           "required": false
         }
       ]
+    },
+    {
+      "from": "*",
+      "to": "1.45.1",
+      "changes": [
+        {
+          "type": "add_gitignore_entry",
+          "entry": ".claude/worktrees/",
+          "comment": "Claude Code native worktrees (claude --worktree <name>, v2.1.49+)",
+          "trackedWarning": "이미 .claude/worktrees/를 추적 중이라면 `git rm --cached -r .claude/worktrees/` 실행 후 커밋 권장 (상태 파일 경합 방지)"
+        }
+      ]
     }
   ],
   "features": [
