@@ -8,21 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **서브에이전트 worktree 격리 (Claude Code v2.1.49+)** — 6개 읽기 전용 분석 에이전트가 격리된 worktree에서 실행되도록 설정
-  - 6개 agent frontmatter에 `isolation: worktree` 필드 추가:
-    - `docs-impact-analyzer`, `pr-reviewer-domain`, `pr-reviewer-security`, `pr-reviewer-test`, `agent-qa`, `agent-db-designer`
-  - `skill-impl` Section 10 (백그라운드 분석): Task 호출 시 `isolation: "worktree"` 옵션 명시
-  - `skill-review-pr` Section 3 (N관점 병렬 리뷰): Task 호출 시 `isolation: "worktree"` 옵션 명시
-  - `skill-plan` Section 3.0 (DB 설계 분석): Task 호출 시 `isolation: "worktree"` 옵션 명시
-
-> 이중 안전: frontmatter + Task 호출 파라미터 양쪽에 isolation 설정. 모든 격리 대상은 읽기 전용이므로 worktree가 자동 정리되며, 메인 워크트리 오염을 방지함.
-
 - **Claude Code v2.1.49+ 네이티브 git worktree 지원** — `claude --worktree <name>` (`-w`) 호환
   - `.gitignore`: `.claude/worktrees/` 추적 제외 (상태 파일 경합 방지)
-  - `project.schema.json`: `orchestrator.type` enum에 `claude-code-native` 추가
   - `CLAUDE.md.tmpl`: Git 워크트리 프로토콜에 오케스트레이터 비교 테이블 추가
   - `git-workflow.md`: Worktree 모드 섹션을 Claude Code 네이티브 / Claude Squad / 수동 worktree로 일반화
   - README 요구사항: Claude Code v2.1.49+ 권장 명시
+  - `skill-upgrade`: `add_gitignore_entry` 마이그레이션 타입 추가 — 기존 프로젝트 업그레이드 시 `.gitignore`에 `.claude/worktrees/` 자동 추가 (이미 추적 중이면 제거 명령 안내)
+
+### Changed
+- `project.schema.json`: `orchestrator.type` enum에서 `claude-code-native` 값 제거 — 감지는 git 메타데이터(`git rev-parse --git-dir != --git-common-dir`)로 자동 수행되므로 enum 값이 분기 로직에 사용되지 않는 선언적 no-op였음. 오케스트레이터 종류(네이티브/Squad/수동)는 모두 동일 경로로 처리됨.
+
+### Reverted
+- **서브에이전트 worktree 격리 (PR #16)** — 100회 시뮬레이션(5 에이전트 × 20 시나리오) 결과 전면 되돌림.
+  - 근거: 대상 6개 agent는 `tools: Read, Glob, Grep`만 사용 → 물리적으로 쓰기 불가이므로 "메인 워크트리 오염 방지"는 존재하지 않는 문제를 해결
+  - 보안 이득 주장(exfiltration/injection/silent failure)은 worktree 경계 밖(`/tmp`, `~`, 부모 컨텍스트 반환)에서 발생 → 격리로 해결 불가
+  - Task 파라미터 `isolation: "worktree"`의 런타임 실재 미확인, Claude Code v2.1.48 이하 CI에서 호출 실패 가능성
+  - 향후 쓰기 가능한 분석 에이전트 도입 시 런타임 계약 검증 후 재설계
 
 > 기존 worktree 분기 로직(`git rev-parse --git-dir != --git-common-dir`)이 네이티브 worktree도 자동 감지하므로 스킬 본문 변경 없이 호환됨.
 

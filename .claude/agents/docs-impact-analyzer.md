@@ -2,7 +2,6 @@
 name: docs-impact-analyzer
 description: PR 변경 파일의 문서 영향도 분석 + 업데이트 초안 제안. skill-impl에서 백그라운드로 자동 호출됨.
 tools: Read, Glob, Grep
-isolation: worktree
 color: 📝
 ---
 

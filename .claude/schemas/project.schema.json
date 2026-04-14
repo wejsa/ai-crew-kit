@@ -143,13 +143,13 @@
     },
     "orchestrator": {
       "type": "object",
-      "description": "워크트리 오케스트레이터 설정 (Claude Code 네이티브 worktree, Claude Squad 등). 미지정 시 자동 감지.",
+      "description": "워크트리 오케스트레이터 설정. 감지는 git 메타데이터(`git rev-parse --git-dir != --git-common-dir`)로 자동 수행되며, 오케스트레이터 종류(Claude Code 네이티브, Claude Squad, 수동 worktree)는 동일하게 처리된다.",
       "properties": {
         "type": {
           "type": "string",
-          "enum": ["auto", "claude-code-native", "claude-squad", "none"],
+          "enum": ["auto", "claude-squad", "none"],
           "default": "auto",
-          "description": "auto: git 메타데이터로 자동 감지, claude-code-native: Claude Code v2.1.49+ `claude --worktree` (.claude/worktrees/<name>/), claude-squad: 외부 Claude Squad 도구, none: 워크트리 미사용"
+          "description": "auto: git 메타데이터로 자동 감지 (모든 worktree 종류 동일 처리), claude-squad: 외부 Claude Squad 도구 명시(auto와 동일 분기), none: 워크트리 미사용"
         }
       },
       "additionalProperties": false

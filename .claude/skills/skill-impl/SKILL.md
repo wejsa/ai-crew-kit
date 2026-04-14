@@ -134,13 +134,7 @@ step status → "pr_created", prNumber 기록. assignedAt 갱신 (lock heartbeat
 - 프롬프트에 포함: 변경 파일 목록, PR 번호, 브랜치명
 - 프롬프트에 포함하지 않음: PR diff 전체, 소스 코드 전체 (에이전트가 필요 시 자체 Read)
 
-**Task 호출 옵션**:
-- `run_in_background: true` — 병렬 실행
-- `isolation: "worktree"` — 각 분석을 격리된 worktree에서 실행 (메인 워크트리 오염 방지, 파일 수정 없으면 자동 정리)
-
-격리 동작: Claude Code v2.1.49+에서 `isolation: "worktree"` 파라미터는 에이전트를 임시 worktree에서 실행한다. 에이전트 frontmatter에도 `isolation: worktree`가 설정되어 있어 이중 안전이 적용된다. 읽기 전용 에이전트(docs-impact-analyzer, agent-qa)는 파일을 수정하지 않으므로 worktree가 자동 정리된다.
-
-실패 시 "⚠️ 분석 불가" 출력 후 진행.
+각 Task `run_in_background: true`. 실패 시 "⚠️ 분석 불가" 출력 후 진행.
 
 ## --micro 옵션 (경량 경로)
 소규모 작업(파일 ≤3개, ~100줄)을 plan 없이 바로 구현한다.

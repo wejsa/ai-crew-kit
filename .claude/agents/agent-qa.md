@@ -2,7 +2,6 @@
 name: agent-qa
 description: 테스트 품질 분석 전문 서브에이전트. skill-impl에서 백그라운드 Task로 자동 호출됨.
 tools: Read, Glob, Grep
-isolation: worktree
 color: 🟢
 ---
 
