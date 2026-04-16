@@ -1,6 +1,6 @@
 # Phase 4: 4-Layer Override + Constraint Rules
 
-> **우선순위**: P1 | **의존성**: Phase 0 + Phase 2 | **난이도**: M
+> **우선순위**: P1 | **의존성**: Phase 0 | **난이도**: M
 
 ## 목표
 
@@ -26,10 +26,11 @@
 
 ### Architect 분석 항목
 1. **4층 로드 순서 구현**: 현재 skill-health-check가 `_base → {domain}` 2층으로 health/_category.json을 병합하는 로직(`SKILL.md:34-39`) 확인 → 이것을 4층으로 일반화하는 방법
-2. **conventions 디렉토리 구조**: `_base/conventions/` vs `rules/` 공존 방식
-   - conventions = 기존 권장사항 (24개 md)
-   - rules = 새로운 제약사항 (domain x language 교차)
-   - 두 디렉토리의 역할 분리 명확화
+2. **conventions vs rules 이중 구조 역할/경계 확정 (H002 — 선행 확정 필수)**:
+   - `_base/conventions/` = 기존 **권장사항** (24개 md, "SHOULD" 수준, 범용)
+   - `.claude/rules/` = 새로운 **제약사항** (domain × language 교차, "MUST/MUST NOT" 수준, 위반 시 리뷰 지적)
+   - **명확한 기준**: conventions에 있는 내용을 rules에 중복하지 않는다. rules는 반드시 도메인 + 언어 교차점에서만 존재한다. `_base/rules/`는 만들지 않는다.
+   - TFT는 기존 conventions 24개 파일을 검토하여 rules로 승격해야 할 항목이 있는지 판단할 것
 
 ### Domain Lead 분석 항목
 1. **domain-first 우선순위의 구체적 충돌 시나리오**

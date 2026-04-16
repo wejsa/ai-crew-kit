@@ -23,15 +23,22 @@ Claude Code 네이티브 훅 시스템을 도입하여 **세션 시작 자동화
 1. **훅 실행 모델**: Claude Code의 hooks 이벤트 수신 방식 확인
    - `settings.json`의 hooks 필드 구조 (Claude Code 공식 스펙 확인)
    - 훅 명령어가 shell command인지 skill 호출인지
-2. **순환 참조 방지**: PostToolUse(Write) 훅이 Write를 트리거하면 무한 루프
-   - 해결책: 훅 내부 Write는 훅을 트리거하지 않는 구조 확인
+2. **PostToolUse 무한 루프 방어 (C001 — CRITICAL)**: PostToolUse(Write) 훅이 backlog.json을 Write하면 무한 재귀 발생 가능. 반드시 다음 **3단계 폴백 전략**을 검증하고 확정할 것:
+   - **1단계 (경로 제외)**: 훅 트리거에서 `.claude/state/`, `.claude/temp/` 경로의 Write를 제외 → 훅이 상태 파일 수정 시 재트리거하지 않음
+   - **2단계 (재진입 방지)**: 훅 실행 중 플래그(환경변수 `ACK_HOOK_RUNNING=1` 등)를 설정하여 동일 훅의 재진입 차단
+   - **3단계 (기능 축소)**: 위 방어가 모두 실패할 경우, 3회 연속 트리거 감지 시 해당 세션의 PostToolUse 훅을 자동 비활성화하고 경고 출력
+   - TFT는 Claude Code가 위 메커니즘 중 어떤 것을 네이티브 지원하는지 확인하고, 지원하지 않는 경우 shell script 래퍼로 구현 가능 여부를 판단할 것
 3. **워크트리 환경 호환**: 여러 세션의 동시 훅 실행 시 race condition
 
 ### Security Lead 분석 항목
 1. **Hook Integrity Audit 설계**: skill-health-check에 추가할 검사 항목
    - settings.json hooks 내 명령어 화이트리스트 검증
-   - 외부 스크립트 참조 탐지 및 경고
-2. **훅 명령어에서의 위험 패턴**: `rm`, `sudo`, `git reset --hard` 등 차단
+   - 외부 스크립트 참조 탐지 — **심각도 CRITICAL** (H010: 외부 스크립트는 서명 검증 불가 → 인젝션 벡터)
+2. **훅 명령어 인젝션 방어 (H009 — 선행 확정 필수)**:
+   - **화이트리스트 방식**: 허용 명령어를 명시적으로 정의 (`git`, `cat`, `echo`, `jq` 등)
+   - **차단 패턴**: `rm`, `sudo`, `curl`, `wget`, `git reset --hard`, `git push --force`, 파이프(`|`)를 통한 외부 전송
+   - **정책**: 화이트리스트에 없는 명령어는 HI-01 CRITICAL FAIL
+   - TFT는 이 화이트리스트 초안을 확정하고, 도메인별 예외가 필요한지 판단할 것
 
 ### DX Lead 분석 항목
 1. **CLAUDE.md.tmpl 세션 시작 섹션** 변경 사양
@@ -75,6 +82,10 @@ Claude Code 네이티브 훅 시스템을 도입하여 **세션 시작 자동화
 ### Task 1-3: PostToolUse 훅 구현
 - 역할: Write/Edit 도구 사용 후 자동 실행
 - 동작: backlog.json의 현재 Task lockedAt 갱신 (TTL 리프레시)
+- **무한 루프 방어 (필수)**:
+  - `.claude/state/`, `.claude/temp/` 경로 Write는 훅 트리거에서 제외
+  - 훅 스크립트 내부에 재진입 방지 로직 포함
+  - 3회 연속 트리거 시 자동 비활성화 + 경고
 
 ### Task 1-4: Stop 훅 구현
 - 역할: 세션 종료 시 자동 실행
@@ -92,7 +103,7 @@ Claude Code 네이티브 훅 시스템을 도입하여 **세션 시작 자동화
 - 파일: `.claude/skills/skill-health-check/SKILL.md`
 - 변경: 새 카테고리 `hook-safety` 추가
   - HI-01: settings.json hooks 명령어에 위험 패턴 탐지 (CRITICAL)
-  - HI-02: 외부 스크립트 참조 경고 (MAJOR)
+  - HI-02: 외부 스크립트 참조 탐지 (CRITICAL — 인젝션 벡터)
   - HI-03: hooks 필드 JSON 구조 유효성 (MINOR)
 - 가중치: 기존 4개 카테고리 + hook-safety 추가 → 재배분
 
@@ -112,13 +123,17 @@ Claude Code 네이티브 훅 시스템을 도입하여 **세션 시작 자동화
 - [ ] SessionStart 훅 실행 시 git sync + 상태 로드 자동 수행
 - [ ] Stop 훅 실행 시 continuation-plan.md 자동 생성
 - [ ] hooks 필드가 없는 프로젝트에서 기존 동작 100% 유지 (하위호환)
+- [ ] PostToolUse 훅이 `.claude/state/` Write 시 재트리거하지 않음 (무한 루프 방어)
+- [ ] PostToolUse 3회 연속 트리거 시 자동 비활성화 + 경고 출력
 - [ ] skill-health-check에 hook-safety 카테고리 검사 동작
 - [ ] 위험 패턴 (`rm -rf`, `sudo`) 포함 훅 → HI-01 CRITICAL FAIL
+- [ ] 외부 스크립트 참조 훅 → HI-02 CRITICAL FAIL
+- [ ] 훅 실행 실패(exit code ≠ 0) 시 에러 로그 출력 + 세션 정상 계속 (훅 실패가 세션을 중단시키지 않음)
 
 ## 리스크
 
 | 리스크 | 확률 | 영향 | 대응 |
 |--------|------|------|------|
 | Claude Code 훅 스펙이 예상과 다를 수 있음 | 중 | 높음 | TFT 분석 단계에서 공식 문서/실제 테스트로 스펙 확인 |
-| PostToolUse 무한 루프 | 낮 | 높음 | 훅 내부 쓰기는 훅을 재트리거하지 않음을 검증 |
+| PostToolUse 무한 루프 | 낮 | 높음 | 3단계 폴백: 경로 제외 → 재진입 플래그 → 3회 자동 비활성화 |
 | 워크트리 동시 훅 충돌 | 낮 | 중 | 파일 잠금 or 원자적 쓰기 |

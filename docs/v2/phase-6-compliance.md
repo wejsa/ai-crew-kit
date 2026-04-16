@@ -23,6 +23,13 @@
    - 입력: 규제 프레임워크(PCI-DSS 항목), 체크리스트 ID, 코드 경로, PR 번호, 머지 일자
    - 출력: 항목별 준수/미준수 상태 + 증거 링크
 2. **기존 체크리스트와의 연결**: `.claude/domains/fintech/checklists/compliance.md`의 각 항목에 ID를 부여해야 하는지
+3. **compliance 데이터 수집 경로 명세 (H004 — 선행 확정 필수)**:
+   - **누가**: skill-impl(PR 생성 시), skill-review-pr(리뷰 시), skill-merge-pr(머지 시)
+   - **언제**: 각 스킬 실행 완료 시점에 매핑 데이터 자동 수집
+   - **어떻게**: 각 스킬이 `compliance/mapping.json`에 증거를 append하는지, 아니면 skill-compliance-report 실행 시 git log/PR 기록을 역추적하는지
+   - **권장안**: 역추적 방식 (각 스킬을 수정하지 않고, 리포트 생성 시점에 git log + PR 메타데이터를 분석)
+   - **대안**: 실시간 수집 (각 스킬 수정 필요, 정확도 높지만 구현 비용 큼)
+   - TFT는 권장안의 정확도가 충분한지 검증할 것
 
 ### Domain Lead 분석 항목
 1. **fintech 규제 매핑 구조**: PCI-DSS 3.2.1 항목 → ACK 체크리스트 항목 → 코드 증거

@@ -28,9 +28,13 @@ skill-health-check에 **도메인별 민감정보 탐지(Secrets Scanner)**와 *
 3. **오탐(false positive) 관리**: 타입 선언, 주석, 변수명에서의 오탐 필터링 전략
 
 ### Architect 분석 항목
-1. **가중치 재배분 설계**: 현재 4개 카테고리 (doc-sync 35%, state-integrity 25%, security 25%, agent-config 15%)
+1. **SEC ID 체계 통합 (H003)**: 기존 SEC-01~04(health-check 내장)와 신규 SEC-05~07 + secrets-patterns.json의 SEC-S01~S03이 **3개 네임스페이스로 분산**됨. 통합 ID 체계 확정 필요:
+   - 권장안: `SEC-01~04`(기존 유지) + `SEC-05~07`(신규 health-check 항목) + `SEC-S{nn}`(secrets-patterns.json, 도메인별 동적)
+   - SEC-01(민감정보 로깅)과 SEC-S01~S03(하드코딩 탐지)의 **검사 대상 겹침 여부** 확인 → 겹치면 SEC-01을 SEC-S로 흡수하거나 참조 관계 정의
+2. **가중치 재배분 설계 + 중간 상태 정의 (H006)**: 현재 4개 카테고리 (doc-sync 35%, state-integrity 25%, security 25%, agent-config 15%)
    - Phase 1에서 hook-safety 추가됨 → Phase 5에서 secrets 추가
-   - 최종 가중치 배분 안 확정
+   - **중간 상태 정의 필수**: Phase 1 완료 ~ Phase 5 완료 사이에 가중치가 어떻게 전이되는지 명시
+   - 권장안: Phase 1 완료 시 `hook-safety: 10%` 추가하고 나머지 4개를 비례 감소. Phase 5에서 최종 재배분.
 
 ### DX Lead 분석 항목
 1. **FAIL 시 사용자 경험**: secrets 탐지 FAIL의 리포트 형식

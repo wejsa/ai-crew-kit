@@ -44,7 +44,7 @@ Phase 0 (Foundation)
   ├── Phase 2 (Profiles) ──────────┤
   └── Phase 3 (Token) ─────────────┤
                                     ▼
-                              Phase 4 (Rules) ← Phase 0 + 2
+                              Phase 4 (Rules) ← Phase 0
                               Phase 5 (Security) ← Phase 0 + 1
                               Phase 6 (Compliance) ← Phase 5
                                     │
@@ -54,7 +54,7 @@ Phase 0 (Foundation)
 ```
 
 - Phase 1, 2, 3은 **병렬 가능** (Phase 0 완료 후)
-- Phase 4는 Phase 0 + 2 의존 (프로파일이 rules 로드에 영향)
+- Phase 4는 Phase 0 의존 (H001: Phase 2 의존 근거 불명확 → 제거. rules 로드는 프로파일과 독립)
 - Phase 5는 Phase 0 + 1 의존 (훅이 보안 스캔 트리거)
 - Phase 6은 Phase 5 의존 (보안 데이터 기반 리포트)
 - Phase 7은 Phase 1 + 4 의존
@@ -113,11 +113,16 @@ TFT 분석 결과물:
 - 엣지 케이스 목록
 - 마이그레이션 영향도
 
+**필수 절차 (H012~H016 대응)**:
+- 각 Phase에서 **실패/에러 시나리오 최소 2개**를 TFT가 도출할 것
+- 성공 기준에 happy path뿐 아니라 **실패 시 복구 동작**을 1개 이상 포함할 것
+- 미결 결정 사항에는 **권장안 + 불일치 시 영향도**를 반드시 명시할 것
+
 ### Step 2: 설계 확정
 
 TFT 분석 결과를 기반으로:
 - 파일별 변경 diff 초안 확정
-- 테스트 시나리오 정의
+- 테스트 시나리오 정의 (정상 + **실패/경계값** 시나리오 필수 포함)
 - 하위호환 검증 계획
 
 ### Step 3: 구현
