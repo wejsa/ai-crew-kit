@@ -42,6 +42,36 @@
           "trackedWarning": "이미 .claude/worktrees/를 추적 중이라면 `git rm --cached -r .claude/worktrees/` 실행 후 커밋 권장 (상태 파일 경합 방지)"
         }
       ]
+    },
+    {
+      "from": "*",
+      "to": "2.0.0",
+      "changes": [
+        {
+          "type": "add_field",
+          "path": "hooks",
+          "default": {},
+          "required": false
+        },
+        {
+          "type": "add_field",
+          "path": "conventions.skillProfile",
+          "default": "default",
+          "required": false
+        },
+        {
+          "type": "add_field",
+          "path": "conventions.overridePriority",
+          "default": "domain-first",
+          "required": false
+        },
+        {
+          "type": "add_field",
+          "path": "tokenHints",
+          "default": {},
+          "required": false
+        }
+      ]
     }
   ],
   "features": [

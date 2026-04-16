@@ -137,6 +137,18 @@
           "enum": ["standard", "fast"],
           "default": "standard",
           "description": "standard: 전체 체이닝 (review 포함), fast: 프로토타입용 (리뷰 생략)"
+        },
+        "skillProfile": {
+          "type": "string",
+          "enum": ["default", "developer", "full", "docs-only", "custom"],
+          "default": "default",
+          "description": "스킬 프로파일 (Phase 2에서 상세 정의)"
+        },
+        "overridePriority": {
+          "type": "string",
+          "enum": ["domain-first", "merge"],
+          "default": "domain-first",
+          "description": "도메인 vs 언어 규칙 충돌 시 우선순위 (Phase 4에서 상세 정의)"
         }
       },
       "additionalProperties": false
@@ -242,8 +254,8 @@
     },
     "kitVersion": {
       "type": "string",
-      "pattern": "^\\d+\\.\\d+\\.\\d+$",
-      "description": "AI Crew Kit 프레임워크 버전 (skill-upgrade가 관리)"
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9]+(\\.[a-zA-Z0-9]+)*)?$",
+      "description": "AI Crew Kit 프레임워크 버전 (skill-upgrade가 관리, SemVer 2.0.0 프리릴리즈 지원)"
     },
     "kitSource": {
       "type": "string",
@@ -276,6 +288,18 @@
         }
       },
       "additionalProperties": false
+    },
+    "hooks": {
+      "type": "object",
+      "description": "라이프사이클 훅 설정 (Phase 1에서 상세 정의)",
+      "default": {},
+      "additionalProperties": true
+    },
+    "tokenHints": {
+      "type": "object",
+      "description": "토큰 최적화 힌트 (Phase 3에서 상세 정의)",
+      "default": {},
+      "additionalProperties": true
     }
   },
   "additionalProperties": false,

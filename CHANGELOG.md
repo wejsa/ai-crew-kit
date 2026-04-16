@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - TBD
+
+### Added
+- v2.0.0 스키마 확장: `hooks`, `skillProfile`, `overridePriority`, `tokenHints` 필드 예약
+- `kitVersion` SemVer 프리릴리즈 패턴 지원 (`2.0.0-alpha.1` 등)
+
+### Changed
+- (Phase 1~8 구현 시 추가)
+
+### Breaking Changes
+- `project.schema.json` 스키마 확장 — v1.x skill이 v2 project.json의 신규 필드를 인식하지 못할 수 있음 (skill-upgrade로 해결)
+
 ## [1.45.1] - 2026-04-14
 
 ### Added
