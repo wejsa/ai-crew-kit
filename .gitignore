@@ -74,3 +74,5 @@ docs/*
 !docs/customization.md
 !docs/upgrade-guide.md
 !docs/eject-guide.md
+!docs/v2/
+!docs/v2/**
