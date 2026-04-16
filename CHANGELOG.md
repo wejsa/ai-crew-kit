@@ -12,9 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - v2.0.0 스키마 확장: `hooks`, `skillProfile`, `overridePriority`, `tokenHints` 필드 예약
 - `kitVersion` SemVer 프리릴리즈 패턴 지원 (`2.0.0-alpha.1` 등)
+- 스킬 프로파일 시스템 (developer/full/docs-only/custom) — CLAUDE.md 스킬 노출 제어
+- `skill-profiles.json` 프로파일 정의 파일
+- `project.schema.json`에 `customSkills` 배열 필드 추가 (custom 프로파일용)
+- `skill-init`에 스킬 프로파일 선택 단계 (Step 5.6) 추가
+- TEMPLATE-ENGINE에 `SKILL_LIST_SECTION`, `NATURAL_LANGUAGE_COMMANDS` 블록 마커 추가
 
 ### Changed
-- (Phase 1~8 구현 시 추가)
+- CLAUDE.md.tmpl: 하드코딩 스킬 목록/자연어 매핑을 프로파일 기반 블록 마커로 교체
 
 ### Breaking Changes
 - `project.schema.json` 스키마 확장 — v1.x skill이 v2 project.json의 신규 필드를 인식하지 못할 수 있음 (skill-upgrade로 해결)
