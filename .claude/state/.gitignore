@@ -1,0 +1,19 @@
+# .claude/state/ — Phase 1 훅 실행으로 생성되는 전이 파일 제외
+# (backlog.json 등 실제 상태 파일은 명시적 예외 처리)
+
+# 훅 에러 로그 / 잠금 / 카운터 (Step 2~3)
+hook-errors.log
+hook-disabled.flag
+hook-trigger-count
+*.lock
+*.tmp
+*.tmp.*
+
+# 기본: 이 디렉토리의 모든 파일 무시, 명시 허용만 커밋
+*
+!.gitignore
+!backlog.json
+!completed.json
+!continuation-plan.md
+!lessons-learned.json
+!health-history.json
