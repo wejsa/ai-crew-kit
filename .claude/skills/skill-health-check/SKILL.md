@@ -264,6 +264,63 @@ complexity-hint: heavy
   - 주의: skill-validate는 YAML 프론트매터만 검증. 이 항목은 본문 구조를 검증.
 - autoFix: 불가
 
+### 카테고리: hook-safety (훅 안전성 — Hook Integrity Audit)
+
+본 카테고리는 `.claude/settings.json`의 `hooks` 필드와 `.claude/hooks/**/*.sh` 스크립트에 대해
+위험 패턴 / 외부 스크립트 참조 / 스키마 유효성 / 비블로킹 규칙을 정적 검사한다.
+Claude Code 네이티브 훅은 clone 즉시 모든 contributor 세션에서 자동 실행되므로 본 카테고리는
+**공급망 공격 1차 방어선**이다. autoFix는 전 항목 불가 (보안 관련은 수동 수정 필수).
+
+사전 조건 규칙:
+- `.claude/settings.json` 및 `.claude/hooks/` 중 어느 것도 없으면 카테고리 전체 SKIP.
+- `.claude/hooks/tests/` 디렉토리는 테스트 fixture 포함으로 모든 검사에서 제외한다.
+
+#### HI-01. 차단 패턴 탐지 (CRITICAL)
+- 사전 조건: `.claude/settings.json`의 hooks 필드 존재 또는 `.claude/hooks/*.sh` 1개 이상 존재
+- 검사 대상:
+  - `.claude/settings.json`의 모든 `hooks[].hooks[].command` 문자열
+  - `.claude/hooks/**/*.sh` (주석 라인 `#` 제외, `tests/` 제외)
+- 차단 패턴 정규식 (하나라도 매칭되면 FAIL, 매칭 위치 리포트 포함):
+  - `\brm\s+-[rf]+` — 재귀 강제 삭제
+  - `\bsudo\b` — 권한 상승
+  - `\bcurl\b`, `\bwget\b` — 외부 요청 (설정/스크립트 내)
+  - `git\s+reset\s+--hard`, `git\s+push\s+--force` — 파괴적 git 동작
+  - `\|\s*(curl|wget|nc|bash|sh)\b` — 파이프 실행
+- FAIL 시: backlog 자동 등록 (CRITICAL bugfix)
+- autoFix: 불가 (수동 수정 필수)
+- 참조: docs/v2/phase-1-plan.md §보안 리뷰 필수 변경점
+
+#### HI-02. 외부 스크립트 참조 탐지 (CRITICAL)
+- 사전 조건: HI-01과 동일
+- 검사 대상: HI-01과 동일
+- 위반 조건:
+  - `.claude/hooks/` 외부 절대/상대 경로 참조 (예: `/usr/local/bin/xxx`, `../../external.sh`)
+  - `http://` 또는 `https://` URL 문자열 존재
+  - `$CLAUDE_PROJECT_DIR/.claude/hooks/` 및 `.claude/hooks/` prefix는 허용
+- FAIL 시: backlog 자동 등록 (CRITICAL bugfix)
+- autoFix: 불가
+
+#### HI-03. hooks 필드 JSON 구조 유효성 (MINOR)
+- 사전 조건: `.claude/settings.json` 존재
+- 검사:
+  - JSON 파싱 성공 확인
+  - `.claude/schemas/project.schema.json`의 `definitions.hookMatcher` 구조와 대조
+    (SessionStart/PostToolUse/Stop 등 각 이벤트 배열이 `{matcher?, hooks: [{type, command, timeout?}]}` 형태)
+  - `hooks[].hooks[].type`이 `"command"`로 설정되어 있는지
+  - `timeout` 값이 숫자이고 상한(예: 60초) 내인지
+- autoFix: 불가 (수동 수정 안내)
+- 주의: project.schema.json과 Claude Code 공식 스키마의 양쪽 대조는 향후 확장 (phase-1-plan.md §스키마 소유권 계약 참조)
+
+#### HI-04. 훅 비블로킹 규칙 위반 (MAJOR)
+- 사전 조건: `.claude/hooks/*.sh` 1개 이상 존재
+- 검사: `scripts/check-hook-blocking.sh`가 있으면 이를 사용하고, 없으면 동일 로직을 인라인 수행
+  - `exit 2` 검출 (주석 제외) — Claude Code "블록" 시그널
+  - `set -e`, `set -eu`, `set -euo pipefail` 등 단독 사용 검출 (`|| true` 동반 없음)
+- 위반 시: 파일:라인 리포트 포함
+- FAIL 시: backlog 자동 등록 (MAJOR improvement)
+- autoFix: 불가 (스크립트 수동 리팩토링 필요)
+- 참조: TFT R4 — 훅 `exit 2`/`set -e` 사용 시 세션 차단 위험
+
 ### 카테고리: compliance (도메인 조건부 — fintech만 해당)
 
 아래 항목들은 project.json의 domain이 "fintech"일 때만 실행된다.
