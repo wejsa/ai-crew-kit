@@ -16,6 +16,14 @@ HOOK_NAME="session-start"
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
 cd "$PROJECT_DIR" 2>/dev/null || exit 0
 
+# 훅은 비대화형 — git이 credential/확인 프롬프트를 띄우지 못하도록 강제.
+# (HTTPS remote + credential manager 미캐시 상태에서 터미널 멈춤 방지)
+export GIT_TERMINAL_PROMPT=0
+export GIT_ASKPASS=/bin/true
+export GCM_INTERACTIVE=never
+# 자식 프로세스 stdin 차단 (이중 방어)
+exec 0</dev/null
+
 STATE_DIR=".claude/state"
 ERROR_LOG="$STATE_DIR/hook-errors.log"
 CONT_PLAN="$STATE_DIR/continuation-plan.md"

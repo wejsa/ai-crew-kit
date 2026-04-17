@@ -17,6 +17,11 @@ HOOK_NAME="stop"
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
 cd "$PROJECT_DIR" 2>/dev/null || exit 0
 
+# 훅은 비대화형 — 어떠한 자식 프로세스도 프롬프트를 띄우지 못하도록.
+export GIT_TERMINAL_PROMPT=0
+export GIT_ASKPASS=/bin/true
+export GCM_INTERACTIVE=never
+
 STATE_DIR=".claude/state"
 ERROR_LOG="$STATE_DIR/hook-errors.log"
 CONT_PLAN="$STATE_DIR/continuation-plan.md"
