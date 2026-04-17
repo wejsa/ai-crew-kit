@@ -4,6 +4,7 @@ description: 프로젝트 초기화 - 도메인 선택 + 자동 셋업. /skill-i
 disable-model-invocation: true
 allowed-tools: Bash(git:*), Read, Write, Glob, AskUserQuestion
 argument-hint: "[--quick] [--reset]"
+complexity-hint: light
 ---
 
 # skill-init: 프로젝트 초기화

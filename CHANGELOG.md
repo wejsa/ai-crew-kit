@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `project.schema.json`에 `customSkills` 배열 필드 추가 (custom 프로파일용)
 - `skill-init`에 스킬 프로파일 선택 단계 (Step 5.6) 추가
 - TEMPLATE-ENGINE에 `SKILL_LIST_SECTION`, `NATURAL_LANGUAGE_COMMANDS` 블록 마커 추가
+- **스킬 복잡도 힌트 (Phase 3)** — 23개 SKILL.md에 `complexity-hint` frontmatter 필드 추가 (heavy 3 / medium 9 / light 11)
+- `project.schema.json`의 `tokenHints` 상세 스키마: `defaultComplexity`, `skillOverrides`, `maxMcpServers`, `compactionThreshold`
+- `docs/token-optimization.md` 신규 — 복잡도 매핑, 환경변수 안내, 프로파일×복잡도 조합
 
 ### Changed
 - CLAUDE.md.tmpl: 하드코딩 스킬 목록/자연어 매핑을 프로파일 기반 블록 마커로 교체

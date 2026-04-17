@@ -4,6 +4,7 @@ description: 프로젝트 상태 확인 - 현재 작업 진행상황, 백로그 
 disable-model-invocation: true
 allowed-tools: Bash(git:*), Bash(gh:*), Bash(python3:*), Read, Glob
 argument-hint: "[--health [--fix]|--locks]"
+complexity-hint: light
 ---
 
 # skill-status: 프로젝트 상태 확인

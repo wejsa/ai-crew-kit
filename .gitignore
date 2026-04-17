@@ -74,5 +74,6 @@ docs/*
 !docs/customization.md
 !docs/upgrade-guide.md
 !docs/eject-guide.md
+!docs/token-optimization.md
 !docs/v2/
 !docs/v2/**

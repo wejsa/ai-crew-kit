@@ -4,6 +4,7 @@ description: 커스텀 스킬 생성 - SKILL.md 스캐폴딩 + CLAUDE.md 자동 
 disable-model-invocation: false
 allowed-tools: Bash(mkdir:*), Bash(ls:*), Read, Write, Edit, Glob, Grep, AskUserQuestion
 argument-hint: "<name> [description]"
+complexity-hint: light
 ---
 
 # skill-create: 커스텀 스킬 생성

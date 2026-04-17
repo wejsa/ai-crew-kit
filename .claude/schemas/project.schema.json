@@ -305,9 +305,39 @@
     },
     "tokenHints": {
       "type": "object",
-      "description": "토큰 최적화 힌트 (Phase 3에서 상세 정의)",
+      "description": "토큰 최적화 힌트 — 스킬별 complexity-hint의 프로젝트 차원 오버라이드",
       "default": {},
-      "additionalProperties": true
+      "properties": {
+        "defaultComplexity": {
+          "type": "string",
+          "enum": ["heavy", "medium", "light"],
+          "default": "medium",
+          "description": "스킬에 complexity-hint가 없을 때 적용되는 기본 복잡도"
+        },
+        "skillOverrides": {
+          "type": "object",
+          "description": "스킬별 complexity 오버라이드 (키: 스킬명, 값: 복잡도)",
+          "additionalProperties": {
+            "type": "string",
+            "enum": ["heavy", "medium", "light"]
+          }
+        },
+        "maxMcpServers": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20,
+          "default": 10,
+          "description": "동시 활성화 MCP 서버 수 권장 상한"
+        },
+        "compactionThreshold": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 100,
+          "default": 50,
+          "description": "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE 권장값 (%)"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false,
