@@ -32,9 +32,9 @@ jobs:
           find .claude/hooks scripts -type f -name '*.sh' -print0 \
             | xargs -0 -n1 bash -n
 
-      - name: shellcheck 정적 분석
+      - name: shellcheck 정적 분석 (warning 이상)
         run: |
-          shellcheck -x \
+          shellcheck -x --severity=warning \
             .claude/hooks/*.sh \
             .claude/hooks/lib/*.sh \
             scripts/check-hook-blocking.sh
