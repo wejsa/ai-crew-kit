@@ -1,0 +1,17 @@
+{
+  "name": "bad-unknown-event",
+  "domain": "general",
+  "version": "2.0.0-alpha.2",
+  "hooks": {
+    "SessionStart": [],
+    "CustomMadeUpEvent": [
+      {
+        "hooks": [
+          {
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/nope.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

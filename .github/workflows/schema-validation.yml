@@ -1,0 +1,50 @@
+name: Schema Validation
+
+on:
+  push:
+    branches: [main, develop, v2-develop, 'feature/**', 'fix/**']
+  pull_request:
+    branches: [main, develop, v2-develop]
+
+jobs:
+  validate:
+    name: Validate project.schema.json + settings.json + fixtures
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install check-jsonschema
+        run: pip install --upgrade check-jsonschema
+
+      - name: Meta-schema check (Draft-07)
+        run: check-jsonschema --check-metaschema .claude/schemas/project.schema.json
+
+      - name: JSON syntax check — .claude/settings.json
+        run: python -m json.tool .claude/settings.json > /dev/null
+
+      - name: JSON syntax check — fixtures
+        run: |
+          for f in .claude/schemas/fixtures/positive/*.json .claude/schemas/fixtures/negative/*.json; do
+            python -m json.tool "$f" > /dev/null
+          done
+
+      - name: Full fixture runner (validate-schema.sh)
+        run: bash scripts/validate-schema.sh
+
+      - name: Validate example project.json files
+        run: |
+          shopt -s nullglob
+          found=0
+          for f in examples/*/.claude/state/project.json; do
+            found=1
+            echo "→ $f"
+            check-jsonschema --schemafile .claude/schemas/project.schema.json "$f"
+          done
+          if [ "$found" -eq 0 ]; then
+            echo "No example project.json files (skip)"
+          fi

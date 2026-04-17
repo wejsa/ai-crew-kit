@@ -37,6 +37,40 @@ Claude Code 네이티브 훅으로 **세션 시작 자동화**, **스킬 전환 
 
 ---
 
+## 🔒 스키마 소유권 계약 (H003 대응)
+
+본 Phase에서 다루는 두 스키마는 **관리 주체가 다름** — 혼동 방지 위해 경계를 명문화한다.
+
+| 파일 | 관리 주체 | 검증 대상 | 강제 수단 |
+|------|---------|---------|---------|
+| `.claude/schemas/project.schema.json` | ai-crew-kit (본 레포) | `examples/*/.claude/state/project.json` 등 ai-crew-kit 내부 구성 | `scripts/validate-schema.sh` + `.github/workflows/schema-validation.yml` |
+| `.claude/settings.json` | **Claude Code 공식 스키마** (외부) | 실제 훅 실행 대상 | Claude Code 런타임 + 본 레포 JSON 구문 체크 |
+
+**핵심 원칙**:
+- `project.schema.json`의 `hooks` 정의는 **참고용 계약**이며 `.claude/settings.json`에 자동 적용되지 않는다.
+- `.claude/settings.json`은 Claude Code 공식 스키마(`https://json.schemastore.org/claude-code-settings.json`)에 맞춰야 한다. 특히 `hooks[].hooks[].type: "command"`가 필수.
+- 두 스키마의 `hookMatcher` 구조 동기화는 **Step 5 HI-03(health-check) 과제**로 런타임에서 양쪽 대조 검사.
+- Phase 4 Layered Override 도입 시 `hooks.schema.json`으로 definition 분리 검토.
+
+---
+
+## 🛡️ 보안 리뷰 필수 변경점 (H006 대응)
+
+다음 파일 변경 PR은 **security-lead(또는 security 에이전트) 리뷰 필수**:
+
+| 파일 | 이유 | 체크포인트 |
+|------|------|---------|
+| `.claude/settings.json` (`hooks` 필드) | clone 시 모든 contributor 세션에서 자동 실행 | 위험 패턴, 외부 스크립트 참조, 경로 prefix |
+| `.claude/hooks/**` | 훅 스크립트 본체 | 비블로킹 규칙, 차단 패턴, stdin 프롬프트 유발 명령 |
+| `.claude/schemas/project.schema.json` (hooks, `definitions.hookMatcher`) | 다른 훅 정의의 계약 | description 필수화, timeout 상한, `command` pattern |
+
+운영 규칙:
+1. 위 파일이 diff에 포함되면 PR label에 `security-review` 자동 부여 (후속 Phase)
+2. `.github/CODEOWNERS`에 상기 경로 등록 (본 PR에서 도입)
+3. `.claude/hooks/README.md`에 "자동 실행 경고" 섹션 필수
+
+---
+
 ## 현재 상태 점검
 
 | 항목 | 상태 |

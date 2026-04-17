@@ -299,23 +299,34 @@
     },
     "hooks": {
       "type": "object",
-      "description": "Claude Code 네이티브 라이프사이클 훅 설정 — 2층 구조: event > matcher > hooks[]. 부재 시 v1.x 동작 유지.",
+      "description": "Claude Code 네이티브 라이프사이클 훅 설정 — 2층 구조: event > matcher > hooks[]. 부재 시 v1.x 동작 유지. Phase 1에서 사용하는 3개는 properties로 정의, 나머지 공식 이벤트는 patternProperties로 확장 가능.",
       "default": {},
       "properties": {
         "SessionStart": {
           "type": "array",
           "description": "세션 시작 시 실행. git sync, 상태 로드 등.",
-          "items": { "$ref": "#/definitions/hookMatcher" }
+          "items": { "$ref": "#/definitions/hookMatcher" },
+          "maxItems": 5
         },
         "PostToolUse": {
           "type": "array",
           "description": "도구 사용 직후 실행. matcher로 대상 도구 지정 (예: \"Edit|Write\").",
-          "items": { "$ref": "#/definitions/hookMatcher" }
+          "items": { "$ref": "#/definitions/hookMatcher" },
+          "maxItems": 5
         },
         "Stop": {
           "type": "array",
-          "description": "Claude 응답 완료 시마다 실행 (세션 종료 아님). stop_hook_active 체크 필수.",
-          "items": { "$ref": "#/definitions/hookMatcher" }
+          "description": "Claude 응답 완료 시마다 실행 (세션 종료 아님). stop_hook_active 체크 필수. 런타임 가드는 훅 스크립트 책임.",
+          "items": { "$ref": "#/definitions/hookMatcher" },
+          "maxItems": 5
+        }
+      },
+      "patternProperties": {
+        "^(PreToolUse|PostToolUseFailure|Notification|UserPromptSubmit|SessionEnd|StopFailure|SubagentStart|SubagentStop|PreCompact|PostCompact|PermissionRequest|PermissionDenied|Setup|TeammateIdle|TaskCreated|TaskCompleted|Elicitation|ElicitationResult|ConfigChange|WorktreeCreate|WorktreeRemove|InstructionsLoaded|CwdChanged|FileChanged)$": {
+          "type": "array",
+          "description": "Claude Code 공식 훅 이벤트 — Phase 1 범위 외이나 v2.1+ 확장을 위해 화이트리스트로 허용.",
+          "items": { "$ref": "#/definitions/hookMatcher" },
+          "maxItems": 5
         }
       },
       "additionalProperties": false

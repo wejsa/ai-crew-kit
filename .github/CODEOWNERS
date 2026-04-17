@@ -1,0 +1,21 @@
+# CODEOWNERS — 경로별 리뷰 필수 오너 지정
+# 참조: https://docs.github.com/en/repositories/managing-your-repositories-settings-and-features/customizing-your-repository/about-code-owners
+#
+# Phase 1 범위: 훅/스키마 관련 파일은 보안 리뷰 필수 지점.
+# PR 생성 시 해당 경로 변경이 감지되면 GitHub가 자동으로 리뷰 요청.
+
+# ── 보안 민감 영역 (자동 실행/정책 파일) ────────────────────
+/.claude/settings.json              @wejsa
+/.claude/hooks/                     @wejsa
+/.claude/hooks/**                   @wejsa
+/.claude/schemas/                   @wejsa
+/.claude/schemas/**                 @wejsa
+
+# ── CI/릴리스 설정 ──────────────────────────────────────────
+/.github/                           @wejsa
+/.github/**                         @wejsa
+/VERSION                            @wejsa
+/CHANGELOG.md                       @wejsa
+
+# ── 스키마 validation 인프라 ────────────────────────────────
+/scripts/validate-schema.sh         @wejsa
