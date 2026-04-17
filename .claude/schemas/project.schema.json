@@ -299,9 +299,37 @@
     },
     "hooks": {
       "type": "object",
-      "description": "라이프사이클 훅 설정 (Phase 1에서 상세 정의)",
+      "description": "Claude Code 네이티브 라이프사이클 훅 설정 — 2층 구조: event > matcher > hooks[]. 부재 시 v1.x 동작 유지. Phase 1에서 사용하는 3개는 properties로 정의, 나머지 공식 이벤트는 patternProperties로 확장 가능.",
       "default": {},
-      "additionalProperties": true
+      "properties": {
+        "SessionStart": {
+          "type": "array",
+          "description": "세션 시작 시 실행. git sync, 상태 로드 등.",
+          "items": { "$ref": "#/definitions/hookMatcher" },
+          "maxItems": 5
+        },
+        "PostToolUse": {
+          "type": "array",
+          "description": "도구 사용 직후 실행. matcher로 대상 도구 지정 (예: \"Edit|Write\").",
+          "items": { "$ref": "#/definitions/hookMatcher" },
+          "maxItems": 5
+        },
+        "Stop": {
+          "type": "array",
+          "description": "Claude 응답 완료 시마다 실행 (세션 종료 아님). stop_hook_active 체크 필수. 런타임 가드는 훅 스크립트 책임.",
+          "items": { "$ref": "#/definitions/hookMatcher" },
+          "maxItems": 5
+        }
+      },
+      "patternProperties": {
+        "^(PreToolUse|PostToolUseFailure|Notification|UserPromptSubmit|SessionEnd|StopFailure|SubagentStart|SubagentStop|PreCompact|PostCompact|PermissionRequest|PermissionDenied|Setup|TeammateIdle|TaskCreated|TaskCompleted|Elicitation|ElicitationResult|ConfigChange|WorktreeCreate|WorktreeRemove|InstructionsLoaded|CwdChanged|FileChanged)$": {
+          "type": "array",
+          "description": "Claude Code 공식 훅 이벤트 — Phase 1 범위 외이나 v2.1+ 확장을 위해 화이트리스트로 허용.",
+          "items": { "$ref": "#/definitions/hookMatcher" },
+          "maxItems": 5
+        }
+      },
+      "additionalProperties": false
     },
     "tokenHints": {
       "type": "object",
@@ -379,5 +407,46 @@
       "createdAt": "2026-02-03T00:00:00Z",
       "version": "2.0.0"
     }
-  ]
+  ],
+  "definitions": {
+    "hookMatcher": {
+      "type": "object",
+      "description": "Claude Code 훅 매처 — 이벤트 내 tool 필터(선택)와 실제 훅 명령 배열을 묶음",
+      "required": ["hooks"],
+      "properties": {
+        "matcher": {
+          "type": "string",
+          "description": "Tool 이름 정규식 (예: \"Edit|Write\"). SessionStart/Stop에서는 생략 가능."
+        },
+        "hooks": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["command"],
+            "properties": {
+              "command": {
+                "type": "string",
+                "minLength": 1,
+                "description": "훅 실행 명령 — .claude/hooks/ 내부 스크립트만 허용 (HI-02 감시). 위험 패턴(rm -rf, sudo, curl | sh 등) 금지 (HI-01)."
+              },
+              "description": {
+                "type": "string",
+                "description": "훅 용도 설명 (감사 추적용)"
+              },
+              "timeout": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 60,
+                "default": 30,
+                "description": "초 단위 timeout — 상한 60s. 훅당 권장값: SessionStart 30s, PostToolUse 10s, Stop 15s. 60s 초과 시 UX/DoS 위험 (H007)."
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
 }

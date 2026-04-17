@@ -77,3 +77,11 @@ docs/*
 !docs/token-optimization.md
 !docs/v2/
 !docs/v2/**
+!docs/archive/
+!docs/archive/**
+
+# Claude Code runtime artifacts (Phase 1)
+.claude/scheduled_tasks.lock
+.claude/state/hook-errors.log
+.claude/state/hook-disabled.flag
+.claude/state/hook-trigger-count
