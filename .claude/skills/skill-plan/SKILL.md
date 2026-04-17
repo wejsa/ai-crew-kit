@@ -4,6 +4,7 @@ description: 계획 수립 - Task 선택 + 설계 분석 + 스텝 분리 계획.
 disable-model-invocation: false
 allowed-tools: Bash(git:*), Read, Write, Glob, Grep, Task, AskUserQuestion
 argument-hint: "[taskId]"
+complexity-hint: heavy
 ---
 
 # skill-plan: 계획 수립

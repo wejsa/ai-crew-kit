@@ -4,6 +4,7 @@ description: 백로그 관리 - Task 목록 조회, 추가, 수정, 우선순위
 disable-model-invocation: true
 allowed-tools: Bash(git:*), Read, Write, Glob
 argument-hint: "[list|add|update|priority|unlock|dashboard|archive|batch|deps] [options]"
+complexity-hint: light
 ---
 
 # skill-backlog: 백로그 관리
