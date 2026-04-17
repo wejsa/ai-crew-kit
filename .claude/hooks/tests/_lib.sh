@@ -47,6 +47,16 @@ assert_file_exists() {
   return 1
 }
 
+assert_file_not_exists() {
+  local path="$1" label="${2:-file}"
+  if [ ! -f "$path" ]; then
+    printf '  ✓ %s\n' "$label"
+    return 0
+  fi
+  printf '  ✗ %s — %s should not exist\n' "$label" "$path" >&2
+  return 1
+}
+
 print_header() {
   printf '\n── %s ──\n' "$1"
 }

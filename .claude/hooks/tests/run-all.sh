@@ -11,6 +11,10 @@ tests=(
   "test-session-start-git.sh"
   "test-continuation-plan.sh"
   "test-hi04-checker.sh"
+  "test-post-tool-use-path-exclude.sh"
+  "test-post-tool-use-lock-reentry.sh"
+  "test-post-tool-use-auto-disable.sh"
+  "test-post-tool-use-heartbeat.sh"
 )
 
 passed=0
