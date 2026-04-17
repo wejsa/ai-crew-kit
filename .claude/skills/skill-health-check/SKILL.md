@@ -33,10 +33,16 @@ complexity-hint: heavy
 1. .claude/state/project.json에서 현재 도메인과 techStack 확인
    - project.json이 없으면 도메인 "general", techStack 미설정으로 간주
 2. .claude/domains/_base/health/_category.json 로딩
-3. .claude/domains/{domain}/health/_category.json 로딩 (있으면 병합)
-   - additionalCategories → 추가
-   - weightOverrides → 기존 카테고리 가중치 조정
-   - 최종 가중치 합 100으로 정규화
+3. .claude/domains/{domain}/health/_category.json 로딩 (있으면 병합 — 두 형태 모두 지원)
+   - **형태 A (legacy)**: `additionalCategories` + `weightOverrides` 키 사용 (예: fintech)
+     - additionalCategories → _base 카테고리 리스트에 추가
+     - weightOverrides → 기존 카테고리 가중치 조정
+   - **형태 B (dictionary)**: `categories: { id: {weight?, failCap?, description?} }` 키 사용 (예: ecommerce/healthcare/saas)
+     - 기존 _base 카테고리는 dictionary 항목으로 override (weight/failCap/description)
+     - dictionary에 새로운 id가 있고 _base에 없으면 추가 (additionalCategories와 동등)
+     - _base에만 있고 dictionary에 없는 카테고리는 _base 값 유지 (예: hook-safety 10은 도메인 override 부재 시 그대로 유지)
+   - 두 형태는 상호 배타적 — 한 파일에 섞지 말 것
+   - 최종 가중치 합이 100이 아니면 자동 정규화 (각 weight × (100 / Σweight))
 4. project.json의 healthCheck.exclude에 있는 항목 ID 제외
 5. --scope 옵션이 있으면 해당 카테고리만 필터
 6. --quick 옵션이 있으면 severity: CRITICAL만 필터
@@ -263,6 +269,76 @@ complexity-hint: heavy
   - 필수: "실행 조건" 또는 "트리거", "실행 플로우" 또는 "워크플로우" 또는 "절차"
   - 주의: skill-validate는 YAML 프론트매터만 검증. 이 항목은 본문 구조를 검증.
 - autoFix: 불가
+
+### 카테고리: hook-safety (훅 안전성 — Hook Integrity Audit)
+
+본 카테고리는 `.claude/settings.json`의 `hooks` 필드와 `.claude/hooks/**/*.sh` 스크립트에 대해
+위험 패턴 / 외부 스크립트 참조 / 스키마 유효성 / 비블로킹 규칙을 정적 검사한다.
+Claude Code 네이티브 훅은 clone 즉시 모든 contributor 세션에서 자동 실행되므로 본 카테고리는
+**공급망 공격 1차 방어선**이다. autoFix는 전 항목 불가 (보안 관련은 수동 수정 필수).
+
+사전 조건 규칙:
+- `.claude/settings.json` 및 `.claude/hooks/` 중 어느 것도 없으면 카테고리 전체 SKIP.
+- `.claude/hooks/tests/` 디렉토리는 테스트 fixture 포함으로 모든 검사에서 제외한다.
+
+#### HI-01. 차단 패턴 탐지 (CRITICAL)
+- 사전 조건: `.claude/settings.json`의 hooks 필드 존재 또는 `.claude/hooks/*.sh` 1개 이상 존재
+- 검사 대상:
+  - `.claude/settings.json`의 모든 `hooks[].hooks[].command` 문자열
+  - `.claude/hooks/**/*.sh` (주석 라인 `#` 제외, `tests/` 제외)
+- 차단 패턴 정규식 (하나라도 매칭되면 FAIL, 매칭 위치 리포트 포함):
+  - `\brm\s+-[rf]+` — 재귀 강제 삭제
+  - `\bsudo\b` — 권한 상승
+  - `\bcurl\b`, `\bwget\b` — 외부 요청 (설정/스크립트 내)
+  - `git\s+reset\s+--hard` — 파괴적 git reset
+  - `git\s+push\s+(--force(?!-with-lease)\b|-f\b)` — 파괴적 git push (`--force-with-lease`는 안전하므로 제외)
+  - `\|\s*(curl|wget|nc|bash|sh)\b` — 파이프 실행
+- FAIL 시: backlog 자동 등록 (CRITICAL bugfix)
+- autoFix: 불가 (수동 수정 필수)
+- 참조: docs/v2/phase-1-plan.md §보안 리뷰 필수 변경점
+
+#### HI-02. 외부 스크립트 참조 탐지 (CRITICAL)
+- 사전 조건: HI-01과 동일
+- 검사 대상: HI-01과 동일
+- 위반 조건 — **실행 키워드 직후 경로만 검사**하여 환경변수 할당 등 오탐 방지:
+  - 실행 키워드: `source`, `bash`, `sh`, `exec`, `eval`, `.`(dot-source), 셔뱅(`#!`)
+  - 위 키워드 직후의 절대/상대 경로가 다음 allowlist 밖이면 FAIL
+    - (예) `source /usr/local/bin/xxx`, `bash ../../external.sh`, `exec /opt/tool` 등
+  - `http://` 또는 `https://` URL 문자열이 명령어 인자로 사용 (예: `curl https://...` — HI-01과 중복 탐지 가능)
+- 허용 경로 allowlist (실행 대상으로 등장해도 FAIL 아님):
+  - `$CLAUDE_PROJECT_DIR/.claude/hooks/**`, `.claude/hooks/**` — 내부 훅 스크립트
+  - `/bin/true`, `/bin/false` — 대화형 프롬프트 차단 레시피 (`.claude/hooks/README.md` 권장)
+  - `/dev/null`, `/dev/stdin`, `/dev/stdout`, `/dev/stderr` — 표준 스트림
+  - `/tmp`, `$TMPDIR` — 일시 파일 경로
+  - 셔뱅의 `/usr/bin/env`, `/bin/bash`, `/bin/sh` — 표준 인터프리터
+- 환경변수 할당(`export VAR=/path`, `VAR=/path`)은 **실행이 아니므로 검사 대상 아님**
+- FAIL 시: backlog 자동 등록 (CRITICAL bugfix)
+- autoFix: 불가
+
+#### HI-03. hooks 필드 JSON 구조 유효성 (MINOR)
+- 사전 조건: `.claude/settings.json` 존재
+- 검사:
+  - JSON 파싱 성공 확인
+  - `.claude/schemas/project.schema.json`의 `definitions.hookMatcher` 구조와 대조
+    (SessionStart/PostToolUse/Stop 등 각 이벤트 배열이 `{matcher?, hooks: [{type, command, timeout?}]}` 형태)
+  - `hooks[].hooks[].type`이 `"command"`로 설정되어 있는지
+  - `timeout` 값이 양의 정수이고 **60초 이내** (Claude Code SessionStart 기본값 30초 × 2배 여유)
+    - 근거: 현 레포 훅 timeout은 SessionStart=30, Stop=15, PostToolUse=10이며, 60초 초과는 블로킹 UX 저하 우려
+- autoFix: 불가 (수동 수정 안내)
+- 주의: project.schema.json과 Claude Code 공식 스키마의 양쪽 대조는 향후 확장 (phase-1-plan.md §스키마 소유권 계약 참조)
+
+#### HI-04. 훅 비블로킹 규칙 위반 (MAJOR)
+- 사전 조건: `.claude/hooks/*.sh` 1개 이상 존재
+- 검사: Grep 기반 인라인 수행 (allowed-tools 제약으로 임의 bash 실행 불가)
+  - `exit 2` 검출 (주석 제외) — Claude Code "블록" 시그널
+    - 정규식: `^[[:space:]]*[^#[:space:]][^#]*\bexit[[:space:]]+2\b`
+  - `set -e`, `set -eu`, `set -euo pipefail` 등 단독 사용 검출 (`|| true` 동반 없음)
+    - 정규식: `^[[:space:]]*set[[:space:]]+[^#]*-[a-zA-Z]*e([^a-zA-Z]|$)` 매칭 후 `|| true` 미동반 라인만
+  - `.claude/hooks/tests/`는 fixture 포함으로 제외
+- 위반 시: 파일:라인 리포트 포함
+- FAIL 시: backlog 자동 등록 (MAJOR improvement)
+- autoFix: 불가 (스크립트 수동 리팩토링 필요)
+- 참조: TFT R4 — 훅 `exit 2`/`set -e` 사용 시 세션 차단 위험. 동일 로직은 `scripts/check-hook-blocking.sh`가 CI에서 실행하므로 로컬 상시 확인 가능
 
 ### 카테고리: compliance (도메인 조건부 — fintech만 해당)
 
