@@ -50,6 +50,28 @@
 
 ## 세션 시작 시 필수
 
+**SessionStart 훅이 자동 실행합니다. 수동 조작은 불필요합니다.**
+
+훅 동작 요약:
+1. `git sync` — 현재 브랜치 기준 최신 동기화 (워크트리/비워크트리 자동 구분)
+2. 이전 세션 연속 계획(`.claude/state/continuation-plan.md`) 존재 시 내용 출력 → 남은 작업부터 자동 재개
+3. 연속 계획이 없으면 일반 세션 시작 — 바로 작업 지시 가능
+
+자주 쓰는 명령:
+
+```bash
+/skill-status   # 현재 상태 요약
+/skill-plan     # 다음 작업 가져오기
+```
+
+<details>
+<summary>훅이 미설치/비활성화/실패한 경우 (폴백 수동 절차)</summary>
+
+다음 중 하나에 해당하면 아래 수동 절차를 따르세요:
+- Claude Code 구버전으로 hooks 필드 미지원
+- `.claude/state/hook-disabled.flag` 존재 (자동 비활성화 상태)
+- `.claude/hooks/session-start.sh`가 없거나 실행되지 않음
+
 ```bash
 # 1. 최신 상태 동기화
 GIT_DIR=$(git rev-parse --git-dir 2>/dev/null)
@@ -64,7 +86,7 @@ else
 fi
 
 # 2. 이전 세션 연속 계획 확인
-#    .claude/temp/continuation-plan.md 존재 시 → 파일 읽고 남은 작업부터 자동 재개
+#    .claude/state/continuation-plan.md 존재 시 → 파일 읽고 남은 작업부터 자동 재개
 #    존재하지 않으면 → 아래 3, 4번 진행
 
 # 3. 상태 요약 보기
@@ -73,6 +95,10 @@ fi
 # 4. 다음 작업 가져오기
 /skill-plan
 ```
+
+자동 비활성화를 해제하려면 `rm .claude/state/hook-disabled.flag` 후 원인을 점검하세요. 자세한 내용은 `.claude/hooks/README.md` 참조.
+
+</details>
 
 ---
 
