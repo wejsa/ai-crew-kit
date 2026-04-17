@@ -13,8 +13,8 @@
 | Step | 상태 | 비고 |
 |------|------|------|
 | 0 — TFT 설계 | ✅ 완료 | [phase-1-tft-analysis.md](./phase-1-tft-analysis.md) |
-| 1 — hooks 스키마 + settings.json 구조 예약 | 🔵 PR #23 리뷰 대기 | `feature/phase-1-hooks-step-1` |
-| 2 — SessionStart + Stop 훅 | ⏳ 대기 | PR #23 머지 후 착수 |
+| 1 — hooks 스키마 + settings.json 구조 예약 | ✅ 완료 | PR #23 머지 |
+| 2 — SessionStart + Stop 훅 | ✅ 완료 | PR #25 머지 (a0c01d7) — 리뷰 피드백 7건 반영, `.claude/hooks/tests/` 회귀 테스트 6건, hook-tests CI job 신설 |
 | 3 — PostToolUse + 3단계 무한 루프 방어 | ⏳ 대기 | Step 2 후 |
 | 4 — CLAUDE.md.tmpl 세션 시작 섹션 재작성 | ⏳ 대기 | Step 2 후 병렬 가능 |
 | 5 — Hook Integrity Audit (HI-01~04) | ⏳ 대기 | Step 1 머지 후 병렬 가능 |
