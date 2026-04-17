@@ -142,7 +142,15 @@
           "type": "string",
           "enum": ["default", "developer", "full", "docs-only", "custom"],
           "default": "default",
-          "description": "스킬 프로파일 (Phase 2에서 상세 정의)"
+          "description": "스킬 프로파일 — CLAUDE.md에 노출할 스킬 세트. default/full: 전체, developer: 개발 핵심, docs-only: 문서 전용, custom: customSkills 배열 사용"
+        },
+        "customSkills": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^skill-[a-z][a-z0-9-]*$"
+          },
+          "description": "skillProfile이 'custom'일 때 사용할 스킬 이름 목록"
         },
         "overridePriority": {
           "type": "string",
