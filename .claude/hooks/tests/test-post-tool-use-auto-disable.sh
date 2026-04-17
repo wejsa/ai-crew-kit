@@ -18,6 +18,7 @@ trap 'rm -rf "$SANDBOX" "$TMP_ISO"' EXIT
 
 BACKLOG="$SANDBOX/.claude/state/backlog.json"
 FLAG="$SANDBOX/.claude/state/hook-disabled.flag"
+COUNTER="$SANDBOX/.claude/state/hook-trigger-count"
 SID="burst-session"
 cat > "$BACKLOG" <<EOF
 {
@@ -40,7 +41,7 @@ run_hook() {
     >/dev/null 2>>"$STDERR_LOG")
 }
 
-# 1~3회: 플래그 생성 안 됨
+# 1~3회: 플래그 생성 안 됨, COUNTER 값 경계 명시 (H010)
 for i in 1 2 3; do
   run_hook "$i"
   if [ -f "$FLAG" ]; then
@@ -48,12 +49,20 @@ for i in 1 2 3; do
     fail=$((fail + 1))
     break
   fi
+  if [ -f "$COUNTER" ]; then
+    read -r _ c < "$COUNTER"
+    assert_eq "$i" "$c" "${i}회 호출 후 COUNT=$i, 플래그 미생성" || fail=$((fail + 1))
+  fi
 done
 [ -f "$FLAG" ] || echo "  ✓ 3회까지는 플래그 미생성"
 
-# 4회: 플래그 생성 + stderr 경고
+# 4회: 플래그 생성 + stderr 경고 + COUNT=4
 run_hook "4"
-assert_file_exists "$FLAG" "4회 초과 시 hook-disabled.flag 생성" || fail=$((fail + 1))
+assert_file_exists "$FLAG" "4회째(>TRIGGER_MAX=3) 시 hook-disabled.flag 생성" || fail=$((fail + 1))
+if [ -f "$COUNTER" ]; then
+  read -r _ c < "$COUNTER"
+  assert_eq "4" "$c" "4회째 호출 후 COUNT=4" || fail=$((fail + 1))
+fi
 
 if grep -q "자동 비활성화" "$STDERR_LOG"; then
   echo "  ✓ stderr에 비활성화 경고 출력"
@@ -68,6 +77,18 @@ BEFORE_LOCK="$(jq -r '.tasks[0].lockedAt' "$BACKLOG")"
 run_hook "5"
 AFTER_LOCK="$(jq -r '.tasks[0].lockedAt' "$BACKLOG")"
 assert_eq "$BEFORE_LOCK" "$AFTER_LOCK" "플래그 존재 시 heartbeat 갱신 차단" || fail=$((fail + 1))
+
+# ── 10초 윈도우 롤오버 (H008): 과거 타임스탬프 주입 → 카운터 리셋 검증 ──
+# 플래그 제거 + 카운터 파일에 11초 전 타임스탬프/비현실적 카운트 주입
+rm -f "$FLAG"
+past=$(( $(date -u +%s) - 11 ))
+printf '%s 99\n' "$past" > "$COUNTER"
+run_hook "rollover"
+assert_file_not_exists "$FLAG" "10초 경과 시 플래그 미생성" || fail=$((fail + 1))
+if [ -f "$COUNTER" ]; then
+  read -r _ c < "$COUNTER"
+  assert_eq "1" "$c" "10초 경과 시 카운터 리셋 → COUNT=1" || fail=$((fail + 1))
+fi
 
 if [ "$fail" -gt 0 ]; then
   printf '\n💥 %d assertion(s) failed\n' "$fail" >&2

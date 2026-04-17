@@ -67,9 +67,24 @@ fi
 FILE_PATH="$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null || echo '')"
 SESSION_ID="$(printf '%s' "$INPUT" | jq -r '.session_id // "nosession"' 2>/dev/null || echo nosession)"
 
+# ── SESSION_ID 부재 시 조기 종료 (H005) ───────────────
+# `nosession` 공유 락 시 다중 세션이 서로의 heartbeat를 차단 → stop.sh TTL 만료로
+# 다른 세션 소유 Task가 강제 해제되는 간접 경로. session_id 미확인이면 heartbeat 자체 스킵.
+if [ -z "$SESSION_ID" ] || [ "$SESSION_ID" = "nosession" ] || [ "$SESSION_ID" = "null" ]; then
+  exit 0
+fi
+
 # ── 1단계: 경로 제외 ─────────────────────────────────
-# 백슬래시 정규화 후 상대/절대 경로 양쪽 매칭.
-FILE_PATH_NORM="$(printf '%s' "$FILE_PATH" | tr '\\' '/')"
+# 백슬래시 → `/`, `//+` → `/`, `/./` → `/` 정규화 후 상대/절대 경로 양쪽 매칭.
+# (R1 방어 — `.claude//state/foo`, `./.claude/state/foo` 등 우회 차단)
+FILE_PATH_NORM="$(printf '%s' "$FILE_PATH" | tr '\\' '/' | sed -e 's|//\+|/|g' -e 's|/\./|/|g')"
+# 선행 `./` 제거 (상대 경로 정규화)
+case "$FILE_PATH_NORM" in ./*) FILE_PATH_NORM="${FILE_PATH_NORM#./}" ;; esac
+# symlink 정규화: realpath 존재 시 ./ 기준 상대 경로로 치환 (없으면 graceful skip)
+if command -v realpath >/dev/null 2>&1 && [ -n "$FILE_PATH_NORM" ]; then
+  REAL_REL="$(realpath --relative-to=. "$FILE_PATH_NORM" 2>/dev/null || true)"
+  [ -n "$REAL_REL" ] && FILE_PATH_NORM="$REAL_REL"
+fi
 case "$FILE_PATH_NORM" in
   .claude/state/*|.claude/temp/*|*/.claude/state/*|*/.claude/temp/*)
     exit 0
@@ -87,6 +102,8 @@ if [ -f "$COUNTER_FILE" ]; then
   # 숫자 검증
   case "$prev_start" in ''|*[!0-9]*) prev_start=0 ;; esac
   case "$prev_count" in ''|*[!0-9]*) prev_count=0 ;; esac
+  # sanity: 비현실적 값 (카운터 파일 오염/장시간 누적)은 리셋 (H006)
+  [ "$prev_count" -gt 1000 ] && prev_count=0
   if [ "$((NOW_EPOCH - prev_start))" -le "$TRIGGER_WINDOW_SECONDS" ]; then
     WINDOW_START="$prev_start"
     COUNT=$((prev_count + 1))

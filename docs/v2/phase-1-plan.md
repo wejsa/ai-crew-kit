@@ -295,7 +295,7 @@ Claude Code 세션 시작
   exit 0
   ```
 - `.claude/settings.json` (수정, ~15줄)
-  - `PostToolUse: [{"matcher": "Edit|Write", "hooks": [{"command": "$CLAUDE_PROJECT_DIR/.claude/hooks/post-tool-use.sh", "timeout": 10}]}]`
+  - `PostToolUse: [{"matcher": "Edit|Write|MultiEdit|NotebookEdit", "hooks": [{"command": "$CLAUDE_PROJECT_DIR/.claude/hooks/post-tool-use.sh", "timeout": 10}]}]`
 - `.claude/state/.gitignore` 업데이트 (수정, ~3줄) — `hook-trigger-count`, `hook-disabled.flag`, `hook-errors.log` 제외
 - `/tmp/` 락 파일은 gitignore 불필요 (레포 외부)
 
