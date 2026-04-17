@@ -26,6 +26,7 @@ complexity-hint: light
 **1. SKILL.md YAML 프론트매터**
 모든 `.claude/skills/*/SKILL.md` 순회:
 - `---` 시작/종료 마커, `name`/`description` 필드 존재, YAML 파싱 가능
+- `complexity-hint` 필드가 존재하면 값이 `heavy|medium|light` 중 하나인지 검증 (optional 필드, 없어도 통과). 잘못된 값 → WARNING
 
 **2. 모든 JSON 파일 유효성**
 `.claude/` 하위 모든 `.json` 파싱 검증:
