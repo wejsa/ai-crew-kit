@@ -21,6 +21,7 @@
         "hooks": [
           {
             "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/on-submit.sh",
+            "description": "프롬프트 제출 직전 컨텍스트 주입 (v2.1+ 예시)",
             "timeout": 5
           }
         ]

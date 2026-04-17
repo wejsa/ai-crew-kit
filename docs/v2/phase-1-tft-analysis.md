@@ -8,12 +8,31 @@
 
 ## 1. Claude Code 네이티브 훅 스펙 (공식 문서 기준)
 
-`claude-code-guide` 에이전트 조사 결과:
+`claude-code-guide` 에이전트 + Claude Code 공식 settings.json 스키마(`https://json.schemastore.org/claude-code-settings.json`) 조사 결과.
+
+### 1.1 허용 이벤트 전체 목록 (v2.x 기준, 조회일 2026-04-17)
+
+Claude Code 공식 스키마(`hooks.propertyNames.enum`)에서 화이트리스트로 선언된 27개 이벤트. 본 레포 `project.schema.json`의 `hooks.properties` (3개: SessionStart/PostToolUse/Stop)와 `hooks.patternProperties` (나머지 24개)가 이 목록을 그대로 반영.
+
+| 카테고리 | 이벤트 | Phase 1 사용 |
+|---------|-------|:---:|
+| 툴 수명주기 | `PreToolUse`, `PostToolUse`, `PostToolUseFailure` | PostToolUse ✅ |
+| 세션 수명주기 | `SessionStart`, `SessionEnd`, `Stop`, `StopFailure` | SessionStart ✅ Stop ✅ |
+| 서브에이전트 | `SubagentStart`, `SubagentStop` | — |
+| 컨텍스트 | `UserPromptSubmit`, `PreCompact`, `PostCompact`, `InstructionsLoaded`, `CwdChanged` | — |
+| 권한 | `PermissionRequest`, `PermissionDenied` | — |
+| 태스크/공지 | `Notification`, `Setup`, `TeammateIdle`, `TaskCreated`, `TaskCompleted` | — |
+| Elicitation | `Elicitation`, `ElicitationResult` | — |
+| 워크트리/파일 | `WorktreeCreate`, `WorktreeRemove`, `FileChanged`, `ConfigChange` | — |
+
+**정책**: Phase 1에서 3개만 `properties`로 명시하고 나머지 24개는 `patternProperties` 화이트리스트. 근거는 ① Claude Code 공식 스키마와의 spec drift 방지, ② v2.1+ 확장 시 스키마 수정 불필요. 단 **본 레포 런타임은 현재 3개만 해석**하며 나머지는 "스키마 유효성 보장용 예약어" 상태.
+
+### 1.2 스펙 요약 표
 
 | 항목 | 스펙 | 영향 |
 |------|------|------|
 | 필드명 | `hooks` | 계획과 일치 |
-| 이벤트 | SessionStart, PreToolUse, PostToolUse, Stop 포함 21개 | 계획과 일치 |
+| 이벤트 | 위 27개 화이트리스트 | `patternProperties`로 전체 커버 |
 | 매처 구조 | 이벤트 하위에 `matcher`/`hooks` 배열 | **계획 수정 필요** — 2층 구조 |
 | Tool 필터 | `"matcher": "Edit|Write"` (정규식) | OK |
 | 파일 경로 필터 | **네이티브 미지원** (v2.1.85+ `if` 필드로 권한 규칙 문법 사용 가능) | **R1 — 재설계** |

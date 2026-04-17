@@ -437,9 +437,9 @@
               "timeout": {
                 "type": "integer",
                 "minimum": 1,
-                "maximum": 300,
+                "maximum": 60,
                 "default": 30,
-                "description": "초 단위 timeout"
+                "description": "초 단위 timeout — 상한 60s. 훅당 권장값: SessionStart 30s, PostToolUse 10s, Stop 15s. 60s 초과 시 UX/DoS 위험 (H007)."
               }
             },
             "additionalProperties": false

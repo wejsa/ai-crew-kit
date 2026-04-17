@@ -33,7 +33,9 @@ jobs:
             python -m json.tool "$f" > /dev/null
           done
 
-      - name: Full fixture runner (validate-schema.sh)
+      - name: Full fixture runner (validate-schema.sh, STRICT)
+        env:
+          SCHEMA_VALIDATOR_STRICT: '1'
         run: bash scripts/validate-schema.sh
 
       - name: Validate example project.json files

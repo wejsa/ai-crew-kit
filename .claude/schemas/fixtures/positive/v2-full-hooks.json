@@ -20,6 +20,7 @@
         "hooks": [
           {
             "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/post-tool-use.sh",
+            "description": "lockedAt 리프레시 + 무한 루프 방어 (3단계 폴백)",
             "timeout": 10
           }
         ]
@@ -30,6 +31,7 @@
         "hooks": [
           {
             "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/stop.sh",
+            "description": "만료 잠금 해제 + continuation-plan 조건부 갱신 (60s 디바운스)",
             "timeout": 15
           }
         ]

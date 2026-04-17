@@ -30,6 +30,9 @@ fail() { printf "${RED}✗${RESET} %s\n" "$1" >&2; }
 warn() { printf "${YELLOW}⚠${RESET} %s\n" "$1" >&2; }
 
 # ── 검증 도구 선택 ───────────────────────────────────────────
+# SCHEMA_VALIDATOR_STRICT=1 이면 fallback 모드에서 exit 77 (skip)로 종료하여
+# false-positive PASS를 방지. CI는 STRICT 권장.
+STRICT="${SCHEMA_VALIDATOR_STRICT:-0}"
 VALIDATOR="fallback"
 if command -v check-jsonschema >/dev/null 2>&1; then
   VALIDATOR="check-jsonschema"
@@ -38,6 +41,10 @@ elif command -v python3 >/dev/null 2>&1 && python3 -c "import jsonschema" >/dev/
 else
   warn "JSON Schema 검증 도구 미설치 — JSON 구문만 체크"
   warn "설치 권장: pip install check-jsonschema 또는 pip install jsonschema"
+  if [ "$STRICT" = "1" ]; then
+    warn "SCHEMA_VALIDATOR_STRICT=1 — fallback 모드 거부, exit 77 (skip)"
+    exit 77
+  fi
 fi
 
 # ── validator 함수 ───────────────────────────────────────────
@@ -158,6 +165,10 @@ echo ""
 echo "──────────────────────────────"
 echo "  Validator: $VALIDATOR"
 echo "  PASS: $PASS  FAIL: $FAIL"
+if [ "$VALIDATOR" = "fallback" ]; then
+  echo "  ⚠ fallback 모드 — 스키마 validation 생략 (구문만)."
+  echo "    신뢰도 확보: SCHEMA_VALIDATOR_STRICT=1 bash $0"
+fi
 echo "──────────────────────────────"
 
 [ "$FAIL" -eq 0 ]
