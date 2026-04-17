@@ -1,0 +1,46 @@
+name: Hook Tests
+
+on:
+  push:
+    branches: [main, develop, v2-develop, 'feature/**', 'fix/**']
+    paths:
+      - '.claude/hooks/**'
+      - 'scripts/check-hook-blocking.sh'
+      - '.github/workflows/hook-tests.yml'
+  pull_request:
+    branches: [main, develop, v2-develop]
+    paths:
+      - '.claude/hooks/**'
+      - 'scripts/check-hook-blocking.sh'
+      - '.github/workflows/hook-tests.yml'
+
+jobs:
+  lint-and-test:
+    name: shellcheck + bash -n + HI-04 + 훅 회귀 테스트
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies (shellcheck, jq)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq shellcheck jq
+
+      - name: bash -n 구문 검사
+        run: |
+          set -e
+          find .claude/hooks scripts -type f -name '*.sh' -print0 \
+            | xargs -0 -n1 bash -n
+
+      - name: shellcheck 정적 분석
+        run: |
+          shellcheck -x \
+            .claude/hooks/*.sh \
+            .claude/hooks/lib/*.sh \
+            scripts/check-hook-blocking.sh
+
+      - name: HI-04 자가 검사 (exit 2 / set -e 금지)
+        run: bash scripts/check-hook-blocking.sh
+
+      - name: 훅 회귀 테스트 (tests/run-all.sh)
+        run: bash .claude/hooks/tests/run-all.sh

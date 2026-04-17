@@ -35,11 +35,13 @@ log_err() {
   printf '[%s] [%s] %s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" "$HOOK_NAME" "$msg" >> "$ERROR_LOG" 2>/dev/null || true
 }
 
-# ── stdin JSON 수신 ──────────────────────────────────────────
+# ── stdin JSON 수신 (timeout 1초로 hang 방지) ────────────────
 INPUT=""
 if [ ! -t 0 ]; then
-  INPUT="$(cat 2>/dev/null || true)"
+  INPUT="$(timeout 1 cat 2>/dev/null || true)"
 fi
+# stdin 소비 후 자식 프로세스 stdin 차단 (session-start.sh와 일관)
+exec 0</dev/null
 
 # ── 0. 공식 재귀 방지: stop_hook_active=true ─────────────────
 if [ -n "$INPUT" ] && command -v jq >/dev/null 2>&1; then
@@ -117,8 +119,9 @@ if [ -f "$BACKLOG" ]; then
     printf '## 진행 중 Task\n\n'
     printf '%s\n' "$ACTIVE_TASKS"
     printf '\n## 재개 방법\n\n'
-    printf '- `docs/v2/phase-1-plan.md` 혹은 해당 계획서 확인\n'
-    printf '- `/skill-impl` 또는 `/skill-plan`으로 복귀\n'
+    # printf: '-' 로 시작하는 포맷은 옵션으로 해석되므로 %s 포맷 필수
+    printf '%s\n' '- `docs/v2/phase-1-plan.md` 혹은 해당 계획서 확인'
+    printf '%s\n' '- `/skill-impl` 또는 `/skill-plan`으로 복귀'
   } > "$TMP_PLAN" 2>/dev/null && mv -f "$TMP_PLAN" "$CONT_PLAN" 2>/dev/null || {
     log_err "continuation-plan 쓰기 실패"
     rm -f "$TMP_PLAN" 2>/dev/null

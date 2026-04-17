@@ -122,13 +122,27 @@ touch .claude/state/hook-disabled.flag
 
 두 워크트리에서 동시에 `.claude/state/*.json`을 갱신하는 시나리오:
 
-- **권장**: `atomic_write` helper (`lib/atomic-write.sh`) 사용. flock 가용 환경은 배타 잠금, 미지원 환경은 `mkdir` 뮤텍스 폴백.
+- **필수 규약**: `.claude/state/` 아래 JSON은 **반드시** `atomic_write` helper (`lib/atomic-write.sh`)를 통해서만 수정. 직접 리디렉션(`echo "..." > file.json`)이나 미-helper 경유 쓰기는 **금지** — flock 락을 우회하여 다른 writer와 race 발생.
+- flock 가용 환경은 배타 잠금, 미지원 환경은 `mkdir` 뮤텍스 폴백. producer는 target을 인자로 받아 stdin으로 읽고 tmp 파일에 쓴 뒤 원자적 rename.
 - **사용법**:
   ```bash
   source "$(dirname "$0")/lib/atomic-write.sh"
   atomic_write .claude/state/backlog.json \
     jq '.currentTask.lockedAt = "..."' .claude/state/backlog.json
   ```
+
+---
+
+## 회귀 테스트 (`tests/`)
+
+TFT §4 실패 시나리오 6건을 자동 검증. CI(`.github/workflows/hook-tests.yml`)에서 shellcheck + `bash -n` + HI-04 자가 검사 + 전체 테스트가 실행됩니다.
+
+```bash
+bash .claude/hooks/tests/run-all.sh           # 전체
+bash .claude/hooks/tests/test-stop-recursion.sh  # 개별
+```
+
+커버: 재귀 방지, jq/git 미설치, 워크트리 동시 write(flock), 만료 lock 해제, continuation-plan 디바운스/idle 스킵, HI-04 체커 자체.
 
 ---
 

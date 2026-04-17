@@ -8,6 +8,7 @@ hook-trigger-count
 *.lock
 *.tmp
 *.tmp.*
+*.mutex.d/
 
 # 기본: 이 디렉토리의 모든 파일 무시, 명시 허용만 커밋
 *

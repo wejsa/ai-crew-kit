@@ -38,7 +38,7 @@ log_err() {
 }
 
 # ── 1. git sync ───────────────────────────────────────────────
-if command -v git >/dev/null 2>&1 && [ -d .git ] || git rev-parse --git-dir >/dev/null 2>&1; then
+if command -v git >/dev/null 2>&1 && { [ -d .git ] || git rev-parse --git-dir >/dev/null 2>&1; }; then
   printf '🪝 [session-start] git sync…\n'
 
   GIT_DIR_RESOLVED="$(git rev-parse --git-dir 2>/dev/null || true)"
