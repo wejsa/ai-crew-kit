@@ -37,17 +37,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`project.schema.json` `definitions.hookMatcher`** 상세화 — SessionStart/PostToolUse/Stop 이벤트 배열, `type: "command"` 강제, `timeout` 상한
 - **CODEOWNERS 운영 원칙** — `.claude/settings.json`(hooks), `.claude/hooks/**`, schema hooks 변경 시 security-review 필수 (phase-1-plan.md §보안 리뷰 필수 변경점)
 
-#### Phase 0 Foundation (v2.0.0-alpha.1)
-- v2.0.0 스키마 확장: `hooks`, `skillProfile`, `overridePriority`, `tokenHints` 필드 예약
-- `kitVersion` SemVer 프리릴리즈 패턴 지원 (`2.0.0-alpha.1` 등)
+#### Phase 2 — Skill Profiles (v2.0.0-alpha.2 — alpha.1 이후 backfill, PR #20 commit 037c2fc)
 - 스킬 프로파일 시스템 (developer/full/docs-only/custom) — CLAUDE.md 스킬 노출 제어
 - `skill-profiles.json` 프로파일 정의 파일
 - `project.schema.json`에 `customSkills` 배열 필드 추가 (custom 프로파일용)
 - `skill-init`에 스킬 프로파일 선택 단계 (Step 5.6) 추가
 - TEMPLATE-ENGINE에 `SKILL_LIST_SECTION`, `NATURAL_LANGUAGE_COMMANDS` 블록 마커 추가
-- **스킬 복잡도 힌트 (Phase 3)** — 23개 SKILL.md에 `complexity-hint` frontmatter 필드 추가 (heavy 3 / medium 9 / light 11)
+
+#### Phase 3 — Token Optimization (v2.0.0-alpha.2 — alpha.1 이후 backfill, PR #21 commit 39592ee)
+- 스킬 복잡도 힌트 — 23개 SKILL.md에 `complexity-hint` frontmatter 필드 추가 (heavy 3 / medium 9 / light 11)
 - `project.schema.json`의 `tokenHints` 상세 스키마: `defaultComplexity`, `skillOverrides`, `maxMcpServers`, `compactionThreshold`
 - `docs/token-optimization.md` 신규 — 복잡도 매핑, 환경변수 안내, 프로파일×복잡도 조합
+
+#### Phase 0 Foundation (v2.0.0-alpha.1, VERSION 파일만 존재 — 태그 미생성)
+- v2.0.0 스키마 확장: `hooks`, `skillProfile`, `overridePriority`, `tokenHints` 필드 예약
+- `kitVersion` SemVer 프리릴리즈 패턴 지원 (`2.0.0-alpha.1` 등)
 
 ### Changed
 
@@ -60,7 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - agent-config 15 → 12
   - hook-safety +10 (신규)
 
-#### Phase 0
+#### Phase 2 (v2.0.0-alpha.2 — alpha.1 이후 backfill)
 - CLAUDE.md.tmpl: 하드코딩 스킬 목록/자연어 매핑을 프로파일 기반 블록 마커로 교체
 
 ### Breaking Changes
