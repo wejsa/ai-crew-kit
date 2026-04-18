@@ -18,7 +18,7 @@
 | 3 — PostToolUse + 3단계 무한 루프 방어 | ✅ 완료 | PR #26 머지 (b63004a) — 리뷰 피드백 6건 반영(H001 matcher 확장, H004 경로 정규화, H005 nosession 격리, H006 카운터 상한, H008/H010 경계/롤오버 테스트), hook-tests 10/10 통과 |
 | 4 — CLAUDE.md.tmpl 세션 시작 섹션 재작성 | ✅ 완료 | PR #27 머지 (1d96475) — 훅 자동 안내 + `<details>` 폴백 블록 3트리거 명시, 리뷰 H001 반영(continuation-plan.md 경로 state/ 교정 2건) |
 | 5 — Hook Integrity Audit (HI-01~04) | ✅ 완료 | PR #28 머지 (9d345eb) — 리뷰 피드백 5건 반영(C001 HI-02 실행키워드+allowlist, H001 도메인 병합 규칙 형태A/B 명문화, H002 `--force-with-lease` 제외+`-f` 포함, M001 HI-04 인라인 Grep 스펙, M002 timeout 60s 근거), _base 가중치 32/23/23/12/10 |
-| 6 — CHANGELOG + VERSION bump → alpha.2 | ⏳ 대기 | Step 1~5 전부 머지 후 |
+| 6 — CHANGELOG + VERSION bump → alpha.2 | ✅ 완료 | PR #29 머지 (cccfd6f) — VERSION 2.0.0-alpha.2, README 버전 뱃지, CHANGELOG Phase 1 서브섹션 + 리뷰 M001 반영(Phase 2/3 alpha.2 backfill 재귀속). 태그 `v2.0.0-alpha.2` 생성은 후속 |
 
 **재개 프롬프트 예시**:
 > `docs/v2/phase-1-plan.md` 읽고 Step {N} 착수해줘. 직전 완료는 PR #{PR번호}.
