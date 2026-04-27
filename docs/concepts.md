@@ -192,7 +192,8 @@ AI Crew Kit은 **프롬프트 기반 시스템**입니다.
 2. .claude/rules/{domain}/{language}/      ← 도메인 × 언어 교차 (Phase 4 신설)
 3. domains/{domain}/domain.json            ← 도메인 설정
 4. domains/_base/                          ← 공통 기본값
-5. 하드코딩 기본값                          ← 최하위
+   ─────────────────────────────────────────
+   하드코딩 기본값                          ← baseline (카운트 외)
 ```
 
 > 2층(`rules`)은 **PR 리뷰 컨텍스트 한정 적용** — 도메인 비즈니스 제약(MUST/MUST NOT) 표현용. 기존 conventions/checklists/health 영역의 로드 구조는 변경되지 않습니다(2~3층 그대로 유지).

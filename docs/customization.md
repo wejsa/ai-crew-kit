@@ -14,8 +14,8 @@ project.json (사용자 설정)                ← 최우선
 domains/{domain}/domain.json              ← 도메인 설정
     ↑
 domains/_base/                            ← 공통 기본값
-    ↑
-하드코딩 기본값                            ← 최하위
+─────────────────────────────────────────
+하드코딩 기본값                            ← baseline (카운트 외)
 ```
 
 **예시:** fintech 도메인의 기본 테스트 커버리지는 80%이지만, `project.json`에 `testCoverage: 90`을 설정하면 90%가 적용됩니다.
@@ -108,7 +108,7 @@ domains/_base/                            ← 공통 기본값
 ├── domains/
 │   ├── _registry.json          # 도메인 목록 (모든 도메인 인덱스)
 │   ├── _base/
-│   │   ├── conventions/        # 공통 컨벤션 (24개)
+│   │   ├── conventions/        # 공통 컨벤션 (21개)
 │   │   │   ├── api-design.md
 │   │   │   ├── database.md
 │   │   │   ├── error-handling.md

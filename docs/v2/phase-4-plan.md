@@ -58,7 +58,7 @@
 | `.claude/hooks/` | 변경 없음 | — |
 | 기존 PR 리뷰 동작 | rules 디렉토리 부재 시 **기존 동작 100% 유지** | Step 2 검증 |
 | `project.schema.json` overridePriority | Phase 0에서 enum 정의됨 — Step 1에서 description만 보강 | Step 1 |
-| 기존 conventions 24개 | **변경 없음** | TFT §2.2 감사 완료 |
+| 기존 conventions 21개 | **변경 없음** | TFT §2.2 감사 완료 |
 | 실제 도메인×언어 룰 콘텐츠 | **0개 (옵션 A)** — 사용자가 필요 시 추가 | — |
 
 ---
@@ -349,7 +349,7 @@ related:
 - [ ] skill-review-pr Step 2.5가 가짜 rules 1개로 dry-run 검증 통과
 - [ ] rules 디렉토리 부재(또는 매칭 없음) 프로젝트에서 기존 리뷰 동작 100% 유지
 - [ ] Trivial PR에서 Rules 단계 SKIP (D7)
-- [ ] 기존 conventions/ 24개 파일 변경 없음
+- [ ] 기존 conventions/ 21개 파일 변경 없음
 - [ ] docs/concepts.md + customization.md 4층 다이어그램 일관성
 - [ ] CHANGELOG + VERSION → alpha.3, README 뱃지 갱신
 - [ ] **MVP 3개 콘텐츠 작성 X** (옵션 A — 의도적 보류)
