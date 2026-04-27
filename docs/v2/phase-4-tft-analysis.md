@@ -52,9 +52,9 @@
 | 형식 | prose md | **frontmatter 필수** + prose + 좋은/나쁜 코드 예시 |
 | 위치 | `_base/conventions/` (1곳) | `.claude/rules/{domain}/{language}/` (교차점) |
 
-### 2.2 기존 conventions 24개 감사 결과
+### 2.2 기존 conventions 21개 감사 결과
 
-기존 24개 파일을 검토한 결과, **rules로 승격해야 할 항목은 없다**. 근거:
+기존 21개 파일을 검토한 결과, **rules로 승격해야 할 항목은 없다**. 근거:
 
 | 파일군 | 도메인 종속? | rules 승격? | 사유 |
 |-------|-----------|-----------|------|
@@ -312,7 +312,7 @@ PR 리뷰 Step 1(PR 정보 수집)과 Step 2(체크리스트) 사이에 **rules 
 | **R1** | language 매핑 enum 누락 시 rules 로드 실패 | 중 | 중 | rules/README.md에 매핑 SSOT + skill-validate가 디렉토리 일치 검사 | Step 1, 4 |
 | **R2** | "Claude가 이미 아는 것을 가르치는" 함정 | 중 | 중 | rules/README.md에 "도메인 의미" 원칙 + Product Lead 검토 게이트 | Step 2 |
 | **R3** | 정규식 trigger의 false positive | 높 | 낮 | MVP는 LLM 컨텍스트 해석 — 자동 차단 아님 (보고만) | Step 2 |
-| **R4** | 기존 conventions와 rules 중복 | 중 | 중 | rules/README.md에 명확한 경계 정의 + 24개 감사 완료 | Step 1 |
+| **R4** | 기존 conventions와 rules 중복 | 중 | 중 | rules/README.md에 명확한 경계 정의 + 21개 감사 완료 | Step 1 |
 | **R5** | rules 파일 다수 시 토큰 폭증 | 낮 | 중 | MVP 3개. 향후 lazy-load(Phase 7+로 이관) | — |
 | **R6** | skill-review-pr Step 2.5 추가가 자기 PR 리뷰/Trivial 경량 리뷰와 충돌 | 낮 | 중 | Trivial 경량 리뷰는 rules 단계 SKIP(코드 변경 0건이므로) | Step 3 |
 | **R7** | overridePriority 분기 미구현 → 사용자 혼동 | 낮 | 낮 | concepts.md에 "MVP는 단일 디렉토리, 향후 확장" 명시 | Step 4 |
@@ -377,7 +377,7 @@ PR 리뷰 Step 1(PR 정보 수집)과 Step 2(체크리스트) 사이에 **rules 
 
 - [x] 4층 적용 범위(rules 한정) 확정
 - [x] conventions vs rules 경계 매트릭스 확정 (H002)
-- [x] 기존 24개 conventions 감사 완료 (승격 항목 0)
+- [x] 기존 21개 conventions 감사 완료 (승격 항목 0)
 - [x] domain-first vs merge MVP 동작 확정 (단일 디렉토리, 분기 미구현)
 - [x] language 매핑 SSOT 확정
 - [x] skill-review-pr Step 2.5 통합 설계 확정
