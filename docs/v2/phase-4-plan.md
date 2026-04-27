@@ -15,7 +15,7 @@
 | Step | 상태 | 비고 |
 |------|------|------|
 | 0 — TFT 설계 + 옵션 결정 | ✅ 완료 | [phase-4-tft-analysis.md](./phase-4-tft-analysis.md) — 옵션 A 채택 |
-| 1 — rules 디렉토리 + README + schema description + 예시 템플릿 | ⏳ 대기 | — |
+| 1 — rules 디렉토리 + README + schema description + 예시 템플릿 | ✅ 완료 | PR #30 머지 (73b2a92) — 리뷰 MINOR 3건 반영(M001 README 4-백틱 펜스 격상, M002 sample-rule 인라인 코드 통일, M003 skill-review-pr 통합 섹션 상태 안내) |
 | 2 — skill-review-pr Step 2.5 통합 | ⏳ 대기 | Step 1 의존 |
 | 3 — concepts.md + customization.md 4층 다이어그램 | ⏳ 대기 | Step 1 의존 |
 | 4 — CHANGELOG + VERSION bump → alpha.3 | ⏳ 대기 | Step 1~3 |
