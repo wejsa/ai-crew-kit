@@ -71,7 +71,7 @@ related:                     # 관련 도메인 docs/checklists 상대 경로
 
 frontmatter 다음에 다음 섹션을 권장합니다(고정 형식 아님):
 
-```markdown
+````markdown
 # <도메인> × <언어>: <룰 제목>
 
 ## 제약 (MUST / MUST NOT)
@@ -79,21 +79,21 @@ frontmatter 다음에 다음 섹션을 권장합니다(고정 형식 아님):
 - 제약 2
 
 ## 좋은 예
-\`\`\`<language>
+```<language>
 // 모범 패턴
-\`\`\`
+```
 
 ## 나쁜 예
-\`\`\`<language>
+```<language>
 // 안티패턴
-\`\`\`
+```
 
 ## 안전한 대체 패턴
 - 안티패턴 대신 사용할 수 있는 방법
 
 ## 근거
 - 컴플라이언스 / 도메인 docs / 표준 링크
-```
+````
 
 > **좋은/나쁜 예시 코드 블록은 필수**입니다. 텍스트만 있는 룰은 LLM이 패턴 학습하기 어렵습니다.
 
@@ -150,7 +150,9 @@ frontmatter 다음에 다음 섹션을 권장합니다(고정 형식 아님):
 
 ## skill-review-pr 통합
 
-`skill-review-pr`의 Step 2.5에서 다음 흐름으로 rules를 로드합니다.
+> **상태**: 본 통합은 Phase 4 Step 2(별도 PR)에서 도입됩니다. 현재 v2.0.0-alpha.3 시점에는 rules 디렉토리가 존재해도 `skill-review-pr`이 자동 참조하지 않습니다.
+
+도입 후 `skill-review-pr`의 Step 2.5에서 다음 흐름으로 rules를 로드할 예정입니다.
 
 ```
 1. project.json의 domain, techStack.backend 읽기
