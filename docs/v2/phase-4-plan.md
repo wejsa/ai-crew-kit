@@ -18,7 +18,7 @@
 | 1 — rules 디렉토리 + README + schema description + 예시 템플릿 | ✅ 완료 | PR #30 머지 (73b2a92) — 리뷰 MINOR 3건 반영(M001 README 4-백틱 펜스 격상, M002 sample-rule 인라인 코드 통일, M003 skill-review-pr 통합 섹션 상태 안내) |
 | 2 — skill-review-pr Step 2.5 통합 | ✅ 완료 | PR #31 머지 (ff1d2ac) — 리뷰 MINOR 2건 반영(M001 SSOT 이중화 제거 A안, M002 Step 5 출력 위치 명시) |
 | 3 — concepts.md + customization.md 4층 다이어그램 | ✅ 완료 | PR #32 머지 (035a51d) — 리뷰 MINOR 2건 반영(M001 conventions 24→21 5파일 SSOT 동기화, M002 4층 라벨↔다이어그램 baseline 분리 A안), 관찰 1건 보류 |
-| 4 — CHANGELOG + VERSION bump → alpha.3 | 🔄 PR 진행 중 | VERSION 2.0.0-alpha.3, README 뱃지, CHANGELOG Phase 4 Added/Changed/Breaking 서브섹션 추가 |
+| 4 — CHANGELOG + VERSION bump → alpha.3 | ✅ 완료 | PR #33 머지 (8f08659) + 태그 `v2.0.0-alpha.3` 생성 — Phase 4 종료 |
 
 **재개 프롬프트 예시**:
 > `docs/v2/phase-4-plan.md` 읽고 Step {N} 착수해줘. 직전 완료는 PR #{PR번호}.
