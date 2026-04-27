@@ -11,6 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### Phase 4 — 4-Layer Override + Constraint Rules (v2.0.0-alpha.3)
+- **`.claude/rules/` 디렉토리** — 도메인 × 언어 교차 제약 규칙 메커니즘 신설 (4층 Layered Override의 2번째 층, PR 리뷰 컨텍스트 한정 적용)
+- **`.claude/rules/README.md`** — rules vs conventions 경계 매트릭스, language 매핑 SSOT 표(7개 backend), frontmatter 표준(id/domain/language/severity/triggers/related), 새 rule 작성 가이드라인, 금지 항목 (`_base/rules/`, `{domain}/rules/` 단독 층 신규 생성 금지), skill-review-pr 통합 절차
+- **`.claude/rules/_example/_example/sample-rule.md`** — 학습용 예시 템플릿. `_example` 경로는 language 매핑 표에 없어 실제 PR 리뷰에 적용되지 않음 (자연 SKIP)
+- **`skill-review-pr` Step 2.5 (Rules 로드)** — PR 리뷰 시 `project.json`의 `domain` + `techStack.backend` 읽고 language 매핑 → `.claude/rules/{domain}/{language}/*.md` 글롭 → `pr-reviewer-domain` 에이전트에 `rules_paths` 전달. 부재 시 / Trivial PR / `_example` 시 SKIP (4단 자연 SKIP 체인)
+- **`pr-reviewer-domain` 에이전트** — 신설 "Rules 처리 (Phase 4)" 섹션. Read 로드 → frontmatter 파악 → MUST/MUST NOT 본문과 PR diff 대조 → 위반 시 frontmatter `severity` 기반 보고 → 출처 경로 (`rules/{domain}/{language}/{rule-id}.md`) 명시. `triggers` 정규식은 자동 차단이 아닌 LLM 컨텍스트 힌트
+- **`skill-review-pr` 출력 헤더** — `📋 적용 Rules: {domain}/{language} (N개) — {파일들}` (rules_paths 비어있거나 Trivial 시 미출력으로 노이즈 방지)
+- **`docs/concepts.md`** — 핵심 원칙 표 + Layered Override 다이어그램 4층 갱신 (project.json → rules → domains → _base + 하드코딩 baseline)
+- **`docs/customization.md`** — 4층 다이어그램, 디렉토리 구조 트리에 `.claude/rules/` 추가, 신규 섹션 "## 도메인 × 언어 Rules" (rules vs conventions 비교, language 매핑 표, 새 rule 추가 절차, 작성 시 주의사항, 현재 정책)
+- **TFT 설계 문서** — `docs/v2/phase-4-tft-analysis.md` (5인 분석 + 8개 리스크 + 옵션 A 결정), `docs/v2/phase-4-plan.md` (Step 1~4 구현 계획)
+
+> **본 릴리스는 메커니즘만 포함.** 도메인 × 언어 룰 콘텐츠는 0개로 출시되며, 사용자가 실 사용 케이스 발생 시 직접 추가합니다 (옵션 A 채택 — "Claude가 이미 아는 것은 가르치지 않는다" 원칙 준수).
+
 #### Phase 1 — Native Hooks Framework (v2.0.0-alpha.2)
 - **SessionStart 훅** (`.claude/hooks/session-start.sh`) — 세션 진입 시 git sync(워크트리/비워크트리 자동 구분) + 이전 세션 `continuation-plan.md` 자동 출력
 - **PostToolUse 훅** (`.claude/hooks/post-tool-use.sh`) — `Edit|Write|MultiEdit|NotebookEdit` 후 `lockedAt` heartbeat 갱신 + **3단계 무한 루프 방어**
@@ -55,6 +68,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+#### Phase 4 (v2.0.0-alpha.3)
+- **`project.schema.json` `overridePriority` description 보강** — Phase 0에서 예약된 enum/default 유지하고 description만 명료화: `domain-first` / `merge` 의미 + "v2.0 MVP는 분기 로직 미구현 (단일 디렉토리 구조라 충돌 구조적으로 발생하지 않음). 향후 단독 도메인/언어 룰 도입 시 활성화" + rules/README.md 참조
+- **`docs/concepts.md` & `docs/customization.md` Layered Override** 3층 → 4층 다이어그램 (rules 포함, 하드코딩 기본값은 baseline으로 카운트 외)
+
 #### Phase 1 (v2.0.0-alpha.2)
 - **`CLAUDE.md.tmpl` 세션 시작 섹션** — 훅 자동 실행을 기본 흐름으로 기술, 수동 절차는 `<details>` 폴백 블록(구버전 Claude Code / `hook-disabled.flag` 존재 / 훅 부재 3가지 트리거)으로 이동. 기존 스크립트 100% 보존
 - **`_base/health/_category.json` 가중치 재배분** (합 100 유지)
@@ -70,6 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Breaking Changes
 - `project.schema.json` 스키마 확장 — v1.x skill이 v2 project.json의 신규 필드를 인식하지 못할 수 있음 (skill-upgrade로 해결)
 - **Phase 1 훅: 없음** — `.claude/settings.json`에 `hooks` 필드가 부재하거나 `.claude/hooks/` 디렉토리가 없으면 v1.x 동작이 100% 유지됨 (하위호환 보장)
+- **Phase 4 rules: 없음** — `.claude/rules/` 디렉토리가 부재하거나 `{domain}/{language}/` 매칭이 0개면 alpha.2 동작이 100% 유지됨. 메커니즘만 추가되고 콘텐츠 0개 출시이므로 모든 PR 리뷰에서 자연 SKIP
 
 ## [1.45.1] - 2026-04-14
 
