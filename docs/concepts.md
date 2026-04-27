@@ -179,20 +179,24 @@ AI Crew Kit은 **프롬프트 기반 시스템**입니다.
 | 원칙 | 설명 |
 |------|------|
 | **Domain-Driven Kit** | 도메인 선택이 전체 키트 동작 결정 |
-| **Layered Override** | `_base` → `{domain}` → `project.json` 순서로 설정 적용 |
+| **Layered Override** | `_base` → `{domain}` → `{domain}/{language}` → `project.json` 순서로 설정 적용 (Phase 4부터 4층) |
 | **Agent Orchestration** | PM이 워크플로우에 따라 에이전트 자동 분배 |
 | **Zero-Config Start** | `/skill-init` 한 번으로 즉시 가동 |
 
 ## Layered Override
 
-설정은 다음 순서로 오버라이드됩니다:
+설정은 다음 순서로 오버라이드됩니다 (v2.0.0-alpha.3 / Phase 4부터 4층):
 
 ```
-1. project.json (사용자 설정)      ← 최우선
-2. domains/{domain}/domain.json   ← 도메인 설정
-3. domains/_base/                 ← 공통 기본값
-4. 하드코딩 기본값                  ← 최하위
+1. project.json (사용자 설정)              ← 최우선
+2. .claude/rules/{domain}/{language}/      ← 도메인 × 언어 교차 (Phase 4 신설)
+3. domains/{domain}/domain.json            ← 도메인 설정
+4. domains/_base/                          ← 공통 기본값
+5. 하드코딩 기본값                          ← 최하위
 ```
+
+> 2층(`rules`)은 **PR 리뷰 컨텍스트 한정 적용** — 도메인 비즈니스 제약(MUST/MUST NOT) 표현용. 기존 conventions/checklists/health 영역의 로드 구조는 변경되지 않습니다(2~3층 그대로 유지).
+> 자세한 사용법은 [docs/customization.md](./customization.md#도메인--언어-rules)와 [.claude/rules/README.md](../.claude/rules/README.md) 참조.
 
 ## 설계 철학: 프레임워크와 AI의 역할 분리
 
