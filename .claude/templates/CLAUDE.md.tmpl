@@ -50,6 +50,28 @@
 
 ## 세션 시작 시 필수
 
+**SessionStart 훅이 자동 실행합니다. 수동 조작은 불필요합니다.**
+
+훅 동작 요약:
+1. `git sync` — 현재 브랜치 기준 최신 동기화 (워크트리/비워크트리 자동 구분)
+2. 이전 세션 연속 계획(`.claude/state/continuation-plan.md`) 존재 시 내용 출력 → 남은 작업부터 자동 재개
+3. 연속 계획이 없으면 일반 세션 시작 — 바로 작업 지시 가능
+
+자주 쓰는 명령:
+
+```bash
+/skill-status   # 현재 상태 요약
+/skill-plan     # 다음 작업 가져오기
+```
+
+<details>
+<summary>훅이 미설치/비활성화/실패한 경우 (폴백 수동 절차)</summary>
+
+다음 중 하나에 해당하면 아래 수동 절차를 따르세요:
+- Claude Code 구버전으로 hooks 필드 미지원
+- `.claude/state/hook-disabled.flag` 존재 (자동 비활성화 상태)
+- `.claude/hooks/session-start.sh`가 없거나 실행되지 않음
+
 ```bash
 # 1. 최신 상태 동기화
 GIT_DIR=$(git rev-parse --git-dir 2>/dev/null)
@@ -64,7 +86,7 @@ else
 fi
 
 # 2. 이전 세션 연속 계획 확인
-#    .claude/temp/continuation-plan.md 존재 시 → 파일 읽고 남은 작업부터 자동 재개
+#    .claude/state/continuation-plan.md 존재 시 → 파일 읽고 남은 작업부터 자동 재개
 #    존재하지 않으면 → 아래 3, 4번 진행
 
 # 3. 상태 요약 보기
@@ -73,6 +95,10 @@ fi
 # 4. 다음 작업 가져오기
 /skill-plan
 ```
+
+자동 비활성화를 해제하려면 `rm .claude/state/hook-disabled.flag` 후 원인을 점검하세요. 자세한 내용은 `.claude/hooks/README.md` 참조.
+
+</details>
 
 ---
 
@@ -98,72 +124,15 @@ fi
 
 ---
 
-## 주요 스킬
+## 주요 스킬 (프로파일: {{SKILL_PROFILE}})
 
-```bash
-/skill-status         # 상태 확인
-/skill-backlog        # 백로그 조회
-/skill-feature        # 새 기능 기획 (요구사항 + backlog 등록)
-/skill-plan           # 다음 작업 + 설계 + 스텝 분리 계획 수립
-/skill-impl           # 스텝 개발 + PR 생성
-/skill-impl --micro "OO"  # 소규모 수정 (plan 생략, ≤3 파일)
-/skill-review         # 코드 리뷰
-/skill-review-pr {num}  # PR 코드 리뷰
-/skill-merge-pr {num}   # PR 머지
-/skill-docs           # 참고자료
-/skill-retro          # 완료 Task 회고 + 학습 반영
-/skill-hotfix         # main 긴급 수정
-/skill-rollback       # 릴리스 롤백
-/skill-report         # 프로젝트 메트릭 리포트
-/skill-onboard        # 기존 프로젝트 온보딩
-/skill-estimate       # 작업 복잡도 추정
-/skill-create         # 커스텀 스킬 생성
-```
+{{SKILL_LIST_SECTION}}
 
 ---
 
 ## 자연어 명령어
 
-| 자연어 | 스킬 | 동작 |
-|--------|------|------|
-| "상태 확인해줘" | `/skill-status` | 프로젝트 상태 확인 |
-| "백로그 보여줘" | `/skill-backlog list` | 백로그 조회 |
-| "버그만 보여줘" | `/skill-backlog list --type=bug` | 버그 타입 필터 |
-| "내 작업 보여줘" | `/skill-backlog list --assignee=me` | 내 할당 필터 |
-| "오래된 작업 보여줘" | `/skill-backlog list --stale=7d` | 장기 미변경 필터 |
-| "대시보드 보여줘" | `/skill-backlog dashboard` | Phase 진행률 현황 |
-| "의존성 보여줘" | `/skill-backlog deps` | 의존성 트리 |
-| "{ID} 보관해줘" | `/skill-backlog archive {ID}` | Task soft delete |
-| "일괄 변경해줘" | `/skill-backlog batch` | 다중 Task 일괄 변경 |
-| "버그 등록해줘: {설명}" | `/skill-backlog add "{설명}" --type=bug` | 버그 등록 |
-| "Task 추가해줘: {제목}" | `/skill-backlog add "{제목}"` | Task 등록 (type AI 추론) |
-| "{ID} 수정해줘" | `/skill-backlog update {ID}` | Task 대화형 수정 |
-| "{ID} 일시정지해줘" | `/skill-backlog update {ID} --pause "사유"` | Task 일시정지 |
-| "{ID} 재개해줘" | `/skill-backlog update {ID} --resume` | 일시정지 Task 재개 |
-| "다음 작업 가져와줘" | `/skill-plan` | Task 선택 + 설계 + 스텝 계획 |
-| "새 기능 기획해줘: {기능명}" | `/skill-feature {기능명}` | 새 기능 기획 + 요구사항 문서 |
-| "개발 진행해줘" | `/skill-impl` | Step 1 개발 -> PR 생성 |
-| "다음 스텝 진행해줘" | `/skill-impl --next` | 다음 스텝 개발 -> PR 생성 |
-| "전체 개발 진행해줘" | `/skill-impl --all` | 모든 스텝 연속 개발 |
-| "이어서 진행해줘" | `/skill-impl --retry` | 실패한 스텝 재시작 |
-| "스텝 건너뛰기" | `/skill-impl --skip` | 빌드 실패 스텝 건너뛰기 |
-| "OO 고쳐줘" | `/skill-impl --micro "OO"` | 소규모 수정 (규모 자동 판단) |
-| "OO 버그 수정해줘" | `/skill-impl --micro "OO"` | 버그 Micro 경로 |
-| "간단하게 OO 추가해줘" | `/skill-impl --micro "OO"` | 소규모 추가 Micro 경로 |
-| "빌드만 확인해줘" | `/skill-impl --dry-run` | 빌드/테스트 검증만 (PR 미생성) |
-| "테스트 돌려봐" | `/skill-impl --dry-run` | 빌드/테스트 검증만 |
-| "{경로} 코드 리뷰해줘" | `/skill-review {경로}` | 코드 경로 종합 리뷰 |
-| "PR {번호} 리뷰해줘" | `/skill-review-pr {번호}` | PR 리뷰 |
-| "PR {번호} 머지해줘" | `/skill-merge-pr {번호}` | PR 머지 |
-| "회고 해줘" | `/skill-retro` | 최근 완료 Task 회고 |
-| "전체 회고 요약해줘" | `/skill-retro --summary` | 전체 회고 요약 |
-| "긴급 수정해줘: {설명}" | `/skill-hotfix "{설명}"` | main 긴급 수정 |
-| "{태그} 롤백해줘" | `/skill-rollback {태그}` | 릴리스/PR 롤백 |
-| "리포트 생성해줘" | `/skill-report` | 프로젝트 메트릭 리포트 |
-| "이 프로젝트에 적용해줘" | `/skill-onboard` | 기존 프로젝트 온보딩 |
-| "이 작업 얼마나 걸려?" | `/skill-estimate {TASK-ID}` | 작업 복잡도 추정 |
-| "스프린트 플래닝 해줘" | `/skill-estimate --sprint` | 스프린트 플래닝 |
-| "커스텀 스킬 만들어줘: {name}" | `/skill-create {name}` | 커스텀 스킬 생성 |
+{{NATURAL_LANGUAGE_COMMANDS}}
 
 {{DOMAIN_DOCS_MAPPING}}
 

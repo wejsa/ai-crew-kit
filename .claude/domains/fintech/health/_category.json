@@ -5,14 +5,15 @@
       "id": "compliance",
       "name": "컴플라이언스 준수",
       "description": "PCI-DSS, 전자금융감독규정 등 금융 규제 준수 여부",
-      "weight": 40,
+      "weight": 36,
       "failCap": 30
     }
   ],
   "weightOverrides": {
-    "doc-sync": 20,
-    "state-integrity": 15,
-    "security": 15,
-    "agent-config": 10
+    "doc-sync": 18,
+    "state-integrity": 14,
+    "security": 14,
+    "agent-config": 9,
+    "hook-safety": 9
   }
 }

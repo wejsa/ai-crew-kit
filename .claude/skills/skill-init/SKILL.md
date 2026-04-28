@@ -4,6 +4,7 @@ description: 프로젝트 초기화 - 도메인 선택 + 자동 셋업. /skill-i
 disable-model-invocation: true
 allowed-tools: Bash(git:*), Read, Write, Glob, AskUserQuestion
 argument-hint: "[--quick] [--reset]"
+complexity-hint: light
 ---
 
 # skill-init: 프로젝트 초기화
@@ -30,16 +31,17 @@ argument-hint: "[--quick] [--reset]"
 | Step 4: 기술 스택 | 추천 수락 시 스킵 / 수동 시 AskUserQuestion 5+회 | 자동 감지 → 감지 실패 시 백엔드 1회 질문 |
 | Step 5: 에이전트 팀 | AskUserQuestion multi-select | 스택 기반 자동: pm + backend/frontend + code-reviewer |
 | Step 5.5: 워크플로우 프로필 | AskUserQuestion 1회 | standard 기본값 |
+| Step 5.6: 스킬 프로파일 | AskUserQuestion 1회 | full 기본값 |
 | Step 6-7 | 그대로 | + "설정 변경: /skill-init --reset" 안내 |
 
 ### 케이스별 흐름 요약
 
 | Case | 모드 | 대상 사용자 | 흐름 | 질문 횟수 |
 |------|------|-----------|------|----------|
-| 1. 추천 수락 | 일반 | 초심자 | Step 2 → 2.5(A) → 5 → 5.5 → 6 | **4회** |
-| 2. 일부 수정 | 일반 | 중급자 | Step 2 → 2.5(B) → 항목 수정 → 5 → 5.5 → 6 | **5-7회** |
-| 3. 직접 선택 | 일반 | 경력자 | Step 2 → 2.5(C) → 3 → 4 → 5 → 5.5 → 6 | 10+회 |
-| 4. 설명 미입력 | 일반 | 경력자 | Step 2 → (2.5 스킵) → 3 → 4 → 5 → 5.5 → 6 | 9+회 |
+| 1. 추천 수락 | 일반 | 초심자 | Step 2 → 2.5(A) → 5 → 5.5 → 5.6 → 6 | **5회** |
+| 2. 일부 수정 | 일반 | 중급자 | Step 2 → 2.5(B) → 항목 수정 → 5 → 5.5 → 5.6 → 6 | **6-8회** |
+| 3. 직접 선택 | 일반 | 경력자 | Step 2 → 2.5(C) → 3 → 4 → 5 → 5.5 → 5.6 → 6 | 11+회 |
+| 4. 설명 미입력 | 일반 | 경력자 | Step 2 → (2.5 스킵) → 3 → 4 → 5 → 5.5 → 5.6 → 6 | 10+회 |
 | 5. 파일 감지 성공 | --quick | 기존 프로젝트 | 파일 감지 → 자동 | **0회** |
 | 6. 디렉토리명 매칭 | --quick | 빈 디렉토리 | 디렉토리명 → 도메인 defaultStack | **0회** |
 | 7. 폴백 | --quick | 빈 디렉토리 | 백엔드 1회 질문 → 자동 | 1회 |
@@ -264,11 +266,22 @@ planner, db-designer, qa, docs
 ### Step 5.5: 워크플로우 프로필 선택
 AskUserQuestion: Standard (권장, 전체 체이닝) / Fast (리뷰 생략, 프로토타입용)
 
+### Step 5.6: 스킬 프로파일 선택
+AskUserQuestion: 스킬 프로파일을 선택하세요:
+1. **Full** (전체, 권장) — 모든 스킬 노출
+2. **Developer** — 개발 핵심만 (status, backlog, feature, plan, impl, review-pr, merge-pr, hotfix, retro)
+3. **Docs-only** — 문서 전용 (status, docs, create)
+4. **Custom** — 직접 선택
+
+Custom 선택 시: 전체 스킬 목록에서 multi-select (AskUserQuestion) → `conventions.customSkills` 배열에 저장
+
+--quick 모드: `"full"` 기본값 자동 적용 (질문 없음)
+
 ### Step 6: 파일 생성
 
-1. **project.json**: name, description, domain, techStack, agents, conventions (taskPrefix, branchStrategy:git-flow, commitFormat:conventional, prLineLimit:500, testCoverage:80, workflowProfile), createdAt, kitVersion (VERSION 값), kitSource (KIT_SOURCE_URL 또는 기본 repo URL)
+1. **project.json**: name, description, domain, techStack, agents, conventions (taskPrefix, branchStrategy:git-flow, commitFormat:conventional, prLineLimit:500, testCoverage:80, workflowProfile, skillProfile), createdAt, kitVersion (VERSION 값), kitSource (KIT_SOURCE_URL 또는 기본 repo URL). skillProfile이 "custom"이면 `conventions.customSkills` 배열도 포함
 2. **backlog.json**: metadata (lastTaskNumber:0, version:1), summary (전체 0), phases:{}, tasks:{}
-3. **CLAUDE.md**: `.claude/templates/CLAUDE.md.tmpl` 마커 치환
+3. **CLAUDE.md**: `.claude/templates/CLAUDE.md.tmpl` 마커 치환 (skillProfile 기반 스킬 목록 필터링)
 4. **VERSION**: `echo "0.1.0" > VERSION`
 5. **README.md**: `.claude/templates/README.md.tmpl` 마커 치환 (기존 README 교체)
 6. **docs/api-specs/**: `mkdir -p`
