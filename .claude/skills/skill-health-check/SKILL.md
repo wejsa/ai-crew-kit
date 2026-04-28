@@ -213,19 +213,63 @@ complexity-hint: heavy
 검사 대상 파일 패턴은 techStack에 따라 Claude가 맥락적으로 결정한다:
 - spring-boot-kotlin/java: src/**/*.{kt,java}
 - nodejs-typescript: src/**/*.{ts,js}
+- python-fastapi/python-django: src/**/*.py 또는 app/**/*.py 등 (프로젝트 구조 맥락 판단)
 - go: **/*.go
 - 해당 패턴에 매칭되는 파일이 0건이면 SKIP
 
+#### 외부 패턴 로드 절차 (SEC-01 / SEC-05 / SEC-07 공유)
+
+SEC-01 / SEC-05 / SEC-07은 `secrets-patterns.json` 외부 파일을 동적 로드한다.
+
+| 경로 | 섹션 | 매핑 | 부재 시 |
+|------|------|------|---------|
+| `.claude/domains/_base/health/secrets-patterns.json` | `common.runtime` | SEC-01 | SEC-01 SKIP + WARN ("외부 패턴 파일 부재") |
+| `.claude/domains/_base/health/secrets-patterns.json` | `common.hardcoded` | SEC-05 | SEC-05 SKIP + WARN |
+| `.claude/domains/{domain}/health/secrets-patterns.json` | `domain.patterns` | SEC-07 | SEC-07 SKIP (정상 — 도메인 콘텐츠 부재 가능) |
+
+오류 처리:
+- JSON 파싱 실패 → 해당 SEC-* ERROR 보고 + 카테고리 부분 SKIP. 다른 SEC-* 정상 실행
+- 개별 패턴의 정규식 컴파일 실패 → 해당 패턴만 SKIP + WARN. 같은 파일 다른 패턴 정상 실행
+- 도메인 patterns 파일에 `common` 섹션이 있으면 무시 + WARN ("`common`은 `_base`만 보유 — `_base/health/README.md` 참조")
+
+#### excludeContexts 처리 SSOT (SEC-01 / SEC-05 / SEC-07 공통)
+
+각 패턴 entry의 `excludeContexts` 배열은 다음 정규식으로 처리한다 (`_base/health/README.md` enum 정의의 SSOT 구현).
+
+| enum | 정규식 | 매칭 라인 검사 제외 사유 |
+|------|--------|--------------------------|
+| `env_var_reference` | `process\.env\.\w+`, `os\.environ\[`, `System\.getenv\(` | 환경변수 참조는 실제 시크릿이 아님 |
+| `type_declaration` | `\b(?:class\|interface\|type)\s+\w+` | 타입/클래스 선언부 (예: `class Password { }`) |
+| `comment` | `^\s*(?://\|#\|\*\|/\*)` | 주석 라인 |
+
+처리 순서:
+1. `excludeFiles` 글롭 매칭 → 해당 파일 전체 검사 제외
+2. 파일 내 라인별 패턴 매칭
+3. 매칭 라인이 `excludeContexts`에 명시된 enum 중 하나의 정규식과 매칭되면 검사 제외
+4. 남은 매칭만 FAIL로 보고
+
+#### 출처 표기 형식 (SEC-01 / SEC-05 / SEC-07)
+
+리포트 출력 시 외부 패턴 ID를 함께 표기한다:
+```
+SEC-05: 하드코딩 시크릿 (src/main/.../Config.kt:42) — 외부 패턴 SEC-S01 (API 키 하드코딩)
+```
+
+#### confidence 안내 (SEC-01 medium 패턴 한정)
+
+`common.runtime` SEC-S06~S17은 v1.x 회귀 보존을 위해 `confidence: medium`(예외)이다. FAIL 메시지에 다음 안내를 첨부한다.
+> ℹ️ medium confidence — 정보성 로그 메시지(예: `logger.info("Password validation failed")`) false positive 가능. 변수 보간이 아닌 단순 키워드 등장이면 무시 가능. 정밀화는 v2.1+ 검토 (`_base/health/README.md` confidence 가이드 참조).
+
+신규 추가 패턴(`common.hardcoded` SEC-S01~S05, `domain.patterns`)은 모두 `high`이며 별도 안내 없이 FAIL 처리한다.
+
 #### SEC-01. 민감정보 로깅 금지 (CRITICAL)
-- 검사: 로그 출력문에서 민감정보 패턴 탐지 (하나라도 매칭되면 FAIL)
-  - 패턴: log.*password, log.*cardNumber, log.*creditCard, log.*cvv,
-    log.*ssn, log.*주민등록, logger.*secret, println.*password,
-    log.*apiKey, log.*token, log.*bearer, log.*authorization
-  - 제외: 타입 선언 (class.*Password, interface.*Secret 등 정의부는 무시)
-  - FAIL 시 매칭 위치를 리포트에 포함
-- 참조: _base/checklists/security-basic.md "로깅 금지"
+- 사전 조건: 외부 패턴 로드 절차에 따라 `_base/health/secrets-patterns.json` `common.runtime` 로드 성공 (부재/파싱 실패 시 SKIP + WARN). techStack에 따른 코드 파일 매칭 결과 0건이면 SKIP.
+- 검사: `common.runtime` 패턴(SEC-S06~S17, 12개, medium)을 코드 파일에 매칭. excludeFiles + excludeContexts SSOT 적용 후 남은 매칭이 1건 이상이면 FAIL.
+  - v1.x 인라인 12 패턴(log.*password / log.*cardNumber / log.*creditCard / log.*cvv / log.*ssn / log.*주민등록 / logger.*secret / println.*password / log.*apiKey / log.*token / log.*bearer / log.*authorization)을 외부화 — 키워드 1:1 동일, 정규식은 단어 경계 + log/logger/println 변형 흡수로 정밀화
+  - FAIL 시 매칭 위치 + 외부 패턴 ID(SEC-S{nn}) 리포트에 포함 + medium confidence 안내 첨부
+- 참조: `_base/checklists/security-basic.md` "로깅 금지", `_base/health/README.md` confidence 등급 가이드
 - FAIL 시: backlog 자동 등록
-- autoFix: 불가 (보안 관련은 수동 수정 필수)
+- autoFix: 불가 (보안 관련은 수동 수정 필수, D5)
 
 #### SEC-02. SQL Injection 위험 (CRITICAL)
 - 검사: SQL 쿼리에서 안전하지 않은 파라미터 바인딩 탐지
@@ -251,6 +295,55 @@ complexity-hint: heavy
   - 예외: *Health*Controller, *Public*Controller (헬스체크, 공개 API)
   - 대상 파일 각각에 존재해야 PASS (each scope)
 - 참조: _base/checklists/security-basic.md "인증 필수"
+
+#### SEC-05. 하드코딩 시크릿 (CRITICAL)
+- 사전 조건: 외부 패턴 로드 절차에 따라 `_base/health/secrets-patterns.json` `common.hardcoded` 로드 성공 (부재/파싱 실패 시 SKIP + WARN). techStack에 따른 코드 파일 매칭 결과 0건이면 SKIP.
+- 검사: `common.hardcoded` 패턴(SEC-S01~S05, 모두 high confidence)을 코드 파일에 매칭. excludeFiles + excludeContexts SSOT 적용 후 남은 매칭이 1건 이상이면 FAIL.
+  - SEC-S01: API 키 하드코딩 — `api[_-]?key`/`apikey` + 16자 이상 리터럴
+  - SEC-S02: 시크릿 / 비공개 키 — `secret`/`private[_-]?key` + 16자 이상 리터럴
+  - SEC-S03: AWS Access Key — `AKIA|AGPA|AROA|AIDA|ANPA` prefix + 16자 (ASIA STS 임시 토큰은 의도적 제외)
+  - SEC-S04: GitHub Token — `ghp|gho|ghu|ghs|ghr` prefix + 36자 (PAT/OAuth/User App/Server App/Refresh)
+  - SEC-S05: Slack Bot/User Token — `xox[bp]-...` prefix
+- FAIL 시 매칭 위치 + 외부 패턴 ID 리포트에 포함. 사용자에게 환경변수 또는 시크릿 매니저 사용 안내.
+- 참조: `_base/checklists/security-basic.md` "시크릿 관리", `_base/health/README.md` 새 패턴 추가 절차
+- FAIL 시: backlog 자동 등록 (CRITICAL bugfix)
+- autoFix: 불가 (D5)
+
+#### SEC-06. 환경변수 파일 노출 (CRITICAL)
+- 사전 조건: 프로젝트 루트에 dotenv 파일이 존재 (`.env`, `.env.local`, `.env.production`, `.env.development` 등 — 단 `.env.example`/`.env.template`/`.env.sample`은 placeholder 가정으로 제외).
+  - dotenv 파일 부재 시 SKIP (정상 — dotenv 미사용 프로젝트)
+- 검사: 다음 두 게이트 중 하나라도 위반하면 FAIL.
+  1. **gitignore 등록 게이트**: `.gitignore`에 `.env*` 또는 `.env` 또는 정확한 파일명 매칭 라인 존재
+     - `.gitignore` 부재 → FAIL ("프로젝트에 `.gitignore` 부재")
+     - `.gitignore` 존재하나 dotenv 패턴 미등록 → FAIL ("`.env` 파일이 `.gitignore`에 미등록 — git commit 시 시크릿 노출 위험")
+  2. **평문 시크릿 게이트**: 검사 대상 dotenv 파일 내용에 `common.hardcoded` 정밀 패턴(SEC-S03/S04/S05 — AWS/GitHub/Slack 명시 prefix)이 매칭되지 않아야 함
+     - placeholder 매칭(`<...>`, `xxx`, `your-...`, `replace-me`, `example-` 등 휴리스틱)은 통과 처리
+     - 실제 prefix 매칭(예: `AKIA[A-Z0-9]{16}`)은 FAIL ("`.env`에 실제 시크릿 형식 노출 — 즉시 회수 + git history 점검 필요")
+- FAIL 시 backlog 자동 등록 + 사용자에게 다음 안내:
+  - `.gitignore`에 `.env*` 추가
+  - 이미 commit된 경우 `git rm --cached <파일>` 후 재커밋
+  - 노출된 시크릿은 외부 콘솔(AWS/GitHub/Slack)에서 즉시 회수
+- autoFix: 불가 (수동 수정 + 자격 회수 필수)
+
+#### SEC-07. 도메인별 민감 데이터 (CRITICAL)
+- 사전 조건:
+  - `project.json`의 `domain` ≠ `general` (general 도메인은 도메인 특화 패턴 없음 → SKIP)
+  - `.claude/domains/{domain}/health/secrets-patterns.json` 파일 존재 + `domain.patterns` 섹션 존재
+  - 위 모두 미충족 시 SKIP (정상 — 도메인 콘텐츠 미작성)
+- 검사: `domain.patterns` 패턴(high confidence만)을 코드 파일에 매칭. excludeFiles + excludeContexts SSOT 적용. 남은 매칭이 1건 이상이면 FAIL.
+- 체크섬 검증 (false positive 차단):
+  - **PAN(카드번호 16자리)**: 정규식 매칭 후 Luhn 알고리즘 검증
+    - 우→좌 짝수 위치(1-indexed)만 ×2 → 결과가 10 이상이면 자릿수 합으로 변환 → 전체 합 mod 10 == 0이면 통과
+    - Luhn 실패 시 매칭 폐기 (false positive로 간주)
+  - **한국 주민등록번호 (13자리)**: 가중치 [2,3,4,5,6,7,8,9,2,3,4,5] × 앞 12자리 → 합 mod 11 → 11 - 결과 → mod 10이 마지막 자리와 일치
+  - **한국 사업자번호 (10자리)**: 표준 체크섬 알고리즘
+  - 도메인 패턴이 체크섬 검증을 요구하는 경우 도메인 `secrets-patterns.json` description에 명시 + 본 SKILL.md 절차에 위임 (Step 3 도메인 추가 시 체크섬 알고리즘 사양 첨부)
+- FAIL 시 매칭 위치 + 외부 패턴 ID + 도메인 표기 (예: `SEC-07: PAN 노출 (src/.../Order.kt:88) — 외부 패턴 fintech/SEC-S{nn} (PAN Luhn 통과)`)
+- 참조: `domains/{domain}/checklists/`의 해당 도메인 컴플라이언스 항목, `_base/health/README.md` 새 도메인 패턴 추가 절차
+- FAIL 시: backlog 자동 등록 (CRITICAL bugfix)
+- autoFix: 불가 (D5)
+
+> **다층 방어 메모 (D6)**: SEC-07은 헬스체크 시점의 정규식 자동 검사이며, Phase 4 `rules/{domain}/{language}/`는 PR 리뷰 시점의 LLM 의미 판단이다. 동일 라인이 양쪽에서 보고되어도 검사 시점/방식이 다른 다층 방어로 정상이다 — 출처 표기로 분별 가능.
 
 ### 카테고리: agent-config (에이전트 설정 유효성)
 
