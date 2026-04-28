@@ -46,7 +46,7 @@
 | `name` | ✅ | string | 사람이 읽는 패턴 이름 |
 | `pattern` | ✅ | string | JavaScript 호환 정규식. JSON 이스케이프 (`\\\\` → `\\`). Python `re` 모듈도 호환 권장 |
 | `severity` | ✅ | enum | `CRITICAL` / `MAJOR` / `MINOR` |
-| `confidence` | ✅ | enum | `high` / `medium` / `low` — **v2.0 MVP는 `high`만 포함** |
+| `confidence` | ✅ | enum | `high` / `medium` / `low` — **v2.0 MVP**: 신규 패턴은 `high`, `common.runtime`(SEC-S06~S17, v1.x SEC-01 회귀)은 `medium` 허용. 자세한 정책은 아래 §confidence 등급 가이드 참조 |
 | `description` | ✅ | string | 위반 시 사용자에게 표시할 한글 설명 |
 | `excludeFiles` | 권장 | string[] | 글롭 패턴. 매칭 파일 검사 제외 |
 | `excludeContexts` | 권장 | enum[] | `env_var_reference` / `type_declaration` / `comment` — `skill-health-check` SKILL.md에 처리 절차 정의 |
@@ -57,12 +57,14 @@
 
 | 등급 | 정의 | v2.0 채택 | 예시 |
 |------|------|:--------:|------|
-| `high` | 정규식이 false positive 거의 없음. 형식이 명확하거나 체크섬 검증 가능. | ✅ | AWS Access Key (`AKIA + 16자`), GitHub PAT (`ghp_ + 36자`), SSN (`\d{3}-\d{2}-\d{4}`), PAN Luhn 검증 |
-| `medium` | 부분 매칭. 검사기 휴리스틱으로 한정적 신뢰. | ❌ (v2.1+) | CVV (3~4자리만으론 false positive), MRN (기관별 형식 다양) |
-| `low` | 변수명 키워드 단독 매칭. 사용자 컨텍스트 의존. | ❌ (v2.1+) | 변수에 "passcode" 포함 등 |
+| `high` | 정규식이 false positive 거의 없음. 형식이 명확하거나 체크섬 검증 가능. | ✅ | AWS Access Key (`(?:AKIA|AGPA|AROA|AIDA|ANPA) + 16자`), GitHub Token (`ghp_/gho_/ghu_/ghs_/ghr_ + 36자`), SSN (`\d{3}-\d{2}-\d{4}`), PAN Luhn 검증 |
+| `medium` | 키워드 매칭 위주이며 정보성 메시지 등 부분 false positive 가능. | 🟡 (SEC-01 회귀 보존 한정) | logger.info("password ..."), logger.info("token expired") 등 v1.x SEC-01의 12 패턴 — `common.runtime`(SEC-S06~S17) |
+| `low` | 변수명 키워드 단독 매칭. 사용자 컨텍스트 강한 의존. | ❌ (v2.1+) | 변수에 "passcode" 포함 등 |
 
-> **v2.0 MVP는 `high` confidence만 포함한다 (옵션 B 채택, TFT §11).**
-> medium/low는 실 사용 데이터 + 사용자 피드백 후 v2.1+에서 검토.
+> **v2.0 MVP 정책 (옵션 B + 회귀 보존, TFT §11 + PR #36 H001 보정)**:
+> - **신규 추가 패턴은 `high`만** — 본 PR의 `common.hardcoded` SEC-S01~S05가 해당
+> - **`common.runtime` SEC-S06~S17은 `medium` 허용** — v1.x SEC-01의 12 패턴을 외부화한 것으로 회귀 보존이 우선. 정보성 로그 메시지(`logger.info("Password validation failed")` 등) false positive 가능성 인지 + Step 2 `excludeContexts` 처리 + 향후 변수 보간 시그널 정밀화로 v2.1+에서 high 승격 검토
+> - **`low`는 v2.0 미포함** — 실 사용 데이터 + 사용자 피드백 후 v2.1+에서 검토
 
 ## `excludeFiles` 기본 권장
 
@@ -107,7 +109,7 @@
 
 ## 금지 항목
 
-- ❌ `medium` / `low` confidence 패턴 (v2.0 범위 외)
+- ❌ **신규** `medium` / `low` confidence 패턴 (v2.0 범위 외 — `common.runtime`의 SEC-S06~S17은 v1.x SEC-01 회귀 보존을 위한 medium 예외)
 - ❌ autoFix 활성화 (보안은 수동 수정 필수 — D5)
 - ❌ 도메인 무관 패턴을 `domain.patterns`에 작성 (`common`에 작성)
 - ❌ 도메인 특화 패턴을 `_base`에 작성 (`{domain}/health/`에 작성)

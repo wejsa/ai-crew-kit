@@ -300,6 +300,8 @@ healthcare 도메인에서 양쪽이 모두 PHI를 다룰 수 있다. 정책:
 - **장점**: 도메인 사용자에게 즉시 가치
 - **단점**: 도메인 패턴 검증 부담, false positive 발생 시 신뢰도 손상
 
+> **PR #36 H001 보정 (2026-04-28)**: SEC-01 외부화 12 패턴(`common.runtime` SEC-S06~S17)은 키워드 단독 매칭 + 정보성 로그 메시지 false positive 가능성 → v1.x SEC-01 회귀 보존을 위해 **`medium` confidence 허용**으로 옵션 B 재정의. 신규 추가 패턴(`common.hardcoded` SEC-S01~S05 + 도메인 패턴)은 `high`만 유지. README/JSON/plan.md 정합 갱신.
+
 ### 옵션 C — 전체 (상위 계획서 그대로)
 
 - 옵션 B + medium/low confidence 패턴 + 도메인 4개 모두 포함
