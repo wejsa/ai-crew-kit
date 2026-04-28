@@ -16,7 +16,7 @@
 |------|------|------|
 | 0 — TFT 설계 + 옵션 결정 | ✅ 완료 | [phase-5-tft-analysis.md](./phase-5-tft-analysis.md) — 옵션 B + B-2 채택 |
 | **선** — D0 hook-safety 가중치 부채 해소 | ✅ 완료 | PR #35 머지 (d0715de) — 4개 도메인 _category.json에 hook-safety 명시 + Hamilton 일관 회복 (M001 반영) |
-| 1 — secrets-patterns.json 스키마 + common high confidence 패턴 + 작성 가이드 | 🔄 진행 중 | 본 PR |
+| 1 — secrets-patterns.json 스키마 + common 패턴 + 작성 가이드 | ✅ 완료 | PR #36 머지 (fdbce8a) — 리뷰 H001/M001/M002 반영(runtime confidence medium 재분류 + AWS/GitHub 5 prefix 확장) |
 | 2 — skill-health-check SKILL.md SEC-01 외부화 + SEC-05/06/07 추가 | ⏳ 대기 | Step 1 의존 |
 | 3 — 도메인별 high confidence 패턴 (fintech/healthcare/ecommerce) | ⏳ 대기 | Step 1, 2 의존 |
 | 4 — security-migration.md + CHANGELOG + VERSION → alpha.4 | ⏳ 대기 | Step 1~3 |
