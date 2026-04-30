@@ -12,8 +12,8 @@
 | Step | 상태 | 비고 |
 |------|------|------|
 | 0 — 설계 (본 문서) | ✅ 완료 | |
-| 1 — secrets-patterns 스키마 + workflow 골격 + plan | ⏳ 다음 | |
-| 2 — fixture 테스트 60+건 (Python) | ⏳ 대기 | Step 1 의존 |
+| 1 — secrets-patterns 스키마 + workflow 골격 + plan | ✅ 완료 | PR #40 머지 (b2b72e9) — 리뷰 후속 M002(auto-discovery) + M003(id 중복) 반영. M001은 false positive(원본 yml 정상) |
+| 2 — fixture 테스트 60+건 (Python) | ⏳ 다음 | Step 1 의존 |
 | 3 — cross-ref + `_category` 가중치 검증 + 보류 9번 → ✅ | ⏳ 대기 | Step 1, 2 의존 |
 
 ---
