@@ -82,8 +82,8 @@
 
 | enum | 정규식 | 매칭 시 검사 제외 |
 |------|--------|-----|
-| `env_var_reference` | `process\.env\.\w+`, `os\.environ\[`, `System\.getenv\(` | 환경변수 참조 (실제 시크릿 아님) |
-| `type_declaration` | `class\|interface\|type` 키워드 직후 단어 | 타입/클래스 선언 (예: `class Password`) |
+| `env_var_reference` | `process\.env\.\w+`, `os\.environ\[`, `os\.getenv\(`, `System\.getenv\(`, `os\.Getenv\(`, `os\.LookupEnv\(` | 환경변수 참조 (실제 시크릿 아님). JS / Python(dict + getenv) / Java / Go(Getenv + LookupEnv) 커버 |
+| `type_declaration` | `class\|interface\|type` 키워드 직후 단어 | 타입/클래스 선언 (예: `class Password`). 라인 단위 제외이므로 single-line 정의 + 시크릿 리터럴 동일 라인은 false negative — `skill-health-check` SKILL.md §처리 한계 참조 |
 | `comment` | 라인 시작 `//`, `#`, `/*`, ` * ` | 주석 라인 |
 
 ## 새 공통 패턴 추가 절차
