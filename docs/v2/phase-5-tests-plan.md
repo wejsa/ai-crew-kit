@@ -13,8 +13,8 @@
 |------|------|------|
 | 0 — 설계 (본 문서) | ✅ 완료 | |
 | 1 — secrets-patterns 스키마 + workflow 골격 + plan | ✅ 완료 | PR #40 머지 (b2b72e9) — 리뷰 후속 M002(auto-discovery) + M003(id 중복) 반영. M001은 false positive(원본 yml 정상) |
-| 2 — fixture 테스트 60+건 (Python) | ⏳ 다음 | Step 1 의존 |
-| 3 — cross-ref + `_category` 가중치 검증 + 보류 9번 → ✅ | ⏳ 대기 | Step 1, 2 의존 |
+| 2 — fixture 테스트 60+건 (Python) | ✅ 완료 | PR #41 머지 (79238e3) — 89 parametrize + 14 메타 + 1 standalone = 104 케이스. 리뷰 후속 M001(SSOT drift 메타 — `test_ssot_alignment.py`) + M003(SKILL.md BRN 명료화) 반영. M002(PR 본문 카운트)는 머지 commit message에서 정정 |
+| 3 — cross-ref + `_category` 가중치 검증 + 보류 9번 → ✅ | ⏳ 다음 | Step 1, 2 의존 |
 
 ---
 
