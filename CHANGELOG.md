@@ -89,7 +89,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Phase 5 (v2.0.0-alpha.4)
 - **SEC-01 외부화** — `skill-health-check/SKILL.md` 인라인 12 패턴 → `_base/health/secrets-patterns.json` `common.runtime` 로드. 키워드 1:1 동일(회귀 보존), 정규식은 단어 경계 + `log/logger/println` 변형 흡수로 정밀화. 회귀 fixture 23건 PASS
-- **alpha.2 hook-safety 정규화 부채 해소** (PR #35, d0715de) — 도메인 4개(fintech/ecommerce/saas/healthcare) `_category.json`의 dictionary에 hook-safety weight 9 명시 + 기존 카테고리 비례 감소(예: fintech doc-sync 20 → 18, compliance 40 → 35)로 합 100 일관. 정규화로 보정되던 비율을 명시화 — **사용자 점수 영향 0**
+- **alpha.2 hook-safety 정규화 부채 해소** (PR #35, d0715de) — 도메인 4개(fintech/ecommerce/saas/healthcare) `_category.json`의 dictionary에 hook-safety weight 9 명시 + 기존 카테고리 비례 감소(예: fintech doc-sync 20 → 18, compliance 40 → 35)로 합 100 일관. 정규화로 보정되던 비율을 명시화 — **사용자 점수 영향 ≤1점** (fintech/ecommerce/saas는 Hamilton 라운딩으로 ≈0, healthcare phi-protection만 의도적 floor로 -0.91% ≈ ~1.0점, PR #35 §점수 영향 분석 참조)
 - **`_base/health/README.md` `excludeContexts` `env_var_reference` enum** — Go(`os.Getenv` / `os.LookupEnv`) + Python 함수형(`os.getenv`) 추가 (PR #37 리뷰 M001 후속). `skill-health-check/SKILL.md` SSOT 동기화
 - **`skill-health-check/SKILL.md` `type_declaration` 처리 한계 명시** — single-line 정의 + 시크릿 리터럴 동일 라인은 라인 단위 제외 때문에 false negative. 워크어라운드(시크릿 별도 라인 분리) + v2.1+ 토큰-단위 정밀화 메모 (PR #37 리뷰 M003 후속)
 
@@ -108,6 +108,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Phase 2 (v2.0.0-alpha.2 — alpha.1 이후 backfill)
 - CLAUDE.md.tmpl: 하드코딩 스킬 목록/자연어 매핑을 프로파일 기반 블록 마커로 교체
+
+### Fixed
+
+#### Phase 1 사후 결함 해소 (v2.0.0-alpha.4)
+- **훅 스크립트 실행 권한 정정** (PR #34, 6dcfdb3) — alpha.2 PR #26 머지 시 누락된 `chmod +x`로 인해 `post-tool-use.sh`를 비롯한 5개 훅이 git index 모드 100644로 박혀 PostToolUse 이벤트마다 "Permission denied" 실패. 비블로킹 정책(R4)으로 세션은 정상 진행됐으나 lockedAt heartbeat 갱신 / 3단계 무한 루프 방어 / hook-disabled.flag 카운터가 사실상 alpha.2/alpha.3 동안 미동작. alpha.4부터 의도 동작 활성화 (콘텐츠 변경 0, 권한 비트만 조정)
 
 ### Breaking Changes
 - `project.schema.json` 스키마 확장 — v1.x skill이 v2 project.json의 신규 필드를 인식하지 못할 수 있음 (skill-upgrade로 해결)

@@ -16,10 +16,11 @@
 | **SEC-05 신설** (CRITICAL) — 하드코딩 시크릿 (API 키 / secret / AWS / GitHub / Slack) | 신규 검사. 매칭 없으면 PASS, 위반 시 CRITICAL FAIL |
 | **SEC-06 신설** (CRITICAL) — `.env` 노출 게이트 | dotenv 미사용 프로젝트는 SKIP |
 | **SEC-07 신설** (CRITICAL) — 도메인별 민감 데이터 (PAN / SSN / 한국 주민·사업자) | `general` 도메인 또는 도메인 patterns 부재 시 SKIP |
-| **alpha.2 hook-safety 가중치 부채 해소** (PR #35) — 도메인 `_category.json`에 명시 | **점수 영향 0** — 정규화로 보정되던 비율을 명시화 |
+| **alpha.2 hook-safety 가중치 부채 해소** (PR #35) — 도메인 `_category.json`에 명시 | **점수 영향 ≤1점** — 3 도메인(fintech/ecommerce/saas) Hamilton 라운딩으로 ≈0, healthcare phi-protection만 의도적 floor로 -0.91% ≈ ~1.0점 (§5 참조) |
+| **PR #34 — 훅 스크립트 실행 권한 정정** (`6dcfdb3`) — alpha.2 PR #26 머지 시 누락된 `chmod +x`로 인해 `post-tool-use.sh` 등 5개 훅이 git index 모드 100644로 박힘 | alpha.2/alpha.3 PostToolUse 훅이 사실상 미동작(비블로킹 stderr라 사용자 가시 변화 없음)이었으나 alpha.4부터 의도 동작 활성화. 보안 감사 시 인지 필요 — lockedAt heartbeat / 3단계 무한 루프 방어 / hook-disabled.flag 카운터 모두 alpha.4에서 처음 작동 |
 | **`python-fastapi` / `python-django` 검사 대상 추가** | 기존 누락 결함 동시 해소 |
 
-**총 사용자 점수 영향**: 신규 위반 발견 시 외에는 0. SEC-01 회귀 보존 + 가중치 부채 해소는 정규화 비율을 그대로 명시화하므로 alpha.3 점수와 동일.
+**총 사용자 점수 영향**: 신규 위반 발견 시 외에는 ≤1점. SEC-01 회귀 보존 + 신규 SEC-* 추가는 점수 영향 0이며, alpha.2 hook-safety 부채 해소만 healthcare phi-protection에서 -0.91% ≈ ~1.0점 (의도적 floor — PR #35 §점수 영향 분석). 다른 3 도메인은 Hamilton 라운딩으로 ≈0.
 
 ---
 
@@ -112,7 +113,7 @@ PR #37 머지 시 회귀 fixture **23건 전건 PASS** (양성 17 + excludeConte
 
 ### 점수 영향
 
-**0** — 정규화로 이미 적용 중이던 비율을 명시했을 뿐. 사용자가 보는 점수와 등급은 alpha.3 ↔ alpha.4 동일.
+**≤1점** — 정규화로 이미 적용 중이던 비율을 명시화. fintech/ecommerce/saas 3 도메인은 Hamilton 라운딩으로 ≈0, healthcare phi-protection만 의도적 floor(40)로 -0.91% ≈ ~1.0점. 도메인별 라운딩 정책 차이는 PR #35 §점수 영향 분석 표 참조 — 모든 도메인 ±1점 이내라 등급 변동은 발생하지 않는다.
 
 ---
 
@@ -125,7 +126,9 @@ Phase 5는 **별도 카테고리 추가 없이 security 카테고리 내부 항�
 | security 카테고리 내부 항목 수 | SEC-01~04 (4개) | SEC-01~07 (7개) | 신규 위반 발견 시에만 FAIL 증가 |
 | security 카테고리 weight | 23 (`_base`) | 23 (변경 없음) | 0 |
 | failCap 40 적용 | CRITICAL FAIL 시 | 동일 | 0 |
-| 도메인 가중치 합 | 100 (정규화 후) | 100 (명시) | 0 (PR #35) |
+| 도메인 가중치 합 | 100 (정규화 후) | 100 (명시) | 도메인별 라운딩 정책 차이로 fintech/ecommerce/saas ≈0, healthcare phi-protection -0.91% ≈ ~1.0점 (PR #35 §점수 영향 분석) |
+
+**라운딩 정책 차이**: PR #35는 fintech/ecommerce/saas에 Hamilton 라운딩(잔여 0.36%/0.27%/0.36%를 base 카테고리에 분배)을 적용해 점수 영향을 ≈0으로 흡수했다. healthcare는 phi-protection을 floor(40)로 의도적으로 내림(40.91% → 40)하여 차이 0.91%를 base 카테고리(doc/state/security 14)에 +0.36 분배 — 결과적으로 healthcare phi-protection 점수만 가시적인 -0.91% 차이가 발생한다. 등급 변동은 발생하지 않는 범위이며, 모든 도메인이 ±1점 이내로 통제된다.
 
 ---
 
