@@ -34,9 +34,16 @@ Thumbs.db
 
 # Secrets
 **/secrets/
+!tests/secrets/
+!tests/secrets/**
 *.pem
 *.key
 *.crt
+
+# Python bytecode (tests/secrets/ 등에서 생성)
+__pycache__/
+*.py[cod]
+*$py.class
 
 # Build outputs
 out/
