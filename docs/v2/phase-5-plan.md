@@ -18,8 +18,8 @@
 | **선** — D0 hook-safety 가중치 부채 해소 | ✅ 완료 | PR #35 머지 (d0715de) — 4개 도메인 _category.json에 hook-safety 명시 + Hamilton 일관 회복 (M001 반영) |
 | 1 — secrets-patterns.json 스키마 + common 패턴 + 작성 가이드 | ✅ 완료 | PR #36 머지 (fdbce8a) — 리뷰 H001/M001/M002 반영(runtime confidence medium 재분류 + AWS/GitHub 5 prefix 확장) |
 | 2 — skill-health-check SKILL.md SEC-01 외부화 + SEC-05/06/07 추가 | ✅ 완료 | PR #37 머지 (ec1886f) — 리뷰 후속 M001(env_var Go/Python 함수형 정규식 추가) / M002(한국 사업자번호 체크섬 인라인) / M003(type_declaration single-line 한계 명시) 반영 + `_base/health/README.md` SSOT 동기화 |
-| 3 — 도메인별 high confidence 패턴 (fintech/healthcare/ecommerce) | ⏳ 다음 | Step 1, 2 의존 |
-| 4 — security-migration.md + CHANGELOG + VERSION → alpha.4 | ⏳ 대기 | Step 1~3 |
+| 3 — 도메인별 high confidence 패턴 (fintech/healthcare/ecommerce) | ✅ 완료 | PR #38 머지 (35e1888) — H001(오픈뱅킹 토큰 v2.0 보류) + 리뷰 후속 M001(PAN IIN [3-6] 제한) / M002(RRN YYMMDD+성별 코드 형식 검증) / M003(BRN 세무서 코드 [1-9] 제한) / O1(BRN description 강화) 반영. fixture 25건 PASS |
+| 4 — security-migration.md + CHANGELOG + VERSION → alpha.4 | ⏳ 다음 | Step 1~3 의존 |
 
 **재개 프롬프트 예시**:
 > `docs/v2/phase-5-plan.md` 읽고 Step {N} 착수해줘. 직전 완료는 PR #{PR번호}.
