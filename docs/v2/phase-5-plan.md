@@ -292,22 +292,35 @@ skill-health-check 실행
 
 ### Step 3: 도메인별 high confidence 패턴 (PR 3)
 
+> **Step 3 시작 전 재검토 결정 (2026-04-30)**: 본 PR에서 다음을 반영.
+> - **H001 — 한국 오픈뱅킹 토큰 v2.0 보류**: `fintech/docs/open-banking.md` 점검 결과 access_token은 OAuth 2.0 base64url(prefix 부재), `fintech_use_num`/`bank_tran_id`도 도메인 docs에 형식 명시 없음. 정규식 추측 시 R4(도메인 패턴 정확도) 위험 + TFT 옵션 B의 high-only 정책 위배 → **보류**. 토큰 *로깅*은 SEC-01 `common.runtime` SEC-S15(token)/SEC-S17(authorization)이 이미 커버하므로 사용자 보호 공백 거의 없음. 금융결제원 표준 형식 정리 후 v2.1+에서 재검토. Step 4 `security-migration.md`에 후속 작업으로 명시
+> - **M001 — SSN 정규식 보강**: 단순 `\d{3}-\d{2}-\d{4}` 대신 SSA invalid 그룹(`000`/`666`/`9XX` 시작, `00` group, `0000` serial) 제외 + 인접 숫자 거부로 false positive 통제
+> - **M002 — fintech CVV 의도적 보류 명시**: 3~4자리 정규식만으로 false positive 과다(TFT §7.2). entries description에 "CVV 로깅은 SEC-01 SEC-S09 커버, 형식 매칭 보류" 명시
+> - **M003 — healthcare DEA Number v2.0 보류**: 형식은 명확(`[A-Z]{2}\d{7}` + 체크섬)하나 본 PR 범위에서 SSN 우선. v2.1+ 재검토
+> - **M004 — entries description에 도메인 docs cross-reference 자연어 포함**: `domains/{domain}/{docs|checklists}/...` 상대 경로
+
 **파일**:
-- `.claude/domains/fintech/health/secrets-patterns.json` (신규, ~80줄)
-  - **PAN (카드번호)**: 16자리 숫자 + Luhn 알고리즘 검증 — `confidence: high`
-    - 정규식만으론 false positive 위험. Luhn 검증을 SKILL.md 또는 별도 알고리즘 단계에 위임 (Step 2 SKILL.md 절차에 Luhn 처리 포함)
-  - **오픈뱅킹 토큰**: 한국 오픈뱅킹 표준 — 명확한 prefix가 있으면 high
-- `.claude/domains/healthcare/health/secrets-patterns.json` (신규, ~50줄)
-  - **SSN (미국)**: `\d{3}-\d{2}-\d{4}` 형식 — high (형식 명확)
-- `.claude/domains/ecommerce/health/secrets-patterns.json` (신규, ~60줄)
-  - **한국 주민등록번호**: `\d{6}-\d{7}` + 체크섬 (Luhn 비슷)
-  - **한국 사업자번호**: `\d{3}-\d{2}-\d{5}` + 체크섬
+- `.claude/domains/fintech/health/secrets-patterns.json` (신규, ~30줄)
+  - **PAN (카드번호 16자리)**: `\b\d{16}\b` + Luhn 검증 위임(SKILL.md SEC-07 §체크섬 검증) — `confidence: high`
+    - description에 PCI-DSS 위반 + 마스킹 권장 + cross-ref(`fintech/docs/security-compliance.md §카드번호 마스킹`) + CVV 보류 사유 명시
+- `.claude/domains/healthcare/health/secrets-patterns.json` (신규, ~30줄)
+  - **SSN (미국)**: `\b(?!000|666|9\d\d)\d{3}-(?!00)\d{2}-(?!0000)\d{4}\b` — high
+    - description에 HIPAA Privacy Rule §164.514 + cross-ref(`healthcare/docs/phi-data-handling.md` PHI 18 식별자) + DEA Number 보류 사유 명시
+- `.claude/domains/ecommerce/health/secrets-patterns.json` (신규, ~50줄)
+  - **한국 주민등록번호**: `\b\d{6}-\d{7}\b` + 체크섬 위임(SKILL.md SEC-07) — high
+  - **한국 사업자번호**: `\b\d{3}-\d{2}-\d{5}\b` + 체크섬 위임(SKILL.md SEC-07) — high
+    - description에 한국 개인정보보호법 + cross-ref(`ecommerce/checklists/compliance.md`)
+- `.claude/domains/_base/health/README.md` (수정, +3줄)
+  - 도메인별 패턴 ID 네임스페이스 명문화 — `{domain}/health/secrets-patterns.json`은 도메인 내부에서 SEC-S01부터 시작 (출처 표기 `{domain}/SEC-S{nn}`로 _base와 충돌 없음)
+
+**라인 추정**: 합계 ~115줄 (기존 plan ~200 추정 대비 보수적 — 보류 채택 + entries 압축)
 
 **검증**:
-- 각 파일 `domain.patterns` entry 1~2개, 모두 `confidence: high`
-- fintech PAN fixture: Luhn 통과 16자리 → CRITICAL FAIL, Luhn 미통과 → 매칭 후 SKIP (Luhn 검증으로 false positive 차단)
-- healthcare SSN fixture: 형식 일치 → FAIL
-- ecommerce 주민/사업자 fixture: 체크섬 통과 → FAIL
+- 각 파일 `domain.patterns` entry, 모두 `confidence: high`
+- fintech PAN fixture: Luhn 통과 16자리 → CRITICAL FAIL, Luhn 미통과 → 매칭 후 매칭 폐기 (false positive 차단)
+- healthcare SSN fixture: 유효 SSN(예: `123-45-6789`) → FAIL, invalid 그룹(`000-12-3456`, `666-12-3456`, `900-12-3456`, `123-00-4567`, `123-45-0000`) → 매칭 자체 거부
+- ecommerce 주민/사업자 fixture: 체크섬 통과 → FAIL, 체크섬 실패 → 매칭 폐기
+- 모든 정규식 Python `re.compile` 성공 + JSON 유효성
 
 ### Step 4: security-migration.md + CHANGELOG + VERSION → alpha.4 (PR 4)
 

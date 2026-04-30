@@ -101,11 +101,18 @@
 2. `secrets-patterns.json` 작성. **`domain.patterns` 섹션만** 정의
 3. `common.hardcoded` / `common.runtime`은 도메인 파일에 작성하지 않음 (`_base`만 보유)
 4. high confidence 패턴만 포함 (옵션 B)
+5. **패턴 ID 네임스페이스**: 도메인 내부에서 `SEC-S01`부터 시작 (도메인별 독립 카운터). 출처 표기는 `{domain}/SEC-S{nn}` 형식으로 `_base/SEC-S{nn}`와 자연 분리되므로 ID 충돌 없음
+6. **description에 cross-reference 권장**: 관련 도메인 docs/checklists 상대 경로(`domains/{domain}/{docs|checklists}/...`) + 컴플라이언스 표준(예: `HIPAA Privacy Rule §164.514`, `한국 개인정보보호법 §24`)을 자연어로 포함
 
-도메인 패턴 예시 (Step 3 이후 작성 예정):
-- `fintech`: PAN Luhn 검증 + 한국 오픈뱅킹 토큰
-- `healthcare`: 미국 SSN
+v2.0 채택 도메인 패턴:
+- `fintech`: PAN(16자리, Luhn 검증)
+- `healthcare`: 미국 SSN(SSA invalid 그룹 제외)
 - `ecommerce`: 한국 주민등록번호 / 사업자번호 (체크섬 검증)
+
+v2.0 보류(v2.1+ 재검토):
+- `fintech`: 한국 오픈뱅킹 토큰(prefix 표준 부재), CVV(3~4자리 false positive 과다 — 로깅은 `_base` SEC-01 SEC-S09 커버)
+- `healthcare`: DEA Number(형식 명확 `[A-Z]{2}\d{7}` + 체크섬, v2.1+에서 SSN과 함께 보강), MRN(기관별 형식 다양 — low confidence)
+- `saas`: 확정 패턴 부재
 
 ## 금지 항목
 
