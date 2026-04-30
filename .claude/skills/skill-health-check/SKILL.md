@@ -238,7 +238,7 @@ SEC-01 / SEC-05 / SEC-07은 `secrets-patterns.json` 외부 파일을 동적 로�
 
 | enum | 정규식 | 매칭 라인 검사 제외 사유 |
 |------|--------|--------------------------|
-| `env_var_reference` | `process\.env\.\w+`, `os\.environ\[`, `System\.getenv\(` | 환경변수 참조는 실제 시크릿이 아님 |
+| `env_var_reference` | `process\.env\.\w+`, `os\.environ\[`, `os\.getenv\(`, `System\.getenv\(`, `os\.Getenv\(`, `os\.LookupEnv\(` | 환경변수 참조는 실제 시크릿이 아님. JS/Python(dict, getenv)/Java/Go(Getenv, LookupEnv) 커버 |
 | `type_declaration` | `\b(?:class\|interface\|type)\s+\w+` | 타입/클래스 선언부 (예: `class Password { }`) |
 | `comment` | `^\s*(?://\|#\|\*\|/\*)` | 주석 라인 |
 
@@ -247,6 +247,8 @@ SEC-01 / SEC-05 / SEC-07은 `secrets-patterns.json` 외부 파일을 동적 로�
 2. 파일 내 라인별 패턴 매칭
 3. 매칭 라인이 `excludeContexts`에 명시된 enum 중 하나의 정규식과 매칭되면 검사 제외
 4. 남은 매칭만 FAIL로 보고
+
+**`type_declaration` 처리 한계 (single-line 정의)**: 위 3단계는 라인 전체를 제외한다. 따라서 `class PasswordValidator { val secret = "abc1234567890123" }` 같이 한 줄에 타입 선언과 시크릿 리터럴이 함께 있으면 SEC-S02 매칭이 누락된다 (false negative). 워크어라운드: 시크릿 리터럴은 별도 라인 또는 companion `const`/`object`로 분리. 본 한계는 v2.1+에서 토큰-단위 처리로 정밀화 검토.
 
 #### 출처 표기 형식 (SEC-01 / SEC-05 / SEC-07)
 
@@ -336,7 +338,7 @@ SEC-05: 하드코딩 시크릿 (src/main/.../Config.kt:42) — 외부 패턴 SEC
     - 우→좌 짝수 위치(1-indexed)만 ×2 → 결과가 10 이상이면 자릿수 합으로 변환 → 전체 합 mod 10 == 0이면 통과
     - Luhn 실패 시 매칭 폐기 (false positive로 간주)
   - **한국 주민등록번호 (13자리)**: 가중치 [2,3,4,5,6,7,8,9,2,3,4,5] × 앞 12자리 → 합 mod 11 → 11 - 결과 → mod 10이 마지막 자리와 일치
-  - **한국 사업자번호 (10자리)**: 표준 체크섬 알고리즘
+  - **한국 사업자번호 (10자리)**: 가중치 [1,3,7,1,3,7,1,3,5] × 앞 9자리 → 합산 → (8번째 자리 × 5) ÷ 10 몫을 합에 추가 → (10 - 합 mod 10) mod 10이 10번째 자리(체크섬)와 일치하면 통과 (국세청 사업자등록번호 체계)
   - 도메인 패턴이 체크섬 검증을 요구하는 경우 도메인 `secrets-patterns.json` description에 명시 + 본 SKILL.md 절차에 위임 (Step 3 도메인 추가 시 체크섬 알고리즘 사양 첨부)
 - FAIL 시 매칭 위치 + 외부 패턴 ID + 도메인 표기 (예: `SEC-07: PAN 노출 (src/.../Order.kt:88) — 외부 패턴 fintech/SEC-S{nn} (PAN Luhn 통과)`)
 - 참조: `domains/{domain}/checklists/`의 해당 도메인 컴플라이언스 항목, `_base/health/README.md` 새 도메인 패턴 추가 절차
