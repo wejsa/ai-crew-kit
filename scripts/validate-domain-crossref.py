@@ -15,7 +15,9 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-PATTERN = re.compile(r"domains/[a-z_]+/(?:docs|checklists)/[a-z_-]+\.md")
+# uppercase + nested subdir 허용 (M002 후속) — 향후 PHI-Safe-Harbor.md / api-keys/oauth-tokens.md 등 cover.
+# 현재 description의 6 cross-ref(lowercase + 단일 dir)도 동일하게 매칭됨.
+PATTERN = re.compile(r"domains/[A-Za-z0-9_-]+/(?:docs|checklists)(?:/[A-Za-z0-9_-]+)+\.md")
 
 
 def extract_refs(data: dict) -> list[tuple[str, str]]:

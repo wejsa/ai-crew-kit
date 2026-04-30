@@ -22,22 +22,39 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 EXPECTED_SUM = 100
 
 
-def category_sum(data: dict) -> int | None:
-    """Compute total weight across a _category.json. Returns None if format unknown."""
+def category_sum(data: dict, base_data: dict | None = None) -> tuple[int | None, list[str]]:
+    """Compute total weight across a _category.json.
+
+    Returns (sum, warnings). sum is None if format unknown. warnings는 형태 A 도메인이
+    _base 카테고리 일부를 weightOverrides에 누락하여 _base default가 자동 적용되는 경우
+    효과적 sum과 명시적 sum 불일치를 알리는 advisory 메시지(M001 후속).
+    """
+    warnings: list[str] = []
+
     if "additionalCategories" in data:
         # 형태 A: legacy fintech (additionalCategories + weightOverrides)
         s = sum(c.get("weight", 0) for c in data.get("additionalCategories", []))
         s += sum(data.get("weightOverrides", {}).values())
-        return s
+        if base_data and isinstance(base_data.get("categories"), list):
+            base_ids = {c["id"] for c in base_data["categories"] if isinstance(c, dict) and "id" in c}
+            override_ids = set(data.get("weightOverrides", {}).keys())
+            missing = base_ids - override_ids
+            if missing:
+                warnings.append(
+                    f"weightOverrides 미커버 _base 카테고리: {sorted(missing)} "
+                    "(_base default 자동 적용 — 효과적 sum과 명시 sum 불일치 가능. "
+                    "도메인에 모든 _base 카테고리 명시 권장)"
+                )
+        return s, warnings
 
     cats = data.get("categories")
     if isinstance(cats, list):
         # _base 배열 형식
-        return sum(c.get("weight", 0) for c in cats)
+        return sum(c.get("weight", 0) for c in cats), warnings
     if isinstance(cats, dict):
         # 형태 B: ecommerce/healthcare/saas
-        return sum(v.get("weight", 0) for v in cats.values() if isinstance(v, dict))
-    return None
+        return sum(v.get("weight", 0) for v in cats.values() if isinstance(v, dict)), warnings
+    return None, warnings
 
 
 def main() -> int:
@@ -45,15 +62,21 @@ def main() -> int:
     if not targets:
         print("✗ No _category.json files found")
         return 1
-    if not (REPO_ROOT / ".claude/domains/_base/health/_category.json").exists():
+
+    base_path = REPO_ROOT / ".claude/domains/_base/health/_category.json"
+    if not base_path.exists():
         print("✗ _base/health/_category.json — required file missing")
         return 1
+    base_data = json.loads(base_path.read_text(encoding="utf-8"))
 
     fail = 0
     for target in targets:
         rel = target.relative_to(REPO_ROOT)
         data = json.loads(target.read_text(encoding="utf-8"))
-        total = category_sum(data)
+        # _base 자체 검증에는 base_data 비교 불필요
+        total, warnings = category_sum(data, None if target == base_path else base_data)
+        for w in warnings:
+            print(f"  ⚠ {rel} — {w}")
         if total is None:
             print(f"✗ {rel} — unknown format (no categories/additionalCategories key)")
             fail += 1
