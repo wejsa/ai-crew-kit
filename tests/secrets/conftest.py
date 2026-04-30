@@ -39,6 +39,12 @@ def ecommerce_patterns() -> dict:
     return _load(".claude/domains/ecommerce/health/secrets-patterns.json")
 
 
+@pytest.fixture(scope="session")
+def skill_md_text() -> str:
+    """skill-health-check/SKILL.md 본문 — SSOT drift 검증용 (M001 후속)."""
+    return (REPO_ROOT / ".claude/skills/skill-health-check/SKILL.md").read_text(encoding="utf-8")
+
+
 def get_pattern(data: dict, section: str, pattern_id: str) -> dict:
     """Find pattern entry by dotted section path and id.
 
