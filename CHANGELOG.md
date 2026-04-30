@@ -11,6 +11,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### Phase 5 — AgentShield-lite (v2.0.0-alpha.4)
+- **`secrets-patterns.json` 스키마** — 3 섹션 표준(`common.hardcoded` / `common.runtime` / `domain.patterns`) + entry 필드(`id`/`name`/`pattern`/`severity`/`confidence`/`description`/`excludeFiles`/`excludeContexts`)
+- **`_base/health/secrets-patterns.json`** — 공통 패턴 17개
+  - `common.hardcoded` SEC-S01~S05 (high) — API 키, secret/private_key, AWS Access Key 5 prefix(`AKIA|AGPA|AROA|AIDA|ANPA`), GitHub Token 5 prefix(`ghp|gho|ghu|ghs|ghr`), Slack Bot/User Token
+  - `common.runtime` SEC-S06~S17 (medium 예외 — v1.x SEC-01 회귀 보존) — log/logger/println에 password/cardNumber/creditCard/cvv/ssn/주민등록/secret/apiKey/token/bearer/authorization 등 직접 전달
+- **`_base/health/README.md`** — 스키마/confidence 등급 가이드/`excludeFiles` 기본 권장/`excludeContexts` enum SSOT 정의/새 공통·도메인 패턴 추가 절차/금지 항목/도메인 ID 네임스페이스 정책(`{domain}/SEC-S01`부터)/v2.0 채택·보류 명시
+- **`skill-health-check` 신규 검사** (모두 CRITICAL, autoFix 불가)
+  - **SEC-05** — 하드코딩 시크릿. `_base/common.hardcoded` 로드 + 매칭
+  - **SEC-06** — `.env` 노출 게이트. gitignore 등록 + 평문 시크릿(AWS/GitHub/Slack 명시 prefix) 두 단계, `.env.example`/`.env.template`/`.env.sample`은 placeholder 가정 제외
+  - **SEC-07** — 도메인별 민감 데이터. `{domain}/health/secrets-patterns.json` `domain.patterns` 로드 + 체크섬 검증(PAN Luhn / 한국 주민·사업자 가중치). `general` 도메인 또는 도메인 patterns 부재 시 SKIP
+- **`skill-health-check` 카테고리 헤더 SSOT** — 외부 패턴 로드 절차(부재/JSON 파싱/정규식 컴파일 실패 3-tier 폴백) + `excludeContexts` 처리 정규식(JS/Python dict+getenv/Java/Go Getenv+LookupEnv 커버) + 출처 표기 형식(`{domain}/SEC-S{nn}`) + `medium` confidence 안내 문구
+- **도메인별 `secrets-patterns.json`**
+  - **`fintech/health/secrets-patterns.json`** — SEC-S01 PAN 16자리 IIN 제한(`\b[3-6]\d{15}\b`) + Luhn 위임. CVV 형식 매칭은 v2.0 보류(SEC-01 SEC-S09 커버)
+  - **`healthcare/health/secrets-patterns.json`** — SEC-S01 미국 SSN, SSA invalid 그룹(area=000/666/9XX, group=00, serial=0000) lookahead 제외. DEA Number/MRN 보류
+  - **`ecommerce/health/secrets-patterns.json`** — SEC-S01 한국 주민등록(YYMMDD + 성별 1-8 형식 검증 + 가중치 [2,3,4,5,6,7,8,9,2,3,4,5] 체크섬), SEC-S02 한국 사업자(세무서 코드 [1-9] 시작 + 가중치 [1,3,7,1,3,7,1,3,5] 체크섬)
+- **`docs/v2/security-migration.md`** — alpha.3 → alpha.4 마이그레이션 가이드. SEC-01 회귀 보존 1:1 매핑표, 신규 SEC-* 가이드, alpha.2 hook-safety 부채 해소 사실, 점수 영향 0 분석, excludeFiles/excludeContexts 사용자 가이드, autoFix 정책, Phase 4 rules 다층 방어, v2.1+ 보류 항목 9건, Troubleshooting Q1~Q3
+- **TFT 설계 문서** — `docs/v2/phase-5-tft-analysis.md` (5인 분석 + D0~D7 결정 + 옵션 A/B/C 비교 + 9 리스크 + 옵션 B 채택), `docs/v2/phase-5-plan.md` (Step 1~4 구현 계획 + 진행 상황 SSOT 테이블)
+- **`python-fastapi` / `python-django` 검사 대상 파일 패턴** — security 카테고리 헤더에 추가 (alpha.2 이후 누락 결함 동시 해소)
+
 #### Phase 4 — 4-Layer Override + Constraint Rules (v2.0.0-alpha.3)
 - **`.claude/rules/` 디렉토리** — 도메인 × 언어 교차 제약 규칙 메커니즘 신설 (4층 Layered Override의 2번째 층, PR 리뷰 컨텍스트 한정 적용)
 - **`.claude/rules/README.md`** — rules vs conventions 경계 매트릭스, language 매핑 SSOT 표(7개 backend), frontmatter 표준(id/domain/language/severity/triggers/related), 새 rule 작성 가이드라인, 금지 항목 (`_base/rules/`, `{domain}/rules/` 단독 층 신규 생성 금지), skill-review-pr 통합 절차
@@ -68,6 +87,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+#### Phase 5 (v2.0.0-alpha.4)
+- **SEC-01 외부화** — `skill-health-check/SKILL.md` 인라인 12 패턴 → `_base/health/secrets-patterns.json` `common.runtime` 로드. 키워드 1:1 동일(회귀 보존), 정규식은 단어 경계 + `log/logger/println` 변형 흡수로 정밀화. 회귀 fixture 23건 PASS
+- **alpha.2 hook-safety 정규화 부채 해소** (PR #35, d0715de) — 도메인 4개(fintech/ecommerce/saas/healthcare) `_category.json`의 dictionary에 hook-safety weight 9 명시 + 기존 카테고리 비례 감소(예: fintech doc-sync 20 → 18, compliance 40 → 35)로 합 100 일관. 정규화로 보정되던 비율을 명시화 — **사용자 점수 영향 ≤1점** (fintech/ecommerce/saas는 Hamilton 라운딩으로 ≈0, healthcare phi-protection만 의도적 floor로 -0.91% ≈ ~1.0점, PR #35 §점수 영향 분석 참조)
+- **`_base/health/README.md` `excludeContexts` `env_var_reference` enum** — Go(`os.Getenv` / `os.LookupEnv`) + Python 함수형(`os.getenv`) 추가 (PR #37 리뷰 M001 후속). `skill-health-check/SKILL.md` SSOT 동기화
+- **`skill-health-check/SKILL.md` `type_declaration` 처리 한계 명시** — single-line 정의 + 시크릿 리터럴 동일 라인은 라인 단위 제외 때문에 false negative. 워크어라운드(시크릿 별도 라인 분리) + v2.1+ 토큰-단위 정밀화 메모 (PR #37 리뷰 M003 후속)
+
 #### Phase 4 (v2.0.0-alpha.3)
 - **`project.schema.json` `overridePriority` description 보강** — Phase 0에서 예약된 enum/default 유지하고 description만 명료화: `domain-first` / `merge` 의미 + "v2.0 MVP는 분기 로직 미구현 (단일 디렉토리 구조라 충돌 구조적으로 발생하지 않음). 향후 단독 도메인/언어 룰 도입 시 활성화" + rules/README.md 참조
 - **`docs/concepts.md` & `docs/customization.md` Layered Override** 3층 → 4층 다이어그램 (rules 포함, 하드코딩 기본값은 baseline으로 카운트 외)
@@ -84,10 +109,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Phase 2 (v2.0.0-alpha.2 — alpha.1 이후 backfill)
 - CLAUDE.md.tmpl: 하드코딩 스킬 목록/자연어 매핑을 프로파일 기반 블록 마커로 교체
 
+### Fixed
+
+#### Phase 1 사후 결함 해소 (v2.0.0-alpha.4)
+- **훅 스크립트 실행 권한 정정** (PR #34, 6dcfdb3) — alpha.2 PR #26 머지 시 누락된 `chmod +x`로 인해 `post-tool-use.sh`를 비롯한 5개 훅이 git index 모드 100644로 박혀 PostToolUse 이벤트마다 "Permission denied" 실패. 비블로킹 정책(R4)으로 세션은 정상 진행됐으나 lockedAt heartbeat 갱신 / 3단계 무한 루프 방어 / hook-disabled.flag 카운터가 사실상 alpha.2/alpha.3 동안 미동작. alpha.4부터 의도 동작 활성화 (콘텐츠 변경 0, 권한 비트만 조정)
+
 ### Breaking Changes
 - `project.schema.json` 스키마 확장 — v1.x skill이 v2 project.json의 신규 필드를 인식하지 못할 수 있음 (skill-upgrade로 해결)
 - **Phase 1 훅: 없음** — `.claude/settings.json`에 `hooks` 필드가 부재하거나 `.claude/hooks/` 디렉토리가 없으면 v1.x 동작이 100% 유지됨 (하위호환 보장)
 - **Phase 4 rules: 없음** — `.claude/rules/` 디렉토리가 부재하거나 `{domain}/{language}/` 매칭이 0개면 alpha.2 동작이 100% 유지됨. 메커니즘만 추가되고 콘텐츠 0개 출시이므로 모든 PR 리뷰에서 자연 SKIP
+- **Phase 5 secrets: 없음** — `_base/health/secrets-patterns.json` 부재 시 SEC-01/SEC-05 SKIP + WARN, 도메인 patterns 부재 시 SEC-07 SKIP, dotenv 미사용 프로젝트는 SEC-06 SKIP. SEC-01 외부화는 키워드 1:1 매핑 보존(회귀 fixture 23건 PASS)으로 alpha.3 동작 유지. alpha.2 hook-safety 정규화 부채 해소도 정규화 비율을 명시화한 것이라 사용자 점수 영향 0
 
 ## [1.45.1] - 2026-04-14
 
