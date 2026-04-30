@@ -193,7 +193,7 @@ SEC-07(헬스체크 시점, 정규식 자동 검사)과 Phase 4 `.claude/rules/{
 | **medium / low confidence 패턴 일반** | 옵션 B 정책 — 신규는 high만 | 실 사용 데이터 + 사용자 피드백 후 |
 | **`secrets-patterns.schema.json`** (D7) | MVP 범위 외 — SKILL.md/README 형식 명세로 대체 | skill-validate 확장 트랙 |
 | **`type_declaration` 토큰-단위 처리** | M003 한계 — 라인 단위 제외로 single-line FN | 사용자 케이스 누적 후 |
-| **회귀 fixture 자동화** (Step 3 리뷰 O1) | 현재 작성자 로컬 검증 + PR 본문 수동 보고 | Phase 6 또는 별도 트랙 — `.claude/domains/_base/health/tests/secrets-fixtures/` + CI job |
+| ~~**회귀 fixture 자동화** (Step 3 리뷰 O1)~~ ✅ **GA 전 격상 + 완료** | v2.0 단일 GA 전략(2026-04-30 합의)으로 GA 전 트랙 A로 격상 | 트랙 A Step 1~3 완료(PR #40/#41/#42): `tests/secrets/` 89 parametrize + 14 메타 + cross-ref + `_category` 가중치 검증 + SSOT drift 메타. `secrets-tests.yml` 워크플로우. 자세한 내용은 [phase-5-tests-plan.md](./phase-5-tests-plan.md) 참조 |
 
 ---
 
