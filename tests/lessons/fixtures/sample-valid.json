@@ -1,0 +1,20 @@
+{
+  "metadata": {
+    "version": 1,
+    "updatedAt": "2026-05-01T12:00:00Z"
+  },
+  "lessons": [
+    {
+      "id": "L-001",
+      "taskId": "FIXTURE-1",
+      "category": "quality",
+      "title": "Sample valid lesson",
+      "description": "회고에서 추출된 정상 학습 항목 예시. PR #43 리뷰 CRITICAL #1 — CI에서 validator 동작 증명용 fixture.",
+      "impact": "high",
+      "tags": ["sample", "fixture"],
+      "appliedCount": 5,
+      "createdAt": "2026-04-01T00:00:00Z",
+      "updatedAt": "2026-04-15T00:00:00Z"
+    }
+  ]
+}
