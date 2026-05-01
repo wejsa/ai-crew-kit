@@ -46,7 +46,7 @@ Phase 0 (Foundation)
                                     ▼
                               Phase 4 (Rules) ← Phase 0
                               Phase 5 (Security) ← Phase 0 + 1
-                              Phase 6 (Compliance) ← Phase 5
+                              Phase 6 (Compliance) ⏸ v2.1+ 보류
                                     │
                                     ▼
                               Phase 7 (Context) ← Phase 1 + 4
@@ -56,9 +56,9 @@ Phase 0 (Foundation)
 - Phase 1, 2, 3은 **병렬 가능** (Phase 0 완료 후)
 - Phase 4는 Phase 0 의존 (H001: Phase 2 의존 근거 불명확 → 제거. rules 로드는 프로파일과 독립)
 - Phase 5는 Phase 0 + 1 의존 (훅이 보안 스캔 트리거)
-- Phase 6은 Phase 5 의존 (보안 데이터 기반 리포트)
-- Phase 7은 Phase 1 + 4 의존
-- Phase 8은 전체 의존
+- ~~Phase 6은 Phase 5 의존~~ → **v2.1+ 보류** (2026-05-01 옵션 D)
+- Phase 7은 Phase 1 + 4 의존 (둘 다 충족 — 다음 진입 가능)
+- Phase 8은 전체 의존 (Phase 6 보류로 의존 그래프 영향 없음 — 보류 자체가 결정 상태)
 
 ---
 
@@ -72,8 +72,8 @@ Phase 0 (Foundation)
 | 3 | Token Optimization | [phase-3-token.md](./phase-3-token.md) | P0 |
 | 4 | 4-Layer Override + Rules | [phase-4-rules.md](./phase-4-rules.md) | P1 |
 | 5 | AgentShield-lite | [phase-5-security.md](./phase-5-security.md) | P1 |
-| 6 | Compliance Report | [phase-6-compliance.md](./phase-6-compliance.md) | P1 |
-| 7 | Context & Learning | [phase-7-context.md](./phase-7-context.md) | P2 |
+| ~~6~~ | ~~Compliance Report~~ | [phase-6-compliance.md](./phase-6-compliance.md) | ⏸ **v2.1+ 보류** (2026-05-01) |
+| 7 | Context & Learning | [phase-7-context.md](./phase-7-context.md) | P2 → **P1 격상 (Phase 6 보류분 재배치)** |
 | 8 | Migration & Release | [phase-8-release.md](./phase-8-release.md) | P2 |
 
 ---
@@ -91,11 +91,11 @@ Phase 0 (Foundation)
 | 4 — Layered Override + Rules | ✅ | alpha.3 packed | 메커니즘 + 0개 콘텐츠 (옵션 A) |
 | 5 — AgentShield-lite | ✅ | alpha.4 packed (`6cf43c9`) | secrets-patterns + SEC-05/06/07 + 도메인 패턴 + migration |
 | **트랙 A — 회귀 자동화** | ✅ | `8b1b628` | secrets-patterns schema + fixture pytest 89 + 14 메타 + cross-ref + `_category` 가중치 + SSOT drift 메타 + 5 jobs CI ([phase-5-tests-plan.md](./phase-5-tests-plan.md)) |
-| **6 — Compliance Report** | ⏳ **다음** | — | skill-compliance-report 신규 + fintech 우선 (PCI-DSS / 전자금융감독규정) |
-| 7 — Context & Learning | ⏳ | — | Phase 1+4 의존 |
+| ~~6 — Compliance Report~~ | ⏸ **v2.1+ 보류** | — | 2026-05-01 옵션 D 채택 — ACK 미니멀리즘 위배 + 실수요 미검증 + 위반 탐지 Phase 4/5 중복. 상세는 [phase-6-compliance.md](./phase-6-compliance.md) §보류 결정 |
+| **7 — Context & Learning** | ⏳ **다음** (P1 격상) | — | Phase 1+4 의존 (충족). Phase 6 보류분 재배치 |
 | 8 — Migration & Release (GA) | ⏳ | — | **GA 검증 게이트** — 통합 회귀 매트릭스 + skill-upgrade v1→v2 시뮬레이션 + E2E |
 
-**현재 v2-develop HEAD**: `8b1b628` (PR #42 트랙 A Step 3)
+**현재 v2-develop HEAD**: Phase 6 보류 docs commit (다음 push)
 **현재 VERSION**: `2.0.0-alpha.4` (인터널)
 **현재 활성 CI**: `hook-tests` / `schema-validation` / `secrets-tests` (4 jobs) — 총 6 CI checks
 
@@ -104,39 +104,41 @@ Phase 0 (Foundation)
 새 세션 진입 시 다음 프롬프트로 시작:
 
 ```
-docs/v2/README.md §진행 상황과 docs/v2/phase-6-compliance.md 읽고
-Phase 6 (Compliance Report) 착수해줘.
+docs/v2/README.md §진행 상황과 docs/v2/phase-7-context.md 읽고
+Phase 7 (Context & Learning) 착수해줘.
 
 전제 조건:
 - v2.0 단일 GA 전략(2026-04-30 합의)이라 alpha 태그 외부 릴리스 없음
-- Phase 5 + 트랙 A 회귀 자동화 완료 (v2-develop HEAD 8b1b628)
+- Phase 5 + 트랙 A 회귀 자동화 완료
+- Phase 6은 v2.1+ 보류 (2026-05-01 옵션 D 채택, ACK 미니멀리즘 위배 + 실수요 미검증)
 - 인터널 VERSION은 alpha.4지만 태그 미생성, 인터널 마일스톤만
 
-권장 진행 방식:
-1. TFT 5인 분석 (Phase 5 패턴 참조)
-2. D0급 결정으로 "각 산출물 회귀 테스트 자동화는 산출물 PR과 동시 또는 즉시 후속"
-   사전 확정 (트랙 A 패턴 일반화)
-3. 옵션 A/B/C 비교 후 사용자 합의
-4. plan.md 작성 → 4 스텝 PR 진행
+권장 진행 방식 (Phase 5 + 6 검토 패턴 일관):
+1. TFT 5인 분석 (Phase 5 패턴 참조) — ACK 미니멀리즘 / SSOT 정합성 우선 점검
+2. D0급 결정 사전 확정:
+   - 산출물 회귀 테스트 자동화는 PR과 동시 또는 즉시 후속 (트랙 A 패턴 일반화)
+   - "Claude가 이미 아는 것" 콘텐츠 박기 금지 (Phase 4 옵션 A / Phase 6 옵션 D 학습)
+3. 옵션 비교 (메커니즘만 / 메커니즘+콘텐츠 / 기존 스킬 통합) 후 사용자 합의
+4. plan.md 작성 → 스텝 PR 진행
 ```
 
-### Phase 6 진입 시 권장 D0급 결정 (사전 확정)
+### v2.0 GA 진입 전 D0급 공통 결정 (Phase 6 보류 학습 반영)
 
 | ID | 결정 사항 | 근거 |
 |----|-----------|------|
 | D0 | 산출물 회귀 테스트 자동화는 PR과 동시 또는 즉시 후속 | 트랙 A 사후 마이그레이션 비용 ↑, 단일 GA 안전성 |
-| H004 (선결) | 데이터 수집 방식: 역추적(git log + PR 메타) vs 실시간 수집 | phase-6-compliance.md §Security Lead 분석 |
-| MVP 도메인 | fintech 우선 (PCI-DSS / 전자금융감독규정) | phase-6-compliance.md §범위 경계 |
-| 출력 형식 | JSON (PDF는 v2.1+) | phase-6-compliance.md §범위 경계 |
+| **D-MIN** | **각 Phase 진입 시 "Claude가 이미 아는 것" 콘텐츠 박기 여부를 옵션 분석 시 명시 검토** | Phase 4(rules) / Phase 6(compliance mapping) 학습 — 지식 박기 vs 추적성/메커니즘 분리 |
+| **D-NEED** | **각 Phase 진입 시 v1.x 실수요 사례 1건 이상 확인. 부재 시 우선순위 강등 후보** | Phase 6 보류 학습 — P1 우선순위가 실제 수요와 정합한지 검증 |
 
 ### 핵심 컨텍스트 파일 (다른 세션 진입 시 우선 읽기)
 
 | 파일 | 역할 |
 |------|------|
 | `docs/v2/README.md` (본 문서) | Phase 목록 + 진행 상황 SSOT + 재개 프롬프트 |
-| `docs/v2/phase-6-compliance.md` | Phase 6 상위 계획 (TFT 분석 가이드 포함) |
-| `docs/v2/phase-5-tests-plan.md` | 트랙 A 3 스텝 패턴 — Phase 6 회귀 자동화 D0 참고 |
-| `docs/v2/security-migration.md` | Phase 5 사용자 가이드 (Phase 6 마이그레이션 패턴 참조) |
+| `docs/v2/phase-7-context.md` | Phase 7 상위 계획 (다음 진입) |
+| `docs/v2/phase-6-compliance.md` | Phase 6 보류 결정 + 부활 옵션 (v2.1+ 재진입 시) |
+| `docs/v2/phase-5-tests-plan.md` | 트랙 A 3 스텝 패턴 — 회귀 자동화 D0 참고 |
+| `docs/v2/security-migration.md` | Phase 5 사용자 가이드 (마이그레이션 패턴 참조) |
 | `.github/workflows/secrets-tests.yml` | 트랙 A CI workflow 패턴 (4 jobs 분리) |
 | `.claude/state/project.json` | (메타 레포라 부재) — 일반 프로젝트는 도메인/techStack SSOT |
 

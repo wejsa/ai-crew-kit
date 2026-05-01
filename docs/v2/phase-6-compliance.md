@@ -1,6 +1,41 @@
 # Phase 6: Compliance Traceability Report
 
-> **우선순위**: P1 | **의존성**: Phase 5 | **난이도**: L
+> **상태**: ⏸ **v2.1+ 보류** (2026-05-01 결정 — 옵션 D 채택)
+> **우선순위**: ~~P1~~ → v2.1+ 재평가
+> **의존성**: Phase 5 (충족) | **난이도**: L
+
+## ⏸ 보류 결정 (2026-05-01)
+
+본 Phase는 v2.0.0 GA 범위에서 제외하고 v2.1+에서 재평가한다.
+
+### 보류 사유 (방향성 재점검 결과)
+
+1. **방향성 위배 신호**: phase-6-compliance.md §Task 6-1의 `compliance-mapping.schema.json` 예시에서 `framework`, `id`, `title`(예: "PAN 암호화 저장")처럼 *컴플라이언스 지식*을 mapping.json에 박는 구조는 ACK 미니멀리즘 원칙("Claude가 이미 아는 것은 가르치지 않는다")과 Phase 4 옵션 A 결정과 모순된다. 추적성 메타(`checklistRef`, `codeEvidence`, `prRefs`)만 진짜 신규 가치이며, 지식 부분은 이미 `fintech/checklists/compliance.md` + Phase 5 secrets-patterns + Phase 4 rules 메커니즘이 SSOT로 처리한다.
+2. **실수요 미검증**: v1.x 시기 컴플라이언스 리포트 사용자 요구 사례 부재. P1 우선순위 적정성 의심.
+3. **위반 탐지 중복**: PR 리뷰 위반 탐지는 Phase 4 rules + Phase 5 SEC-01/05/07 + skill-review-pr이 이미 커버. 추적성 단독 가치만으로 v2.0 GA 포함 명분 약함.
+4. **GA 임팩트 우선순위**: 단일 GA 전략에서 Phase 7(Context & Learning) / Phase 8(Migration & Release) 진입이 실제 GA 가치 큼.
+
+### 재진입 조건 (v2.1+ 시점에 다음 중 1건 이상 만족 시 부활)
+
+- 사용자(또는 v2.0 GA 도입 팀)에게서 컴플라이언스 추적성 리포트 요구 발생
+- 감사 증빙 자동화에 대한 외부 컴플라이언스 표준 변화 (예: PCI-DSS v4.0 항목 추적 의무화)
+- skill-health-check 카테고리 확장 시 `compliance-traceability` 카테고리가 자연스러운 확장 후보로 검토됨
+
+### 부활 시 권장 옵션 (v2.1+ 진입 시 사전 후보)
+
+| 옵션 | 핵심 |
+|------|------|
+| **옵션 A′ (Lean Mechanism)** | skill-compliance-report 신규 + schema는 추적성 메타만(title/description 등 지식 필드 제거) + mapping 콘텐츠 0개 + `_example` 샘플 1개. Phase 4 옵션 A 패턴 정확 일관 |
+| **옵션 E (skill-health-check 통합)** | 신규 스킬 0개. 기존 `compliance.md` 항목에 ID 부여만 + health-check `compliance-traceability` 카테고리 추가로 PR 역추적. 강한 미니멀리즘 |
+
+> 본 결정의 상세 분석(옵션 비교 표 + TFT 5인 분석 + 옵션 B 함정 검출)은 v2-develop 세션 로그(`8b1b628` 이후 2026-05-01 대화)에 보존. 부활 시 본 문서 상단 헤더 제거 + 옵션 A′ 또는 E 전환.
+
+---
+
+## (이하 원본 phase-6 계획 — v2.1+ 재진입 시 참고용 보존)
+
+> **참고**: 아래 본문은 옵션 B(메커니즘 + fintech MVP 매핑)를 가정하고 작성되었다. v2.1+ 재진입 시 옵션 A′/E로 재구성 필요.
+
 
 ## 목표
 
