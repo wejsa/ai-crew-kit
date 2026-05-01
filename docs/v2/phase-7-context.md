@@ -1,6 +1,45 @@
 # Phase 7: Context & Learning
 
-> **우선순위**: P2 | **의존성**: Phase 1 + Phase 4 | **난이도**: M
+> **상태**: 옵션 A (Lean Closure) **진행 중** (2026-05-01 결정)
+> **우선순위**: ~~P2~~ → P1 격상 (Phase 6 보류분 재배치)
+> **의존성**: Phase 1 + Phase 4 (모두 충족) | **난이도**: M (옵션 A 적용 시 S)
+
+## ✅ 진행 결정 (2026-05-01)
+
+본 Phase는 **옵션 A — Lean Closure**로 진행한다. 상세 계획은 [phase-7-plan.md](./phase-7-plan.md) 참조.
+
+### 진단
+
+**이미 v1.23.0(2026-03-05)에 구현됨**:
+- `.claude/state/lessons-learned.json` + skill-retro §5.3 저장
+- skill-retro `--lessons` (list/search/top)
+- skill-plan §"과거 학습 반영" — impact=high 우선 + 최대 5건 자동 참조
+
+**옵션 A 범위 (회귀 보호 갭만 보강)**:
+1. `lessons-learned.schema.json` 신규 — schema 부재 회귀 보호
+2. `description` 필드 secrets 필터링 (Phase 5 SEC-S01~S05 재사용)
+3. impact 임계값 SSOT 명문화 (`>=5 → high / >=3 → medium / <3 → low`)
+4. taskId cross-ref 검증 (completed.json + backlog.json archived)
+
+### ⏸ v2.1+ 보류 (D-NEED 미충족)
+
+다음 Task는 v1.x 사용자 요청 사례 부재로 v2.1+ 재진입 후보로 보류한다 (Phase 6 옵션 D 학습 적용).
+
+| 보류 항목 | 보류 사유 | v2.1+ 재진입 조건 |
+|----------|----------|-----------------|
+| **Task 7-1/7-2 — contextSnapshot** (workflowState에 domain/checklistPaths/activeRules/prNumber/ttl 객체 + 30분 TTL) | v1.x 토큰 비용 호소 사례 부재. v1.32.0 SKILL.md 74% 압축으로 토큰 비용 큰 폭 감소 | 토큰 비용 메트릭 측정 후 절감 잠재성 정량 검증 시 |
+| **Task 7-6 — skill-create `--from-history`** (git log 50건에서 패턴 추출) | v1.x 요청 사례 부재. 현 skill-create 충분 동작 | git log 분석 모드 사용자 요구 발생 시 |
+| **lessons-learned 도메인별 파일 분리** (`.claude/state/{domain}/lessons-learned.json`) | 단일 파일 + `tags` 필드로 도메인 표시 가능. v1.x 오염 호소 사례 부재 | 도메인 변경 시 lessons 오염 사례 1건 이상 발생 시 |
+
+> 본 결정의 상세 분석(v1.23 진단 + D-MIN/D-NEED 점검 + 옵션 비교)은 v2-develop 세션 로그(`3043528` 이후 2026-05-01 대화)에 보존. 부활 시 phase-7-context.md 상단 헤더 갱신 + 본문 작업 목록 부활.
+
+---
+
+## (이하 원본 Phase 7 계획 — 일부는 v1.23 구현으로 완료, 일부는 v2.1+ 보류)
+
+> **참고**: 아래 본문의 Task 7-3/7-4/7-5는 v1.23.0에 이미 구현되어 옵션 A는 *회귀 보호*만 진행. Task 7-1/7-2/7-6은 v2.1+ 보류.
+
+> **우선순위**: ~~P2~~ → P1 (격상) | **의존성**: Phase 1 + Phase 4 | **난이도**: M
 
 ## 목표
 
