@@ -92,34 +92,42 @@ Phase 0 (Foundation)
 | 5 — AgentShield-lite | ✅ | alpha.4 packed (`6cf43c9`) | secrets-patterns + SEC-05/06/07 + 도메인 패턴 + migration |
 | **트랙 A — 회귀 자동화** | ✅ | `8b1b628` | secrets-patterns schema + fixture pytest 89 + 14 메타 + cross-ref + `_category` 가중치 + SSOT drift 메타 + 5 jobs CI ([phase-5-tests-plan.md](./phase-5-tests-plan.md)) |
 | ~~6 — Compliance Report~~ | ⏸ **v2.1+ 보류** | — | 2026-05-01 옵션 D 채택 — ACK 미니멀리즘 위배 + 실수요 미검증 + 위반 탐지 Phase 4/5 중복. 상세는 [phase-6-compliance.md](./phase-6-compliance.md) §보류 결정 |
-| **7 — Context & Learning** | ⏳ **다음** (P1 격상) | — | Phase 1+4 의존 (충족). Phase 6 보류분 재배치 |
+| **7 — Context & Learning** | ⏳ **진행 중** (옵션 A — Lean Closure) | — | Phase 1+4 의존 (충족). Phase 6 보류분 재배치. 상세 [phase-7-plan.md](./phase-7-plan.md) |
+| ↳ Step 1 — schema + validator + fixtures + plan | ✅ | `f4cc1e1` (PR #43) | lessons-learned.schema.json + validate-lessons-learned.py + tests/lessons/fixtures 3건 + secrets-tests.yml 5번째 job (4단계 검증). PR 리뷰 CRITICAL/MAJOR/MINOR 5건 모두 반영 |
+| ↳ Step 2 — skill-retro 통합 + secrets 필터 + impact 정량 + pytest | ⏳ **다음** | — | skill-retro §5.3 secrets 필터 통합(Step 1에서 이관) + impact 임계값 정량 출력 + tests/lessons/ pytest fixture (~12건) + context-migration.md |
 | 8 — Migration & Release (GA) | ⏳ | — | **GA 검증 게이트** — 통합 회귀 매트릭스 + skill-upgrade v1→v2 시뮬레이션 + E2E |
 
-**현재 v2-develop HEAD**: Phase 6 보류 docs commit (다음 push)
+**현재 v2-develop HEAD**: `f4cc1e1` (PR #43 Phase 7 Step 1)
 **현재 VERSION**: `2.0.0-alpha.4` (인터널)
-**현재 활성 CI**: `hook-tests` / `schema-validation` / `secrets-tests` (4 jobs) — 총 6 CI checks
+**현재 활성 CI**: `hook-tests` / `schema-validation` / `secrets-tests` (5 jobs — `validate-lessons-learned` 추가) — 총 7 CI checks
 
 ### 🔄 다른 세션에서 재개 시 프롬프트
 
-새 세션 진입 시 다음 프롬프트로 시작:
+새 세션 진입 시 다음 프롬프트로 시작 (Phase 7 Step 2 진입):
 
 ```
-docs/v2/README.md §진행 상황과 docs/v2/phase-7-context.md 읽고
-Phase 7 (Context & Learning) 착수해줘.
+docs/v2/README.md §진행 상황과 docs/v2/phase-7-plan.md 읽고
+Phase 7 Step 2 착수해줘.
 
 전제 조건:
 - v2.0 단일 GA 전략(2026-04-30 합의)이라 alpha 태그 외부 릴리스 없음
-- Phase 5 + 트랙 A 회귀 자동화 완료
-- Phase 6은 v2.1+ 보류 (2026-05-01 옵션 D 채택, ACK 미니멀리즘 위배 + 실수요 미검증)
+- Phase 7 Step 1 완료 (PR #43 머지, f4cc1e1) — schema + validator
+  + fixtures 3건 + 4단계 CI workflow + plan.md
+- Phase 6은 v2.1+ 보류 (2026-05-01 옵션 D 채택)
 - 인터널 VERSION은 alpha.4지만 태그 미생성, 인터널 마일스톤만
 
-권장 진행 방식 (Phase 5 + 6 검토 패턴 일관):
-1. TFT 5인 분석 (Phase 5 패턴 참조) — ACK 미니멀리즘 / SSOT 정합성 우선 점검
-2. D0급 결정 사전 확정:
-   - 산출물 회귀 테스트 자동화는 PR과 동시 또는 즉시 후속 (트랙 A 패턴 일반화)
-   - "Claude가 이미 아는 것" 콘텐츠 박기 금지 (Phase 4 옵션 A / Phase 6 옵션 D 학습)
-3. 옵션 비교 (메커니즘만 / 메커니즘+콘텐츠 / 기존 스킬 통합) 후 사용자 합의
-4. plan.md 작성 → 스텝 PR 진행
+Step 2 범위 (Step 1에서 이관 + 잔여 책임):
+1. skill-retro §5.3 secrets 필터 통합 — SEC-S01~S05 + excludeContexts
+   정확 처리(comment/type_declaration) + AskUserQuestion override
+2. skill-retro --lessons list/top 출력에 impact 임계값 정량 표시
+   (`appliedCount X (권장: Y)`)
+3. tests/lessons/ pytest fixture (~12건):
+   - test_schema.py (정상 + negative 5건)
+   - test_secrets_filter.py (SEC-S01~S05 + excludeContexts)
+   - test_threshold.py (appliedCount 경계 2/3/4/5/6)
+4. docs/v2/context-migration.md (Phase 7 Lean Closure 사용자 가이드)
+
+Step 2 완료 후 → Phase 8 (Migration & Release / GA) 진입.
 ```
 
 ### v2.0 GA 진입 전 D0급 공통 결정 (Phase 6 보류 학습 반영)
