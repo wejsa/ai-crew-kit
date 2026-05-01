@@ -51,6 +51,10 @@
 | **D7** | `.claude/state/lessons-learned.json` 부재 시 validator graceful skip(exit 0) — 메타 레포 / 신규 프로젝트 호환 | Step 1 |
 | **D8** (신규) | CI에서 validator 동작 증명용 **fixture 3건**(`tests/lessons/fixtures/`) — positive 1, negative 2(bad id, additionalProperties). validator `--fixture <path>` 옵션 추가. 메타 레포에서 실제 데이터 부재로 SKIP되는 상황의 회귀 보호 갭 해소 (PR #43 리뷰 CRITICAL #1) | Step 1 |
 | **D9** (신규 — 후속 부채) | schema multi-version 분기는 v2.1+ contextSnapshot/`--from-history` 부활 시 한번에 도입. 현재 `metadata.schemaVersion`은 optional + validator 미사용 — SSOT 명시만 있고 메커니즘 부재. forward-compat 부채로 인지(PR #43 리뷰 MINOR #2) | v2.1+ |
+| **D10** (신규 — 후속 부채) | SEC-S01~S05 invariant 테스트(`test_all_hardcoded_have_comment_excludecontext`, `test_hardcoded_pattern_count`)를 `tests/secrets/`로 이동. 현재 위치는 secrets-patterns 정책이 lesson-filter 테스트에 종속된 의존 방향 역전 상태 (PR #44 리뷰 심화 3) | v2.1+ 또는 후속 PR |
+| **D11** (신규 — 후속 부채) | `scripts/_lessons_threshold.py` 모듈 추출 — `threshold_recommended()` SSOT 단일화. validator는 1줄 import, conftest는 importlib 17줄 → 2줄 (PR #44 리뷰 심화 2) | v2.1+ 또는 후속 PR |
+| **D12** (신규 — 후속 부채) | `validate-lessons-learned` 4단계 ↔ `lessons-fixture-tests` pytest 기능적 중복. negative 2건은 pytest로 흡수, validator job은 real + positive만 유지하여 단일화 (PR #44 리뷰 심화 5-b) | v2.1+ 또는 후속 PR |
+| **D13** (신규 — 후속 부채) | validator의 `--fixture` 옵션명이 pytest fixture와 의미 충돌. `--input`/`--file`로 rename (PR #44 리뷰 심화 5-c) | v2.1+ |
 
 ---
 

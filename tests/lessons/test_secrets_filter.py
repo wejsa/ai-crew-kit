@@ -25,8 +25,10 @@ CLEAN_DESCRIPTIONS = [
 
 @pytest.mark.parametrize("text", CLEAN_DESCRIPTIONS)
 def test_clean_description_no_match(text, hardcoded_patterns):
+    """PR #44 리뷰 MINOR — find_pattern 재호출 제거, 직접 컴파일."""
+    import re as _re
     for entry in hardcoded_patterns:
-        pat = find_pattern(hardcoded_patterns, entry["id"])
+        pat = _re.compile(entry["pattern"])
         assert not pat.search(text), f"{entry['id']} false positive on {text!r}"
 
 

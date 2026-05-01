@@ -62,13 +62,12 @@ CLAUDE.md는 절대 수정 금지.
 
 **Secrets 필터 (저장 직전, 신규 항목만 — Phase 7 Step 2)**:
 - `_base/health/secrets-patterns.json` `common.hardcoded` (SEC-S01~S05) 로드
-- 신규 lesson `description` 정규식 매칭
-- 매칭 시 AskUserQuestion으로 사용자 결정 (default = 거부):
-  - **거부**: 해당 lesson 저장 스킵 + 사용자에게 description 수정 안내
-  - **마스킹 후 저장**: 매칭 부분을 `***MASKED-{SEC-ID}***`로 치환 후 저장
-  - **강행 저장**: 안티패턴 *예시* 등 의도된 경우 그대로 저장 (사용자 책임)
-- 다중 패턴 매칭 시 모두 표시
-- 비대화형 환경(AskUserQuestion 불가): 자동 거부 + execution-log에 경고 기록
+- 신규 lesson `description` 정규식 매칭. 다중 패턴 매칭 시 모두 표시 후 **lesson 단위 단일 옵션** 선택 (개별 패턴 선택 불가)
+- 매칭 시 AskUserQuestion (default = 거부):
+  - **거부**: lesson 저장 스킵 + execution-log에 `lesson_rejected_secrets` 기록. dedup key = `title+category` — 동일 lesson 재출현 시 자동 재거부 (사용자 피로 방지)
+  - **마스킹 후 저장**: 매칭 부분을 `***MASKED-{SEC-ID}***`로 치환. 예: `api_key="AbCd1234..."` → `api_key=***MASKED-SEC-S01***`
+  - **강행 저장**: 안티패턴 *예시* 등 의도된 경우 그대로 저장 (사용자 책임). 이후 CI `validate-lessons-learned` 통과 — Step 1 D2 개정으로 validator는 secrets 검사를 skill-retro 레이어로 위임
+- **비대화형 환경 판별**: `CI=true` 환경변수 또는 stdout이 TTY 아님 → AskUserQuestion 불가 → 자동 거부 + execution-log에 `lesson_rejected_secrets_noninteractive` 기록. ⚠️ CI 자동 회고 시 학습 손실 가능성 — 사용자 검토 안내 출력
 
 - 중복: appliedCount 증가 + updatedAt 갱신 / 신규: L-{NNN} ID로 추가
 - lesson 스키마(SSOT: [`schemas/lessons-learned.schema.json`](../../schemas/lessons-learned.schema.json)): `{id, taskId, category (quality|performance|architecture|process|security), title, description, impact (high|medium|low), tags, appliedCount, createdAt, updatedAt}`
