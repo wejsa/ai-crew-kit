@@ -12,8 +12,8 @@
 | Step | 상태 | 비고 |
 |------|------|------|
 | 0 — 옵션 결정 (재진입 시 본 문서) | ✅ 완료 | 옵션 A 채택 — Phase 6 D-MIN/D-NEED 학습 적용 |
-| 1 — schema + validator + workflow job + fixtures + plan + phase-7-context 보류 헤더 | ⏳ 진행 중 | feature/phase-7-step-1 (PR #43 — 리뷰 반영 후 secrets 필터 Step 2로 이관, fixtures 추가) |
-| 2 — skill-retro §5.3 **secrets 필터 통합** + impact 임계값 정량 출력 + tests/lessons/ pytest fixture (~12건) | ⏳ | Step 1 머지 후. Step 1에서 이관된 secrets 필터 책임 포함 |
+| 1 — schema + validator + workflow job + fixtures + plan + phase-7-context 보류 헤더 | ✅ 완료 | PR #43 머지 (`f4cc1e1`) — 리뷰 반영 후 secrets 필터 Step 2로 이관, fixtures 3건 추가 |
+| 2 — skill-retro §5.3 **secrets 필터 통합** + impact 임계값 정량 출력 + tests/lessons/ pytest fixture + context-migration.md | ⏳ 진행 중 | feature/phase-7-step-2 — Step 1에서 이관된 secrets 필터 책임 포함 |
 
 ---
 
