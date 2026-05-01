@@ -78,6 +78,84 @@ Phase 0 (Foundation)
 
 ---
 
+## 📍 진행 상황 (Single GA Strategy, 2026-04-30~)
+
+> **전략 변경 (2026-04-30 합의)**: alpha.N 태그는 **외부 릴리스가 아닌 인터널 마일스톤**. 사용자는 v2.0.0 GA만 install하므로 모든 Phase 산출물이 alpha.1 ↔ GA 누적 회귀 보존되어야 한다. 따라서 각 Phase fixture는 작성자 로컬에 머무르지 않고 **CI로 자동화**되어야 GA 안전성이 확보된다. alpha.4 등 인터널 태그는 생성하지 않는다.
+
+| Phase / 트랙 | 상태 | 머지 SHA | 비고 |
+|-------------|------|---------|------|
+| 0 — Foundation | ✅ | alpha.1 (VERSION 파일만) | schema 확장 |
+| 1 — Native Hooks | ✅ | alpha.2 packed | 5 hooks + atomic-write + HI-01~04 + CI `hook-tests` |
+| 2 — Skill Profiles | ✅ | alpha.2 backfill | 추가 작업 없음 |
+| 3 — Token Optimization | ✅ | alpha.2 backfill | 추가 작업 없음 |
+| 4 — Layered Override + Rules | ✅ | alpha.3 packed | 메커니즘 + 0개 콘텐츠 (옵션 A) |
+| 5 — AgentShield-lite | ✅ | alpha.4 packed (`6cf43c9`) | secrets-patterns + SEC-05/06/07 + 도메인 패턴 + migration |
+| **트랙 A — 회귀 자동화** | ✅ | `8b1b628` | secrets-patterns schema + fixture pytest 89 + 14 메타 + cross-ref + `_category` 가중치 + SSOT drift 메타 + 5 jobs CI ([phase-5-tests-plan.md](./phase-5-tests-plan.md)) |
+| **6 — Compliance Report** | ⏳ **다음** | — | skill-compliance-report 신규 + fintech 우선 (PCI-DSS / 전자금융감독규정) |
+| 7 — Context & Learning | ⏳ | — | Phase 1+4 의존 |
+| 8 — Migration & Release (GA) | ⏳ | — | **GA 검증 게이트** — 통합 회귀 매트릭스 + skill-upgrade v1→v2 시뮬레이션 + E2E |
+
+**현재 v2-develop HEAD**: `8b1b628` (PR #42 트랙 A Step 3)
+**현재 VERSION**: `2.0.0-alpha.4` (인터널)
+**현재 활성 CI**: `hook-tests` / `schema-validation` / `secrets-tests` (4 jobs) — 총 6 CI checks
+
+### 🔄 다른 세션에서 재개 시 프롬프트
+
+새 세션 진입 시 다음 프롬프트로 시작:
+
+```
+docs/v2/README.md §진행 상황과 docs/v2/phase-6-compliance.md 읽고
+Phase 6 (Compliance Report) 착수해줘.
+
+전제 조건:
+- v2.0 단일 GA 전략(2026-04-30 합의)이라 alpha 태그 외부 릴리스 없음
+- Phase 5 + 트랙 A 회귀 자동화 완료 (v2-develop HEAD 8b1b628)
+- 인터널 VERSION은 alpha.4지만 태그 미생성, 인터널 마일스톤만
+
+권장 진행 방식:
+1. TFT 5인 분석 (Phase 5 패턴 참조)
+2. D0급 결정으로 "각 산출물 회귀 테스트 자동화는 산출물 PR과 동시 또는 즉시 후속"
+   사전 확정 (트랙 A 패턴 일반화)
+3. 옵션 A/B/C 비교 후 사용자 합의
+4. plan.md 작성 → 4 스텝 PR 진행
+```
+
+### Phase 6 진입 시 권장 D0급 결정 (사전 확정)
+
+| ID | 결정 사항 | 근거 |
+|----|-----------|------|
+| D0 | 산출물 회귀 테스트 자동화는 PR과 동시 또는 즉시 후속 | 트랙 A 사후 마이그레이션 비용 ↑, 단일 GA 안전성 |
+| H004 (선결) | 데이터 수집 방식: 역추적(git log + PR 메타) vs 실시간 수집 | phase-6-compliance.md §Security Lead 분석 |
+| MVP 도메인 | fintech 우선 (PCI-DSS / 전자금융감독규정) | phase-6-compliance.md §범위 경계 |
+| 출력 형식 | JSON (PDF는 v2.1+) | phase-6-compliance.md §범위 경계 |
+
+### 핵심 컨텍스트 파일 (다른 세션 진입 시 우선 읽기)
+
+| 파일 | 역할 |
+|------|------|
+| `docs/v2/README.md` (본 문서) | Phase 목록 + 진행 상황 SSOT + 재개 프롬프트 |
+| `docs/v2/phase-6-compliance.md` | Phase 6 상위 계획 (TFT 분석 가이드 포함) |
+| `docs/v2/phase-5-tests-plan.md` | 트랙 A 3 스텝 패턴 — Phase 6 회귀 자동화 D0 참고 |
+| `docs/v2/security-migration.md` | Phase 5 사용자 가이드 (Phase 6 마이그레이션 패턴 참조) |
+| `.github/workflows/secrets-tests.yml` | 트랙 A CI workflow 패턴 (4 jobs 분리) |
+| `.claude/state/project.json` | (메타 레포라 부재) — 일반 프로젝트는 도메인/techStack SSOT |
+
+### 작업 체이닝 패턴 (Phase 5 패턴 일관)
+
+각 Phase는 일반적으로 다음 흐름:
+1. Step 0 — TFT 분석 + 옵션 결정 (설계 문서, PR 없음)
+2. Step 1 — 핵심 메커니즘 + plan.md
+3. Step 2 — 통합/확장
+4. Step 3 — 콘텐츠 (도메인별)
+5. Step 4 — migration/CHANGELOG/VERSION (인터널 — 외부 릴리스 X)
+6. (선택) 트랙 X — 회귀 자동화 (각 Phase 산출물별)
+
+각 PR 머지 후:
+- 별도 chore commit으로 plan.md 진행 상황 테이블 갱신
+- README.md (본 문서) §진행 상황 표 갱신 (Phase 완료 시)
+
+---
+
 ## 절대 금지 항목 (TFT 만장일치)
 
 | 기능 | 금지 사유 |
