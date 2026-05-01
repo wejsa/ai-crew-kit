@@ -1,0 +1,21 @@
+{
+  "metadata": {
+    "version": 1,
+    "updatedAt": "2026-05-01T12:00:00Z"
+  },
+  "lessons": [
+    {
+      "id": "L-002",
+      "taskId": "FIXTURE-3",
+      "category": "process",
+      "title": "additionalProperties 위반 (음성 fixture)",
+      "description": "lessonEntry에 schema 미정의 필드 추가. additionalProperties: false 검증 증명용.",
+      "impact": "medium",
+      "tags": ["negative"],
+      "appliedCount": 3,
+      "createdAt": "2026-04-01T00:00:00Z",
+      "updatedAt": "2026-04-15T00:00:00Z",
+      "unknownField": "should-fail-additional-properties"
+    }
+  ]
+}

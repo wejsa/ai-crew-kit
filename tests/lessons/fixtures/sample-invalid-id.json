@@ -1,0 +1,20 @@
+{
+  "metadata": {
+    "version": 1,
+    "updatedAt": "2026-05-01T12:00:00Z"
+  },
+  "lessons": [
+    {
+      "id": "BAD-ID",
+      "taskId": "FIXTURE-2",
+      "category": "quality",
+      "title": "ID 형식 위반 (음성 fixture)",
+      "description": "id가 ^L-\\d{3,}$ 패턴 위반. validator가 schema FAIL을 정확히 검출하는지 증명용.",
+      "impact": "low",
+      "tags": ["negative"],
+      "appliedCount": 1,
+      "createdAt": "2026-04-01T00:00:00Z",
+      "updatedAt": "2026-04-15T00:00:00Z"
+    }
+  ]
+}
