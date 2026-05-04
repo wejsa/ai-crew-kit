@@ -9,7 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.0] - TBD
 
+> **GA 릴리스 — Migration Surface 요약**: v1.x 사용자는 `/skill-upgrade --version v2.0.0` 자동 마이그레이션으로 충분. 자동 적용 4 add_field(`hooks`/`conventions.skillProfile`/`conventions.overridePriority`/`tokenHints`), 수동 작업 *거의 없음*, 점수 영향 ≤1점. 상세는 [docs/v2/migration-guide.md](./docs/v2/migration-guide.md).
+>
+> **Phase 6 (`skill-compliance-report`) 보류** — 2026-05-01 옵션 D 채택. ACK 미니멀리즘 위배 + 실수요 미검증 + 위반 탐지 Phase 4/5 중복. v2.1+ 재진입 시 검토.
+
 ### Added
+
+#### Phase 8 — Migration & Release / GA (v2.0.0)
+- **`docs/v2/migration-guide.md`** (Step 2) — v1.x → v2.0.0 마이그레이션 사용자 가이드 5섹션(변경 사항 / 자동 절차 / 수동 확인 / 롤백 매뉴얼 / FAQ 5건) + R6 1차 방어선
+- **examples v2 형식 마이그레이션** (Step 3) — `examples/{fintech-gateway,ecommerce-shop}/.claude/state/project.json`에 `kitVersion 2.0.0` + `kitSource` + `conventions.skillProfile`/`overridePriority` + `hooks {}` + `tokenHints {}` 명시
+- **`tests/upgrade/fixtures/v1-{fintech,ecommerce,saas,healthcare}-project.json`** (Step 3) — 4 도메인 v1 형식 fixture (saas/healthcare는 OQ-04 fixture-only 검증, 실제 examples 디렉토리는 v2.1+ 후속)
+- **`scripts/validate-v2-migration.py`** (Step 3) — cumulative add_field 적용(target ≤ 버전 오름차순) + schema-aware 필터(`backlog.*` 등 다른 파일 영역 자동 스킵) + ${KIT_VERSION}/${KIT_SOURCE} placeholder 치환 + 비-dict 부모 fail-fast(silent overwrite 방지) + OQ-02 진단 모드
+- **`tests/upgrade/test_rollback.py`** (Step 3) — R6 1차 자동 방어선. 7 tests × 4 fixtures parametrize: v1 보존 / v2 add_field / schema 통과 / *진짜 라운드트립*(v1 → migrated → 백업 복원 = v1) / *비-trivial 멱등성*(1차 롤백 → dirty 변경 → 2차 롤백 = v1) / 더블 마이그레이션 멱등 / 사용자 보존(3 parametrize) / fail-fast / cumulative+filter
+- **CI 워크플로우 2 jobs 신설** (`.github/workflows/secrets-tests.yml`) — `validate-v2-migration`(4 fixtures + 2 examples 검증) + `upgrade-fixture-tests`(pytest tests/upgrade -v R6)
+- **`skill-upgrade` SKILL.md 갭 fix** (Step 1) — 업데이트 대상 표에 `.claude/rules/`(Phase 4 도입) 추가 + 보존 대상 표에 `lessons-learned.json`(Phase 7 도입) 명시
+- **`docs/v2/phase-8-plan.md`** (Step 1) — 옵션 A Lean Closure 결정 SSOT (9 D + 7 OQ + 6 R + Step 1~6 분리)
+- **`docs/v2/phase-8-release.md` SSOT 이관 헤더** (Step 1) — phase-8-plan.md를 결정 SSOT로 명시 (PR #45 리뷰 MAJOR #1)
+
+#### Phase 7 — Context & Learning (v2.0.0)
+- **`.claude/schemas/lessons-learned.schema.json`** (Step 1) — v1.23 lessons-learned 회귀 보호 schema. id/category/severity/impact 필드 + `additionalProperties: false`
+- **`scripts/validate-lessons-learned.py`** (Step 1) — 4단계 검증(schema / cross-ref / impact / required field). `--fixture` 단일 검증 모드
+- **`tests/lessons/` pytest 33 cases (5 files)** (Step 2) — schema validation / secrets 필터 / threshold 적용 / skill-retro 명세 / fixtures(positive/invalid-id/extra-property)
+- **`skill-retro` §5.3 secrets 필터** (Step 2) — lessons-learned 작성 시 토큰/이메일 패턴 자동 redact + impact 정량(상/중/하 → 점수 매핑)
+- **CI 워크플로우 2 jobs 신설** (`.github/workflows/secrets-tests.yml`) — `validate-lessons-learned`(positive PASS + 2 negative MUST FAIL) + `lessons-fixture-tests`(pytest tests/lessons)
+- **`docs/v2/phase-7-{plan,context}.md` + `context-migration.md`** — 옵션 A Lean Closure 결정 + 사용자 마이그레이션 안내
 
 #### Phase 5 — AgentShield-lite (v2.0.0-alpha.4)
 - **`secrets-patterns.json` 스키마** — 3 섹션 표준(`common.hardcoded` / `common.runtime` / `domain.patterns`) + entry 필드(`id`/`name`/`pattern`/`severity`/`confidence`/`description`/`excludeFiles`/`excludeContexts`)
@@ -115,10 +138,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **훅 스크립트 실행 권한 정정** (PR #34, 6dcfdb3) — alpha.2 PR #26 머지 시 누락된 `chmod +x`로 인해 `post-tool-use.sh`를 비롯한 5개 훅이 git index 모드 100644로 박혀 PostToolUse 이벤트마다 "Permission denied" 실패. 비블로킹 정책(R4)으로 세션은 정상 진행됐으나 lockedAt heartbeat 갱신 / 3단계 무한 루프 방어 / hook-disabled.flag 카운터가 사실상 alpha.2/alpha.3 동안 미동작. alpha.4부터 의도 동작 활성화 (콘텐츠 변경 0, 권한 비트만 조정)
 
 ### Breaking Changes
-- `project.schema.json` 스키마 확장 — v1.x skill이 v2 project.json의 신규 필드를 인식하지 못할 수 있음 (skill-upgrade로 해결)
+
+> **요약**: 모든 Breaking Change에 대해 `/skill-upgrade --version v2.0.0`이 자동 마이그레이션을 수행한다. 사용자 수동 작업이 필요한 변경은 *없다*. 점수 영향 ≤1점, 동작 회귀 0.
+
+- **`project.json` 스키마 확장** — 5개 신규 top-level 필드(`hooks` / `tokenHints` / `customDomain` / `healthCheck` / `orchestrator`) + `conventions` 2개 신규 키(`skillProfile` / `overridePriority`). v1.x skill이 신규 필드를 인식하지 못할 수 있음. **자동 해결**: `migrations.json` v2.0.0이 4 add_field(`hooks {}` / `conventions.skillProfile "default"` / `conventions.overridePriority "domain-first"` / `tokenHints {}`)를 적용. 누락 3개(`customDomain`/`healthCheck`/`orchestrator`)는 schema optional이라 부재 통과 (Phase 8 Step 3 fixture 검증 결과)
+- **`CLAUDE.md.tmpl` 구조 변경** — Phase 4 4층 Override 도입으로 템플릿 본문 갱신. `CUSTOM_SECTION_START`/`CUSTOM_SECTION_END` 마커는 v1.x와 동일하며, **마커 사이 콘텐츠는 자동 보존**된다 (skill-upgrade Step 13 결정적 치환). Phase 2(skillProfile 기반 스킬 목록 필터링) + Phase 1(훅 자동 실행을 기본 흐름으로 기술, 수동 절차는 `<details>` 폴백)도 동일 마커 보존 정책 적용
+- **`skill-health-check` 가중치 재배분** — Phase 1 hook-safety +10 신규(doc-sync 35→32, state-integrity 25→23, security 25→23, agent-config 15→12) + Phase 5 alpha.2 hook-safety 정규화 부채 해소(도메인 4개 `_category.json` 명시). **사용자 점수 영향 ≤1점** — 3 도메인은 Hamilton 라운딩으로 ≈0, healthcare phi-protection만 의도적 floor로 -0.91% ≈ ~1.0점 (security-migration.md §5 참조)
 - **Phase 1 훅: 없음** — `.claude/settings.json`에 `hooks` 필드가 부재하거나 `.claude/hooks/` 디렉토리가 없으면 v1.x 동작이 100% 유지됨 (하위호환 보장)
 - **Phase 4 rules: 없음** — `.claude/rules/` 디렉토리가 부재하거나 `{domain}/{language}/` 매칭이 0개면 alpha.2 동작이 100% 유지됨. 메커니즘만 추가되고 콘텐츠 0개 출시이므로 모든 PR 리뷰에서 자연 SKIP
-- **Phase 5 secrets: 없음** — `_base/health/secrets-patterns.json` 부재 시 SEC-01/SEC-05 SKIP + WARN, 도메인 patterns 부재 시 SEC-07 SKIP, dotenv 미사용 프로젝트는 SEC-06 SKIP. SEC-01 외부화는 키워드 1:1 매핑 보존(회귀 fixture 23건 PASS)으로 alpha.3 동작 유지. alpha.2 hook-safety 정규화 부채 해소도 정규화 비율을 명시화한 것이라 사용자 점수 영향 0
+- **Phase 5 secrets: 없음** — `_base/health/secrets-patterns.json` 부재 시 SEC-01/SEC-05 SKIP + WARN, 도메인 patterns 부재 시 SEC-07 SKIP, dotenv 미사용 프로젝트는 SEC-06 SKIP. SEC-01 외부화는 키워드 1:1 매핑 보존(회귀 fixture 23건 PASS)으로 alpha.3 동작 유지
+- **Phase 7 lessons-learned: 없음** — `.claude/state/*` 디렉토리 전체 보존 (skill-upgrade 보존 대상 표 명시). 신규 schema는 회귀 보호 메커니즘이라 사용자 데이터 영향 0
+- **Phase 8 마이그레이션: 없음** — 본 절이 정의하는 자동 마이그레이션이 모든 변경을 흡수. 매뉴얼 작업 0건. 롤백은 [migration-guide.md §4](./docs/v2/migration-guide.md) R6 1차 자동 방어선 + 매뉴얼 체크리스트 6건으로 보장
 
 ## [1.45.1] - 2026-04-14
 
