@@ -1,9 +1,9 @@
 {
-  "name": "ecommerce-shop",
-  "description": "이커머스 온라인 쇼핑몰 서비스",
+  "name": "ecommerce-fixture",
+  "description": "v1 ecommerce project — Phase 8 Step 3 마이그레이션 검증용",
   "domain": "ecommerce",
   "version": "1.0.0",
-  "kitVersion": "2.0.0",
+  "kitVersion": "1.45.1",
   "kitSource": "https://github.com/wejsa/ai-crew-kit.git",
   "techStack": {
     "backend": "nodejs-typescript",
@@ -23,21 +23,11 @@
     "commitFormat": "conventional",
     "prLineLimit": 500,
     "testCoverage": 80,
-    "language": "ko",
-    "skillProfile": "default",
-    "overridePriority": "domain-first"
-  },
-  "hooks": {},
-  "tokenHints": {},
-  "ports": {
-    "app": 3000,
-    "api": 4000,
-    "db": 5432,
-    "cache": 6379
+    "language": "ko"
   },
   "metadata": {
-    "version": 2,
-    "updatedAt": "2026-05-04T00:00:00Z"
+    "version": 1,
+    "updatedAt": "2026-04-14T00:00:00Z"
   },
   "createdAt": "2026-02-15T00:00:00Z"
 }

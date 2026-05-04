@@ -1,0 +1,33 @@
+{
+  "name": "saas-fixture",
+  "description": "v1 saas project — OQ-04: examples 디렉토리 부재라 fixture-only 검증",
+  "domain": "saas",
+  "version": "1.0.0",
+  "kitVersion": "1.45.1",
+  "kitSource": "https://github.com/wejsa/ai-crew-kit.git",
+  "techStack": {
+    "backend": "python-fastapi",
+    "frontend": "react",
+    "database": "postgresql",
+    "cache": "redis",
+    "messageQueue": "none",
+    "infrastructure": "kubernetes"
+  },
+  "agents": {
+    "enabled": ["pm", "backend", "frontend", "code-reviewer", "qa"],
+    "disabled": ["planner", "docs", "db-designer", "devops"]
+  },
+  "conventions": {
+    "taskPrefix": "SAAS",
+    "branchStrategy": "git-flow",
+    "commitFormat": "conventional",
+    "prLineLimit": 500,
+    "testCoverage": 80,
+    "language": "ko"
+  },
+  "metadata": {
+    "version": 1,
+    "updatedAt": "2026-04-14T00:00:00Z"
+  },
+  "createdAt": "2026-04-04T00:00:00Z"
+}
