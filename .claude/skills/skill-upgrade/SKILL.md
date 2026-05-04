@@ -198,7 +198,7 @@ v{version}: {title}
 
 ## 보존 대상 (프로젝트 파일)
 
-- `.claude/state/*` — `backlog.json`, `completed.json`, `lessons-learned.json` (Phase 7), `health-history.json`, `continuation-plan.md` 등 사용자 누적 데이터
+- `.claude/state/*` — **디렉토리 전체 보존** (사용자 누적 데이터). 주요 파일: `backlog.json`, `completed.json`, `lessons-learned.json` (Phase 7), `health-history.json`, `continuation-plan.md` 등
 - `.claude/settings.local.json` — 로컬 권한 override
 - `.claude/temp/` — 진행 중 plan 파일, 백업 디렉토리
 - `.claude/plans/` — 사용자 plan 산출물

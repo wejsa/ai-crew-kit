@@ -58,8 +58,8 @@ Phase 0~5에서 *암묵적으로* 도입된 자산:
 | ID | 결정 | 영향 |
 |----|------|------|
 | **D1** | 옵션 A — phase-8 doc Task 8-1~8-7 원본 + Phase 7 패턴 일관 (메커니즘 갭 fix만) | 모든 Step |
-| **D2** | branch flow = `v2-develop → develop → main`. develop은 머지 후 v1.x 핫픽스 라인으로 동결 | Step 6 |
-| **D3** | VERSION `2.0.0-alpha.4 → 2.0.0` 전환은 Step 6 단일 commit (메모리 §릴리스 프로세스 일관) | Step 6 |
+| **D2** | branch flow = `v2-develop → develop → main`. develop은 v2 GA 후 **v1.x 핫픽스 라인으로 동결** — v2 신규 작업 진입 차단(`v2-develop`이 후속 v2.x 작업 라인). main↔develop 핫픽스 양방향 머지는 유지 (PR #45 리뷰 MINOR 명확화) | Step 6 |
+| **D3** | VERSION `2.0.0-alpha.4 → 2.0.0` 전환은 Step 6 **VERSION 파일 변경 한정 단일 commit** (메모리 §릴리스 프로세스 일관). branch flow 머지 PR 단위는 OQ-03 별도 결정 (PR #45 리뷰 MINOR 명확화) | Step 6 |
 | **D4** | ADJ-01: phase-8 doc Task 8-3의 `skill-compliance-report` 실행 항목 무효화 (Phase 6 옵션 D 보류) | Step 3 |
 | **D5** | ADJ-05: 각 Step 진입 시 D-MIN/D-NEED 사전 점검 (Phase 6/7 패턴) | 모든 Step |
 | **D6** | 회귀 자동화는 Step 3(examples 검증)에서 자연 활성화. Step 1은 doc/spec 변경만 (회귀 대상 없음) | Step 1, 3 |
@@ -101,7 +101,7 @@ Phase 0~5에서 *암묵적으로* 도입된 자산:
 
 | Step | 제목 | 예상 라인 | 주요 파일 | 의존 |
 |------|------|----------|---------|------|
-| 1 | plan + skill-upgrade SKILL.md 갭 fix | ~310 | `docs/v2/phase-8-plan.md` (신규), `.claude/skills/skill-upgrade/SKILL.md` (갱신) | — |
+| 1 | plan + skill-upgrade SKILL.md 갭 fix | ~280 (실제 1차 commit 214 → 리뷰 반영 후 ~270) | `docs/v2/phase-8-plan.md` (신규), `.claude/skills/skill-upgrade/SKILL.md` (갱신), `docs/v2/phase-8-release.md` (SSOT 이관 헤더) | — |
 | 2 | migration-guide.md | ~200 | `docs/v2/migration-guide.md` (신규) | Step 1 |
 | 3 | examples 마이그레이션 검증 + 회귀 fixture | ~400 | `examples/*/.claude/state/project.json` (수정), `tests/upgrade/fixtures/` (신규), `.github/workflows/secrets-tests.yml` (job 추가 가능) | Step 1, 2 |
 | 4 | CHANGELOG v2.0.0 | ~150 | `CHANGELOG.md` | Step 3 |
@@ -117,10 +117,11 @@ Phase 0~5에서 *암묵적으로* 도입된 자산:
 ### Step 1: plan + skill-upgrade SKILL.md 갭 fix (PR 1, 본 PR)
 
 **파일**:
-- `docs/v2/phase-8-plan.md` (본 문서, ~280줄)
+- `docs/v2/phase-8-plan.md` (본 문서, ~270줄 — PR #45 리뷰 반영 포함)
 - `.claude/skills/skill-upgrade/SKILL.md`:
   - "업데이트 대상 (프레임워크 파일)" 표에 `.claude/rules/` 행 추가 (Phase 4 도입)
-  - "보존 대상 (프로젝트 파일)" 표에 `lessons-learned.json` 명시 (Phase 7 도입, `.claude/state/*` 일반 패턴 흡수되지만 가시성 강화)
+  - "보존 대상 (프로젝트 파일)" 표에 `lessons-learned.json` 명시 (Phase 7 도입, `.claude/state/*` 디렉토리 전체 보존 명확화)
+- `docs/v2/phase-8-release.md` (SSOT 이관 헤더 추가 — PR #45 리뷰 MAJOR #1)
 
 **검증** (Step 1 doc만이라 회귀 자동화 없음):
 - 표 갱신이 기존 동작 문장과 모순 없는지 시각 검토
@@ -146,7 +147,8 @@ Phase 0~5에서 *암묵적으로* 도입된 자산:
 - `tests/upgrade/fixtures/v1-fintech-project.json` (신규) + `v1-ecommerce-project.json`
   - **OQ-04 잠정 답**: `v1-saas-project.json` + `v1-healthcare-project.json`도 fixture로만 추가 (실제 examples 디렉토리는 미생성)
 - `scripts/validate-v2-migration.py` (신규) — fixture 입력 → migrations.json 적용 → v2 schema 통과 검증
-- `.github/workflows/secrets-tests.yml`에 `validate-v2-migration` job 추가 (또는 별도 workflow)
+- **롤백 시뮬레이션** (R6 재평가 반영, PR #45 리뷰 MAJOR #2): `tests/upgrade/test_rollback.py` (또는 bash 스크립트) — *"v1 fixture → v2 마이그레이션 → --rollback → 원본 fixture와 일치"* 검증. ~30줄
+- `.github/workflows/secrets-tests.yml`에 `validate-v2-migration` + `rollback-simulation` job 추가 (또는 별도 workflow)
 - **ADJ-01 적용**: 본 Step 작업 목록에서 `skill-compliance-report` 실행 항목 무효화 (Phase 6 옵션 D 보류 사유 인용)
 
 ### Step 4: CHANGELOG v2.0.0 (PR 4)
@@ -162,6 +164,7 @@ Phase 0~5에서 *암묵적으로* 도입된 자산:
 **파일**:
 - `docs/upgrade-guide.md` v2.0.0 마이그레이션 섹션 추가 (migration-guide.md 참조 링크)
 - `README.md` v2.0 신규 기능 소개 + Phase 7 lessons-learned 회귀 보호
+- **OQ-04 GA UX 안내** (PR #45 리뷰 NICE): README / upgrade-guide에 *"v2.0 GA 시점 examples는 fintech-gateway / ecommerce-shop만. saas / healthcare 도메인은 fixture 단위 검증만 완료, example project는 v2.1+ 후속"* 명시
 
 > **ADJ-04 적용**: VERSION은 본 Step에 포함하지 않음 — Step 6에서 단일 commit
 
@@ -188,7 +191,7 @@ Phase 0~5에서 *암묵적으로* 도입된 자산:
 | **R3** | Phase 6 보류분이 doc 곳곳에 잔재 (compliance-report 언급) | 낮 | 낮 | Step 4 CHANGELOG / Step 5 README에서 명시 제거 (~~compliance report~~ 표기) | Step 4, 5 |
 | **R4** | examples saas/healthcare 부재로 v2 마이그레이션 검증 부분적 (OQ-04) | 중 | 낮 | 권장: 단위 fixture만 (실제 examples 디렉토리 추가는 v2.1+ 후속) | Step 3 |
 | **R5** | VERSION 변경 후 main 머지 실패 (CI/충돌) | 중 | 높 | Step 6를 마지막에 위치시키고 모든 Step 완료 + CI 그린 확인 후 진입 | Step 6 |
-| **R6** | skill-upgrade `--rollback` 동작 검증 부재 | 낮 | 중 | 본 Phase 범위 외 (phase-8 doc §범위 경계에서 자동화 제외). 사용자 매뉴얼 테스트로 검증 | (제외) |
+| **R6** (재평가, PR #45 리뷰 MAJOR #2) | skill-upgrade `--rollback` 동작 검증 부재 — 사용자 데이터 손실 + 평판 리스크 | 낮 | **높** (중→상향) | (i) Step 3 fixture에 **롤백 시뮬레이션 1건 추가** — *"v2 마이그레이션 → --rollback → 원본과 동일"* (~30줄). (ii) Step 2 migration-guide.md FAQ에 매뉴얼 테스트 절차 명시. *"구현됨 ≠ 검증됨"* — v1.x 시기 실사용 사례 미상 | Step 3 (필수) + Step 2 (보조) |
 
 ---
 
