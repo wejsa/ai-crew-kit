@@ -23,11 +23,12 @@
 | `lessons-learned.json` 회귀 보호 (schema + validator + pytest fixture) | Phase 7 | 자동 — `.claude/state/*` 디렉토리 전체 보존 (skill-upgrade 보존 대상 표 명시) |
 | ~~`skill-compliance-report`~~ | (보류) | Phase 6 옵션 D 채택(2026-05-01). v2.1+ 재진입 시 검토 |
 
-### 1.2 Breaking Changes
+### 1.2 주요 변경 사항 (대부분 자동 적용)
 
 - **`project.json` 스키마 확장** — 5개 신규 top-level 필드(`hooks`, `tokenHints`, `customDomain`, `healthCheck`, `orchestrator`) + `conventions` 2개 신규 키. 자동 마이그레이션 4건은 `migrations.json` SSOT 적용. 누락 3건(`customDomain`/`healthCheck`/`orchestrator`)은 schema default 통과 (Step 3 OQ-02에서 확정 예정).
 - **`CLAUDE.md.tmpl` 구조 변경** — Phase 4 4층 Override 도입으로 템플릿 본문 갱신. `CUSTOM_SECTION_START`/`CUSTOM_SECTION_END` 마커는 v1.x와 동일하며, **마커 사이 콘텐츠는 자동 보존**된다.
 - **`skill-health-check` 가중치 재배분** — Phase 5에서 hook-safety 부채 해소 + 도메인 `_category.json` 명시. 사용자 점수 영향 ≤1점 ([security-migration.md §5](./security-migration.md) 참조).
+- **마이그레이션 비용** — semver major bump(v1→v2)이지만 사용자 *수동 작업이 필요한 변경*은 거의 없다 (모두 자동 마이그레이션 또는 default 통과).
 
 ### 1.3 사용자 점수 영향
 
@@ -109,7 +110,6 @@ v2.0.0 GA 시점 `examples/` 디렉토리는 **`fintech-gateway` / `ecommerce-sh
 - [ ] 백업 tar 무결성 — `tar tzf .claude/temp/upgrade-backup-*/backup.tar.gz >/dev/null && echo OK` (종료 코드 0 + `OK` 출력 확인. `tar tzf`는 *목록 출력*이라 별도 종료 코드 검사 필요)
 - [ ] 백업 무결성 해시 별도 보관 — `sha256sum .claude/temp/upgrade-backup-*/backup.tar.gz > /tmp/backup-sha.txt` (사후 변조 검증용)
 - [ ] 중요 상태 파일 별도 보관 권장 — `cp .claude/state/backlog.json /tmp/backlog-pre-rollback.json`
-- [ ] **외부 공유 전 시크릿 마스킹** — backlog/state/CLAUDE.md 첨부 시 토큰·이메일·외부 시스템 ID 검토 후 redact (Q1과 동일 정책)
 
 ### 사후 검증 체크리스트
 
@@ -140,7 +140,12 @@ v2.0.0 GA 시점 `examples/` 디렉토리는 **`fintech-gateway` / `ecommerce-sh
 { "customDomain": null, "healthCheck": {}, "orchestrator": {} }
 ```
 
-보강 후 `/skill-validate`(또는 `/skill-health-check`)로 통과 재확인. 통과하지 않으면 `--rollback` 후 [GitHub Issues](https://github.com/wejsa/ai-crew-kit/issues)에 `project.json` 첨부 (시크릿 마스킹 후).
+보강 후 `/skill-validate`(또는 `/skill-health-check`)로 통과 재확인. 통과하지 않을 때 즉시 `--rollback` 실행 금지 — §4 R6 박스의 *"자동 동작 검증 미상"* 경고 적용. 안전 절차:
+
+1. **§4 사전 검증 체크리스트 완료** (백업 무결성 + sha256 + 상태 파일 보관)
+2. `/skill-upgrade --rollback` 실행
+3. **§4 사후 검증 체크리스트로 복원 정합 확인** (`kitVersion` / `CUSTOM_SECTION` / backlog Task)
+4. 그래도 실패 시 [GitHub Issues](https://github.com/wejsa/ai-crew-kit/issues)에 `project.json` 첨부 (외부 공유 전 토큰·이메일·외부 시스템 ID 마스킹)
 
 ### Q2. `CLAUDE.md`의 커스텀 규칙이 사라졌습니다.
 
@@ -150,21 +155,21 @@ v2.0.0 GA 시점 `examples/` 디렉토리는 **`fintech-gateway` / `ecommerce-sh
 
 ### Q3. Phase 1 훅이 작동하지 않습니다.
 
-가장 흔한 원인은 **스크립트 실행 권한 누락**이다 (PR #34 사례 — alpha.2~alpha.3에서 5개 훅이 git index 모드 100644로 박혔다, [security-migration.md §1](./security-migration.md)). 점검·권한 부여:
+가장 흔한 원인은 **스크립트 실행 권한 누락**이다 (PR #34 사례 — alpha.2~alpha.3에서 `post-tool-use.sh` 런타임 훅이 git index 모드 100644로 박혔다, [security-migration.md §1](./security-migration.md)). 점검·권한 부여:
 
 ```bash
 # 1) 미실행 훅 식별 (디렉토리 내 untrusted/임시 .sh 부재 사전 확인)
 ls -l .claude/hooks/                                                          # 의도하지 않은 .sh 부재 확인
 find .claude/hooks -maxdepth 1 -name "*.sh" ! -perm -u+x                      # 실행 권한 없는 훅 목록
 
-# 2) v2.0.0 SSOT 훅만 명시 부여 (PR #34 회귀 케이스 해소)
-chmod +x .claude/hooks/{pre-commit,post-merge,pre-push,post-checkout,post-rewrite}.sh
+# 2) v2.0.0 Claude Code 런타임 훅 3건 명시 부여 (PR #34 회귀 케이스 해소)
+chmod +x .claude/hooks/{post-tool-use,session-start,stop}.sh
 
-# 3) settings.json 등록 확인
-grep -A2 hooks .claude/settings.json
+# 3) settings.json 등록 확인 (PostToolUse / SessionStart / Stop 매핑)
+grep -A3 hooks .claude/settings.json
 ```
 
-> 와일드카드(`chmod +x .claude/hooks/*.sh`)는 디렉토리 내 *모든* `.sh`에 권한을 부여한다. 검토 중인 third-party 훅·임시 백업본까지 실행 가능 상태가 될 수 있어 supply-chain 관점에서 **위 명시 부여 패턴 권장**.
+> Claude Code 훅 3건(`post-tool-use.sh` / `session-start.sh` / `stop.sh`)은 `.claude/hooks/`에, git hooks(`pre-commit` 등)는 `.git/hooks/`에 별도 존재한다. `lib/`(유틸)·`tests/`는 직접 실행 대상 아님. 와일드카드(`chmod +x .claude/hooks/*.sh`)는 third-party·임시 백업본까지 실행 가능 상태로 만들어 supply-chain 관점에서 **위 명시 부여 패턴 권장**.
 
 훅 비활성화 자동 플래그가 존재할 수 있다 — 위치 무관 탐색: `find .claude -name 'hook-disabled*'`. 플래그가 발견되면 (1) `.claude/state/hook-error.log`로 무한 루프 원인 확인 → (2) 원인(예: post-commit이 새 commit 트리거) 해결 → (3) `rm <플래그-경로>`. **원인 미해결 상태 삭제 금지** — 재발 시 시스템 부하 / lock contention 위험.
 
@@ -177,7 +182,7 @@ grep -A2 hooks .claude/settings.json
 /skill-upgrade --version v2.0.0               # 동일 버전 재실행 시에도 CLAUDE.md/README.md 재생성 단계 진입
 ```
 
-skill-upgrade가 동일 버전 재실행 시에도 결정적 치환 단계를 거치므로 `skillProfile` 반영이 강제된다 (skill-upgrade SKILL.md `Step 13 — CLAUDE.md/README.md 재생성` 참조). 대안: `/skill-init` 재실행 (CUSTOM_SECTION 보존 동일).
+skill-upgrade가 동일 버전 재실행 시에도 결정적 치환 단계를 거치므로 `skillProfile` 반영이 강제된다 (skill-upgrade SKILL.md `Step 13 — CLAUDE.md/README.md 재생성` 참조).
 
 ### Q5. v1.x 핫픽스(서브에이전트 worktree 격리 등)와 v2가 충돌합니다.
 
@@ -189,7 +194,7 @@ v2.0.0 GA 후 `develop` 브랜치는 **v1.x 핫픽스 라인으로 동결**된�
 
 - [docs/v2/phase-8-plan.md](./phase-8-plan.md) — Phase 8 결정 SSOT (9 D + 7 OQ + 6 R)
 - [docs/v2/security-migration.md](./security-migration.md) — Phase 5 보안 마이그레이션 (SEC-05/06/07 상세)
-- [docs/upgrade-guide.md](../upgrade-guide.md) — `/skill-upgrade` 명령·옵션·보존 항목 SSOT
+- [docs/upgrade-guide.md](../upgrade-guide.md) — `/skill-upgrade` 명령·옵션·보존 항목 SSOT (본 PR 머지 시점 v1.7.0 예제 인용. **Phase 8 Step 5에서 v2.0.0 갱신 예정** — Step 5 머지 전까지 v1↔v2 명령 형식 호환이라 사용에는 문제 없음)
 - [.claude/schemas/migrations.json](../../.claude/schemas/migrations.json) — 마이그레이션 SSOT (D7 — phase-8-release.md doc과 불일치 시 본 파일 우선)
 - [.claude/skills/skill-upgrade/SKILL.md](../../.claude/skills/skill-upgrade/SKILL.md) — skill 동작 SSOT
 - `CHANGELOG.md [2.0.0]` — Step 4 완성 후 정합
