@@ -34,9 +34,16 @@ Thumbs.db
 
 # Secrets
 **/secrets/
+!tests/secrets/
+!tests/secrets/**
 *.pem
 *.key
 *.crt
+
+# Python bytecode (tests/secrets/ 등에서 생성)
+__pycache__/
+*.py[cod]
+*$py.class
 
 # Build outputs
 out/
@@ -74,3 +81,14 @@ docs/*
 !docs/customization.md
 !docs/upgrade-guide.md
 !docs/eject-guide.md
+!docs/token-optimization.md
+!docs/v2/
+!docs/v2/**
+!docs/archive/
+!docs/archive/**
+
+# Claude Code runtime artifacts (Phase 1)
+.claude/scheduled_tasks.lock
+.claude/state/hook-errors.log
+.claude/state/hook-disabled.flag
+.claude/state/hook-trigger-count

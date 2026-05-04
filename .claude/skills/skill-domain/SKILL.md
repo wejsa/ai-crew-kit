@@ -4,6 +4,7 @@ description: 도메인 관리 - 조회, 전환, 커스터마이징, 워크플로
 disable-model-invocation: false
 allowed-tools: Bash(git:*), Read, Write, Edit, Glob, AskUserQuestion
 argument-hint: "[list|switch|create|add-doc|add-checklist|add-workflow|export] [options]"
+complexity-hint: light
 ---
 
 # skill-domain: 도메인 관리

@@ -4,6 +4,7 @@ description: 릴리스 - 빌드 검증 + API spec 스냅샷 + 버전 범프 + CH
 disable-model-invocation: true
 allowed-tools: Bash(git:*), Bash(gh:*), Bash(cat:*), Bash(./gradlew:*), Bash(npm:*), Bash(yarn:*), Bash(go:*), Bash(swag:*), Read, Write, Edit, Glob, AskUserQuestion, Skill
 argument-hint: "{버전타입: patch|minor|major}"
+complexity-hint: light
 ---
 
 # skill-release: 릴리스 자동화

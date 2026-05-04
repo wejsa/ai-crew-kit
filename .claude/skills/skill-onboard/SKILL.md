@@ -4,6 +4,7 @@ description: 기존 프로젝트 온보딩 - 코드베이스 스캔 + 자동 설
 disable-model-invocation: false
 allowed-tools: Bash(git:*), Bash(ls:*), Bash(cat:*), Bash(wc:*), Read, Write, Edit, Glob, Grep, AskUserQuestion
 argument-hint: "[--scan-only]"
+complexity-hint: medium
 ---
 
 # skill-onboard: 기존 프로젝트 온보딩

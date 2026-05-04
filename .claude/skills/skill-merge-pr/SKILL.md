@@ -4,6 +4,7 @@ description: PR 머지 - 승인된 PR을 Squash 머지하고 상태 업데이트
 disable-model-invocation: false
 allowed-tools: Bash(git:*), Bash(gh:*), Read, Write, Glob, Skill
 argument-hint: "{PR번호}"
+complexity-hint: light
 ---
 
 # skill-merge-pr: PR 머지

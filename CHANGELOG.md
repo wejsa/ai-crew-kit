@@ -7,6 +7,153 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-05-04
+
+> **GA 릴리스 — Migration Surface 요약**: v1.x 사용자는 `/skill-upgrade --version v2.0.0` 자동 마이그레이션으로 충분. 자동 적용 4 add_field(`hooks`/`conventions.skillProfile`/`conventions.overridePriority`/`tokenHints`), 수동 작업 *거의 없음*, 점수 영향 ≤1점. 상세는 [docs/v2/migration-guide.md](./docs/v2/migration-guide.md).
+>
+> **Phase 6 (`skill-compliance-report`) 보류** — 2026-05-01 옵션 D 채택. ACK 미니멀리즘 위배 + 실수요 미검증 + 위반 탐지 Phase 4/5 중복. v2.1+ 재진입 시 검토.
+
+### Added
+
+#### Phase 8 — Migration & Release / GA (v2.0.0)
+- **`docs/v2/migration-guide.md`** (Step 2) — v1.x → v2.0.0 마이그레이션 사용자 가이드 5섹션(변경 사항 / 자동 절차 / 수동 확인 / 롤백 매뉴얼 / FAQ 5건) + R6 1차 방어선
+- **examples v2 형식 마이그레이션** (Step 3) — `examples/{fintech-gateway,ecommerce-shop}/.claude/state/project.json`에 `kitVersion 2.0.0` + `kitSource` + `conventions.skillProfile`/`overridePriority` + `hooks {}` + `tokenHints {}` 명시
+- **`tests/upgrade/fixtures/v1-{fintech,ecommerce,saas,healthcare}-project.json`** (Step 3) — 4 도메인 v1 형식 fixture (saas/healthcare는 OQ-04 fixture-only 검증, 실제 examples 디렉토리는 v2.1+ 후속)
+- **`scripts/validate-v2-migration.py`** (Step 3) — cumulative add_field 적용(target ≤ 버전 오름차순) + schema-aware 필터(`backlog.*` 등 다른 파일 영역 자동 스킵) + ${KIT_VERSION}/${KIT_SOURCE} placeholder 치환 + 비-dict 부모 fail-fast(silent overwrite 방지) + OQ-02 진단 모드
+- **`tests/upgrade/test_rollback.py`** (Step 3) — R6 1차 자동 방어선. 9 tests × 4 fixtures parametrize (외부 리뷰 #1/#2 보강 반영): v1 보존 / v2 add_field / schema 통과 / *진짜 라운드트립*(v1 → migrated → 백업 복원 = v1) / *비-trivial 멱등성*(1차 롤백 → dirty 변경 → 2차 롤백 = v1) / 더블 마이그레이션 멱등 / 사용자 보존(3 parametrize) / fail-fast on non-dict parent / cumulative+schema-aware filter
+- **CI 워크플로우 2 jobs 신설** (`.github/workflows/secrets-tests.yml`) — `validate-v2-migration`(4 fixtures + 2 examples 검증) + `upgrade-fixture-tests`(pytest tests/upgrade -v R6)
+- **`skill-upgrade` SKILL.md 갭 fix** (Step 1) — 업데이트 대상 표에 `.claude/rules/`(Phase 4 도입) 추가 + 보존 대상 표에 `lessons-learned.json`(Phase 7 도입) 명시
+- **`docs/v2/phase-8-plan.md`** (Step 1) — 옵션 A Lean Closure 결정 SSOT (9 D + 7 OQ + 6 R + Step 1~6 분리)
+- **`docs/v2/phase-8-release.md` SSOT 이관 헤더** (Step 1) — phase-8-plan.md를 결정 SSOT로 명시 (PR #45 리뷰 MAJOR #1)
+
+#### Phase 7 — Context & Learning (v2.0.0)
+- **`.claude/schemas/lessons-learned.schema.json`** (Step 1) — v1.23 lessons-learned 회귀 보호 schema. id/category/severity/impact 필드 + `additionalProperties: false`
+- **`scripts/validate-lessons-learned.py`** (Step 1) — 4단계 검증(schema validation + cross-ref + impact 정량 + required field 누락). `--fixture` 단일 검증 모드
+- **`tests/lessons/` pytest 33 cases (5 files)** (Step 2) — schema validation / secrets 필터 / threshold 적용 / skill-retro 명세 / fixtures(positive/invalid-id/extra-property)
+- **`skill-retro` §5.3 secrets 필터** (Step 2) — lessons-learned 작성 시 토큰/이메일 패턴 자동 redact + impact 정량(상/중/하 → 점수 매핑)
+- **CI 워크플로우 2 jobs 신설** (`.github/workflows/secrets-tests.yml`) — `validate-lessons-learned`(positive PASS + 2 negative MUST FAIL) + `lessons-fixture-tests`(pytest tests/lessons)
+- **`docs/v2/phase-7-{plan,context}.md` + `context-migration.md`** — 옵션 A Lean Closure 결정 + 사용자 마이그레이션 안내
+
+#### Phase 5 — AgentShield-lite (v2.0.0-alpha.4)
+- **`secrets-patterns.json` 스키마** — 3 섹션 표준(`common.hardcoded` / `common.runtime` / `domain.patterns`) + entry 필드(`id`/`name`/`pattern`/`severity`/`confidence`/`description`/`excludeFiles`/`excludeContexts`)
+- **`_base/health/secrets-patterns.json`** — 공통 패턴 17개
+  - `common.hardcoded` SEC-S01~S05 (high) — API 키, secret/private_key, AWS Access Key 5 prefix(`AKIA|AGPA|AROA|AIDA|ANPA`), GitHub Token 5 prefix(`ghp|gho|ghu|ghs|ghr`), Slack Bot/User Token
+  - `common.runtime` SEC-S06~S17 (medium 예외 — v1.x SEC-01 회귀 보존) — log/logger/println에 password/cardNumber/creditCard/cvv/ssn/주민등록/secret/apiKey/token/bearer/authorization 등 직접 전달
+- **`_base/health/README.md`** — 스키마/confidence 등급 가이드/`excludeFiles` 기본 권장/`excludeContexts` enum SSOT 정의/새 공통·도메인 패턴 추가 절차/금지 항목/도메인 ID 네임스페이스 정책(`{domain}/SEC-S01`부터)/v2.0 채택·보류 명시
+- **`skill-health-check` 신규 검사** (모두 CRITICAL, autoFix 불가)
+  - **SEC-05** — 하드코딩 시크릿. `_base/common.hardcoded` 로드 + 매칭
+  - **SEC-06** — `.env` 노출 게이트. gitignore 등록 + 평문 시크릿(AWS/GitHub/Slack 명시 prefix) 두 단계, `.env.example`/`.env.template`/`.env.sample`은 placeholder 가정 제외
+  - **SEC-07** — 도메인별 민감 데이터. `{domain}/health/secrets-patterns.json` `domain.patterns` 로드 + 체크섬 검증(PAN Luhn / 한국 주민·사업자 가중치). `general` 도메인 또는 도메인 patterns 부재 시 SKIP
+- **`skill-health-check` 카테고리 헤더 SSOT** — 외부 패턴 로드 절차(부재/JSON 파싱/정규식 컴파일 실패 3-tier 폴백) + `excludeContexts` 처리 정규식(JS/Python dict+getenv/Java/Go Getenv+LookupEnv 커버) + 출처 표기 형식(`{domain}/SEC-S{nn}`) + `medium` confidence 안내 문구
+- **도메인별 `secrets-patterns.json`**
+  - **`fintech/health/secrets-patterns.json`** — SEC-S01 PAN 16자리 IIN 제한(`\b[3-6]\d{15}\b`) + Luhn 위임. CVV 형식 매칭은 v2.0 보류(SEC-01 SEC-S09 커버)
+  - **`healthcare/health/secrets-patterns.json`** — SEC-S01 미국 SSN, SSA invalid 그룹(area=000/666/9XX, group=00, serial=0000) lookahead 제외. DEA Number/MRN 보류
+  - **`ecommerce/health/secrets-patterns.json`** — SEC-S01 한국 주민등록(YYMMDD + 성별 1-8 형식 검증 + 가중치 [2,3,4,5,6,7,8,9,2,3,4,5] 체크섬), SEC-S02 한국 사업자(세무서 코드 [1-9] 시작 + 가중치 [1,3,7,1,3,7,1,3,5] 체크섬)
+- **`docs/v2/security-migration.md`** — alpha.3 → alpha.4 마이그레이션 가이드. SEC-01 회귀 보존 1:1 매핑표, 신규 SEC-* 가이드, alpha.2 hook-safety 부채 해소 사실, 점수 영향 0 분석, excludeFiles/excludeContexts 사용자 가이드, autoFix 정책, Phase 4 rules 다층 방어, v2.1+ 보류 항목 9건, Troubleshooting Q1~Q3
+- **TFT 설계 문서** — `docs/v2/phase-5-tft-analysis.md` (5인 분석 + D0~D7 결정 + 옵션 A/B/C 비교 + 9 리스크 + 옵션 B 채택), `docs/v2/phase-5-plan.md` (Step 1~4 구현 계획 + 진행 상황 SSOT 테이블)
+- **`python-fastapi` / `python-django` 검사 대상 파일 패턴** — security 카테고리 헤더에 추가 (alpha.2 이후 누락 결함 동시 해소)
+
+#### Phase 4 — 4-Layer Override + Constraint Rules (v2.0.0-alpha.3)
+- **`.claude/rules/` 디렉토리** — 도메인 × 언어 교차 제약 규칙 메커니즘 신설 (4층 Layered Override의 2번째 층, PR 리뷰 컨텍스트 한정 적용)
+- **`.claude/rules/README.md`** — rules vs conventions 경계 매트릭스, language 매핑 SSOT 표(7개 backend), frontmatter 표준(id/domain/language/severity/triggers/related), 새 rule 작성 가이드라인, 금지 항목 (`_base/rules/`, `{domain}/rules/` 단독 층 신규 생성 금지), skill-review-pr 통합 절차
+- **`.claude/rules/_example/_example/sample-rule.md`** — 학습용 예시 템플릿. `_example` 경로는 language 매핑 표에 없어 실제 PR 리뷰에 적용되지 않음 (자연 SKIP)
+- **`skill-review-pr` Step 2.5 (Rules 로드)** — PR 리뷰 시 `project.json`의 `domain` + `techStack.backend` 읽고 language 매핑 → `.claude/rules/{domain}/{language}/*.md` 글롭 → `pr-reviewer-domain` 에이전트에 `rules_paths` 전달. 부재 시 / Trivial PR / `_example` 시 SKIP (4단 자연 SKIP 체인)
+- **`pr-reviewer-domain` 에이전트** — 신설 "Rules 처리 (Phase 4)" 섹션. Read 로드 → frontmatter 파악 → MUST/MUST NOT 본문과 PR diff 대조 → 위반 시 frontmatter `severity` 기반 보고 → 출처 경로 (`rules/{domain}/{language}/{rule-id}.md`) 명시. `triggers` 정규식은 자동 차단이 아닌 LLM 컨텍스트 힌트
+- **`skill-review-pr` 출력 헤더** — `📋 적용 Rules: {domain}/{language} (N개) — {파일들}` (rules_paths 비어있거나 Trivial 시 미출력으로 노이즈 방지)
+- **`docs/concepts.md`** — 핵심 원칙 표 + Layered Override 다이어그램 4층 갱신 (project.json → rules → domains → _base + 하드코딩 baseline)
+- **`docs/customization.md`** — 4층 다이어그램, 디렉토리 구조 트리에 `.claude/rules/` 추가, 신규 섹션 "## 도메인 × 언어 Rules" (rules vs conventions 비교, language 매핑 표, 새 rule 추가 절차, 작성 시 주의사항, 현재 정책)
+- **TFT 설계 문서** — `docs/v2/phase-4-tft-analysis.md` (5인 분석 + 8개 리스크 + 옵션 A 결정), `docs/v2/phase-4-plan.md` (Step 1~4 구현 계획)
+
+> **본 릴리스는 메커니즘만 포함.** 도메인 × 언어 룰 콘텐츠는 0개로 출시되며, 사용자가 실 사용 케이스 발생 시 직접 추가합니다 (옵션 A 채택 — "Claude가 이미 아는 것은 가르치지 않는다" 원칙 준수).
+
+#### Phase 1 — Native Hooks Framework (v2.0.0-alpha.2)
+- **SessionStart 훅** (`.claude/hooks/session-start.sh`) — 세션 진입 시 git sync(워크트리/비워크트리 자동 구분) + 이전 세션 `continuation-plan.md` 자동 출력
+- **PostToolUse 훅** (`.claude/hooks/post-tool-use.sh`) — `Edit|Write|MultiEdit|NotebookEdit` 후 `lockedAt` heartbeat 갱신 + **3단계 무한 루프 방어**
+  - 0단계: `hook-disabled.flag` 존재 시 즉시 종료
+  - 1단계: `file_path`가 `.claude/state/*` / `.claude/temp/*`면 즉시 종료 (R1 — 네이티브 path 필터 부재 보완)
+  - 2단계: 세션별 파일 락 재진입 방지 (R2)
+  - 3단계: 10초 윈도우 내 3회 초과 시 `hook-disabled.flag` 자동 생성 + stderr 경고
+- **Stop 훅** (`.claude/hooks/stop.sh`) — 응답 완료 시 `stop_hook_active` 체크 + 60초 디바운스 + idle 시 `continuation-plan.md` 생성 스킵, TTL 만료 락 자동 해제 (R3)
+- **atomic-write 헬퍼** (`.claude/hooks/lib/atomic-write.sh`) — `flock` 기반 원자적 JSON 쓰기, 워크트리 동시 Write race 방어 (R5), `flock` 미지원 시 mkdir 폴백
+- **Hook Integrity Audit** — `skill-health-check`의 신규 `hook-safety` 카테고리 (weight 10, failCap 40)
+  - **HI-01** (CRITICAL) — 차단 패턴 정적 검사: `rm -rf`, `sudo`, `curl`/`wget`, `git reset --hard`, `git push --force`(`--force-with-lease` 제외, `-f` 단축형 포함), 파이프 실행(`| curl|wget|nc|bash|sh`)
+  - **HI-02** (CRITICAL) — 외부 스크립트 참조 탐지: 실행 키워드(`source|bash|sh|exec|eval|.|#!`) 직후 경로 + allowlist(`/bin/true`, `/bin/false`, `/dev/*`, `/tmp`, `$TMPDIR`, 내부 hooks, 표준 인터프리터) 적용으로 환경변수 할당 오탐 방지
+  - **HI-03** (MINOR) — hooks 필드 JSON 구조/스키마 유효성 + timeout 60초 상한 (SessionStart 기본 30초 × 2배 여유)
+  - **HI-04** (MAJOR) — 훅 비블로킹 규칙 위반 (R4): `exit 2` 금지, `set -e` 단독(`|| true` 미동반) 금지. Grep 기반 인라인 + CI `scripts/check-hook-blocking.sh` 등가 실행
+- **`_base/health/_category.json`**: `hook-safety` 카테고리 추가 (weight 10)
+- **도메인 `_category.json` 병합 규칙 명문화** — `skill-health-check` Phase A §3에 두 형태 정의
+  - 형태 A (legacy): `additionalCategories` + `weightOverrides` (fintech)
+  - 형태 B (dictionary): `categories: { id: {weight?, failCap?, description?} }` (ecommerce/healthcare/saas)
+  - 합 ≠ 100 시 자동 정규화
+- **훅 디버깅 가이드** (`.claude/hooks/README.md`) — 자동 실행 경고, 3단계 방어 동작표, 수동 복구 절차
+- **훅 회귀 테스트 10건** (`.claude/hooks/tests/`) — atomic-write parallel, stop recursion, lock expiry, session-start git graceful skip, continuation-plan debounce, HI-04 checker, post-tool-use path-exclude/lock-reentry/auto-disable(+10초 롤오버)/heartbeat
+- **CI `hook-tests` job** (`.github/workflows/hook-tests.yml`) — shellcheck + `bash -n` + HI-04 자가 검사 + `run-all.sh` (Ubuntu)
+- **`scripts/check-hook-blocking.sh`** — HI-04 자가 검사 스크립트 (주석 라인 제외, `tests/` fixture 제외)
+- **`project.schema.json` `definitions.hookMatcher`** 상세화 — SessionStart/PostToolUse/Stop 이벤트 배열, `type: "command"` 강제, `timeout` 상한
+- **CODEOWNERS 운영 원칙** — `.claude/settings.json`(hooks), `.claude/hooks/**`, schema hooks 변경 시 security-review 필수 (phase-1-plan.md §보안 리뷰 필수 변경점)
+
+#### Phase 2 — Skill Profiles (v2.0.0-alpha.2 — alpha.1 이후 backfill, PR #20 commit 037c2fc)
+- 스킬 프로파일 시스템 (developer/full/docs-only/custom) — CLAUDE.md 스킬 노출 제어
+- `skill-profiles.json` 프로파일 정의 파일
+- `project.schema.json`에 `customSkills` 배열 필드 추가 (custom 프로파일용)
+- `skill-init`에 스킬 프로파일 선택 단계 (Step 5.6) 추가
+- TEMPLATE-ENGINE에 `SKILL_LIST_SECTION`, `NATURAL_LANGUAGE_COMMANDS` 블록 마커 추가
+
+#### Phase 3 — Token Optimization (v2.0.0-alpha.2 — alpha.1 이후 backfill, PR #21 commit 39592ee)
+- 스킬 복잡도 힌트 — 23개 SKILL.md에 `complexity-hint` frontmatter 필드 추가 (heavy 3 / medium 9 / light 11)
+- `project.schema.json`의 `tokenHints` 상세 스키마: `defaultComplexity`, `skillOverrides`, `maxMcpServers`, `compactionThreshold`
+- `docs/token-optimization.md` 신규 — 복잡도 매핑, 환경변수 안내, 프로파일×복잡도 조합
+
+#### Phase 0 Foundation (v2.0.0-alpha.1, VERSION 파일만 존재 — 태그 미생성)
+- v2.0.0 스키마 확장: `hooks`, `skillProfile`, `overridePriority`, `tokenHints` 필드 예약
+- `kitVersion` SemVer 프리릴리즈 패턴 지원 (`2.0.0-alpha.1` 등)
+
+### Changed
+
+#### Phase 5 (v2.0.0-alpha.4)
+- **SEC-01 외부화** — `skill-health-check/SKILL.md` 인라인 12 패턴 → `_base/health/secrets-patterns.json` `common.runtime` 로드. 키워드 1:1 동일(회귀 보존), 정규식은 단어 경계 + `log/logger/println` 변형 흡수로 정밀화. 회귀 fixture 23건 PASS
+- **alpha.2 hook-safety 정규화 부채 해소** (PR #35, d0715de) — 도메인 4개(fintech/ecommerce/saas/healthcare) `_category.json`의 dictionary에 hook-safety weight 9 명시 + 기존 카테고리 비례 감소(예: fintech doc-sync 20 → 18, compliance 40 → 35)로 합 100 일관. 정규화로 보정되던 비율을 명시화 — **사용자 점수 영향 ≤1점** (fintech/ecommerce/saas는 Hamilton 라운딩으로 ≈0, healthcare phi-protection만 의도적 floor로 -0.91% ≈ ~1.0점, PR #35 §점수 영향 분석 참조)
+- **`_base/health/README.md` `excludeContexts` `env_var_reference` enum** — Go(`os.Getenv` / `os.LookupEnv`) + Python 함수형(`os.getenv`) 추가 (PR #37 리뷰 M001 후속). `skill-health-check/SKILL.md` SSOT 동기화
+- **`skill-health-check/SKILL.md` `type_declaration` 처리 한계 명시** — single-line 정의 + 시크릿 리터럴 동일 라인은 라인 단위 제외 때문에 false negative. 워크어라운드(시크릿 별도 라인 분리) + v2.1+ 토큰-단위 정밀화 메모 (PR #37 리뷰 M003 후속)
+
+#### Phase 4 (v2.0.0-alpha.3)
+- **`project.schema.json` `overridePriority` description 보강** — Phase 0에서 예약된 enum/default 유지하고 description만 명료화: `domain-first` / `merge` 의미 + "v2.0 MVP는 분기 로직 미구현 (단일 디렉토리 구조라 충돌 구조적으로 발생하지 않음). 향후 단독 도메인/언어 룰 도입 시 활성화" + rules/README.md 참조
+- **`docs/concepts.md` & `docs/customization.md` Layered Override** 3층 → 4층 다이어그램 (rules 포함, 하드코딩 기본값은 baseline으로 카운트 외)
+
+#### Phase 1 (v2.0.0-alpha.2)
+- **`CLAUDE.md.tmpl` 세션 시작 섹션** — 훅 자동 실행을 기본 흐름으로 기술, 수동 절차는 `<details>` 폴백 블록(구버전 Claude Code / `hook-disabled.flag` 존재 / 훅 부재 3가지 트리거)으로 이동. 기존 스크립트 100% 보존
+- **`_base/health/_category.json` 가중치 재배분** (합 100 유지)
+  - doc-sync 35 → 32
+  - state-integrity 25 → 23
+  - security 25 → 23
+  - agent-config 15 → 12
+  - hook-safety +10 (신규)
+
+#### Phase 2 (v2.0.0-alpha.2 — alpha.1 이후 backfill)
+- CLAUDE.md.tmpl: 하드코딩 스킬 목록/자연어 매핑을 프로파일 기반 블록 마커로 교체
+
+### Fixed
+
+#### Phase 1 사후 결함 해소 (v2.0.0-alpha.4)
+- **훅 스크립트 실행 권한 정정** (PR #34, 6dcfdb3) — alpha.2 PR #26 머지 시 누락된 `chmod +x`로 인해 `post-tool-use.sh`를 비롯한 5개 훅이 git index 모드 100644로 박혀 PostToolUse 이벤트마다 "Permission denied" 실패. 비블로킹 정책(R4)으로 세션은 정상 진행됐으나 lockedAt heartbeat 갱신 / 3단계 무한 루프 방어 / hook-disabled.flag 카운터가 사실상 alpha.2/alpha.3 동안 미동작. alpha.4부터 의도 동작 활성화 (콘텐츠 변경 0, 권한 비트만 조정)
+
+### Breaking Changes
+
+> **요약**: 모든 Breaking Change에 대해 `/skill-upgrade --version v2.0.0`이 자동 마이그레이션을 수행한다. 사용자 수동 작업이 필요한 변경은 *없다*. 점수 영향 ≤1점, 동작 회귀 0.
+
+- **`project.json` 스키마 확장** — 5개 신규 top-level 필드(`hooks` / `tokenHints` / `customDomain` / `healthCheck` / `orchestrator`) + `conventions` 2개 신규 키(`skillProfile` / `overridePriority`). v1.x skill이 신규 필드를 인식하지 못할 수 있음. **자동 해결**: `migrations.json` v2.0.0이 4 add_field(`hooks {}` / `conventions.skillProfile "default"` / `conventions.overridePriority "domain-first"` / `tokenHints {}`)를 적용. 누락 3개(`customDomain`/`healthCheck`/`orchestrator`)는 schema optional이라 부재 통과 (Phase 8 Step 3 fixture 검증 결과)
+- **`CLAUDE.md.tmpl` 구조 변경** — Phase 4 4층 Override 도입으로 템플릿 본문 갱신. `CUSTOM_SECTION_START`/`CUSTOM_SECTION_END` 마커는 v1.x와 동일하며, **마커 사이 콘텐츠는 자동 보존**된다 (skill-upgrade Step 13 결정적 치환). Phase 2(skillProfile 기반 스킬 목록 필터링) + Phase 1(훅 자동 실행을 기본 흐름으로 기술, 수동 절차는 `<details>` 폴백)도 동일 마커 보존 정책 적용
+- **`skill-health-check` 가중치 재배분** — Phase 1 hook-safety +10 신규(doc-sync 35→32, state-integrity 25→23, security 25→23, agent-config 15→12) + Phase 5 alpha.2 hook-safety 정규화 부채 해소(도메인 4개 `_category.json` 명시). **사용자 점수 영향 ≤1점** — 3 도메인은 Hamilton 라운딩으로 ≈0, healthcare phi-protection만 의도적 floor로 -0.91% ≈ ~1.0점 (security-migration.md §5 참조)
+- **Phase 1 훅: 없음** — `.claude/settings.json`에 `hooks` 필드가 부재하거나 `.claude/hooks/` 디렉토리가 없으면 v1.x 동작이 100% 유지됨 (하위호환 보장)
+- **Phase 4 rules: 없음** — `.claude/rules/` 디렉토리가 부재하거나 `{domain}/{language}/` 매칭이 0개면 alpha.2 동작이 100% 유지됨. 메커니즘만 추가되고 콘텐츠 0개 출시이므로 모든 PR 리뷰에서 자연 SKIP
+- **Phase 5 secrets: 없음** — `_base/health/secrets-patterns.json` 부재 시 SEC-01/SEC-05 SKIP + WARN, 도메인 patterns 부재 시 SEC-07 SKIP, dotenv 미사용 프로젝트는 SEC-06 SKIP. SEC-01 외부화는 키워드 1:1 매핑 보존(회귀 fixture 23건 PASS)으로 alpha.3 동작 유지
+- **Phase 7 lessons-learned: 없음** — `.claude/state/*` 디렉토리 전체 보존 (skill-upgrade 보존 대상 표 명시). 신규 schema는 회귀 보호 메커니즘이라 사용자 데이터 영향 0
+- **Phase 8 마이그레이션: 없음** — 본 절이 정의하는 자동 마이그레이션이 모든 변경을 흡수. 매뉴얼 작업 0건. 롤백은 [migration-guide.md §4](./docs/v2/migration-guide.md) R6 1차 자동 방어선 + 매뉴얼 체크리스트 6건으로 보장
+
+### Deferred (v2.1+ 후속)
+
+- **Phase 6 — `skill-compliance-report`** (옵션 D 채택, 2026-05-01) — 위반 탐지 Phase 4/5 중복 + ACK 미니멀리즘 위배 + v1.x 시기 실수요 미검증으로 보류. 재진입 조건 + 부활 옵션은 [docs/v2/phase-6-compliance.md](./docs/v2/phase-6-compliance.md) §보류 결정 참조 (ADJ-01)
+
 ## [1.45.1] - 2026-04-14
 
 ### Added

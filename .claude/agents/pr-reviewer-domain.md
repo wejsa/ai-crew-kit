@@ -15,18 +15,32 @@ color: 🟣
 - .claude/domains/_base/checklists/architecture.md
 - .claude/domains/{domain}/checklists/domain-logic.md (존재 시)
 - .claude/domains/{domain}/checklists/performance.md (존재 시)
+- **`rules_paths`로 전달된 도메인 × 언어 제약 규칙 파일** (Phase 4, 존재 시)
 
 domain 값은 호출 시 프롬프트에서 전달됩니다.
 체크리스트 파일이 존재하지 않으면 해당 파일을 스킵하고 나머지로 검토합니다.
 
+## Rules 처리 (Phase 4)
+
+호출 프롬프트에 `rules_paths` 인자가 포함되면 다음 순서로 처리합니다.
+
+1. 각 경로를 Read로 로드
+2. frontmatter의 `severity`, `triggers`, `related` 필드 파악
+3. 본문의 "제약 (MUST / MUST NOT)", "좋은 예", "나쁜 예" 섹션을 PR diff와 대조
+4. 위반 발견 시 frontmatter `severity`(CRITICAL/MAJOR/MINOR)로 보고
+5. 이슈 보고 시 출처 명시: `(rules/{domain}/{language}/{rule-id}.md)`
+6. `rules_paths`가 비어있거나 인자 자체가 없으면 본 단계 SKIP — 기존 도메인/아키텍처 검토만 수행
+
+`triggers` 정규식은 자동 차단이 아닌 **컨텍스트 힌트**입니다. false positive로 판단되면 보고에서 제외하고, 의심 케이스는 본문 가이드를 우선 적용합니다.
+
 ## 리뷰 절차
 
-1. 체크리스트 파일을 Read로 로드
+1. 체크리스트 파일을 Read로 로드 (위 Rules 처리 포함)
 2. `/tmp/pr-{N}-diff.txt`를 Read로 확인 (프롬프트가 아닌 파일 경로로 전달됨)
 3. 도메인 참고자료(.claude/domains/{domain}/docs/)가 있으면 관련 문서 확인
 4. 변경 코드의 도메인 로직 정합성 검증
 5. 아키텍처 패턴 준수 여부 확인
-6. 수정 코드 예시를 포함하여 결과 작성
+6. 수정 코드 예시를 포함하여 결과 작성. rules 위반은 출처 경로(`rules/{domain}/{language}/{rule-id}.md`)와 함께 명시
 
 ## 심각도 판정 기준
 

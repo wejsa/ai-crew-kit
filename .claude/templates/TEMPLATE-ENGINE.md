@@ -45,6 +45,7 @@ AI Crew Kit의 CLAUDE.md 자동 생성 엔진입니다.
 | `{{PR_LINE_LIMIT}}` | project.json → conventions.prLineLimit | 500 | PR 라인 제한 |
 | `{{TEST_COVERAGE}}` | project.json → conventions.testCoverage | 80 | 테스트 커버리지 목표 |
 | `{{WORKFLOW_PROFILE}}` | project.json → conventions.workflowProfile | "standard" | 워크플로우 프로필 (standard/fast) |
+| `{{SKILL_PROFILE}}` | project.json → conventions.skillProfile | "default" | 현재 스킬 프로파일명 |
 
 ### 블록 마커
 
@@ -60,6 +61,8 @@ AI Crew Kit의 CLAUDE.md 자동 생성 엔진입니다.
 | `{{DOMAIN_COMPLIANCE}}` | domain.compliance 기반 | 컴플라이언스 목록 |
 | `{{CUSTOM_SECTION}}` | project.json → customSections | 사용자 정의 섹션 |
 | `{{WORKFLOW_CHAINING_RULES}}` | workflowProfile 기반 | 프로필별 자동 체이닝 규칙 테이블 |
+| `{{SKILL_LIST_SECTION}}` | skillProfile + skill-profiles.json 기반 | 프로파일별 스킬 목록 (bash 코드블록) |
+| `{{NATURAL_LANGUAGE_COMMANDS}}` | skillProfile + skill-profiles.json 기반 | 프로파일별 자연어 매핑 테이블 |
 
 ---
 
@@ -349,6 +352,229 @@ def generate_workflow_chaining_rules(project: dict) -> str:
         ])
 ```
 
+### SKILL_LIST_SECTION (프로파일 기반 스킬 목록)
+
+```python
+# 스킬별 정규 데이터 — 커맨드 + 설명 + 자연어 매핑의 단일 소스
+SKILL_REGISTRY = {
+    "skill-status": {
+        "commands": ['/skill-status         # 상태 확인'],
+        "nl_mappings": [
+            ('"상태 확인해줘"', '`/skill-status`', '프로젝트 상태 확인'),
+        ]
+    },
+    "skill-backlog": {
+        "commands": ['/skill-backlog        # 백로그 조회'],
+        "nl_mappings": [
+            ('"백로그 보여줘"', '`/skill-backlog list`', '백로그 조회'),
+            ('"버그만 보여줘"', '`/skill-backlog list --type=bug`', '버그 타입 필터'),
+            ('"내 작업 보여줘"', '`/skill-backlog list --assignee=me`', '내 할당 필터'),
+            ('"오래된 작업 보여줘"', '`/skill-backlog list --stale=7d`', '장기 미변경 필터'),
+            ('"대시보드 보여줘"', '`/skill-backlog dashboard`', 'Phase 진행률 현황'),
+            ('"의존성 보여줘"', '`/skill-backlog deps`', '의존성 트리'),
+            ('"{ID} 보관해줘"', '`/skill-backlog archive {ID}`', 'Task soft delete'),
+            ('"일괄 변경해줘"', '`/skill-backlog batch`', '다중 Task 일괄 변경'),
+            ('"버그 등록해줘: {설명}"', '`/skill-backlog add "{설명}" --type=bug`', '버그 등록'),
+            ('"Task 추가해줘: {제목}"', '`/skill-backlog add "{제목}"`', 'Task 등록 (type AI 추론)'),
+            ('"{ID} 수정해줘"', '`/skill-backlog update {ID}`', 'Task 대화형 수정'),
+            ('"{ID} 일시정지해줘"', '`/skill-backlog update {ID} --pause "사유"`', 'Task 일시정지'),
+            ('"{ID} 재개해줘"', '`/skill-backlog update {ID} --resume`', '일시정지 Task 재개'),
+        ]
+    },
+    "skill-feature": {
+        "commands": ['/skill-feature        # 새 기능 기획 (요구사항 + backlog 등록)'],
+        "nl_mappings": [
+            ('"새 기능 기획해줘: {기능명}"', '`/skill-feature {기능명}`', '새 기능 기획 + 요구사항 문서'),
+        ]
+    },
+    "skill-plan": {
+        "commands": ['/skill-plan           # 다음 작업 + 설계 + 스텝 분리 계획 수립'],
+        "nl_mappings": [
+            ('"다음 작업 가져와줘"', '`/skill-plan`', 'Task 선택 + 설계 + 스텝 계획'),
+        ]
+    },
+    "skill-impl": {
+        "commands": [
+            '/skill-impl           # 스텝 개발 + PR 생성',
+            '/skill-impl --micro "OO"  # 소규모 수정 (plan 생략, ≤3 파일)',
+        ],
+        "nl_mappings": [
+            ('"개발 진행해줘"', '`/skill-impl`', 'Step 1 개발 -> PR 생성'),
+            ('"다음 스텝 진행해줘"', '`/skill-impl --next`', '다음 스텝 개발 -> PR 생성'),
+            ('"전체 개발 진행해줘"', '`/skill-impl --all`', '모든 스텝 연속 개발'),
+            ('"이어서 진행해줘"', '`/skill-impl --retry`', '실패한 스텝 재시작'),
+            ('"스텝 건너뛰기"', '`/skill-impl --skip`', '빌드 실패 스텝 건너뛰기'),
+            ('"OO 고쳐줘"', '`/skill-impl --micro "OO"`', '소규모 수정 (규모 자동 판단)'),
+            ('"OO 버그 수정해줘"', '`/skill-impl --micro "OO"`', '버그 Micro 경로'),
+            ('"간단하게 OO 추가해줘"', '`/skill-impl --micro "OO"`', '소규모 추가 Micro 경로'),
+            ('"빌드만 확인해줘"', '`/skill-impl --dry-run`', '빌드/테스트 검증만 (PR 미생성)'),
+            ('"테스트 돌려봐"', '`/skill-impl --dry-run`', '빌드/테스트 검증만'),
+        ]
+    },
+    "skill-review": {
+        "commands": ['/skill-review         # 코드 리뷰'],
+        "nl_mappings": [
+            ('"{경로} 코드 리뷰해줘"', '`/skill-review {경로}`', '코드 경로 종합 리뷰'),
+        ]
+    },
+    "skill-review-pr": {
+        "commands": ['/skill-review-pr {num}  # PR 코드 리뷰'],
+        "nl_mappings": [
+            ('"PR {번호} 리뷰해줘"', '`/skill-review-pr {번호}`', 'PR 리뷰'),
+        ]
+    },
+    "skill-merge-pr": {
+        "commands": ['/skill-merge-pr {num}   # PR 머지'],
+        "nl_mappings": [
+            ('"PR {번호} 머지해줘"', '`/skill-merge-pr {번호}`', 'PR 머지'),
+        ]
+    },
+    "skill-docs": {
+        "commands": ['/skill-docs           # 참고자료'],
+        "nl_mappings": []
+    },
+    "skill-retro": {
+        "commands": ['/skill-retro          # 완료 Task 회고 + 학습 반영'],
+        "nl_mappings": [
+            ('"회고 해줘"', '`/skill-retro`', '최근 완료 Task 회고'),
+            ('"전체 회고 요약해줘"', '`/skill-retro --summary`', '전체 회고 요약'),
+        ]
+    },
+    "skill-hotfix": {
+        "commands": ['/skill-hotfix         # main 긴급 수정'],
+        "nl_mappings": [
+            ('"긴급 수정해줘: {설명}"', '`/skill-hotfix "{설명}"`', 'main 긴급 수정'),
+        ]
+    },
+    "skill-rollback": {
+        "commands": ['/skill-rollback       # 릴리스 롤백'],
+        "nl_mappings": [
+            ('"{태그} 롤백해줘"', '`/skill-rollback {태그}`', '릴리스/PR 롤백'),
+        ]
+    },
+    "skill-report": {
+        "commands": ['/skill-report         # 프로젝트 메트릭 리포트'],
+        "nl_mappings": [
+            ('"리포트 생성해줘"', '`/skill-report`', '프로젝트 메트릭 리포트'),
+        ]
+    },
+    "skill-onboard": {
+        "commands": ['/skill-onboard        # 기존 프로젝트 온보딩'],
+        "nl_mappings": [
+            ('"이 프로젝트에 적용해줘"', '`/skill-onboard`', '기존 프로젝트 온보딩'),
+        ]
+    },
+    "skill-estimate": {
+        "commands": ['/skill-estimate       # 작업 복잡도 추정'],
+        "nl_mappings": [
+            ('"이 작업 얼마나 걸려?"', '`/skill-estimate {TASK-ID}`', '작업 복잡도 추정'),
+            ('"스프린트 플래닝 해줘"', '`/skill-estimate --sprint`', '스프린트 플래닝'),
+        ]
+    },
+    "skill-create": {
+        "commands": ['/skill-create         # 커스텀 스킬 생성'],
+        "nl_mappings": [
+            ('"커스텀 스킬 만들어줘: {name}"', '`/skill-create {name}`', '커스텀 스킬 생성'),
+        ]
+    },
+    "skill-domain": {
+        "commands": ['/skill-domain         # 도메인 관리'],
+        "nl_mappings": []
+    },
+    "skill-health-check": {
+        "commands": ['/skill-health-check   # 코드베이스 건강 검진'],
+        "nl_mappings": []
+    },
+    "skill-release": {
+        "commands": ['/skill-release        # 릴리스'],
+        "nl_mappings": []
+    },
+    "skill-upgrade": {
+        "commands": ['/skill-upgrade        # 프레임워크 업그레이드'],
+        "nl_mappings": []
+    },
+    "skill-init": {
+        "commands": ['/skill-init           # 프로젝트 초기화'],
+        "nl_mappings": []
+    },
+}
+
+def resolve_skill_profile(project: dict) -> list[str]:
+    """
+    활성 프로파일에 따라 노출할 스킬 이름 목록 반환.
+    
+    해석 순서:
+    1. project.json → conventions.skillProfile 읽기 (기본값: "default")
+    2. "default" 또는 None → "full"로 alias
+    3. "custom" → project.json → conventions.customSkills 배열 사용
+    4. 그 외 → skill-profiles.json에서 프로파일 조회
+    5. skills == "*" → .claude/skills/ 하위 전체 - internal 목록
+    """
+    profile_name = project.get("conventions", {}).get("skillProfile", "default")
+
+    # "default"는 "full"의 alias (하위호환)
+    if profile_name in (None, "default"):
+        profile_name = "full"
+
+    # "custom" → 사용자 지정 목록
+    if profile_name == "custom":
+        return project.get("conventions", {}).get("customSkills", [])
+
+    # skill-profiles.json 로드
+    profiles_config = load_json(".claude/skill-profiles.json")
+    internal = profiles_config.get("internal", [])
+    profile = profiles_config["profiles"].get(profile_name, profiles_config["profiles"]["full"])
+    skills = profile.get("skills", "*")
+
+    # 와일드카드: 전체 스킬 디렉토리 탐색 - internal 제외
+    if skills == "*":
+        all_skills = [d.name for d in Path(".claude/skills").iterdir()
+                      if d.is_dir() and d.name.startswith("skill-")]
+        return sorted([s for s in all_skills if s not in internal])
+
+    return skills
+
+
+def generate_skill_list_section(project: dict) -> str:
+    """
+    프로파일 기반 스킬 목록 (bash 코드블록) 생성.
+    SKILL_REGISTRY에서 활성 스킬만 필터링하여 bash 코드블록을 구성한다.
+    """
+    active_skills = resolve_skill_profile(project)
+    lines = ["```bash"]
+
+    for skill_name, data in SKILL_REGISTRY.items():
+        if skill_name in active_skills:
+            for cmd in data["commands"]:
+                lines.append(cmd)
+
+    lines.append("```")
+    return "\n".join(lines)
+```
+
+### NATURAL_LANGUAGE_COMMANDS (프로파일 기반 자연어 매핑)
+
+```python
+def generate_natural_language_commands(project: dict) -> str:
+    """
+    프로파일 기반 자연어 명령어 테이블 생성.
+    SKILL_REGISTRY에서 활성 스킬의 nl_mappings만 필터링하여 마크다운 테이블을 구성한다.
+    """
+    active_skills = resolve_skill_profile(project)
+
+    lines = [
+        "| 자연어 | 스킬 | 동작 |",
+        "|--------|------|------|",
+    ]
+
+    for skill_name, data in SKILL_REGISTRY.items():
+        if skill_name in active_skills:
+            for nl, cmd, action in data["nl_mappings"]:
+                lines.append(f"| {nl} | {cmd} | {action} |")
+
+    return "\n".join(lines)
+```
+
 ### DOMAIN_ERROR_CODES (레이지 로딩 — 파일 경로 참조)
 
 ```python
@@ -505,6 +731,7 @@ def generate_claude_md(project_json_path: str) -> str:
         "PR_LINE_LIMIT": resolve_pr_line_limit(project, domain),
         "TEST_COVERAGE": resolve_test_coverage(project, domain),
         "WORKFLOW_PROFILE": project.get("conventions", {}).get("workflowProfile", "standard"),
+        "SKILL_PROFILE": project.get("conventions", {}).get("skillProfile", "default"),
     }
 
     # 4. 블록 마커 값 준비
@@ -516,6 +743,8 @@ def generate_claude_md(project_json_path: str) -> str:
         "DOMAIN_ERROR_CODES": generate_error_codes_section(domain_id),  # 레이지 로딩 파일 참조
         "DOMAIN_COMPLIANCE": generate_compliance_section(domain),
         "WORKFLOW_CHAINING_RULES": generate_workflow_chaining_rules(project),  # 프로필별 체이닝 규칙
+        "SKILL_LIST_SECTION": generate_skill_list_section(project),  # 프로파일별 스킬 목록
+        "NATURAL_LANGUAGE_COMMANDS": generate_natural_language_commands(project),  # 프로파일별 자연어 매핑
         "CUSTOM_SECTION": "",  # 초기 생성 시 빈 값, 보존 시 extract_custom_section()으로 대체
     }
 

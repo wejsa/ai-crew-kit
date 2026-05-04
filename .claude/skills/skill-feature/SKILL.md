@@ -4,6 +4,7 @@ description: 기능 기획 - 요구사항 정의 + 백로그 Task 등록. 사용
 disable-model-invocation: true
 allowed-tools: Bash(git:*), Read, Write, Glob, Grep, AskUserQuestion
 argument-hint: "[기능명]"
+complexity-hint: medium
 ---
 
 # skill-feature: 기능 기획

@@ -4,6 +4,7 @@ description: 작업 복잡도 추정 - 5팩터 분석 + 과거 데이터 보정.
 disable-model-invocation: false
 allowed-tools: Bash(git:*), Bash(gh:*), Bash(wc:*), Read, Glob, Grep
 argument-hint: "<TASK-ID|--phase N|--sprint>"
+complexity-hint: medium
 ---
 
 # skill-estimate: 작업 복잡도 추정

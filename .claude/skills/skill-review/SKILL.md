@@ -4,6 +4,7 @@ description: 코드 리뷰 - 지정 경로의 코드를 5관점 통합 리뷰. /
 disable-model-invocation: true
 allowed-tools: Bash(git:*), Read, Glob, Grep, Task
 argument-hint: "[경로]"
+complexity-hint: medium
 ---
 
 # skill-review: 코드 리뷰

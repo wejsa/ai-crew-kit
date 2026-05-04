@@ -4,6 +4,7 @@ description: 완료 Task 회고 - 분석 리포트 생성 + 체크리스트/컨�
 disable-model-invocation: false
 allowed-tools: Bash(git:*), Bash(gh:*), Read, Write, Edit, Glob, Grep, AskUserQuestion
 argument-hint: "[TASK-ID|--summary|--lessons [list|search {keyword}|top]]"
+complexity-hint: medium
 ---
 
 # skill-retro: 완료 Task 회고
@@ -58,9 +59,20 @@ CLAUDE.md는 절대 수정 금지.
 #### 5.3 lessons-learned.json 저장
 - `.claude/state/lessons-learned.json` 없으면 빈 구조 생성
 - Lessons 섹션에서 학습 항목 추출 → 기존 중복 검사 (title+category)
+
+**Secrets 필터 (저장 직전, 신규 항목만 — Phase 7 Step 2)**:
+- `_base/health/secrets-patterns.json` `common.hardcoded` (SEC-S01~S05) 로드
+- 신규 lesson `description` 정규식 매칭. 다중 패턴 매칭 시 모두 표시 후 **lesson 단위 단일 옵션** 선택 (개별 패턴 선택 불가)
+- 매칭 시 AskUserQuestion (default = 거부):
+  - **거부**: lesson 저장 스킵 + execution-log에 `lesson_rejected_secrets` 기록. dedup key = `title+category` — 동일 lesson 재출현 시 자동 재거부 (사용자 피로 방지)
+  - **마스킹 후 저장**: 매칭 부분을 `***MASKED-{SEC-ID}***`로 치환. 예: `api_key="AbCd1234..."` → `api_key=***MASKED-SEC-S01***`
+  - **강행 저장**: 안티패턴 *예시* 등 의도된 경우 그대로 저장 (사용자 책임). 이후 CI `validate-lessons-learned` 통과 — Step 1 D2 개정으로 validator는 secrets 검사를 skill-retro 레이어로 위임
+- **비대화형 환경 판별**: `CI=true` 환경변수 또는 stdout이 TTY 아님 → AskUserQuestion 불가 → 자동 거부 + execution-log에 `lesson_rejected_secrets_noninteractive` 기록. ⚠️ CI 자동 회고 시 학습 손실 가능성 — 사용자 검토 안내 출력
+
 - 중복: appliedCount 증가 + updatedAt 갱신 / 신규: L-{NNN} ID로 추가
-- lesson 스키마: `{id, taskId, category (quality|performance|architecture|process|security), title, description, impact (high|medium|low), tags, appliedCount, createdAt, updatedAt}`
+- lesson 스키마(SSOT: [`schemas/lessons-learned.schema.json`](../../schemas/lessons-learned.schema.json)): `{id, taskId, category (quality|performance|architecture|process|security), title, description, impact (high|medium|low), tags, appliedCount, createdAt, updatedAt}`
 - metadata.version 1 증가 + updatedAt 갱신
+- 저장 후 `.claude/state/lessons-learned.json`은 schema 자동 검증 대상 (CI `validate-lessons-learned`)
 
 ### 6. 실행 로그 기록
 execution-log.json에 `retro_completed` 항목 추가. 체크리스트/컨벤션 수정 시 `checklist_updated` 추가.
@@ -71,14 +83,22 @@ execution-log.json에 `retro_completed` 항목 추가. 체크리스트/컨벤션
 
 ## --lessons 관리 명령어
 
+### Impact 권장 임계값 (SSOT — `schemas/lessons-learned.schema.json` description)
+- `appliedCount >= 5` → **high** 권장
+- `appliedCount >= 3` → **medium** 권장
+- `appliedCount < 3` → **low** 권장
+
+> 임계값은 권장이며 사용자가 수동으로 impact를 override할 수 있다. list/top 출력 시 현재 impact ≠ 권장 시 `(권장: Y)` 표기.
+
 ### list
-전체 학습 항목 카테고리별 테이블 출력 (ID, 제목, 영향도, 적용 횟수, 출처 Task)
+전체 학습 항목 카테고리별 테이블 출력 (ID, 제목, 영향도, 적용 횟수, 출처 Task).
+영향도 컬럼은 `impact (권장: Y)` 형식 — 현재 impact와 권장이 일치 시 `(권장: Y)` 생략.
 
 ### search {keyword}
-title, description, tags 대상 검색 → 매칭 테이블 출력
+title, description, tags 대상 검색 → 매칭 테이블 출력 (list 동일 포맷)
 
 ### top
-appliedCount 상위 5개 출력
+appliedCount 상위 5개 출력 (list 동일 포맷)
 
 파일 미존재 시: "학습 항목이 없습니다. `/skill-retro` 먼저 실행하세요."
 

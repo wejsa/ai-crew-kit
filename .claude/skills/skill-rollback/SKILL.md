@@ -4,6 +4,7 @@ description: 릴리스 롤백 - git revert 기반 안전한 릴리스/PR 롤백 
 disable-model-invocation: false
 allowed-tools: Bash(git:*), Bash(gh:*), Read, Write, Edit, Glob
 argument-hint: "\"{태그 또는 PR번호}\""
+complexity-hint: light
 ---
 
 # skill-rollback: 릴리스 롤백

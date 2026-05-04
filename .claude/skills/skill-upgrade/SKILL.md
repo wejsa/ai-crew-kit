@@ -4,6 +4,7 @@ description: 프레임워크 업그레이드 - ai-crew-kit 최신 버전으로 �
 disable-model-invocation: true
 allowed-tools: Bash(git:*), Bash(cp:*), Bash(rm:*), Bash(tar:*), Bash(diff:*), Bash(mktemp:*), Bash(mkdir:*), Bash(cat:*), Bash(ls:*), Bash(date:*), Bash(wc:*), Bash(df:*), Bash(jq:*), Bash(echo:*), Read, Write, Edit, Glob, Grep, AskUserQuestion
 argument-hint: "[--dry-run] [--source <git-url|local-path>] [--version <tag>] [--rollback <backup-path>]"
+complexity-hint: light
 ---
 
 # skill-upgrade: 프레임워크 업그레이드
@@ -187,8 +188,9 @@ v{version}: {title}
 | `.claude/agents/` | 에이전트 정의 |
 | `.claude/skills/` | 스킬 구현 |
 | `.claude/domains/` | 도메인 설정 (커스텀 파일/항목은 감지→복원) |
+| `.claude/rules/` | 도메인 × 언어 교차 제약 룰 (Phase 4 도입, v2.0.0+) |
 | `.claude/templates/` | CLAUDE.md.tmpl, README.md.tmpl 등 |
-| `.claude/schemas/` | project.schema.json, migrations.json |
+| `.claude/schemas/` | project.schema.json, migrations.json, secrets-patterns.schema.json, lessons-learned.schema.json |
 | `.claude/workflows/` | 워크플로우 YAML |
 | `.claude/docs/` | 프레임워크 문서 |
 
@@ -196,7 +198,13 @@ v{version}: {title}
 
 ## 보존 대상 (프로젝트 파일)
 
-`.claude/state/*`, `.claude/settings.local.json`, `.claude/temp/`, `.claude/plans/`, CLAUDE.md(재생성+커스텀 보존), README.md(재생성+커스텀 보존), VERSION, CHANGELOG.md, docs/, src/ 등
+- `.claude/state/*` — **디렉토리 전체 보존** (사용자 누적 데이터). 주요 파일: `backlog.json`, `completed.json`, `lessons-learned.json` (Phase 7), `health-history.json`, `continuation-plan.md` 등
+- `.claude/settings.local.json` — 로컬 권한 override
+- `.claude/temp/` — 진행 중 plan 파일, 백업 디렉토리
+- `.claude/plans/` — 사용자 plan 산출물
+- `CLAUDE.md` — 재생성 + `CUSTOM_SECTION` 보존
+- `README.md` — 재생성 + `CUSTOM_SECTION` 보존
+- `VERSION`, `CHANGELOG.md`, `docs/`, `src/` 등 프로젝트 자산
 
 ## 안전장치
 

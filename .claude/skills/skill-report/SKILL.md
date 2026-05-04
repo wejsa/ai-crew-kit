@@ -4,6 +4,7 @@ description: 프로젝트 메트릭 리포트 - throughput, quality, code, healt
 disable-model-invocation: false
 allowed-tools: Bash(git:*), Bash(gh:*), Bash(python3:*), Read, Write, Glob, Grep
 argument-hint: "[--full]"
+complexity-hint: medium
 ---
 
 # skill-report: 프로젝트 메트릭 리포트

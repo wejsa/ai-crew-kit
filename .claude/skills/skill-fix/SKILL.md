@@ -4,6 +4,7 @@ description: PR 수정 - CRITICAL 이슈 자동 수정. skill-review-pr --auto-f
 disable-model-invocation: false
 allowed-tools: Bash(git:*), Bash(gh:*), Bash(./gradlew:*), Bash(npm:*), Read, Write, Edit, Glob, Grep
 argument-hint: "{PR번호}"
+complexity-hint: medium
 ---
 
 # skill-fix: PR 수정
