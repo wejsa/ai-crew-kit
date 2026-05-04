@@ -1,5 +1,15 @@
 # Phase 8: Migration & Release
 
+> **⚠ SSOT 이관 (2026-05-04)**: 본 doc은 Phase 8 진입 시점 원본 보존용.
+> 현재 결정 SSOT는 [phase-8-plan.md](./phase-8-plan.md). 본 doc과 불일치 시
+> plan.md 우선. 특히 다음 항목은 stale:
+> - Task 8-3의 `skill-compliance-report` (Phase 6 옵션 D로 무효화 — ADJ-01)
+> - skillProfile 기본값 (`"full"` 표기 → 실제 SSOT는 `migrations.json`의 `"default"`)
+> - 통합 회귀 매트릭스 / E2E 자동화는 v2.1+ 후속 부채 (D14/D15)
+> - VERSION 전환 위치는 plan.md Step 6에서 단일 commit (ADJ-04)
+>
+> Phase 6/7 옵션 A/D 학습 적용으로 본 doc의 일부 작업 항목이 plan.md에서 재구성됨.
+
 > **우선순위**: P2 | **의존성**: Phase 0~7 전체 | **난이도**: L
 
 ## 목표
