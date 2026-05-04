@@ -28,15 +28,22 @@ _spec = importlib.util.spec_from_file_location("validate_v2_migration", SCRIPT_P
 _module = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_module)
 apply_migrations = _module.apply_migrations
+apply_add_field = _module.apply_add_field
 validate_against_schema = _module.validate_against_schema
+schema_top_level_keys = _module.schema_top_level_keys
 TARGET_VERSION = _module.TARGET_VERSION
 
 
-def test_migration_preserves_v1_fields(v1_fixture: dict, migrations: dict) -> None:
+def _migrate(project: dict, migrations: dict, schema: dict) -> list[str]:
+    """schema-aware cumulative migration apply. project를 in-place 변경하고 추가된 path 반환."""
+    return apply_migrations(project, migrations, TARGET_VERSION, schema_top_level_keys(schema))
+
+
+def test_migration_preserves_v1_fields(v1_fixture: dict, migrations: dict, schema: dict) -> None:
     """v2 마이그레이션이 v1 기존 필드를 변경하지 않음을 보증."""
     original = copy.deepcopy(v1_fixture)
     migrated = copy.deepcopy(v1_fixture)
-    apply_migrations(migrated, migrations, TARGET_VERSION)
+    _migrate(migrated, migrations, schema)
 
     for key in original:
         assert key in migrated, f"v1 필드 {key} 가 마이그레이션 후 사라짐"
@@ -49,10 +56,10 @@ def test_migration_preserves_v1_fields(v1_fixture: dict, migrations: dict) -> No
                 )
 
 
-def test_migration_adds_v2_fields(v1_fixture: dict, migrations: dict) -> None:
+def test_migration_adds_v2_fields(v1_fixture: dict, migrations: dict, schema: dict) -> None:
     """v2 마이그레이션이 4 add_field를 정확히 추가함을 보증."""
     migrated = copy.deepcopy(v1_fixture)
-    added = apply_migrations(migrated, migrations, TARGET_VERSION)
+    added = _migrate(migrated, migrations, schema)
 
     expected_paths = {"hooks", "conventions.skillProfile", "conventions.overridePriority", "tokenHints"}
     assert set(added) == expected_paths, f"add_field 불일치: 기대 {expected_paths}, 실제 {set(added)}"
@@ -66,45 +73,65 @@ def test_migration_adds_v2_fields(v1_fixture: dict, migrations: dict) -> None:
 def test_migrated_passes_schema(v1_fixture: dict, schema: dict, migrations: dict) -> None:
     """마이그레이션 결과가 project.schema.json 통과."""
     migrated = copy.deepcopy(v1_fixture)
-    apply_migrations(migrated, migrations, TARGET_VERSION)
+    _migrate(migrated, migrations, schema)
     errors = validate_against_schema(migrated, schema)
     assert not errors, "schema 위반:\n" + "\n".join(errors)
 
 
-def test_rollback_roundtrip_restores_v1_exactly(v1_fixture: dict, migrations: dict) -> None:
-    """R6 핵심 — 백업(deep copy) → 마이그레이션 → 백업 복원 = 원본 100%.
+def test_rollback_roundtrip_restores_v1_exactly(v1_fixture: dict, migrations: dict, schema: dict) -> None:
+    """R6 핵심 — 백업 → 마이그레이션된 working → 백업 복원 = 원본 100%.
 
-    skill-upgrade Step 9 (backup) → Step 12 (migration) → `--rollback` (Step 1
-    "롤백 모드" 백업 추출) 라운드트립의 *논리적 보증*이다. 실제 tar 백업
-    파일 무결성은 skill-upgrade SKILL.md Step 9가 `tar tzf`로 별도 검증.
+    skill-upgrade Step 9 (backup tar.gz) → Step 12 (migration applied to working
+    project.json) → `--rollback` (working 폐기 + tar 추출 복원) 라운드트립의 *논리적
+    보증*. 실제 tar 무결성은 skill-upgrade SKILL.md Step 9의 `tar tzf` 검증과 본 PR
+    migration-guide.md §4 사전 체크리스트가 책임.
+
+    핵심: working에 마이그레이션 *적용 후*, working을 백업으로 *덮어써서* 라운드트립
+    검증. (이전 버전은 working을 사용하지 않아 vacuous truth였음 — 외부 리뷰 #1 fix)
     """
     backup = copy.deepcopy(v1_fixture)              # Step 9 백업 시점
     working = copy.deepcopy(v1_fixture)
-    apply_migrations(working, migrations, TARGET_VERSION)  # Step 12 마이그레이션
+    _migrate(working, migrations, schema)           # Step 12 마이그레이션
     assert working != backup, "마이그레이션이 no-op (v1 fixture가 이미 v2 형식?)"
+    assert "hooks" in working and "hooks" not in backup, "마이그레이션이 hooks 필드를 추가하지 않음"
 
-    rolled_back = copy.deepcopy(backup)             # --rollback: 백업 복원
-    assert rolled_back == v1_fixture, "롤백 복원본이 원본과 불일치"
+    # --rollback 시뮬레이션: working을 backup 내용으로 완전 교체
+    working.clear()
+    working.update(copy.deepcopy(backup))
+
+    assert working == v1_fixture, "라운드트립 후 working이 원본 v1과 불일치"
+    assert "hooks" not in working, "롤백이 v2 필드를 제거하지 못함"
 
 
-def test_rollback_idempotent(v1_fixture: dict, migrations: dict) -> None:
-    """롤백 후 동일 명령 재실행 시 멱등 (재롤백 안전)."""
+def test_rollback_idempotent_after_migration(v1_fixture: dict, migrations: dict, schema: dict) -> None:
+    """진짜 멱등성 — 마이그레이션 후 1차 롤백 → 재롤백 결과가 동일.
+
+    이전 버전은 같은 backup의 두 deepcopy 비교라 deepcopy 결정론만 증명했음 (vacuous).
+    본 버전은 마이그레이션 적용 → 1차 롤백 → 다시 한 번 롤백 → v1 fixture와 일치 검증.
+    """
     backup = copy.deepcopy(v1_fixture)
     working = copy.deepcopy(v1_fixture)
-    apply_migrations(working, migrations, TARGET_VERSION)
+    _migrate(working, migrations, schema)
+    assert working != v1_fixture
 
-    rolled_back_1 = copy.deepcopy(backup)
-    rolled_back_2 = copy.deepcopy(backup)
-    assert rolled_back_1 == rolled_back_2, "재롤백 결과 불일치"
+    # 1차 롤백
+    working.clear()
+    working.update(copy.deepcopy(backup))
+    assert working == v1_fixture, "1차 롤백 후 v1과 불일치"
+
+    # 2차 롤백 (이미 롤백된 상태에서 재실행 — 멱등 보장)
+    working.clear()
+    working.update(copy.deepcopy(backup))
+    assert working == v1_fixture, "재롤백 후 v1과 불일치 (멱등 위반)"
 
 
-def test_double_migration_idempotent(v1_fixture: dict, migrations: dict) -> None:
+def test_double_migration_idempotent(v1_fixture: dict, migrations: dict, schema: dict) -> None:
     """v2 마이그레이션 2회 적용 시 멱등 — add_field가 기존 값을 덮어쓰지 않음."""
     once = copy.deepcopy(v1_fixture)
-    apply_migrations(once, migrations, TARGET_VERSION)
+    _migrate(once, migrations, schema)
 
     twice = copy.deepcopy(once)
-    added_second_pass = apply_migrations(twice, migrations, TARGET_VERSION)
+    added_second_pass = _migrate(twice, migrations, schema)
     assert added_second_pass == [], f"2회차 마이그레이션이 add_field 재적용: {added_second_pass}"
     assert once == twice, "2회차 마이그레이션이 결과를 변경"
 
@@ -118,7 +145,7 @@ def test_double_migration_idempotent(v1_fixture: dict, migrations: dict) -> None
     ],
     ids=["hooks-set", "skillProfile-developer", "tokenHints-light"],
 )
-def test_migration_does_not_overwrite_user_values(v1_fixture: dict, migrations: dict, user_override: dict) -> None:
+def test_migration_does_not_overwrite_user_values(v1_fixture: dict, migrations: dict, schema: dict, user_override: dict) -> None:
     """사용자가 이미 v2 필드를 설정한 경우 마이그레이션이 덮어쓰지 않음."""
     pre_migrated = copy.deepcopy(v1_fixture)
     for key, value in user_override.items():
@@ -128,7 +155,7 @@ def test_migration_does_not_overwrite_user_values(v1_fixture: dict, migrations: 
             pre_migrated[key] = value
 
     snapshot = copy.deepcopy(pre_migrated)
-    apply_migrations(pre_migrated, migrations, TARGET_VERSION)
+    _migrate(pre_migrated, migrations, schema)
 
     for key, value in user_override.items():
         if key == "conventions":
@@ -138,3 +165,33 @@ def test_migration_does_not_overwrite_user_values(v1_fixture: dict, migrations: 
                 )
         else:
             assert pre_migrated[key] == snapshot[key], f"사용자 {key} 값 덮어씀"
+
+
+def test_apply_add_field_fails_fast_on_non_dict_parent() -> None:
+    """apply_add_field가 부모 경로가 dict 아닐 때 silent overwrite 대신 ValueError로 즉시 중단.
+
+    외부 리뷰 #3 — migration tool 안전성: 손상된 입력에 대해 명시적 오류 vs 조용한 데이터
+    손실. v1.x 시기 사용자 project.json 직접 편집 → 타입 손상 가능.
+    """
+    broken = {"conventions": "not-a-dict"}
+    change = {"path": "conventions.skillProfile", "default": "default"}
+
+    with pytest.raises(ValueError, match="dict가 아님"):
+        apply_add_field(broken, change)
+
+    # 입력 보존 — silent overwrite 안 됨
+    assert broken == {"conventions": "not-a-dict"}, "ValueError 발생 후에도 입력이 보존되지 않음"
+
+
+def test_cumulative_apply_skips_non_project_paths(schema: dict, migrations: dict) -> None:
+    """cumulative 적용 시 project schema에 없는 top-level path(예: backlog.*)는 스킵.
+
+    외부 리뷰 #2 — migrations.json v1.39.0의 `backlog.step.prLineLimit`은 project.json
+    영역이 아님(`additionalProperties: false`와 충돌). schema-aware 필터로 안전 우회.
+    """
+    minimal = {"name": "x", "domain": "fintech", "version": "1.0.0"}
+    apply_migrations(minimal, migrations, TARGET_VERSION, schema_top_level_keys(schema))
+
+    assert "backlog" not in minimal, "backlog.* 필드가 project.json에 누락 적용됨 (schema 위반 위험)"
+    errors = validate_against_schema(minimal, schema)
+    assert not errors, f"cumulative 적용 결과 schema 위반: {errors}"
