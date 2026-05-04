@@ -92,42 +92,49 @@ Phase 0 (Foundation)
 | 5 — AgentShield-lite | ✅ | alpha.4 packed (`6cf43c9`) | secrets-patterns + SEC-05/06/07 + 도메인 패턴 + migration |
 | **트랙 A — 회귀 자동화** | ✅ | `8b1b628` | secrets-patterns schema + fixture pytest 89 + 14 메타 + cross-ref + `_category` 가중치 + SSOT drift 메타 + 5 jobs CI ([phase-5-tests-plan.md](./phase-5-tests-plan.md)) |
 | ~~6 — Compliance Report~~ | ⏸ **v2.1+ 보류** | — | 2026-05-01 옵션 D 채택 — ACK 미니멀리즘 위배 + 실수요 미검증 + 위반 탐지 Phase 4/5 중복. 상세는 [phase-6-compliance.md](./phase-6-compliance.md) §보류 결정 |
-| **7 — Context & Learning** | ⏳ **진행 중** (옵션 A — Lean Closure) | — | Phase 1+4 의존 (충족). Phase 6 보류분 재배치. 상세 [phase-7-plan.md](./phase-7-plan.md) |
+| **7 — Context & Learning** | ✅ **완료** (옵션 A — Lean Closure) | `9683457` (PR #44) | v1.23 lessons-learned 메커니즘 회귀 보호 갭 메우기. 상세 [phase-7-plan.md](./phase-7-plan.md) |
 | ↳ Step 1 — schema + validator + fixtures + plan | ✅ | `f4cc1e1` (PR #43) | lessons-learned.schema.json + validate-lessons-learned.py + tests/lessons/fixtures 3건 + secrets-tests.yml 5번째 job (4단계 검증). PR 리뷰 CRITICAL/MAJOR/MINOR 5건 모두 반영 |
-| ↳ Step 2 — skill-retro 통합 + secrets 필터 + impact 정량 + pytest | ⏳ **다음** | — | skill-retro §5.3 secrets 필터 통합(Step 1에서 이관) + impact 임계값 정량 출력 + tests/lessons/ pytest fixture (~12건) + context-migration.md |
-| 8 — Migration & Release (GA) | ⏳ | — | **GA 검증 게이트** — 통합 회귀 매트릭스 + skill-upgrade v1→v2 시뮬레이션 + E2E |
+| ↳ Step 2 — skill-retro 통합 + secrets 필터 + impact 정량 + pytest | ✅ | `9683457` (PR #44) | skill-retro §5.3 secrets 필터 + impact 정량 + tests/lessons/ pytest 33 cases(5 files) + context-migration.md. PR 리뷰 권장 패키지(CRITICAL/MAJOR/MINOR + 심화 1/4/5-(a)) 모두 반영. 후속 부채 D10~D13 plan.md 기록 |
+| **8 — Migration & Release (GA)** | ⏳ **다음** | — | **GA 게이트 = 옵션 A**(phase-8 doc 원본 Task 8-1~8-7) — skill-upgrade v2 변환 + migration-guide + examples 검증 + CHANGELOG + VERSION + README + 릴리스. ADJ-01~06 [PR #44 코멘트](https://github.com/wejsa/ai-crew-kit/pull/44#issuecomment-4363971097) 반영 |
 
-**현재 v2-develop HEAD**: `f4cc1e1` (PR #43 Phase 7 Step 1)
-**현재 VERSION**: `2.0.0-alpha.4` (인터널)
-**현재 활성 CI**: `hook-tests` / `schema-validation` / `secrets-tests` (5 jobs — `validate-lessons-learned` 추가) — 총 7 CI checks
+**현재 v2-develop HEAD**: `9683457` (PR #44 Phase 7 Step 2)
+**현재 VERSION**: `2.0.0-alpha.4` (인터널 — Phase 8 마지막 Step에서 `2.0.0`으로 전환)
+**현재 활성 CI**: `hook-tests` / `schema-validation` / `secrets-tests` (6 jobs — `lessons-fixture-tests` 추가) — 총 8 CI checks
 
 ### 🔄 다른 세션에서 재개 시 프롬프트
 
-새 세션 진입 시 다음 프롬프트로 시작 (Phase 7 Step 2 진입):
+새 세션 진입 시 다음 프롬프트로 시작 (Phase 8 GA 진입):
 
 ```
-docs/v2/README.md §진행 상황과 docs/v2/phase-7-plan.md 읽고
-Phase 7 Step 2 착수해줘.
+docs/v2/README.md §진행 상황 + docs/v2/phase-8-release.md 읽고
+Phase 8 (Migration & Release / GA) 착수해줘.
 
 전제 조건:
-- v2.0 단일 GA 전략(2026-04-30 합의)이라 alpha 태그 외부 릴리스 없음
-- Phase 7 Step 1 완료 (PR #43 머지, f4cc1e1) — schema + validator
-  + fixtures 3건 + 4단계 CI workflow + plan.md
-- Phase 6은 v2.1+ 보류 (2026-05-01 옵션 D 채택)
-- 인터널 VERSION은 alpha.4지만 태그 미생성, 인터널 마일스톤만
+- v2.0 단일 GA 전략(2026-04-30) — alpha 태그 외부 릴리스 없음
+- Phase 7 완료 (Step 1 f4cc1e1 / Step 2 9683457). Phase 6은 v2.1+ 보류
+- 인터널 VERSION 2.0.0-alpha.4 → Phase 8 마지막 Step에서 2.0.0 전환
+- main / develop = v1.45.1 (legacy v1.x 라인)
 
-Step 2 범위 (Step 1에서 이관 + 잔여 책임):
-1. skill-retro §5.3 secrets 필터 통합 — SEC-S01~S05 + excludeContexts
-   정확 처리(comment/type_declaration) + AskUserQuestion override
-2. skill-retro --lessons list/top 출력에 impact 임계값 정량 표시
-   (`appliedCount X (권장: Y)`)
-3. tests/lessons/ pytest fixture (~12건):
-   - test_schema.py (정상 + negative 5건)
-   - test_secrets_filter.py (SEC-S01~S05 + excludeContexts)
-   - test_threshold.py (appliedCount 경계 2/3/4/5/6)
-4. docs/v2/context-migration.md (Phase 7 Lean Closure 사용자 가이드)
+Phase 8 진입 합의 (PR #44 코멘트 SSOT —
+https://github.com/wejsa/ai-crew-kit/pull/44#issuecomment-4363971097):
+- 옵션 A 채택 — phase-8 doc 원본 Task 8-1~8-7 그대로
+  (통합 회귀 매트릭스 / E2E는 v2.1+ 후속)
+- branch flow: v2-develop → develop → main + develop은 이후
+  v1.x 핫픽스 라인으로 동결
+- VERSION 2.0.0 전환은 마지막 Step 단일 commit (메모리
+  §릴리스 프로세스 일관)
 
-Step 2 완료 후 → Phase 8 (Migration & Release / GA) 진입.
+ADJ-01~06 plan.md 작성 시 흡수:
+- ADJ-01: Task 8-3 skill-compliance-report 항목 무효화 (Phase 6 보류)
+- ADJ-02: 통합 회귀 매트릭스/E2E v2.1+ 후속 부채 (D14, D15)
+- ADJ-03: branch flow 단계별 commit/PR sequence 명세
+- ADJ-04: VERSION 전환 commit Step 위치
+- ADJ-05: D-MIN/D-NEED 사전 점검 명시 (Phase 6/7 패턴)
+- ADJ-06: examples saas/healthcare 마이그레이션 대상 점검
+
+Step 0 — TFT 분석 + D-MIN/D-NEED 점검 + plan.md 작성
+Step 1~7 — Task 8-1 ~ 8-7 (skill-upgrade / migration-guide /
+  examples / CHANGELOG / VERSION / README / 릴리스)
 ```
 
 ### v2.0 GA 진입 전 D0급 공통 결정 (Phase 6 보류 학습 반영)
