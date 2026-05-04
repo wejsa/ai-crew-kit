@@ -26,7 +26,7 @@
 ### 1.2 Breaking Changes
 
 - **`project.json` 스키마 확장** — 5개 신규 top-level 필드(`hooks`, `tokenHints`, `customDomain`, `healthCheck`, `orchestrator`) + `conventions` 2개 신규 키. 자동 마이그레이션 4건은 `migrations.json` SSOT 적용. 누락 3건(`customDomain`/`healthCheck`/`orchestrator`)은 schema default 통과 (Step 3 OQ-02에서 확정 예정).
-- **`CLAUDE.md.tmpl` 구조 변경** — Phase 4 4층 Override 도입으로 마커 갱신. **`CUSTOM_SECTION_START`/`CUSTOM_SECTION_END` 마커 사이 콘텐츠는 자동 보존**.
+- **`CLAUDE.md.tmpl` 구조 변경** — Phase 4 4층 Override 도입으로 템플릿 본문 갱신. `CUSTOM_SECTION_START`/`CUSTOM_SECTION_END` 마커는 v1.x와 동일하며, **마커 사이 콘텐츠는 자동 보존**된다.
 - **`skill-health-check` 가중치 재배분** — Phase 5에서 hook-safety 부채 해소 + 도메인 `_category.json` 명시. 사용자 점수 영향 ≤1점 ([security-migration.md §5](./security-migration.md) 참조).
 
 ### 1.3 사용자 점수 영향
@@ -59,6 +59,17 @@
 - `✅ 검증 통과` (`skill-validate` 자동 호출)
 - `백업 위치: .claude/temp/upgrade-backup-{ts}/` + `롤백 명령: /skill-upgrade --rollback`
 
+### `--dry-run` 출력 체크포인트
+
+`/skill-upgrade --dry-run` 결과에서 다음 4항을 확인한다 (사용자 결정 근거):
+
+- **버전 전환**: `v{current} → v{new}` 라인이 의도한 대상 버전인가
+- **보존 커스터마이징 요약**: 도메인 커스텀 파일·`domain.json` 커스텀 항목·settings.json 권한 모두 감지됐는가
+- **해시 불일치 파일 목록**: 사용자가 직접 수정한 프레임워크 파일이 빠짐없이 표시되는가 (덮어쓰기 / 유지 / 수동 머지 결정 필요)
+- **스키마 마이그레이션 항목**: `migrations.json` v2.0.0의 4 add_field가 적용 대상으로 표시되는가
+
+부분 실패(특정 파일 충돌·해시 불일치 다수) 발견 시 **dry-run 단계에서 중단**하고 §5 FAQ Q1·Q2 절차로 사전 해결한 후 본 업그레이드를 실행한다.
+
 문제 발생 시 §4 롤백 매뉴얼 절차 참조.
 
 ---
@@ -77,7 +88,7 @@
 
 ### 도메인 examples 안내
 
-v2.0.0 GA 시점 `examples/` 디렉토리는 **`fintech-gateway` / `ecommerce-shop`** 두 도메인만 제공한다. **`saas` / `healthcare` 도메인은 `tests/upgrade/fixtures/` 단위 fixture 검증만 완료** (Phase 8 Step 3 진행). 실제 example project는 v2.1+ 후속 범위.
+v2.0.0 GA 시점 `examples/` 디렉토리는 **`fintech-gateway` / `ecommerce-shop`** 두 도메인만 제공한다. **`saas` / `healthcare` 도메인은 `tests/upgrade/fixtures/` 단위 fixture 검증만 완료** (Phase 8 Step 3에서 진행 예정). 실제 example project는 v2.1+ 후속 범위.
 
 ---
 
@@ -94,19 +105,23 @@ v2.0.0 GA 시점 `examples/` 디렉토리는 **`fintech-gateway` / `ecommerce-sh
 
 ### 사전 검증 체크리스트
 
-- [ ] 백업 디렉토리 존재 — `ls .claude/temp/upgrade-backup-*/`
-- [ ] 백업 tar 무결성 — `tar tzf .claude/temp/upgrade-backup-{ts}/backup.tar.gz | head` (오류 없이 목록 출력)
+- [ ] 백업 디렉토리 존재 — `ls .claude/temp/upgrade-backup-*/` (`{ts}`는 `YYYYMMDD-HHmmss` 형식 자리)
+- [ ] 백업 tar 무결성 — `tar tzf .claude/temp/upgrade-backup-*/backup.tar.gz >/dev/null && echo OK` (종료 코드 0 + `OK` 출력 확인. `tar tzf`는 *목록 출력*이라 별도 종료 코드 검사 필요)
+- [ ] 백업 무결성 해시 별도 보관 — `sha256sum .claude/temp/upgrade-backup-*/backup.tar.gz > /tmp/backup-sha.txt` (사후 변조 검증용)
 - [ ] 중요 상태 파일 별도 보관 권장 — `cp .claude/state/backlog.json /tmp/backlog-pre-rollback.json`
+- [ ] **외부 공유 전 시크릿 마스킹** — backlog/state/CLAUDE.md 첨부 시 토큰·이메일·외부 시스템 ID 검토 후 redact (Q1과 동일 정책)
 
 ### 사후 검증 체크리스트
 
-- [ ] 복원된 `project.json kitVersion`이 백업 시점 버전과 일치 (`grep kitVersion .claude/state/project.json`)
-- [ ] `CLAUDE.md`의 `CUSTOM_SECTION_START` 사이 내용이 사전 보관본과 동일
-- [ ] `backlog.json metadata.version` 회귀 — Task 상태(in_progress/completed) 변경 없음
+- [ ] 복원된 `project.json kitVersion`이 백업 시점 버전과 일치 — `grep kitVersion .claude/state/project.json`
+- [ ] `CLAUDE.md`의 `CUSTOM_SECTION_START` 사이 내용이 사전 보관본과 동일 — `diff <(sed -n '/CUSTOM_SECTION_START/,/CUSTOM_SECTION_END/p' /tmp/CLAUDE.md.bak) <(sed -n '/CUSTOM_SECTION_START/,/CUSTOM_SECTION_END/p' CLAUDE.md)`
+- [ ] `backlog.json` Task 상태 회귀 — `diff <(jq .tasks /tmp/backlog-pre-rollback.json) <(jq .tasks .claude/state/backlog.json)` (출력 없으면 동일)
 
 ### 백업 보존 정책
 
 - 백업은 `.claude/temp/upgrade-backup-*/` 누적 보관 (자동 정리 없음)
+- 멀티유저 환경: `chmod 700 .claude/temp/` 권장 (다른 OS 사용자에게 평문 백업 노출 방지)
+- `.gitignore`에 `.claude/temp/` 포함 여부 확인 — v1.6.0+는 자동 포함되나 사용자 커스텀 시 누락 가능 (커밋 사고 방지)
 - 디스크 부담 시 사용자가 수동 삭제 — 마이그레이션 7일 이상 안정 동작 확인 후 권장
 - `--rollback` 실행 직후 백업은 보존 (재롤백 시도 가능)
 
@@ -116,31 +131,42 @@ v2.0.0 GA 시점 `examples/` 디렉토리는 **`fintech-gateway` / `ecommerce-sh
 
 ### Q1. 업그레이드 후 `project.json` 검증 실패가 발생합니다.
 
-`migrations.json` v2.0.0의 4 add_field는 자동 적용되지만, **누락된 v2 신규 필드**(`customDomain` / `healthCheck` / `orchestrator`)는 schema default로 통과하지 않을 수 있다 (Phase 8 Step 3 OQ-02에서 보강 검토). 임시 수동 보강:
+`migrations.json` v2.0.0의 4 add_field는 자동 적용되지만, **누락된 v2 신규 필드**(`customDomain` / `healthCheck` / `orchestrator`)는 schema default로 통과하지 않을 수 있다 (Phase 8 Step 3 OQ-02에서 보강 검토).
+
+> ⚠️ **임시 우회 주의** — 아래 보강은 OQ-02 확정 전까지의 *우회*다. 다음 패치 릴리스에서 default 값이 확정되면 본 보강은 자동 마이그레이션 대상으로 흡수된다. 빈 객체 보강 시 향후 schema가 required 키를 추가할 경우 silent behavior change 가능. **commit 메시지에 `migration-guide Q1 workaround` 표기 권장** (추후 추적용).
 
 ```jsonc
+// OQ-02 확정 전 임시 보강
 { "customDomain": null, "healthCheck": {}, "orchestrator": {} }
 ```
 
-문제 지속 시 `--rollback` 후 [GitHub Issues](https://github.com/wejsa/ai-crew-kit/issues)에 `project.json` 첨부 (시크릿 마스킹 후).
+보강 후 `/skill-validate`(또는 `/skill-health-check`)로 통과 재확인. 통과하지 않으면 `--rollback` 후 [GitHub Issues](https://github.com/wejsa/ai-crew-kit/issues)에 `project.json` 첨부 (시크릿 마스킹 후).
 
 ### Q2. `CLAUDE.md`의 커스텀 규칙이 사라졌습니다.
 
 `CUSTOM_SECTION_START`/`CUSTOM_SECTION_END` **마커가 누락된 v1.x 초기 프로젝트**일 가능성이 높다. skill-upgrade는 마커 부재 시 (1) 전체 파일 백업 + (2) 템플릿 diff로 커스텀 추출을 시도하지만 실패할 수 있다.
 
-복구 절차: §4 사전 체크리스트로 백업 무결성 확인 → `tar xzf .claude/temp/upgrade-backup-{ts}/backup.tar.gz CLAUDE.md` → 마커 사이로 콘텐츠 이동 → 재실행. 재발 방지를 위해 마커를 명시 배치한다.
+복구 절차: §4 사전 체크리스트로 백업 무결성 확인 → `tar xzf .claude/temp/upgrade-backup-*/backup.tar.gz CLAUDE.md` → 마커 사이로 콘텐츠 이동 → 재실행. **추출된 CLAUDE.md를 외부 채널로 공유하기 전 토큰·이메일·외부 시스템 ID 마스킹 필수** (Q1과 동일 정책). 재발 방지를 위해 마커를 명시 배치한다.
 
 ### Q3. Phase 1 훅이 작동하지 않습니다.
 
-가장 흔한 원인은 **스크립트 실행 권한 누락**이다 (PR #34 사례 — alpha.2~alpha.3에서 5개 훅이 git index 모드 100644로 박혔다, [security-migration.md §1](./security-migration.md)). 점검:
+가장 흔한 원인은 **스크립트 실행 권한 누락**이다 (PR #34 사례 — alpha.2~alpha.3에서 5개 훅이 git index 모드 100644로 박혔다, [security-migration.md §1](./security-migration.md)). 점검·권한 부여:
 
 ```bash
-ls -l .claude/hooks/*.sh                      # 모두 -rwxr-xr-x 인지 확인
-chmod +x .claude/hooks/*.sh                   # 누락 시 일괄 부여
-grep -A2 hooks .claude/settings.json          # settings.json hooks 등록 확인
+# 1) 미실행 훅 식별 (디렉토리 내 untrusted/임시 .sh 부재 사전 확인)
+ls -l .claude/hooks/                                                          # 의도하지 않은 .sh 부재 확인
+find .claude/hooks -maxdepth 1 -name "*.sh" ! -perm -u+x                      # 실행 권한 없는 훅 목록
+
+# 2) v2.0.0 SSOT 훅만 명시 부여 (PR #34 회귀 케이스 해소)
+chmod +x .claude/hooks/{pre-commit,post-merge,pre-push,post-checkout,post-rewrite}.sh
+
+# 3) settings.json 등록 확인
+grep -A2 hooks .claude/settings.json
 ```
 
-훅 비활성화 자동 플래그(`.claude/state/hook-disabled.flag`) 존재 시 무한 루프 방어 작동 중일 수 있다 — 플래그 파일 점검 후 삭제.
+> 와일드카드(`chmod +x .claude/hooks/*.sh`)는 디렉토리 내 *모든* `.sh`에 권한을 부여한다. 검토 중인 third-party 훅·임시 백업본까지 실행 가능 상태가 될 수 있어 supply-chain 관점에서 **위 명시 부여 패턴 권장**.
+
+훅 비활성화 자동 플래그가 존재할 수 있다 — 위치 무관 탐색: `find .claude -name 'hook-disabled*'`. 플래그가 발견되면 (1) `.claude/state/hook-error.log`로 무한 루프 원인 확인 → (2) 원인(예: post-commit이 새 commit 트리거) 해결 → (3) `rm <플래그-경로>`. **원인 미해결 상태 삭제 금지** — 재발 시 시스템 부하 / lock contention 위험.
 
 ### Q4. `skillProfile` 변경 후 `CLAUDE.md`가 갱신되지 않습니다.
 
@@ -148,14 +174,14 @@ grep -A2 hooks .claude/settings.json          # settings.json hooks 등록 확�
 
 ```bash
 /skill-upgrade --dry-run                      # 차이 확인
-/skill-upgrade --version v2.0.0               # 동일 버전 재실행 시에도 13단계로 재생성
+/skill-upgrade --version v2.0.0               # 동일 버전 재실행 시에도 CLAUDE.md/README.md 재생성 단계 진입
 ```
 
-대안: `/skill-init` 재실행 (CUSTOM_SECTION 보존 동일).
+skill-upgrade가 동일 버전 재실행 시에도 결정적 치환 단계를 거치므로 `skillProfile` 반영이 강제된다 (skill-upgrade SKILL.md `Step 13 — CLAUDE.md/README.md 재생성` 참조). 대안: `/skill-init` 재실행 (CUSTOM_SECTION 보존 동일).
 
 ### Q5. v1.x 핫픽스(서브에이전트 worktree 격리 등)와 v2가 충돌합니다.
 
-v2.0.0 GA 후 `develop` 브랜치는 **v1.x 핫픽스 라인으로 동결**된다 (phase-8-plan.md D2). v2 신규 작업은 `v2-develop`에서 분기. 양방향 머지(main↔develop 핫픽스)는 유지된다. 충돌 흡수 방식은 phase-8-plan.md OQ-06 결정 후 Step 6 진입 시점에 Notion 릴리스 노트(메모리 §외부 참조)에 게시된다.
+v2.0.0 GA 후 `develop` 브랜치는 **v1.x 핫픽스 라인으로 동결**된다 (phase-8-plan.md D2). v2 신규 작업은 `v2-develop`에서 분기. 양방향 머지(main↔develop 핫픽스)는 유지된다. 충돌 흡수 방식은 [phase-8-plan.md OQ-06](./phase-8-plan.md#open-questions-step-26-진행-시-답해야-함)의 결정에 따라 **Step 6 머지 PR 본문**(공개 1차 채널)에 명시되며, 내부 Notion 릴리스 노트(메모리 §외부 참조)는 보조 채널로 동기화된다.
 
 ---
 
