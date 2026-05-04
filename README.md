@@ -112,6 +112,25 @@ claude
 
 ---
 
+## ✨ v2.0 신규 기능
+
+| 기능 | Phase | 사용자 가치 |
+|------|:-----:|------|
+| **Claude Code 네이티브 훅** (SessionStart / PostToolUse / Stop) | Phase 1 | 세션 진입 자동 git sync, lockedAt heartbeat 자동 갱신, 응답 완료 시 continuation-plan 자동 작성 — 미사용 시 v1.x 동작 100% 유지 |
+| **스킬 프로파일 + 토큰 힌트** | Phase 2/3 | `default` / `developer` / `docs-only` / `custom` 4종 프로파일로 CLAUDE.md 노출 스킬 제어. complexity-hint(heavy/medium/light) 토큰 예산 가이드 |
+| **4층 Layered Override + 도메인×언어 rules** | Phase 4 | `.claude/rules/{domain}/{language}/*.md`로 도메인 비즈니스 제약(MUST/MUST NOT)을 PR 리뷰에 자동 적용. 메커니즘만 출시(콘텐츠 0개) — 사용자 실수요 발생 시 추가 |
+| **AgentShield-lite 시크릿 스캐너** (SEC-05/06/07) | Phase 5 | 하드코딩 시크릿(API 키/AWS/GitHub/Slack) + `.env` 노출 게이트 + 도메인별 민감 데이터(PAN Luhn / SSN / 한국 주민·사업자) CRITICAL 검출 |
+| **lessons-learned 회귀 보호** | Phase 7 | `skill-retro` 학습 데이터에 schema 검증 + secrets 필터(토큰/이메일 자동 redact) + impact 정량(상/중/하) + 33 pytest cases 회귀 보호 |
+| **v1→v2 자동 마이그레이션 + R6 1차 방어선** | Phase 8 | `/skill-upgrade --version v2.0.0` 한 번으로 모든 변경 자동 흡수. R6 자동 검증 9 tests × 4 fixtures(라운드트립 + 비-trivial 멱등성 + cumulative+filter + fail-fast) |
+
+> **GA examples 안내 (OQ-04)** — v2.0.0 GA 시점 `examples/` 디렉토리는 **`fintech-gateway` (Spring Boot Kotlin) / `ecommerce-shop` (Node.js TypeScript)** 두 도메인만 제공합니다. **`saas` / `healthcare` 도메인은 `tests/upgrade/fixtures/` 단위 fixture 검증만 완료** — 실제 example project는 v2.1+ 후속 범위. 두 도메인 사용자는 `/skill-init`로 동일하게 초기화 가능하나 example 참조용 코드는 v2.1+에서 추가됩니다.
+>
+> **v1.x 사용자**: [v1.x → v2.0.0 마이그레이션 가이드](./docs/v2/migration-guide.md) 참조 — 자동 4 add_field, 수동 작업 거의 없음, 점수 영향 ≤1점.
+>
+> **Phase 6 (`skill-compliance-report`) v2.1+ 보류** — 옵션 D 채택(2026-05-01). 위반 탐지 Phase 4/5 중복 + 실수요 미검증으로 보류, 재진입 조건은 [phase-6-compliance.md](./docs/v2/phase-6-compliance.md) §보류 결정 참조.
+
+---
+
 ## 💡 핵심 원칙
 
 | 원칙 | 설명 |
@@ -134,7 +153,8 @@ claude
 | [워크플로우 가이드](./docs/workflow-guide.md) | 자동 체이닝, 7가지 워크플로우, 품질 게이트, Git 전략 |
 | [도메인 확장](./docs/customization.md) | 참고자료/체크리스트 추가, 새 도메인 생성, Layered Override |
 | [프레임워크 업그레이드](./docs/upgrade-guide.md) | 업그레이드, 보존 항목, 롤백 |
-| [예제 프로젝트](./examples/) | fintech-gateway, ecommerce-shop 예제 |
+| [v1.x → v2.0.0 마이그레이션 가이드](./docs/v2/migration-guide.md) | v2.0 변경 사항, 자동 마이그레이션, FAQ, 롤백 매뉴얼 |
+| [예제 프로젝트](./examples/) | fintech-gateway, ecommerce-shop (saas/healthcare는 v2.1+ 후속) |
 | [프레임워크 제거 (Eject)](./docs/eject-guide.md) | 제거 절차, 보존 항목, 체크리스트 |
 
 ---
