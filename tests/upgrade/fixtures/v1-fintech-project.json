@@ -1,9 +1,9 @@
 {
-  "name": "fintech-gateway",
-  "description": "핀테크 도메인 API Gateway 서비스",
+  "name": "fintech-fixture",
+  "description": "v1 fintech project — Phase 8 Step 3 마이그레이션 검증용",
   "domain": "fintech",
   "version": "1.0.0",
-  "kitVersion": "2.0.0",
+  "kitVersion": "1.45.1",
   "kitSource": "https://github.com/wejsa/ai-crew-kit.git",
   "techStack": {
     "backend": "spring-boot-kotlin",
@@ -23,20 +23,11 @@
     "commitFormat": "conventional",
     "prLineLimit": 500,
     "testCoverage": 80,
-    "language": "ko",
-    "skillProfile": "default",
-    "overridePriority": "domain-first"
-  },
-  "hooks": {},
-  "tokenHints": {},
-  "ports": {
-    "app": 10080,
-    "db": 3306,
-    "cache": 6379
+    "language": "ko"
   },
   "metadata": {
-    "version": 2,
-    "updatedAt": "2026-05-04T00:00:00Z"
+    "version": 1,
+    "updatedAt": "2026-04-14T00:00:00Z"
   },
   "createdAt": "2026-02-03T00:00:00Z"
 }
