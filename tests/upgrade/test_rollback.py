@@ -104,10 +104,11 @@ def test_rollback_roundtrip_restores_v1_exactly(v1_fixture: dict, migrations: di
 
 
 def test_rollback_idempotent_after_migration(v1_fixture: dict, migrations: dict, schema: dict) -> None:
-    """진짜 멱등성 — 마이그레이션 후 1차 롤백 → 재롤백 결과가 동일.
+    """진짜 멱등성 — 1차 롤백 후 사용자 dirty 변경이 발생해도 2차 롤백이 정확히 v1로 복원.
 
-    이전 버전은 같은 backup의 두 deepcopy 비교라 deepcopy 결정론만 증명했음 (vacuous).
-    본 버전은 마이그레이션 적용 → 1차 롤백 → 다시 한 번 롤백 → v1 fixture와 일치 검증.
+    3차 외부 리뷰 보강: 같은 backup으로 단순히 두 번 clear+update하면 deterministic
+    operation이라 trivial 통과. 진짜 비-trivial 멱등성은 *1차 롤백 → 사용자 실수
+    dirty 변경 → 2차 롤백이 dirty를 무시하고 정확히 복원* 시나리오로 검증해야 한다.
     """
     backup = copy.deepcopy(v1_fixture)
     working = copy.deepcopy(v1_fixture)
@@ -119,10 +120,16 @@ def test_rollback_idempotent_after_migration(v1_fixture: dict, migrations: dict,
     working.update(copy.deepcopy(backup))
     assert working == v1_fixture, "1차 롤백 후 v1과 불일치"
 
-    # 2차 롤백 (이미 롤백된 상태에서 재실행 — 멱등 보장)
+    # 사용자 실수로 dirty 변경 발생 (예: 수동 편집, 다른 도구의 부분 쓰기)
+    working["spurious"] = "user accident"
+    working.setdefault("conventions", {})["accidental"] = True
+
+    # 2차 롤백 — dirty 변경을 무시하고 v1으로 정확히 복원해야 진짜 멱등
     working.clear()
     working.update(copy.deepcopy(backup))
     assert working == v1_fixture, "재롤백 후 v1과 불일치 (멱등 위반)"
+    assert "spurious" not in working, "재롤백이 dirty 키를 제거하지 못함"
+    assert "accidental" not in working["conventions"], "재롤백이 dirty 중첩 키를 제거하지 못함"
 
 
 def test_double_migration_idempotent(v1_fixture: dict, migrations: dict, schema: dict) -> None:
