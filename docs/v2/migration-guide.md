@@ -25,7 +25,7 @@
 
 ### 1.2 주요 변경 사항 (대부분 자동 적용)
 
-- **`project.json` 스키마 확장** — 5개 신규 top-level 필드(`hooks`, `tokenHints`, `customDomain`, `healthCheck`, `orchestrator`) + `conventions` 2개 신규 키. 자동 마이그레이션 4건은 `migrations.json` SSOT 적용. 누락 3건(`customDomain`/`healthCheck`/`orchestrator`)은 schema default 통과 (Step 3 OQ-02에서 확정 예정).
+- **`project.json` 스키마 확장** — 5개 신규 top-level 필드(`hooks`, `tokenHints`, `customDomain`, `healthCheck`, `orchestrator`) + `conventions` 2개 신규 키. 자동 마이그레이션 4건은 `migrations.json` SSOT 적용. 누락 3건(`customDomain`/`healthCheck`/`orchestrator`)은 schema optional이라 부재 통과 (Phase 8 Step 3 fixture 검증 결과 — `migrations.json` 추가 보강 불요).
 - **`CLAUDE.md.tmpl` 구조 변경** — Phase 4 4층 Override 도입으로 템플릿 본문 갱신. `CUSTOM_SECTION_START`/`CUSTOM_SECTION_END` 마커는 v1.x와 동일하며, **마커 사이 콘텐츠는 자동 보존**된다.
 - **`skill-health-check` 가중치 재배분** — Phase 5에서 hook-safety 부채 해소 + 도메인 `_category.json` 명시. 사용자 점수 영향 ≤1점 ([security-migration.md §5](./security-migration.md) 참조).
 - **마이그레이션 비용** — semver major bump(v1→v2)이지만 사용자 *수동 작업이 필요한 변경*은 거의 없다 (모두 자동 마이그레이션 또는 default 통과).
@@ -34,7 +34,7 @@
 
 신규 위반 발견 시 외에는 **≤1점**. SEC-01 회귀 보존 + 신규 SEC-05/06/07 추가는 점수 영향 0이며, alpha.2 hook-safety 부채 해소만 healthcare phi-protection에서 -0.91% ≈ ~1.0점 (의도적 floor). 상세는 [security-migration.md §1](./security-migration.md).
 
-> **CHANGELOG 정합 알림** — `CHANGELOG.md [2.0.0]`은 Phase 8 Step 4(미진행)에서 완성된다. 본 §1.2는 `migrations.json` SSOT + Phase 4·5 Added 섹션 기반이며, Step 4 머지 시 정합 fixup이 동시 commit될 수 있다 (D7 — migrations.json 우선).
+> **CHANGELOG 정합** — `CHANGELOG.md [2.0.0]` Breaking Changes 섹션이 본 §1.2와 동일 SSOT(`migrations.json` v2.0.0). Phase 8 Step 4 머지로 정합 완료.
 
 ---
 
