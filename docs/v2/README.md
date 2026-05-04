@@ -95,46 +95,55 @@ Phase 0 (Foundation)
 | **7 — Context & Learning** | ✅ **완료** (옵션 A — Lean Closure) | `9683457` (PR #44) | v1.23 lessons-learned 메커니즘 회귀 보호 갭 메우기. 상세 [phase-7-plan.md](./phase-7-plan.md) |
 | ↳ Step 1 — schema + validator + fixtures + plan | ✅ | `f4cc1e1` (PR #43) | lessons-learned.schema.json + validate-lessons-learned.py + tests/lessons/fixtures 3건 + secrets-tests.yml 5번째 job (4단계 검증). PR 리뷰 CRITICAL/MAJOR/MINOR 5건 모두 반영 |
 | ↳ Step 2 — skill-retro 통합 + secrets 필터 + impact 정량 + pytest | ✅ | `9683457` (PR #44) | skill-retro §5.3 secrets 필터 + impact 정량 + tests/lessons/ pytest 33 cases(5 files) + context-migration.md. PR 리뷰 권장 패키지(CRITICAL/MAJOR/MINOR + 심화 1/4/5-(a)) 모두 반영. 후속 부채 D10~D13 plan.md 기록 |
-| **8 — Migration & Release (GA)** | ⏳ **다음** | — | **GA 게이트 = 옵션 A**(phase-8 doc 원본 Task 8-1~8-7) — skill-upgrade v2 변환 + migration-guide + examples 검증 + CHANGELOG + VERSION + README + 릴리스. ADJ-01~06 [PR #44 코멘트](https://github.com/wejsa/ai-crew-kit/pull/44#issuecomment-4363971097) 반영 |
+| **8 — Migration & Release (GA)** | ⏳ **진행 중** (옵션 A — Lean Closure) | — | **GA 게이트** — Task 8-1~8-7 Phase 7 패턴 일관 적용. 상세 [phase-8-plan.md](./phase-8-plan.md) |
+| ↳ Step 1 — plan + skill-upgrade SKILL.md 갭 fix | ✅ | `938e9f8` (PR #45) | phase-8-plan.md(217줄, 9 D + 7 OQ + 6 R) + skill-upgrade `.claude/rules/`/`lessons-learned.json` 명시 + phase-8-release.md SSOT 이관 헤더. 리뷰 MAJOR 2 + MINOR 4 + GA UX 1 모두 반영 |
+| ↳ Step 2 — migration-guide.md (Task 8-2) | ⏳ **다음** | — | 사용자 v1 → v2 자동 마이그레이션 가이드 + FAQ + 롤백 매뉴얼 절차 (R6 재평가 보조) |
+| ↳ Step 3 — examples 마이그레이션 검증 + 회귀 fixture (Task 8-3) | ⏳ | — | examples/* v2 변환 + tests/upgrade/ fixture (4 도메인) + scripts/validate-v2-migration.py + 롤백 시뮬레이션(R6 필수). ADJ-01 compliance-report 무효화 |
+| ↳ Step 4 — CHANGELOG v2.0.0 (Task 8-4) | ⏳ | — | Added/Changed/Breaking Changes 섹션 |
+| ↳ Step 5 — docs/upgrade-guide + README (Task 8-5/8-6) | ⏳ | — | OQ-04 GA UX(saas/healthcare fixture-only) 명시 |
+| ↳ Step 6 — VERSION 2.0.0 + branch flow + 태그 (Task 8-7) | ⏳ | — | OQ-03/06 사용자 합의 후 진행 (PR 분리 + 일괄 백머지) |
 
-**현재 v2-develop HEAD**: `9683457` (PR #44 Phase 7 Step 2)
-**현재 VERSION**: `2.0.0-alpha.4` (인터널 — Phase 8 마지막 Step에서 `2.0.0`으로 전환)
-**현재 활성 CI**: `hook-tests` / `schema-validation` / `secrets-tests` (6 jobs — `lessons-fixture-tests` 추가) — 총 8 CI checks
+**현재 v2-develop HEAD**: `938e9f8` (PR #45 Phase 8 Step 1)
+**현재 VERSION**: `2.0.0-alpha.4` (인터널 — Phase 8 Step 6에서 `2.0.0`으로 단일 commit 전환)
+**현재 활성 CI**: `hook-tests` / `schema-validation` / `secrets-tests` (6 jobs) — 총 8 CI checks
 
 ### 🔄 다른 세션에서 재개 시 프롬프트
 
-새 세션 진입 시 다음 프롬프트로 시작 (Phase 8 GA 진입):
+새 세션 진입 시 다음 프롬프트로 시작 (Phase 8 Step 2 진입):
 
 ```
-docs/v2/README.md §진행 상황 + docs/v2/phase-8-release.md 읽고
-Phase 8 (Migration & Release / GA) 착수해줘.
+docs/v2/README.md §진행 상황 + docs/v2/phase-8-plan.md 읽고
+Phase 8 Step 2 (migration-guide.md, Task 8-2) 착수해줘.
 
 전제 조건:
-- v2.0 단일 GA 전략(2026-04-30) — alpha 태그 외부 릴리스 없음
-- Phase 7 완료 (Step 1 f4cc1e1 / Step 2 9683457). Phase 6은 v2.1+ 보류
-- 인터널 VERSION 2.0.0-alpha.4 → Phase 8 마지막 Step에서 2.0.0 전환
+- v2.0 단일 GA 전략 — alpha 태그 외부 릴리스 없음
+- Phase 8 Step 1 완료 (PR #45 머지 938e9f8) — plan.md(217줄,
+  9 D + 7 OQ + 6 R) + skill-upgrade SKILL.md 갭 fix +
+  phase-8-release.md SSOT 이관 헤더
+- 인터널 VERSION 2.0.0-alpha.4 → Step 6에서 2.0.0 단일 commit
 - main / develop = v1.45.1 (legacy v1.x 라인)
 
-Phase 8 진입 합의 (PR #44 코멘트 SSOT —
-https://github.com/wejsa/ai-crew-kit/pull/44#issuecomment-4363971097):
-- 옵션 A 채택 — phase-8 doc 원본 Task 8-1~8-7 그대로
-  (통합 회귀 매트릭스 / E2E는 v2.1+ 후속)
-- branch flow: v2-develop → develop → main + develop은 이후
-  v1.x 핫픽스 라인으로 동결
-- VERSION 2.0.0 전환은 마지막 Step 단일 commit (메모리
-  §릴리스 프로세스 일관)
+Phase 8 진입 합의 (Step 1 plan.md SSOT):
+- 옵션 A 채택 — phase-8 doc 원본 Task 8-1~8-7 + Phase 7 패턴 일관
+- branch flow v2-develop → develop → main + develop은 v2 GA 후
+  v1.x 핫픽스 라인으로 동결 (v2 신규 차단, 핫픽스 양방향 머지 유지)
+- VERSION 전환은 Step 6 VERSION 파일 변경 한정 단일 commit
+- migrations.json SSOT 우선 (D7) — phase-8-release.md doc은 stale 보존
 
-ADJ-01~06 plan.md 작성 시 흡수:
-- ADJ-01: Task 8-3 skill-compliance-report 항목 무효화 (Phase 6 보류)
-- ADJ-02: 통합 회귀 매트릭스/E2E v2.1+ 후속 부채 (D14, D15)
-- ADJ-03: branch flow 단계별 commit/PR sequence 명세
-- ADJ-04: VERSION 전환 commit Step 위치
-- ADJ-05: D-MIN/D-NEED 사전 점검 명시 (Phase 6/7 패턴)
-- ADJ-06: examples saas/healthcare 마이그레이션 대상 점검
+Step 2 범위 (~200줄):
+- docs/v2/migration-guide.md (신규)
+  - v1 → v2 변경 사항 요약 (CHANGELOG Breaking Changes 미러)
+  - 자동 마이그레이션 절차 (/skill-upgrade --version v2.0.0)
+  - 수동 확인 사항 (skillProfile 선택, 훅 활성화)
+  - 롤백 매뉴얼 절차 (--rollback) — R6 재평가 보조 (Step 3 자동
+    검증 추가 전 1차 방어선)
+  - FAQ 5건 (schema 위반, CUSTOM_SECTION 손실, hook 작동 안함 등)
 
-Step 0 — TFT 분석 + D-MIN/D-NEED 점검 + plan.md 작성
-Step 1~7 — Task 8-1 ~ 8-7 (skill-upgrade / migration-guide /
-  examples / CHANGELOG / VERSION / README / 릴리스)
+Step 3 진입 전 OQ-02/04/05 사용자 확인 필요:
+- OQ-02: v2 신규 필드 5개 중 누락 3개(customDomain/healthCheck/
+  orchestrator) 보강 여부
+- OQ-04: examples saas/healthcare 부재 → 단위 fixture만 권장
+- OQ-05: v1→v2 시뮬레이션 fixture 시점 (Step 3)
 ```
 
 ### v2.0 GA 진입 전 D0급 공통 결정 (Phase 6 보류 학습 반영)
