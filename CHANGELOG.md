@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **examples v2 형식 마이그레이션** (Step 3) — `examples/{fintech-gateway,ecommerce-shop}/.claude/state/project.json`에 `kitVersion 2.0.0` + `kitSource` + `conventions.skillProfile`/`overridePriority` + `hooks {}` + `tokenHints {}` 명시
 - **`tests/upgrade/fixtures/v1-{fintech,ecommerce,saas,healthcare}-project.json`** (Step 3) — 4 도메인 v1 형식 fixture (saas/healthcare는 OQ-04 fixture-only 검증, 실제 examples 디렉토리는 v2.1+ 후속)
 - **`scripts/validate-v2-migration.py`** (Step 3) — cumulative add_field 적용(target ≤ 버전 오름차순) + schema-aware 필터(`backlog.*` 등 다른 파일 영역 자동 스킵) + ${KIT_VERSION}/${KIT_SOURCE} placeholder 치환 + 비-dict 부모 fail-fast(silent overwrite 방지) + OQ-02 진단 모드
-- **`tests/upgrade/test_rollback.py`** (Step 3) — R6 1차 자동 방어선. 7 tests × 4 fixtures parametrize: v1 보존 / v2 add_field / schema 통과 / *진짜 라운드트립*(v1 → migrated → 백업 복원 = v1) / *비-trivial 멱등성*(1차 롤백 → dirty 변경 → 2차 롤백 = v1) / 더블 마이그레이션 멱등 / 사용자 보존(3 parametrize) / fail-fast / cumulative+filter
+- **`tests/upgrade/test_rollback.py`** (Step 3) — R6 1차 자동 방어선. 9 tests × 4 fixtures parametrize (외부 리뷰 #1/#2 보강 반영): v1 보존 / v2 add_field / schema 통과 / *진짜 라운드트립*(v1 → migrated → 백업 복원 = v1) / *비-trivial 멱등성*(1차 롤백 → dirty 변경 → 2차 롤백 = v1) / 더블 마이그레이션 멱등 / 사용자 보존(3 parametrize) / fail-fast on non-dict parent / cumulative+schema-aware filter
 - **CI 워크플로우 2 jobs 신설** (`.github/workflows/secrets-tests.yml`) — `validate-v2-migration`(4 fixtures + 2 examples 검증) + `upgrade-fixture-tests`(pytest tests/upgrade -v R6)
 - **`skill-upgrade` SKILL.md 갭 fix** (Step 1) — 업데이트 대상 표에 `.claude/rules/`(Phase 4 도입) 추가 + 보존 대상 표에 `lessons-learned.json`(Phase 7 도입) 명시
 - **`docs/v2/phase-8-plan.md`** (Step 1) — 옵션 A Lean Closure 결정 SSOT (9 D + 7 OQ + 6 R + Step 1~6 분리)
@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Phase 7 — Context & Learning (v2.0.0)
 - **`.claude/schemas/lessons-learned.schema.json`** (Step 1) — v1.23 lessons-learned 회귀 보호 schema. id/category/severity/impact 필드 + `additionalProperties: false`
-- **`scripts/validate-lessons-learned.py`** (Step 1) — 4단계 검증(schema / cross-ref / impact / required field). `--fixture` 단일 검증 모드
+- **`scripts/validate-lessons-learned.py`** (Step 1) — 4단계 검증(schema validation + cross-ref + impact 정량 + required field 누락). `--fixture` 단일 검증 모드
 - **`tests/lessons/` pytest 33 cases (5 files)** (Step 2) — schema validation / secrets 필터 / threshold 적용 / skill-retro 명세 / fixtures(positive/invalid-id/extra-property)
 - **`skill-retro` §5.3 secrets 필터** (Step 2) — lessons-learned 작성 시 토큰/이메일 패턴 자동 redact + impact 정량(상/중/하 → 점수 매핑)
 - **CI 워크플로우 2 jobs 신설** (`.github/workflows/secrets-tests.yml`) — `validate-lessons-learned`(positive PASS + 2 negative MUST FAIL) + `lessons-fixture-tests`(pytest tests/lessons)
@@ -149,6 +149,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Phase 5 secrets: 없음** — `_base/health/secrets-patterns.json` 부재 시 SEC-01/SEC-05 SKIP + WARN, 도메인 patterns 부재 시 SEC-07 SKIP, dotenv 미사용 프로젝트는 SEC-06 SKIP. SEC-01 외부화는 키워드 1:1 매핑 보존(회귀 fixture 23건 PASS)으로 alpha.3 동작 유지
 - **Phase 7 lessons-learned: 없음** — `.claude/state/*` 디렉토리 전체 보존 (skill-upgrade 보존 대상 표 명시). 신규 schema는 회귀 보호 메커니즘이라 사용자 데이터 영향 0
 - **Phase 8 마이그레이션: 없음** — 본 절이 정의하는 자동 마이그레이션이 모든 변경을 흡수. 매뉴얼 작업 0건. 롤백은 [migration-guide.md §4](./docs/v2/migration-guide.md) R6 1차 자동 방어선 + 매뉴얼 체크리스트 6건으로 보장
+
+### Deferred (v2.1+ 후속)
+
+- **Phase 6 — `skill-compliance-report`** (옵션 D 채택, 2026-05-01) — 위반 탐지 Phase 4/5 중복 + ACK 미니멀리즘 위배 + v1.x 시기 실수요 미검증으로 보류. 재진입 조건 + 부활 옵션은 [docs/v2/phase-6-compliance.md](./docs/v2/phase-6-compliance.md) §보류 결정 참조 (ADJ-01)
 
 ## [1.45.1] - 2026-04-14
 
