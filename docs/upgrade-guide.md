@@ -59,7 +59,7 @@ rm -rf /tmp/ai-crew-kit-latest
 | 구분 | 항목 | 보존 방식 |
 |------|------|----------|
 | **프로젝트 상태** | project.json, backlog.json | 완전 보존 |
-| **누적 학습 데이터** | `.claude/state/*` 전체 (lessons-learned.json, completed.json, health-history.json 등) | 완전 보존 (Phase 7 회귀 보호 메커니즘) |
+| **누적 학습 데이터** | `.claude/state/` 디렉토리 전체 보존 (주요 파일: lessons-learned.json, completed.json, health-history.json) | 완전 보존 (Phase 7 회귀 보호 메커니즘) |
 | **프로젝트 코드** | src/, docs/, VERSION 등 | 완전 보존 |
 | **CLAUDE.md 커스텀 규칙** | `CUSTOM_SECTION` 마커 사이 내용 | 추출 → 재생성 → 복원 |
 | **도메인 커스텀 파일** | add-doc, add-checklist로 추가한 파일 | 자동 감지 → 복원 |
@@ -74,8 +74,8 @@ rm -rf /tmp/ai-crew-kit-latest
 # 가장 최근 백업에서 롤백
 /skill-upgrade --rollback
 
-# 특정 백업 지정 (.claude/temp/upgrade-backup-{YYYYMMDD-HHmmss}/ 형식)
-/skill-upgrade --rollback .claude/temp/upgrade-backup-20260504-143052/
+# 특정 백업 지정 — 실제 timestamp는 `ls .claude/temp/`로 확인 후 치환
+/skill-upgrade --rollback .claude/temp/upgrade-backup-<YYYYMMDD-HHmmss>/
 ```
 
 > **v2.0.0 사용자 안내** — `--rollback`은 R6 1차 자동 방어선([test_rollback.py](../tests/upgrade/test_rollback.py))으로 라운드트립·비-trivial 멱등성·사용자 보존이 회귀 보호됩니다. 매뉴얼 사전·사후 검증 체크리스트는 [migration-guide.md §4](./v2/migration-guide.md)를 참조하세요.

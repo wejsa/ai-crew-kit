@@ -118,10 +118,10 @@ claude
 |------|:-----:|------|
 | **Claude Code 네이티브 훅** (SessionStart / PostToolUse / Stop) | Phase 1 | 세션 진입 자동 git sync, lockedAt heartbeat 자동 갱신, 응답 완료 시 continuation-plan 자동 작성 — 미사용 시 v1.x 동작 100% 유지 |
 | **스킬 프로파일 + 토큰 힌트** | Phase 2/3 | `default` / `developer` / `docs-only` / `custom` 4종 프로파일로 CLAUDE.md 노출 스킬 제어. complexity-hint(heavy/medium/light) 토큰 예산 가이드 |
-| **4층 Layered Override + 도메인×언어 rules** | Phase 4 | `.claude/rules/{domain}/{language}/*.md`로 도메인 비즈니스 제약(MUST/MUST NOT)을 PR 리뷰에 자동 적용. 메커니즘만 출시(콘텐츠 0개) — 사용자 실수요 발생 시 추가 |
+| **4층 Layered Override + 도메인×언어 rules** | Phase 4 | PR 리뷰가 `.claude/rules/{domain}/{language}/*.md`의 도메인 비즈니스 제약(MUST/MUST NOT)을 자동 인식 — 사용자가 rule 1건 추가하는 즉시 활성. v2.0.0 GA는 메커니즘만 제공(빌트인 콘텐츠 0개) |
 | **AgentShield-lite 시크릿 스캐너** (SEC-05/06/07) | Phase 5 | 하드코딩 시크릿(API 키/AWS/GitHub/Slack) + `.env` 노출 게이트 + 도메인별 민감 데이터(PAN Luhn / SSN / 한국 주민·사업자) CRITICAL 검출 |
 | **lessons-learned 회귀 보호** | Phase 7 | `skill-retro` 학습 데이터에 schema 검증 + secrets 필터(토큰/이메일 자동 redact) + impact 정량(상/중/하) + 33 pytest cases 회귀 보호 |
-| **v1→v2 자동 마이그레이션 + R6 1차 방어선** | Phase 8 | `/skill-upgrade --version v2.0.0` 한 번으로 모든 변경 자동 흡수. R6 자동 검증 9 tests × 4 fixtures(라운드트립 + 비-trivial 멱등성 + cumulative+filter + fail-fast) |
+| **v1→v2 자동 마이그레이션 + R6 1차 방어선** | Phase 8 | `/skill-upgrade --version v2.0.0` 한 번으로 모든 변경 자동 흡수. R6 자동 검증 9 tests across 4 fixtures (parametrize) — 라운드트립 + 비-trivial 멱등성 + cumulative+filter + fail-fast |
 
 > **GA examples 안내 (OQ-04)** — v2.0.0 GA 시점 `examples/` 디렉토리는 **`fintech-gateway` (Spring Boot Kotlin) / `ecommerce-shop` (Node.js TypeScript)** 두 도메인만 제공합니다. **`saas` / `healthcare` 도메인은 `tests/upgrade/fixtures/` 단위 fixture 검증만 완료** — 실제 example project는 v2.1+ 후속 범위. 두 도메인 사용자는 `/skill-init`로 동일하게 초기화 가능하나 example 참조용 코드는 v2.1+에서 추가됩니다.
 >
