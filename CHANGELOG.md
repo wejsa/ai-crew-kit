@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.0.0] - TBD
+## [2.0.0] - 2026-05-04
 
 > **GA 릴리스 — Migration Surface 요약**: v1.x 사용자는 `/skill-upgrade --version v2.0.0` 자동 마이그레이션으로 충분. 자동 적용 4 add_field(`hooks`/`conventions.skillProfile`/`conventions.overridePriority`/`tokenHints`), 수동 작업 *거의 없음*, 점수 영향 ≤1점. 상세는 [docs/v2/migration-guide.md](./docs/v2/migration-guide.md).
 >
