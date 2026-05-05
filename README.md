@@ -117,7 +117,7 @@ claude
 | 기능 | Phase | 사용자 가치 |
 |------|:-----:|------|
 | **Claude Code 네이티브 훅** (SessionStart / PostToolUse / Stop) | Phase 1 | 세션 진입 자동 git sync, lockedAt heartbeat 자동 갱신, 응답 완료 시 continuation-plan 자동 작성 — 미사용 시 v1.x 동작 100% 유지 |
-| **스킬 프로파일 + 토큰 힌트** | Phase 2/3 | `default` / `developer` / `docs-only` / `custom` 4종 프로파일로 CLAUDE.md 노출 스킬 제어. complexity-hint(heavy/medium/light) 토큰 예산 가이드 |
+| **스킬 프로파일 + 토큰 힌트** | Phase 2/3 | 5종 프로파일(`default` ≡ `full` / `developer` / `docs-only` / `custom`)로 CLAUDE.md 노출 스킬 제어. complexity-hint(heavy/medium/light) 토큰 예산 가이드 |
 | **4층 Layered Override + 도메인×언어 rules** | Phase 4 | PR 리뷰가 `.claude/rules/{domain}/{language}/*.md`의 도메인 비즈니스 제약(MUST/MUST NOT)을 자동 인식 — 사용자가 rule 1건 추가하는 즉시 활성. v2.0.0 GA는 메커니즘만 제공(빌트인 콘텐츠 0개) |
 | **AgentShield-lite 시크릿 스캐너** (SEC-05/06/07) | Phase 5 | 하드코딩 시크릿(API 키/AWS/GitHub/Slack) + `.env` 노출 게이트 + 도메인별 민감 데이터(PAN Luhn / SSN / 한국 주민·사업자) CRITICAL 검출 |
 | **lessons-learned 회귀 보호** | Phase 7 | `skill-retro` 학습 데이터에 schema 검증 + secrets 필터(토큰/이메일 자동 redact) + impact 정량(상/중/하) + 33 pytest cases 회귀 보호 |

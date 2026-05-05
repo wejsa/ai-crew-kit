@@ -93,7 +93,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CODEOWNERS 운영 원칙** — `.claude/settings.json`(hooks), `.claude/hooks/**`, schema hooks 변경 시 security-review 필수 (phase-1-plan.md §보안 리뷰 필수 변경점)
 
 #### Phase 2 — Skill Profiles (v2.0.0-alpha.2 — alpha.1 이후 backfill, PR #20 commit 037c2fc)
-- 스킬 프로파일 시스템 (developer/full/docs-only/custom) — CLAUDE.md 스킬 노출 제어
+- 스킬 프로파일 시스템 (`default` ≡ `full` / `developer` / `docs-only` / `custom`, 5종) — CLAUDE.md 스킬 노출 제어
 - `skill-profiles.json` 프로파일 정의 파일
 - `project.schema.json`에 `customSkills` 배열 필드 추가 (custom 프로파일용)
 - `skill-init`에 스킬 프로파일 선택 단계 (Step 5.6) 추가
