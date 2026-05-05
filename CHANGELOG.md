@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-05-05
+
+> **DB 컨벤션 정책 중심 정리 (patch)** — v1.41.0 "프레임워크는 특정 기술 패턴을 가르치지 않음" 철학 정렬. `_base/conventions/database.md`와 `agent-db-designer.md`에서 Claude 기본 지식 영역(DB별 구문/타입표/인덱스 설계 원칙)을 제거하고, 팀 정책(네이밍·필수 컬럼·Soft Delete·낙관적 잠금·무중단 마이그레이션)만 유지. 기본값(MySQL+Flyway) 외 사용 시 `project.json`의 `techStack.database`만 변경하면 Claude가 컨텍스트에 맞춰 구문 적용. 사용자 진입점은 `docs/customization.md`로 단일화.
+
+### Changed
+
+- **`_base/conventions/database.md`** (#53) — 정책-only 슬림화, 159 → 70줄(~56% 감소). 상단 박스에 "기본값 + 커스터마이징 경로" 명시(`project.json` SSOT 참조), `↔` → `→` 단방향 표기, NoSQL은 정책 차용만 명시, 도구별 표준 식별자 체계 그대로 따르기, non-blocking 인덱스 옵션 각주.
+- **`.claude/agents/agent-db-designer.md`** (#54) — DB별 특성표/MySQL·PostgreSQL 특화/인덱스 설계 원칙 제거. 의사결정 프레임워크/도메인별 특수설계/심각도/출력 형식은 유지. 240 → 185줄(~23% 감소). healthcare PHI 패턴 정정(append-only `phi_access_log` 별도 테이블 + 분리 저장 원칙, `audit-trail.md` 정합), saas 도메인 특수 설계 신규 추가(`tenant_id` 격리·격리 전략 3종·PostgreSQL RLS·시계열 과금), GDPR Art.17 vs 의료법 보존 의무 충돌 케이스 명시.
+- **`docs/customization.md`** (#55) — 신규 섹션 "DB 및 마이그레이션 도구 변경"(+70줄). schema 정합(enum `mysql/postgresql/mongodb/none` + `additionalProperties: false` 약속 준수), SQL 구문 매핑 표 + NoSQL 별도 단락 분리, 도구 4종 명명 규칙(Flyway/Alembic/Liquibase/Prisma/golang-migrate). CUSTOM_SECTION 보존 범위 정직 표기(v2.0은 CLAUDE.md/README.md만, conventions 파일은 v2.1+ 도입 예정) + 권장 대안 2종 안내.
+
+### Notes
+
+- v2.0.0 → v2.0.1 사용자 영향 없음. 자동 마이그레이션 불필요.
+- 외부 리뷰 1라운드(CRITICAL 1건 + MAJOR 7건 + MINOR 6건) 모두 반영.
+- v2.1+ 로드맵: schema enum 확장(CockroachDB/SQLite/DynamoDB), `techStack.migration` 신규 필드, conventions 파일 단위 CUSTOM_SECTION 자동 보존.
+
 ## [2.0.0] - 2026-05-04
 
 > **GA 릴리스 — Migration Surface 요약**: v1.x 사용자는 `/skill-upgrade --version v2.0.0` 자동 마이그레이션으로 충분. 자동 적용 4 add_field(`hooks`/`conventions.skillProfile`/`conventions.overridePriority`/`tokenHints`), 수동 작업 *거의 없음*, 점수 영향 ≤1점. 상세는 [docs/v2/migration-guide.md](./docs/v2/migration-guide.md).

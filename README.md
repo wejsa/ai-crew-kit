@@ -1,6 +1,6 @@
 <div align="center">
 
-# AI Crew Kit v2.0.0
+# AI Crew Kit v2.0.1
 
 **도메인 선택 → 자동 셋업 → 에이전트 팀 즉시 가동**
 
