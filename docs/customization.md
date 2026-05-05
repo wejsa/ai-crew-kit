@@ -256,6 +256,76 @@ domains/_base/                            ← 공통 기본값
 
 ---
 
+## DB 및 마이그레이션 도구 변경
+
+`_base/conventions/database.md`의 정책(네이밍·필수 컬럼·Soft Delete·낙관적 잠금·무중단 마이그레이션)은 DB·도구 무관하게 적용됩니다. 기본값을 다른 DB나 마이그레이션 도구로 바꾸려면 `project.json`만 변경하면 됩니다.
+
+### 기본값
+
+| 항목 | 기본값 |
+|------|--------|
+| DB | MySQL 8.0+ |
+| 마이그레이션 도구 | Flyway (`V{N}__{description}.sql`) |
+
+### DB 변경
+
+```jsonc
+// project.json
+{
+  "techStack": {
+    // schema enum: mysql / postgresql / mongodb / none
+    "database": "postgresql"
+  }
+}
+```
+
+> **schema 제약**: v2.0 시점 `project.schema.json`의 `techStack.database` enum은 `mysql/postgresql/mongodb/none` 4개로 한정됩니다. CockroachDB/SQLite/DynamoDB 등 기타 DB enum 확장은 v2.1+ 로드맵에 있으며, 그 전까지는 위 4개 중 가장 가까운 값(예: CockroachDB → `postgresql`)으로 지정 후 CUSTOM_SECTION에 실제 DB 명시를 권장합니다.
+
+SQL DB 간 구문 차이는 Claude가 컨텍스트에 맞춰 적용합니다(자주 쓰이는 매핑 예시):
+
+| MySQL | PostgreSQL |
+|-------|-----------|
+| `TINYINT(1)` | `BOOLEAN` |
+| `AUTO_INCREMENT` | `IDENTITY` / `SERIAL` |
+| `JSON` | `JSONB` |
+
+> **MongoDB는 *치환* 대상이 아닙니다.** conventions의 정책(필수 컬럼 의미·Soft Delete·낙관적 잠금)만 차용하고 스키마/쿼리는 도큐먼트 모델에 맞게 별도 작성하세요. ObjectId/document 등은 MongoDB 네이티브 패턴을 그대로 사용합니다.
+
+### 마이그레이션 도구 변경
+
+v2.0 시점 `project.schema.json`에는 마이그레이션 도구 식별 필드가 정의되어 있지 않습니다(`techStack`은 `additionalProperties: false`). 도구 자체는 schema에서 강제하지 않으며, 사용자는 도구의 표준 식별자 체계를 그대로 따르면 됩니다. 도구 신규 필드는 v2.1+ 도입 예정.
+
+| 도구 | 표준 식별자 예 |
+|------|----------------|
+| Flyway (기본) | `V1__create_users_table.sql` |
+| Alembic | `2024_01_create_users_table.py` (revision id) |
+| Liquibase | `001-create-users-table.xml` (changelog ID) |
+| Prisma migrate | `20240101000000_create_users_table/migration.sql` |
+| golang-migrate | `000001_create_users_table.up.sql` |
+
+### 팀 표준 강제 (CUSTOM_SECTION)
+
+> **v2.0 보존 범위 안내**: `skill-upgrade`의 CUSTOM_SECTION 자동 보존 메커니즘은 v2.0 시점 **`CLAUDE.md`와 `README.md` 두 파일에만** 적용됩니다. `_base/conventions/database.md` 같은 conventions 파일에 직접 마커를 다는 방식은 v2.0 업그레이드 시 자동 보존이 보장되지 않으므로, 다음 두 가지 대안을 권장합니다.
+>
+> - **(권장)** 팀 DB 표준은 `CLAUDE.md`의 CUSTOM_SECTION에 추가 — 자동 보존됨, agent-db-designer도 CLAUDE.md를 참조
+> - **(대안)** 별도 파일(예: `domains/_base/conventions/database-team.md`) 신규 생성 — 업그레이드 시 보존되며 `CLAUDE.md`에서 참조 링크 추가
+
+```markdown
+<!-- CLAUDE.md 내부 -->
+<!-- CUSTOM_SECTION_START -->
+## 팀 DB 표준 (PostgreSQL)
+
+- 시계열 데이터: TimescaleDB 하이퍼테이블 사용
+- JSONB 인덱스: GIN 인덱스 + 부분 표현식 인덱스 우선
+- 파티셔닝: 월 단위 RANGE 파티션 (1년 보관 후 아카이브)
+- 통계 갱신: ANALYZE를 마이그레이션 마지막 단계에 포함
+<!-- CUSTOM_SECTION_END -->
+```
+
+`agent-db-designer`는 `CLAUDE.md`를 자동 참조하여 팀 표준에 맞춘 설계 초안을 제시합니다. conventions 파일 단위 CUSTOM_SECTION 자동 보존은 v2.1+에서 도입 예정.
+
+---
+
 ## 새 도메인 생성
 
 ### 방법 1: 기존 도메인 복제 (권장)
