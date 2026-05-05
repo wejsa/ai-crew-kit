@@ -38,7 +38,13 @@ claude
 ```
 /skill-init 실행
     │
-    ├── 1. 환경 검증 (Git 저장소 확인)
+    ├── 1. 환경 검증 + ai-crew-kit clone 자동 정리 (해당 시)
+    │       ├── kit 검출 (origin URL + initial commit fingerprint)
+    │       ├── 자기 보호 가드 (더티/미푸시/비-main 차단)
+    │       ├── kit 히스토리 제거 (rm -rf .git && git init -b main)
+    │       └── kit 잔여 자동 삭제
+    │           CHANGELOG.md, docs/, examples/, tests/, scripts/,
+    │           .github/, memory/, LICENSE, .claude/temp/, .claude/hooks/tests/
     │
     ├── 2. 프로젝트 정보 입력 (이름, 설명)
     │
@@ -54,7 +60,7 @@ claude
     ├── 5. 에이전트 팀 구성 (필수 3개 + 선택 6개)
     │
     └── 6. 설정 파일 자동 생성
-            ├── .claude/state/project.json
+            ├── .claude/state/project.json (kitSource = ai-crew-kit URL 보존)
             ├── .claude/state/backlog.json
             ├── CLAUDE.md
             ├── README.md  (프로젝트 전용)
@@ -62,6 +68,8 @@ claude
 ```
 
 > **--quick 모드**: 2~5단계를 자동 감지/기본값으로 건너뛰어 즉시 시작합니다. 나중에 `/skill-init --reset`으로 재설정할 수 있습니다.
+
+> **1단계 자동 정리**: ai-crew-kit clone에서 시작한 경우 kit dev 잡티(CHANGELOG, docs, examples, tests, scripts, .github, memory, LICENSE, .claude/temp, .claude/hooks/tests)가 추가 확인 없이 자동 삭제되어 깨끗한 사용자 프로젝트로 시작합니다. **검출 기준**: `git remote origin`이 `[/:]ai-crew-kit(\.git)?$` 매칭 + initial commit SHA가 `ab0269a14...` (kit fingerprint)와 일치. **가드**: 더티 워킹 트리/미푸시 커밋/비-main 브랜치 중 하나라도 해당하면 정리 SKIP하고 일반 진행 (kit 개발자 보호). kit 가이드 문서(getting-started, customization 등)는 GitHub 리포에서 항상 참조 가능 — `project.json.kitSource`로 기록됨.
 
 ### Python 프로젝트로 시작하기
 
@@ -87,10 +95,12 @@ claude
 
 ### 준비
 
+**권장 경로 (시나리오 A — `.claude/`만 복사, 가장 깨끗)**:
+
 ```bash
 # 1. AI Crew Kit 스킬 복사
-git clone https://github.com/wejsa/ai-crew-kit.git
-cp -r ai-crew-kit/.claude my-existing-project/
+git clone https://github.com/wejsa/ai-crew-kit.git /tmp/ai-crew-kit
+cp -r /tmp/ai-crew-kit/.claude my-existing-project/
 
 # 2. 프로젝트에서 Claude Code 실행
 cd my-existing-project
@@ -100,10 +110,27 @@ claude
 /skill-onboard
 ```
 
+**대안 경로 (시나리오 B — kit clone에 사용자 코드 함께 두기)**:
+
+```bash
+# kit을 그대로 clone하고 그 안에서 작업
+git clone https://github.com/wejsa/ai-crew-kit.git my-project
+cd my-project
+# 사용자 코드를 src/, app/, lib/ 등 비충돌 경로로 복사
+# (docs/, tests/, scripts/, .github/는 자동 정리 대상이므로 충돌 주의)
+claude
+/skill-onboard
+```
+
+> 시나리오 B에서 `/skill-onboard`는 사전 조건 단계에서 ai-crew-kit clone을 자동 감지하여 `kit 잔여 파일 자동 정리`를 먼저 수행합니다 (skill-init과 동일). 사용자 코드가 `src/`/`app/`/`lib/` 등 비충돌 경로면 안전하나, 동일 경로(`docs/`, `tests/` 등)에 사용자 콘텐츠가 있으면 함께 삭제되므로 의심 시 `tar czf .pre-onboard-backup-$(date +%s).tar.gz docs tests scripts .github` 등으로 사전 백업하세요.
+
 ### 온보딩 흐름
 
 ```
 /skill-onboard 실행
+    │
+    ├── 0. 사전 조건 (Git 저장소 + ai-crew-kit clone 자동 정리 — 해당 시)
+    │       └── kit 검출+가드 통과 시 kit 잔여 자동 삭제 (skill-init과 동일)
     │
     ├── 1. 코드베이스 자동 스캔
     │       ├── 패키지 매니저 (package.json, build.gradle 등)

@@ -4,7 +4,7 @@
 > **TFT 분석**: [docs/v2/phase-1-tft-analysis.md](https://github.com/wejsa/ai-crew-kit/blob/main/docs/v2/phase-1-tft-analysis.md)
 > **도입 버전**: v2.0.0-alpha.2 (Phase 1 Step 2~)
 >
-> kit dev 문서 링크는 ai-crew-kit GitHub 리포를 가리킵니다. 사용자 프로젝트에는 `docs/`가 포함되지 않습니다(자동 정리됨).
+> kit dev 문서 링크는 ai-crew-kit GitHub 리포를 가리킵니다. 사용자 프로젝트에는 `docs/`가 포함되지 않습니다(자동 정리됨). **버전 주의**: `blob/main`은 최신 기준이며 사용자 시드 시점(`project.json.kitVersion`)과 다를 수 있습니다.
 
 Claude Code 네이티브 훅으로 ai-crew-kit 워크플로우 자동화를 구현합니다. 훅이 비활성화되어도 v1.x 동작은 100% 유지됩니다.
 

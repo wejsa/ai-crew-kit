@@ -6,7 +6,7 @@
 
 AI 에이전트 팀 기반 소프트웨어 개발 프로세스 관리 프레임워크
 
-[![Version](https://img.shields.io/badge/version-v2.0.0-blue?style=flat-square)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v2.0.1-blue?style=flat-square)](./CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](./LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/wejsa/ai-crew-kit?style=flat-square)](https://github.com/wejsa/ai-crew-kit)
 [![Built with Claude Code](https://img.shields.io/badge/built_with-Claude_Code-blueviolet?style=flat-square)](https://claude.ai/download)
@@ -32,19 +32,29 @@ claude
 > `/skill-init --quick`은 제로 결정 모드로 5분 안에 체험할 수 있습니다.
 > 모든 설정을 직접 선택하려면 `/skill-init`을 사용하세요.
 
-초기화 과정에서 **도메인**, **기술 스택**, **에이전트 팀**을 선택하고, 프로젝트 전용 `README.md`와 `VERSION`(0.1.0)이 자동 생성됩니다.
+`/skill-init`은 ai-crew-kit clone을 자동 감지하여 다음을 한 번에 처리합니다 (사용자 추가 확인 없음):
+
+1. kit git 히스토리 제거 + 새 사용자 리포 초기화
+2. kit 잔여 파일 자동 정리 (`CHANGELOG.md`, `docs/`, `examples/`, `tests/`, `scripts/`, `.github/`, `memory/`, `LICENSE`, `.claude/temp/`, `.claude/hooks/tests/`)
+3. 도메인·기술 스택·에이전트 팀 선택
+4. 사용자 프로젝트용 `CLAUDE.md`/`README.md`/`VERSION`(0.1.0) 자동 생성
+5. `KIT_SOURCE_URL`을 `project.json`의 `kitSource`로 기록 (skill-upgrade가 GitHub에서 kit 가이드 fetch)
+
+> [!NOTE]
+> kit clone 자동 정리는 두 안전장치를 통과해야 실행됩니다 — (1) origin URL 정규식 + initial commit fingerprint 일치, (2) 더티/미푸시/비-main 브랜치 가드. 사용자 시나리오에는 영향이 없으며 kit 개발자 환경 사고만 방지합니다.
 
 **이미 코드베이스가 있는 프로젝트라면:**
 
 ```bash
-git clone https://github.com/wejsa/ai-crew-kit.git
-cp -r ai-crew-kit/.claude my-existing-project/
+# 권장: kit의 .claude/만 기존 프로젝트에 복사 (잡티 0)
+git clone https://github.com/wejsa/ai-crew-kit.git /tmp/ai-crew-kit
+cp -r /tmp/ai-crew-kit/.claude my-existing-project/
 cd my-existing-project
 claude
 /skill-onboard
 ```
 
-> 코드베이스를 자동 스캔하여 기술 스택과 도메인을 감지하고 설정을 생성합니다.
+> 코드베이스를 자동 스캔하여 기술 스택과 도메인을 감지하고 설정을 생성합니다. kit clone에 사용자 코드를 함께 둔 경우(시나리오 B)도 `/skill-onboard`가 위와 동일한 자동 정리를 사전에 수행합니다 (사용자 코드 보통 `src/`/`app/` 등 비충돌 경로면 안전; 동일 경로 충돌 의심 시 사전 백업 권장).
 > 자세한 내용은 [기존 프로젝트 온보딩](./docs/getting-started.md#기존-프로젝트-온보딩)을 참조하세요.
 
 ---

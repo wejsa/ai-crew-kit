@@ -131,4 +131,4 @@ v2.0 보류(v2.1+ 재검토):
 - 검사 절차: [skill-health-check SKILL.md](../../../skills/skill-health-check/SKILL.md) `secrets` 카테고리 (Step 2 이후)
 - Phase 4 도메인 × 언어 rules와의 경계: [docs/v2/phase-5-tft-analysis.md §3](https://github.com/wejsa/ai-crew-kit/blob/main/docs/v2/phase-5-tft-analysis.md)
 
-> kit dev 문서(docs/v2/) 링크는 ai-crew-kit GitHub 리포를 가리킵니다. 사용자 프로젝트에는 `docs/`가 포함되지 않으므로(자동 정리됨), GitHub URL로 참조합니다. `.claude/skills/...` 내부 링크는 사용자 프로젝트에서도 유효합니다.
+> kit dev 문서(docs/v2/) 링크는 ai-crew-kit GitHub 리포를 가리킵니다. 사용자 프로젝트에는 `docs/`가 포함되지 않으므로(자동 정리됨), GitHub URL로 참조합니다. `.claude/skills/...` 내부 링크는 사용자 프로젝트에서도 유효합니다. **버전 주의**: `blob/main`은 최신 main 기준이며 사용자 시드 시점과 다를 수 있습니다 — 시드 시점 보존이 필요하면 `blob/{kitVersion 태그}`로 변경하세요.
