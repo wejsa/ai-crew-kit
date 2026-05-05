@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.2] - 2026-05-05
+
+> **skill-init/onboard에서 ai-crew-kit clone 자동 정리 (patch)** — 사용자가 ai-crew-kit clone에서 신규/기존 프로젝트로 진입할 때 Claude가 보수적으로 멈추거나 kit 잔여 파일(CHANGELOG.md, docs/, examples/ 등) 처리를 수동으로 묻던 UX 결함 해결. skill-init Step 1, skill-onboard 사전 조건에 "표준 진입 플로우 — 추가 확인 없이 자동 실행" 명시. 검출 기준(origin URL 정규식 + initial commit fingerprint) + 자기 보호 가드 3종(tracked dirty / 미푸시 / 비-main·detached) 통과 시 kit 잔여 10개 항목(`CHANGELOG.md`, `docs/`, `examples/`, `tests/`, `scripts/`, `.github/`, `memory/`, `LICENSE`, `.claude/temp/`, `.claude/hooks/tests/`) 자동 삭제. 외부 리뷰 2라운드 모두 반영(M1 검출 기준 / M2 dev 가드 / M3 Guard 1 untracked 우회로 시나리오 B UX 보존 / m1·m4·m5·m6).
+
 ### Changed
 
 - **`.claude/skills/skill-init/SKILL.md`** — Step 1에 "ai-crew-kit clone 자동 정리" 표준 진입 플로우 명시. 검출 기준(origin URL 정규식 `[/:]ai-crew-kit(\.git)?$` + initial commit fingerprint `ab0269a14...` 둘 다 매칭) + 자기 보호 가드 3가지(더티 워킹 트리/미푸시 커밋/비-main 브랜치 차단) 모두 통과 시 `rm -rf .git && git init -b main` 후 kit 잔여 10개 항목(CHANGELOG.md, docs/, examples/, tests/, scripts/, .github/, memory/, LICENSE, .claude/temp/, .claude/hooks/tests/)을 **추가 확인 질문 없이** 자동 삭제. Claude가 이전에 보수적으로 멈추던 케이스 해결. Step 7 마지막 줄 `docs/getting-started.md` 참조를 GitHub URL로 변경.
