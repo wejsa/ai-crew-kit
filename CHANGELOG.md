@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`.claude/skills/skill-init/SKILL.md`** — Step 1에 "ai-crew-kit clone 자동 정리" 표준 진입 플로우 명시. `git remote get-url origin`이 ai-crew-kit을 가리키면 `rm -rf .git && git init -b main` 후 kit 잔여 파일(CHANGELOG.md, docs/, examples/, tests/, scripts/, .github/, memory/, LICENSE, .claude/temp/, .claude/hooks/tests/)을 **추가 확인 질문 없이** 자동 삭제. Claude가 이전에 보수적으로 멈추던 케이스 해결 — "의도된 초기화이며 destructive 작업이 아님" 컨텍스트 명시. Step 7 마지막 줄의 `docs/getting-started.md` 참조를 GitHub URL로 변경(자동 정리 후 사용자 프로젝트에 docs/ 부재).
+- **`.claude/skills/skill-onboard/SKILL.md`** — 사전 조건 2번에 "ai-crew-kit clone 자동 정리" 추가 (skill-init Step 1과 동일 로직). 사용자가 ai-crew-kit clone에 기존 코드를 함께 두고 온보딩하는 시나리오(B/C)에서도 잡티 자동 제거. kit clone이 아니면 자동 스킵.
+- **`.claude/rules/README.md`, `.claude/domains/_base/health/README.md`, `.claude/hooks/README.md`** — 사용자 프로젝트에서 `docs/` 자동 정리 시 깨질 dead link 11개를 GitHub 절대 URL로 보정. 사용자 프로젝트와 kit dev 양쪽에서 모두 작동.
+
+### Notes
+
+- 사용자 영향: skill-init/skill-onboard 진입 시 멈춤 없이 자연스럽게 진행. 사용자 프로젝트가 더 깨끗하게 시작됨(kit 잡티 0).
+- 프로덕션 훅 3종(SessionStart/PostToolUse/Stop) 영향 0 — `CLAUDE_PROJECT_DIR` 만 참조하여 self-contained.
+- LICENSE는 Y/n 질문 없이 자동 삭제(사용자가 자기 라이선스 결정). KIT_SOURCE_URL은 보존되어 skill-upgrade가 kit 가이드 문서 fetch 가능.
+
 ## [2.0.1] - 2026-05-05
 
 > **DB 컨벤션 정책 중심 정리 (patch)** — v1.41.0 "프레임워크는 특정 기술 패턴을 가르치지 않음" 철학 정렬. `_base/conventions/database.md`와 `agent-db-designer.md`에서 Claude 기본 지식 영역(DB별 구문/타입표/인덱스 설계 원칙)을 제거하고, 팀 정책(네이밍·필수 컬럼·Soft Delete·낙관적 잠금·무중단 마이그레이션)만 유지. 기본값(MySQL+Flyway) 외 사용 시 `project.json`의 `techStack.database`만 변경하면 Claude가 컨텍스트에 맞춰 구문 적용. 사용자 진입점은 `docs/customization.md`로 단일화.

@@ -168,8 +168,10 @@ frontmatter 다음에 다음 섹션을 권장합니다(고정 형식 아님):
 
 ## 참고
 
-- 상위 설계: [docs/v2/phase-4-rules.md](../../docs/v2/phase-4-rules.md)
-- TFT 분석: [docs/v2/phase-4-tft-analysis.md](../../docs/v2/phase-4-tft-analysis.md)
-- 구현 계획: [docs/v2/phase-4-plan.md](../../docs/v2/phase-4-plan.md)
-- Layered Override: [docs/concepts.md](../../docs/concepts.md)
-- 커스터마이징: [docs/customization.md](../../docs/customization.md)
+- 상위 설계: [docs/v2/phase-4-rules.md](https://github.com/wejsa/ai-crew-kit/blob/main/docs/v2/phase-4-rules.md)
+- TFT 분석: [docs/v2/phase-4-tft-analysis.md](https://github.com/wejsa/ai-crew-kit/blob/main/docs/v2/phase-4-tft-analysis.md)
+- 구현 계획: [docs/v2/phase-4-plan.md](https://github.com/wejsa/ai-crew-kit/blob/main/docs/v2/phase-4-plan.md)
+- Layered Override: [docs/concepts.md](https://github.com/wejsa/ai-crew-kit/blob/main/docs/concepts.md)
+- 커스터마이징: [docs/customization.md](https://github.com/wejsa/ai-crew-kit/blob/main/docs/customization.md)
+
+> 이 링크들은 ai-crew-kit GitHub 리포를 가리킵니다. 사용자 프로젝트에는 `docs/`가 포함되지 않으므로 (skill-init/skill-onboard에서 자동 정리), 항상 GitHub URL로 참조합니다.

@@ -29,7 +29,23 @@ complexity-hint: medium
 
 ## 사전 조건 (MUST-EXECUTE-FIRST — 하나라도 실패 시 STOP)
 1. Git 저장소 확인 → 없으면 "git init 먼저 실행" 안내
-2. 기존 AI Crew Kit 설정 (project.json) → AskUserQuestion으로 덮어쓰기 확인
+2. **ai-crew-kit clone 자동 정리** (표준 진입 플로우):
+   - `git remote get-url origin`이 `ai-crew-kit`을 가리키면 자동 실행 (그 외 자동 스킵)
+   - **추가 확인 질문 없이 즉시 실행** — 의도된 초기화이며 destructive 작업이 아님
+   - 실행 순서:
+     1. `KIT_SOURCE_URL=$(git remote get-url origin)` 저장 (Step 5에서 `kitSource`로 기록)
+     2. `rm -rf .git && git init -b main`
+     3. kit 잔여 파일 자동 삭제:
+        ```bash
+        rm -rf CHANGELOG.md docs/ examples/ tests/ scripts/ \
+               .github/ memory/ LICENSE \
+               .claude/temp/ .claude/hooks/tests/
+        ```
+        보존: `.claude/` (프레임워크 본체), `.gitignore`, `.gitattributes`
+     4. 보고: `"✓ ai-crew-kit clone 감지 → 표준 초기화 + kit 잔여 N개 자동 정리"`
+   - 사용자 코드가 이미 같이 있는 경우(시나리오 B/C)에도 안전 — `.claude/` 외부의 사용자 코드는 건드리지 않음
+   - Claude는 "다른 경로가 필요한가요?" 같은 확인 질문을 하지 말 것
+3. 기존 AI Crew Kit 설정 (project.json) → AskUserQuestion으로 덮어쓰기 확인
 
 ## 실행 플로우
 

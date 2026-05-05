@@ -125,8 +125,10 @@ v2.0 보류(v2.1+ 재검토):
 
 ## 참고
 
-- 상위 설계: [docs/v2/phase-5-security.md](../../../../docs/v2/phase-5-security.md)
-- TFT 분석: [docs/v2/phase-5-tft-analysis.md](../../../../docs/v2/phase-5-tft-analysis.md)
-- 구현 계획: [docs/v2/phase-5-plan.md](../../../../docs/v2/phase-5-plan.md)
+- 상위 설계: [docs/v2/phase-5-security.md](https://github.com/wejsa/ai-crew-kit/blob/main/docs/v2/phase-5-security.md)
+- TFT 분석: [docs/v2/phase-5-tft-analysis.md](https://github.com/wejsa/ai-crew-kit/blob/main/docs/v2/phase-5-tft-analysis.md)
+- 구현 계획: [docs/v2/phase-5-plan.md](https://github.com/wejsa/ai-crew-kit/blob/main/docs/v2/phase-5-plan.md)
 - 검사 절차: [skill-health-check SKILL.md](../../../skills/skill-health-check/SKILL.md) `secrets` 카테고리 (Step 2 이후)
-- Phase 4 도메인 × 언어 rules와의 경계: [docs/v2/phase-5-tft-analysis.md §3](../../../../docs/v2/phase-5-tft-analysis.md)
+- Phase 4 도메인 × 언어 rules와의 경계: [docs/v2/phase-5-tft-analysis.md §3](https://github.com/wejsa/ai-crew-kit/blob/main/docs/v2/phase-5-tft-analysis.md)
+
+> kit dev 문서(docs/v2/) 링크는 ai-crew-kit GitHub 리포를 가리킵니다. 사용자 프로젝트에는 `docs/`가 포함되지 않으므로(자동 정리됨), GitHub URL로 참조합니다. `.claude/skills/...` 내부 링크는 사용자 프로젝트에서도 유효합니다.

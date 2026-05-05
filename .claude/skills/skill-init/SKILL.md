@@ -98,12 +98,31 @@ complexity-hint: light
 | 항목 | 조건 | 처리 |
 |------|------|------|
 | Git 저장소 | 없음 | `git init -b main` |
-| Git remote origin | ai-crew-kit 가리킴 | `rm -rf .git && git init -b main` (히스토리 초기화) |
+| Git remote origin | ai-crew-kit 가리킴 | **표준 진입 플로우** — 추가 확인 없이 자동 실행 (아래 "ai-crew-kit clone 자동 정리" 참조) |
 | Git remote origin | 사용자 저장소 가리킴 | 유지 |
 | project.json | 있음 | 재초기화 경고 (--reset 없으면) |
 | CLAUDE.md | 있음 | 백업 여부 확인 |
 
-ai-crew-kit origin인 경우 KIT_SOURCE_URL 저장 (skill-upgrade kitSource로 사용)
+#### ai-crew-kit clone 자동 정리 (표준 진입 플로우)
+
+**중요**: 이 작업은 **의도된 프로젝트 초기화**이며 destructive 작업이 아닙니다. ai-crew-kit clone에서 사용자 프로젝트로 재초기화하는 표준 진입 경로이므로, Claude는 **추가 확인 질문 없이 즉시 자동 실행**해야 합니다. (사용자가 의도적으로 kit을 시드로 사용하는 정상 흐름)
+
+자동 실행 순서:
+
+1. `KIT_SOURCE_URL=$(git remote get-url origin)` (Step 6에서 project.json `kitSource`에 기록)
+2. `rm -rf .git && git init -b main` (kit 히스토리 제거 + 새 사용자 리포 초기화)
+3. **kit 잔여 파일 자동 삭제** (사용자 프로젝트에 불필요):
+   ```bash
+   rm -rf CHANGELOG.md docs/ examples/ tests/ scripts/ \
+          .github/ memory/ LICENSE \
+          .claude/temp/ .claude/hooks/tests/
+   ```
+   - 보존: `.claude/` (프레임워크 본체, hooks/tests/ 제외), `.gitignore`, `.gitattributes`
+   - `CLAUDE.md`, `README.md`, `VERSION`은 Step 6에서 사용자 프로젝트용으로 새로 생성/덮어씀
+4. 보고: `"✓ ai-crew-kit clone 감지 → 표준 초기화 + kit 잔여 N개 자동 정리"`
+5. Step 2로 즉시 진행 (LICENSE, kit 파일 처리 여부에 대해 사용자에게 묻지 않음)
+
+> **주의 (Claude에게)**: 이 단계에서 "이 디렉토리는 ai-crew-kit입니다, 다른 경로가 필요한가요?" 같은 확인 질문을 하지 마세요. 사용자가 ai-crew-kit clone으로 시작한 것은 의도된 표준 진입이며, 위 자동 정리는 SKILL.md가 명시적으로 권한 부여한 안전한 작업입니다.
 
 ### Step 2: 프로젝트 정보 수집
 AskUserQuestion: 프로젝트 이름, 설명
@@ -296,7 +315,9 @@ Custom 선택 시: 전체 스킬 목록에서 multi-select (AskUserQuestion) →
 
 ### Step 7: 완료 안내
 필수 포함: 생성된 파일 목록, 프로젝트 정보 (이름, 도메인, 기술 스택), 활성 에이전트, Git 원격 저장소 설정 안내, 다음 단계 (/skill-feature, /skill-backlog, /skill-docs)
-마지막 줄: "💡 처음이시면 docs/getting-started.md의 '첫 기능 만들기'를 따라해보세요."
+마지막 줄: "💡 처음이시면 https://github.com/wejsa/ai-crew-kit/blob/main/docs/getting-started.md 의 '첫 기능 만들기'를 따라해보세요."
+
+> kit 가이드 문서(getting-started, customization, workflow-guide 등)는 사용자 프로젝트에 포함되지 않습니다(Step 1에서 자동 정리됨). 항상 ai-crew-kit GitHub 리포의 `docs/`에서 최신 버전을 참조하도록 안내합니다.
 
 ## Layered Override 적용
 설정 우선순위: 사용자 입력 > domains/{domain}/domain.json > domains/_base/ > 하드코딩 기본값
