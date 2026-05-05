@@ -168,8 +168,10 @@ frontmatter 다음에 다음 섹션을 권장합니다(고정 형식 아님):
 
 ## 참고
 
-- 상위 설계: [docs/v2/phase-4-rules.md](../../docs/v2/phase-4-rules.md)
-- TFT 분석: [docs/v2/phase-4-tft-analysis.md](../../docs/v2/phase-4-tft-analysis.md)
-- 구현 계획: [docs/v2/phase-4-plan.md](../../docs/v2/phase-4-plan.md)
-- Layered Override: [docs/concepts.md](../../docs/concepts.md)
-- 커스터마이징: [docs/customization.md](../../docs/customization.md)
+- 상위 설계: [docs/v2/phase-4-rules.md](https://github.com/wejsa/ai-crew-kit/blob/main/docs/v2/phase-4-rules.md)
+- TFT 분석: [docs/v2/phase-4-tft-analysis.md](https://github.com/wejsa/ai-crew-kit/blob/main/docs/v2/phase-4-tft-analysis.md)
+- 구현 계획: [docs/v2/phase-4-plan.md](https://github.com/wejsa/ai-crew-kit/blob/main/docs/v2/phase-4-plan.md)
+- Layered Override: [docs/concepts.md](https://github.com/wejsa/ai-crew-kit/blob/main/docs/concepts.md)
+- 커스터마이징: [docs/customization.md](https://github.com/wejsa/ai-crew-kit/blob/main/docs/customization.md)
+
+> 이 링크들은 ai-crew-kit GitHub 리포를 가리킵니다. 사용자 프로젝트에는 `docs/`가 포함되지 않으므로 (skill-init/skill-onboard에서 자동 정리), 항상 GitHub URL로 참조합니다. **버전 주의**: `blob/main`은 항상 최신을 가리키므로 사용자 시드 시점(`project.json.kitVersion`)과 다를 수 있습니다. 시드 시점 문서를 보려면 `blob/{태그}` (예: `blob/v2.0.1`) 형태로 직접 변경하세요.

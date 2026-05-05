@@ -34,7 +34,7 @@
 
 | 명령어 | 설명 |
 |--------|------|
-| `/skill-init` | 프로젝트 초기화 |
+| `/skill-init` | 프로젝트 초기화 (ai-crew-kit clone 감지 시 kit 잔여 자동 정리) |
 | `/skill-init --quick` | 제로 결정 빠른 초기화 |
 | `/skill-init --reset` | 기존 설정 초기화 (재설정) |
 | `/skill-status` | 현재 상태 확인 |
@@ -45,8 +45,10 @@
 | `/skill-health-check --scope {카테고리}` | 특정 카테고리만 검사 |
 | `/skill-health-check --fix` | 자동 수정 포함 검사 |
 | `/skill-backlog` | 백로그 조회/관리 |
-| `/skill-onboard` | 기존 프로젝트에 AI Crew Kit 적용 |
+| `/skill-onboard` | 기존 프로젝트에 AI Crew Kit 적용 (kit clone 감지 시 자동 정리) |
 | `/skill-onboard --scan-only` | 스캔만 수행 (설정 생성 없음) |
+
+> **ai-crew-kit clone 자동 정리** (`/skill-init`, `/skill-onboard` 공통): origin URL 정규식 + initial commit fingerprint 둘 다 일치 + 더티/미푸시/비-main 가드 통과 시 kit 잔여 파일(`CHANGELOG.md`, `docs/`, `examples/`, `tests/`, `scripts/`, `.github/`, `memory/`, `LICENSE`, `.claude/temp/`, `.claude/hooks/tests/`)을 추가 확인 없이 자동 삭제. 가드 미통과 시 정리 SKIP하고 일반 진행 (kit 개발자 환경 보호).
 
 ### 개발 워크플로우 🔵
 

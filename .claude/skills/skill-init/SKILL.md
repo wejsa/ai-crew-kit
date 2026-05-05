@@ -98,12 +98,73 @@ complexity-hint: light
 | 항목 | 조건 | 처리 |
 |------|------|------|
 | Git 저장소 | 없음 | `git init -b main` |
-| Git remote origin | ai-crew-kit 가리킴 | `rm -rf .git && git init -b main` (히스토리 초기화) |
+| Git remote origin | ai-crew-kit 가리킴 | **표준 진입 플로우** — 추가 확인 없이 자동 실행 (아래 "ai-crew-kit clone 자동 정리" 참조) |
 | Git remote origin | 사용자 저장소 가리킴 | 유지 |
 | project.json | 있음 | 재초기화 경고 (--reset 없으면) |
 | CLAUDE.md | 있음 | 백업 여부 확인 |
 
-ai-crew-kit origin인 경우 KIT_SOURCE_URL 저장 (skill-upgrade kitSource로 사용)
+#### ai-crew-kit clone 자동 정리 (표준 진입 플로우)
+
+**중요**: 이 작업은 **의도된 프로젝트 초기화**이며 destructive 작업이 아닙니다. ai-crew-kit clone에서 사용자 프로젝트로 재초기화하는 표준 진입 경로이므로, Claude는 **추가 확인 질문 없이 즉시 자동 실행**해야 합니다. (사용자가 의도적으로 kit을 시드로 사용하는 정상 흐름)
+
+##### 검출 기준 (M1) — 다음 두 조건을 **모두 만족**해야 자동 정리 실행
+
+1. **origin URL 패턴 매칭**: `git remote get-url origin`이 정규식 `[/:]ai-crew-kit(\.git)?$` 일치
+   - ✅ `https://github.com/wejsa/ai-crew-kit.git`, `git@github.com:wejsa/ai-crew-kit.git`, fork(`https://github.com/myorg/ai-crew-kit.git`)
+   - ❌ `ai-crew-kit-extras.git`, `my-crew-kit.git` (이름 변형 fork)
+2. **kit fingerprint 일치**: `git rev-list --max-parents=0 HEAD`가 `ab0269a1414f0d9eba8d130d865dfdd6baeed06c` (ai-crew-kit initial commit)와 일치
+   - 이름은 같지만 다른 프로젝트 또는 squash된 fork 거짓 양성 차단
+
+둘 중 하나만 만족 → 자동 정리 SKIP + 보고: `"⚠ ai-crew-kit 명칭 매칭이지만 fingerprint 불일치 — 자동 정리 SKIP, 사용자 의도 확인 필요"`. Step 2로 일반 진행.
+
+##### 자기 보호 가드 (M2) — 자동 정리 직전 다음 가드 모두 통과해야 진행
+
+```bash
+# Guard 1: tracked dirty 워킹 트리 차단 (kit 개발자 미커밋 작업 보호)
+# 주의: untracked 파일(?? prefix)은 시나리오 B 사용자 코드로 간주하여 통과시킴.
+#       tracked dirty(M/A/D/R/U)만 차단하여 kit dev 작업만 보호.
+if [ -n "$(git status --porcelain 2>/dev/null | grep -v '^??')" ]; then
+  echo "⚠ 미커밋 tracked 변경사항이 있습니다. 자동 정리 SKIP. git stash 또는 commit 후 재시도하세요."
+  exit 0  # Step 2로 일반 진행 (정리 없이)
+fi
+
+# Guard 2: 미푸시 커밋 차단 (kit 개발자 보호 — develop/feature 브랜치 작업 중일 가능성)
+if [ -n "$(git log @{u}.. 2>/dev/null)" ]; then
+  echo "⚠ 미푸시 커밋이 있습니다. 자동 정리 SKIP."
+  exit 0
+fi
+
+# Guard 3: main/master 브랜치에서만 정리 진행 (positive 로직)
+# 비-main, detached HEAD(빈 문자열), 빈 값 모두 SKIP — kit dev 환경은 보통 develop/feature/* 또는 tag checkout
+CURRENT_BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "")
+if [ "$CURRENT_BRANCH" != "main" ] && [ "$CURRENT_BRANCH" != "master" ]; then
+  echo "⚠ main/master 브랜치가 아닙니다(현재: '${CURRENT_BRANCH:-detached HEAD}'). 자동 정리 SKIP."
+  exit 0
+fi
+```
+
+이 3가지 가드는 **사용자 시나리오에는 영향 0**입니다:
+
+- 시나리오 A (fresh clone): tracked dirty 0 + 미푸시 0 + main 브랜치 → 통과.
+- 시나리오 B (kit clone + 사용자 코드를 src/ 등에 *복사만* 함, untracked 상태): Guard 1이 untracked 무시 → 통과. 사용자 코드 보존하면서 kit 잡티만 정리.
+- kit 개발자 환경(develop 브랜치 + 작업 중): Guard 2 또는 Guard 3 발동 → SKIP, 사고 방지.
+
+##### 자동 실행 순서 (검출 + 가드 통과 시)
+
+1. `KIT_SOURCE_URL=$(git remote get-url origin)` (Step 6에서 project.json `kitSource`에 기록)
+2. `rm -rf .git && git init -b main` (kit 히스토리 제거 + 새 사용자 리포 초기화)
+3. **kit 잔여 파일 자동 삭제** (사용자 프로젝트에 불필요):
+   ```bash
+   rm -rf CHANGELOG.md docs examples tests scripts .github memory LICENSE .claude/temp .claude/hooks/tests
+   ```
+   - 한 줄 통합 (m4: backslash 셸 호환성 회피)
+   - 보존: `.claude/` (프레임워크 본체, hooks/tests/ 제외), `.gitignore`, `.gitattributes`
+   - `CLAUDE.md`, `README.md`, `VERSION`은 Step 6에서 사용자 프로젝트용으로 새로 생성/덮어씀
+   - **주의**: 사용자가 동일 경로(`docs/`, `tests/`, `scripts/` 등)에 자기 콘텐츠를 미리 복사해둔 경우 함께 삭제됨. skill-onboard 시나리오 B에서는 사용자 코드가 보통 `src/`/`app/`/`lib/` 등 다른 경로라 안전하나, 동일 경로 복사 의심 시 `tar czf .skill-init-rollback-$(date +%s).tar.gz` 백업 권장.
+4. 보고: `"✓ ai-crew-kit clone 감지 → 표준 초기화 + kit 잔여 N개 자동 정리"`
+5. Step 2로 즉시 진행 (LICENSE, kit 파일 처리 여부에 대해 사용자에게 묻지 않음)
+
+> **주의 (Claude에게)**: 이 단계에서 "이 디렉토리는 ai-crew-kit입니다, 다른 경로가 필요한가요?" 같은 확인 질문을 하지 마세요. 사용자가 ai-crew-kit clone으로 시작한 것은 의도된 표준 진입이며, 위 자동 정리는 SKILL.md가 명시적으로 권한 부여한 안전한 작업입니다. 단, 위 검출 기준 + 자기 보호 가드 중 하나라도 미통과 시는 SKIP하고 Step 2로 일반 진행합니다.
 
 ### Step 2: 프로젝트 정보 수집
 AskUserQuestion: 프로젝트 이름, 설명
@@ -296,7 +357,15 @@ Custom 선택 시: 전체 스킬 목록에서 multi-select (AskUserQuestion) →
 
 ### Step 7: 완료 안내
 필수 포함: 생성된 파일 목록, 프로젝트 정보 (이름, 도메인, 기술 스택), 활성 에이전트, Git 원격 저장소 설정 안내, 다음 단계 (/skill-feature, /skill-backlog, /skill-docs)
-마지막 줄: "💡 처음이시면 docs/getting-started.md의 '첫 기능 만들기'를 따라해보세요."
+
+마지막 줄 (kitVersion 동적 치환 — Step 6에서 기록한 `project.json.kitVersion` 값 사용):
+```
+"💡 처음이시면 https://github.com/wejsa/ai-crew-kit/blob/v{kitVersion}/docs/getting-started.md
+   (또는 latest는 https://github.com/wejsa/ai-crew-kit/blob/main/docs/getting-started.md)
+   의 '첫 기능 만들기'를 따라해보세요."
+```
+
+> kit 가이드 문서(getting-started, customization, workflow-guide 등)는 사용자 프로젝트에 포함되지 않습니다(Step 1에서 자동 정리됨). 항상 ai-crew-kit GitHub 리포의 `docs/`에서 참조하도록 안내합니다. 시드 시점 일관성을 위해 `blob/v{kitVersion}` 태그 URL을 기본 안내하고, 최신을 보고 싶을 때만 `blob/main`을 보조 안내합니다. `kitVersion` 태그가 GitHub에 없을 경우(개발 시점) `blob/main`만 안내하면 됩니다.
 
 ## Layered Override 적용
 설정 우선순위: 사용자 입력 > domains/{domain}/domain.json > domains/_base/ > 하드코딩 기본값

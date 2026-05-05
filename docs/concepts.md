@@ -117,6 +117,10 @@ CLAUDE.md               # AI 에이전트 지시문
 README.md               # 프로젝트 README (템플릿 기반)
 VERSION                 # 프로젝트 버전 (0.1.0부터 시작)
 
+# ai-crew-kit clone에서 시작한 경우 skill-init/skill-onboard가 다음을 자동 삭제
+# (kit dev 잡티 — 사용자 프로젝트에 불필요): CHANGELOG.md, docs/, examples/,
+# tests/, scripts/, .github/, memory/, LICENSE, .claude/temp/, .claude/hooks/tests/
+
 docs/
 ├── retro/              # 회고 리포트 (skill-retro)
 └── reports/            # 메트릭 리포트 (skill-report)

@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`.claude/skills/skill-init/SKILL.md`** — Step 1에 "ai-crew-kit clone 자동 정리" 표준 진입 플로우 명시. 검출 기준(origin URL 정규식 `[/:]ai-crew-kit(\.git)?$` + initial commit fingerprint `ab0269a14...` 둘 다 매칭) + 자기 보호 가드 3가지(더티 워킹 트리/미푸시 커밋/비-main 브랜치 차단) 모두 통과 시 `rm -rf .git && git init -b main` 후 kit 잔여 10개 항목(CHANGELOG.md, docs/, examples/, tests/, scripts/, .github/, memory/, LICENSE, .claude/temp/, .claude/hooks/tests/)을 **추가 확인 질문 없이** 자동 삭제. Claude가 이전에 보수적으로 멈추던 케이스 해결. Step 7 마지막 줄 `docs/getting-started.md` 참조를 GitHub URL로 변경.
+- **`.claude/skills/skill-onboard/SKILL.md`** — 사전 조건 2번에 동일 검출+가드+자동 정리 로직 추가 (skill-init과 일치). 시나리오 A(`.claude/`만 복사)는 검출 자동 스킵, 시나리오 B(kit clone+사용자 코드)는 사전 정리 후 온보딩, 시나리오 C(kit clone 아님)는 자동 스킵으로 영향 없음. 시나리오 B 동일 경로 충돌(사용자가 자기 docs/tests를 동일 경로에 둔 경우) 1줄 주의 추가.
+- **`README.md`** — 빠른 시작 섹션에 자동 정리 5단계 결과 + 검출 기준/가드 설명 추가. 버전 배지 v2.0.0 → v2.0.1 정정. 기존 프로젝트 온보딩 경로를 시나리오 A(권장) 중심으로 정리하고 시나리오 B 동일 경로 충돌 주의 추가.
+- **`docs/getting-started.md`** — 초기화 흐름 다이어그램에 "1단계 환경 검증 + ai-crew-kit clone 자동 정리" 명시. 검출 기준/가드 박스, kit dev 잡티 10종 명시. 기존 프로젝트 온보딩에 시나리오 A(`.claude/`만 복사)와 시나리오 B(kit clone+사용자 코드) 분기 + 사전 백업 권장. 온보딩 흐름 다이어그램에 "0. 사전 조건" 단계 추가.
+- **`docs/skill-reference.md`** — `/skill-init`, `/skill-onboard` 행에 "ai-crew-kit clone 감지 시 자동 정리" 한 줄 + 표 하단에 검출/가드/잔여파일 요약 박스.
+- **`docs/concepts.md`** — 프로젝트 루트 자동 생성 섹션에 "ai-crew-kit clone에서 시작 시 kit dev 잡티 10종 자동 삭제" 1줄 주석.
+- **`.claude/rules/README.md`, `.claude/domains/_base/health/README.md`, `.claude/hooks/README.md`** — 사용자 프로젝트에서 `docs/` 자동 정리 시 깨질 dead link 11개를 GitHub 절대 URL로 보정. `blob/main` 버전 표류 주의 1줄(시드 시점 보존이 필요하면 `blob/{kitVersion 태그}`로 변경) 추가.
+- **`CHANGELOG.md`** — 본 변경 기록.
+
+### Notes
+
+- 사용자 영향: skill-init/skill-onboard 진입 시 멈춤 없이 자연스럽게 진행. 사용자 프로젝트가 더 깨끗하게 시작됨(kit 잡티 0).
+- 프로덕션 훅 3종(SessionStart/PostToolUse/Stop) 영향 0 — `CLAUDE_PROJECT_DIR` 만 참조하여 self-contained.
+- LICENSE는 Y/n 질문 없이 자동 삭제(사용자가 자기 라이선스 결정). KIT_SOURCE_URL은 보존되어 skill-upgrade가 kit 가이드 문서 fetch 가능.
+- 외부 리뷰 1라운드(직전 CRITICAL 1건은 재평가에서 MINOR로 강등, MAJOR 2건 M1·M2 본 PR에서 반영, MINOR 4건 중 m1·m4 반영, m2·m3 INFO로 분류).
+- M2 가드는 사용자 시나리오에 영향 0이며 ai-crew-kit 본인 dev 환경에서 `/skill-init` 실수 실행 시의 폭탄을 방지합니다.
+- **외부 리뷰 2라운드 반영** — Guard 1(더티 워킹 트리)이 시나리오 B(사용자 코드 untracked) 흐름을 차단하던 M3 결함 수정: `grep -v '^??'`로 tracked dirty만 차단. m5 Guard 3 detached HEAD 빈 문자열 우회 차단(`[ -n ]` 조건 제거, positive 로직). m6 skill-init Step 7 마지막 줄 GitHub URL을 `blob/v{kitVersion}` 동적 치환 + main 보조 안내로 변경. fingerprint `ab0269a14...` 실제 main root commit 일치 검증 완료.
+
 ## [2.0.1] - 2026-05-05
 
 > **DB 컨벤션 정책 중심 정리 (patch)** — v1.41.0 "프레임워크는 특정 기술 패턴을 가르치지 않음" 철학 정렬. `_base/conventions/database.md`와 `agent-db-designer.md`에서 Claude 기본 지식 영역(DB별 구문/타입표/인덱스 설계 원칙)을 제거하고, 팀 정책(네이밍·필수 컬럼·Soft Delete·낙관적 잠금·무중단 마이그레이션)만 유지. 기본값(MySQL+Flyway) 외 사용 시 `project.json`의 `techStack.database`만 변경하면 Claude가 컨텍스트에 맞춰 구문 적용. 사용자 진입점은 `docs/customization.md`로 단일화.
