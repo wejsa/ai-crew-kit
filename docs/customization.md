@@ -256,6 +256,67 @@ domains/_base/                            ← 공통 기본값
 
 ---
 
+## DB 및 마이그레이션 도구 변경
+
+`_base/conventions/database.md`의 정책(네이밍·필수 컬럼·Soft Delete·낙관적 잠금·무중단 마이그레이션)은 DB·도구 무관하게 적용됩니다. 기본값을 다른 DB나 마이그레이션 도구로 바꾸려면 `project.json`만 변경하면 됩니다.
+
+### 기본값
+
+| 항목 | 기본값 |
+|------|--------|
+| DB | MySQL 8.0+ |
+| 마이그레이션 도구 | Flyway (`V{N}__{description}.sql`) |
+
+### DB 변경
+
+```json
+// project.json
+{
+  "techStack": {
+    "database": "postgresql"   // mysql / postgresql / mongodb / 기타
+  }
+}
+```
+
+DB별 구문 차이는 Claude가 자동 치환합니다:
+
+| MySQL | PostgreSQL | MongoDB |
+|-------|-----------|---------|
+| `TINYINT(1)` | `BOOLEAN` | (스키마리스) |
+| `AUTO_INCREMENT` | `IDENTITY` / `SERIAL` | `_id` ObjectId |
+| `JSON` | `JSONB` | document |
+| `VARCHAR(N)` | `VARCHAR(N)` / `TEXT` | string |
+
+본 표에 없는 DB(CockroachDB/SQLite/DynamoDB 등)도 Claude가 동등 특성으로 추론합니다.
+
+### 마이그레이션 도구 변경
+
+Flyway 외 도구(Liquibase/Alembic/Prisma migrate/golang-migrate 등)를 사용하려면 `domain.json` 또는 `project.json`의 `techStack.migration` 필드를 추가하세요(없으면 Flyway 기본). 명명 규칙은 동등 패턴을 유지합니다:
+
+- Flyway: `V1__create_users_table.sql`
+- Alembic: `2024_01_create_users_table.py` (revision id)
+- Liquibase: `001-create-users-table.xml`
+- Prisma: `20240101000000_create_users_table/migration.sql`
+
+### 팀 표준 강제 (CUSTOM_SECTION)
+
+기본 정책 외에 팀 차원의 추가 표준을 강제하려면 `_base/conventions/database.md`에 CUSTOM_SECTION 마커로 추가하세요. 프레임워크 업그레이드 시에도 보존됩니다.
+
+```markdown
+<!-- CUSTOM_SECTION_START -->
+## 팀 DB 표준 (PostgreSQL)
+
+- 시계열 데이터: TimescaleDB 하이퍼테이블 사용
+- JSONB 인덱스: GIN 인덱스 + 부분 표현식 인덱스 우선
+- 파티셔닝: 월 단위 RANGE 파티션 (1년 보관 후 아카이브)
+- 통계 갱신: ANALYZE를 마이그레이션 마지막 단계에 포함
+<!-- CUSTOM_SECTION_END -->
+```
+
+`agent-db-designer`는 이 섹션을 자동 참조하여 팀 표준에 맞춘 설계 초안을 제시합니다.
+
+---
+
 ## 새 도메인 생성
 
 ### 방법 1: 기존 도메인 복제 (권장)
