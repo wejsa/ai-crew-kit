@@ -30,7 +30,7 @@ DB 설계 분석 전문 에이전트. 파일 수정은 하지 않습니다.
 
 테이블/컬럼 네이밍, 필수 컬럼(`id`, `created_at`, `updated_at`, `deleted_at`), 제약조건 명명 패턴(`pk_`/`uk_`/`fk_`/`idx_`/`ck_`), 무중단 마이그레이션 원칙은 `_base/conventions/database.md`를 따릅니다. 본 에이전트는 **의사결정**과 **도메인 특수성**에 집중합니다.
 
-DB별 구문 차이(예: `TINYINT(1)` ↔ `BOOLEAN`, `AUTO_INCREMENT` ↔ `IDENTITY`, `JSON` ↔ `JSONB`)는 `project.json`에 지정된 DB에 맞춰 자동 적용합니다.
+SQL DB별 구문 차이(예: `TINYINT(1)` → `BOOLEAN`, `AUTO_INCREMENT` → `IDENTITY`, `JSON` → `JSONB`)는 `project.json`의 `techStack.database`에 맞춰 컨텍스트적으로 적용합니다. NoSQL(MongoDB 등)은 본 컨벤션의 *정책 수준*만 차용하고 스키마/쿼리는 도큐먼트 모델에 맞게 별도 작성합니다.
 
 ## 설계 의사결정 프레임워크
 
@@ -98,9 +98,18 @@ M:N 관계 시 **중간 테이블** 필수: `{테이블A}_{테이블B}` (예: `p
 - 쿠폰 테이블: 사용 횟수 카운터 + 동시성 제어
 
 ### healthcare
-- PHI 컬럼: 암호화 + 감사 로그 필수 (`access_log_id` FK)
+- PHI 컬럼: 저장 시 암호화, 평문 저장 금지 (`_base/conventions/security.md` 참조)
+- 감사 로그: append-only `phi_access_log` 별도 테이블/스토리지에 `(timestamp, user_id, user_role, patient_id, action, resource_type, resource_id, ip_address, result)` 누적. **PHI 테이블이 access log에 FK 걸지 않음** — 분리 저장 원칙 (`audit-trail.md` 참조). 1:N 누적 이력 + 위변조 방지(해시 체인/WORM)
 - 환자 식별자는 외부 노출용 별도 ID(UUID 등) 분리
-- 의료 기록은 Hard Delete 금지(법정 보존 기간 준수)
+- 의료 기록은 법정 보존 기간 동안 Hard Delete 금지 (의료법 10년/2년/5년 — `phi-data-handling.md` 참조). GDPR Art.17(Right to Erasure) 적용 환자는 보존 의무와 충돌 시 보존 의무 우선 + 처리 근거를 감사 로그에 기록
+- 상세: `.claude/domains/healthcare/docs/audit-trail.md` · `phi-data-handling.md`
+
+### saas
+- 모든 테넌트 데이터는 `tenant_id` 컬럼 필수, 인덱스 선두에 배치 (테넌트 격리)
+- 멀티테넌트 격리 전략: shared-DB-shared-schema(`tenant_id` 필터) / shared-DB-separate-schema / DB-per-tenant 중 SLA·격리 요구로 선택, 근거 명시
+- PostgreSQL 사용 시 RLS(Row-Level Security) 정책으로 격리 강제 권장
+- 사용량 과금(usage metering) 테이블은 시계열 패턴 — 파티셔닝/롤업 전략 명시
+- 상세: `.claude/domains/saas/checklists/tenant-security.md`
 
 ## 심각도 판정 기준
 
@@ -160,7 +169,7 @@ Mermaid `erDiagram` 형식으로 엔티티 관계를 시각화합니다.
 
 ### 마이그레이션 초안
 `project.json`에 지정된 마이그레이션 도구(기본: Flyway, `V{N}__{description}.sql`)에 맞춘 파일명으로 주요 DDL 내용을 텍스트로 제시합니다.
-다른 도구(Liquibase/Alembic/Prisma migrate 등) 사용 시 동등 명명 규칙을 적용합니다.
+다른 도구(Liquibase/Alembic/Prisma migrate 등) 사용 시 해당 도구의 표준 식별자 체계(changelog ID, revision ID, 타임스탬프 prefix 등)를 따릅니다. 단계 분리·설명 가능한 식별자·한 번만 실행 원칙은 공통 적용.
 무중단 마이그레이션이 필요한 경우 단계를 분리하여 제시합니다.
 
 ### 주의사항
