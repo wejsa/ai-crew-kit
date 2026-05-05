@@ -120,9 +120,11 @@ complexity-hint: light
 ##### 자기 보호 가드 (M2) — 자동 정리 직전 다음 가드 모두 통과해야 진행
 
 ```bash
-# Guard 1: 더티 워킹 트리 차단 (사용자 미커밋 작업 보호)
-if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
-  echo "⚠ 미커밋 변경사항이 있습니다. 자동 정리 SKIP. git stash 또는 commit 후 재시도하세요."
+# Guard 1: tracked dirty 워킹 트리 차단 (kit 개발자 미커밋 작업 보호)
+# 주의: untracked 파일(?? prefix)은 시나리오 B 사용자 코드로 간주하여 통과시킴.
+#       tracked dirty(M/A/D/R/U)만 차단하여 kit dev 작업만 보호.
+if [ -n "$(git status --porcelain 2>/dev/null | grep -v '^??')" ]; then
+  echo "⚠ 미커밋 tracked 변경사항이 있습니다. 자동 정리 SKIP. git stash 또는 commit 후 재시도하세요."
   exit 0  # Step 2로 일반 진행 (정리 없이)
 fi
 
@@ -132,15 +134,20 @@ if [ -n "$(git log @{u}.. 2>/dev/null)" ]; then
   exit 0
 fi
 
-# Guard 3: 비-main/master 브랜치 차단 (kit dev 환경은 develop 등에서 작업)
+# Guard 3: main/master 브랜치에서만 정리 진행 (positive 로직)
+# 비-main, detached HEAD(빈 문자열), 빈 값 모두 SKIP — kit dev 환경은 보통 develop/feature/* 또는 tag checkout
 CURRENT_BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "")
-if [ "$CURRENT_BRANCH" != "main" ] && [ "$CURRENT_BRANCH" != "master" ] && [ -n "$CURRENT_BRANCH" ]; then
-  echo "⚠ 비-main 브랜치($CURRENT_BRANCH). kit 개발 워크트리일 수 있어 자동 정리 SKIP."
+if [ "$CURRENT_BRANCH" != "main" ] && [ "$CURRENT_BRANCH" != "master" ]; then
+  echo "⚠ main/master 브랜치가 아닙니다(현재: '${CURRENT_BRANCH:-detached HEAD}'). 자동 정리 SKIP."
   exit 0
 fi
 ```
 
-이 3가지 가드는 **사용자 시나리오에는 영향 0**입니다 — fresh clone은 더티/미푸시 0, 기본 브랜치 main. **kit 개발자 환경(develop 브랜치 + 작업 중)에서만** 발동하여 사고를 막습니다.
+이 3가지 가드는 **사용자 시나리오에는 영향 0**입니다:
+
+- 시나리오 A (fresh clone): tracked dirty 0 + 미푸시 0 + main 브랜치 → 통과.
+- 시나리오 B (kit clone + 사용자 코드를 src/ 등에 *복사만* 함, untracked 상태): Guard 1이 untracked 무시 → 통과. 사용자 코드 보존하면서 kit 잡티만 정리.
+- kit 개발자 환경(develop 브랜치 + 작업 중): Guard 2 또는 Guard 3 발동 → SKIP, 사고 방지.
 
 ##### 자동 실행 순서 (검출 + 가드 통과 시)
 
@@ -350,9 +357,15 @@ Custom 선택 시: 전체 스킬 목록에서 multi-select (AskUserQuestion) →
 
 ### Step 7: 완료 안내
 필수 포함: 생성된 파일 목록, 프로젝트 정보 (이름, 도메인, 기술 스택), 활성 에이전트, Git 원격 저장소 설정 안내, 다음 단계 (/skill-feature, /skill-backlog, /skill-docs)
-마지막 줄: "💡 처음이시면 https://github.com/wejsa/ai-crew-kit/blob/main/docs/getting-started.md 의 '첫 기능 만들기'를 따라해보세요."
 
-> kit 가이드 문서(getting-started, customization, workflow-guide 등)는 사용자 프로젝트에 포함되지 않습니다(Step 1에서 자동 정리됨). 항상 ai-crew-kit GitHub 리포의 `docs/`에서 최신 버전을 참조하도록 안내합니다.
+마지막 줄 (kitVersion 동적 치환 — Step 6에서 기록한 `project.json.kitVersion` 값 사용):
+```
+"💡 처음이시면 https://github.com/wejsa/ai-crew-kit/blob/v{kitVersion}/docs/getting-started.md
+   (또는 latest는 https://github.com/wejsa/ai-crew-kit/blob/main/docs/getting-started.md)
+   의 '첫 기능 만들기'를 따라해보세요."
+```
+
+> kit 가이드 문서(getting-started, customization, workflow-guide 등)는 사용자 프로젝트에 포함되지 않습니다(Step 1에서 자동 정리됨). 항상 ai-crew-kit GitHub 리포의 `docs/`에서 참조하도록 안내합니다. 시드 시점 일관성을 위해 `blob/v{kitVersion}` 태그 URL을 기본 안내하고, 최신을 보고 싶을 때만 `blob/main`을 보조 안내합니다. `kitVersion` 태그가 GitHub에 없을 경우(개발 시점) `blob/main`만 안내하면 됩니다.
 
 ## Layered Override 적용
 설정 우선순위: 사용자 입력 > domains/{domain}/domain.json > domains/_base/ > 하드코딩 기본값

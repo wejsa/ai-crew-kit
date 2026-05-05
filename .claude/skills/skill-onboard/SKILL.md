@@ -36,9 +36,11 @@ complexity-hint: medium
      2. `git rev-list --max-parents=0 HEAD`가 `ab0269a1414f0d9eba8d130d865dfdd6baeed06c` (ai-crew-kit initial commit)와 일치
      - 둘 중 하나라도 불일치 → 자동 스킵 + Step 1 코드베이스 스캔으로 일반 진행
    - **자기 보호 가드** (3가지 모두 통과해야 정리 진행):
-     1. 더티 워킹 트리(`git status --porcelain` 출력 있음) → SKIP
+     1. **tracked dirty** 워킹 트리(`git status --porcelain | grep -v '^??'` 출력 있음) → SKIP
+        - **untracked 파일은 통과**: 시나리오 B에서 사용자가 src/, app/, lib/ 등에 자기 코드를 *복사만* 한 상태(`git add` 미실행)는 untracked → 통과하여 정리 진행. 사용자 코드 보존 + kit 잡티 제거.
+        - tracked 수정/추가/삭제만 차단(kit 개발자 미커밋 작업 보호).
      2. 미푸시 커밋(`git log @{u}..` 출력 있음) → SKIP
-     3. 비-main/master 브랜치 → SKIP (kit 개발 워크트리 보호)
+     3. main/master 브랜치만 진행. 비-main, detached HEAD(빈 문자열), 빈 값 모두 SKIP (kit dev 환경은 보통 develop/feature/* 또는 tag checkout)
      - 가드 미통과 시 보고 후 Step 1로 일반 진행 (정리 없이)
    - **실행 순서** (검출+가드 통과 시):
      1. `KIT_SOURCE_URL=$(git remote get-url origin)` 저장 (Step 5에서 `kitSource`로 기록)

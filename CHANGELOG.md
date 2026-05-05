@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - LICENSE는 Y/n 질문 없이 자동 삭제(사용자가 자기 라이선스 결정). KIT_SOURCE_URL은 보존되어 skill-upgrade가 kit 가이드 문서 fetch 가능.
 - 외부 리뷰 1라운드(직전 CRITICAL 1건은 재평가에서 MINOR로 강등, MAJOR 2건 M1·M2 본 PR에서 반영, MINOR 4건 중 m1·m4 반영, m2·m3 INFO로 분류).
 - M2 가드는 사용자 시나리오에 영향 0이며 ai-crew-kit 본인 dev 환경에서 `/skill-init` 실수 실행 시의 폭탄을 방지합니다.
+- **외부 리뷰 2라운드 반영** — Guard 1(더티 워킹 트리)이 시나리오 B(사용자 코드 untracked) 흐름을 차단하던 M3 결함 수정: `grep -v '^??'`로 tracked dirty만 차단. m5 Guard 3 detached HEAD 빈 문자열 우회 차단(`[ -n ]` 조건 제거, positive 로직). m6 skill-init Step 7 마지막 줄 GitHub URL을 `blob/v{kitVersion}` 동적 치환 + main 보조 안내로 변경. fingerprint `ab0269a14...` 실제 main root commit 일치 검증 완료.
 
 ## [2.0.1] - 2026-05-05
 
