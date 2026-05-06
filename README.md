@@ -35,9 +35,9 @@ claude
 `/skill-init`은 ai-crew-kit clone을 자동 감지하여 다음을 한 번에 처리합니다 (사용자 추가 확인 없음):
 
 1. kit git 히스토리 제거 + 새 사용자 리포 초기화
-2. kit 잔여 파일 자동 정리 (`CHANGELOG.md`, `docs/`, `examples/`, `tests/`, `scripts/`, `.github/`, `memory/`, `LICENSE`, `.claude/temp/`, `.claude/hooks/tests/`)
+2. kit 잔여 파일 자동 정리 (14종): `CHANGELOG.md`, `docs/`, `examples/`, `tests/`, `scripts/`, `.github/`, `memory/`, `LICENSE`, `README.md`, `CLAUDE.md`, `VERSION`, `.claude/temp/`, `.claude/hooks/tests/`, `.claude/state/`, `.claude/settings.local.json`
 3. 도메인·기술 스택·에이전트 팀 선택
-4. 사용자 프로젝트용 `CLAUDE.md`/`README.md`/`VERSION`(0.1.0) 자동 생성
+4. 사용자 프로젝트용 `CLAUDE.md`/`README.md`/`VERSION`(0.1.0) 새로 생성
 5. `KIT_SOURCE_URL`을 `project.json`의 `kitSource`로 기록 (skill-upgrade가 GitHub에서 kit 가이드 fetch)
 
 > [!NOTE]
