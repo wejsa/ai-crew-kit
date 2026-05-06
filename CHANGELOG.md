@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.3] - 2026-05-06
+
+> **kit clone cleanup 4종 추가 (patch)** — v2.0.2의 ai-crew-kit clone 자동 정리에 누락된 항목 보강. cleanup 10종 → 14종. `README.md`/`CLAUDE.md`/`VERSION`(Step 6 새로 생성과 일관성), `.claude/state/`(kit dev runtime state), `.claude/settings.local.json`(kit 개발자 로컬 권한 설정 — 사용자 무관) 추가. Step 1 표의 `CLAUDE.md` 행을 사용자 저장소/kit clone 케이스로 분리하여 모순 해소.
+
 ### Changed
 
 - **`.claude/skills/skill-init/SKILL.md`** — Step 1 cleanup 대상에 4종 추가: `README.md`, `CLAUDE.md`, `VERSION` (Step 6에서 사용자 프로젝트용으로 어차피 덮어씀이지만 정리 단계에서 명시 삭제로 일관성 확보), `.claude/state/` (kit dev runtime state — `hook-trigger-count` 등), `.claude/settings.local.json` (kit 개발자 로컬 권한 설정 — 사용자 프로젝트에 무관). 총 cleanup 항목 10종 → 14종. Step 1 표 `CLAUDE.md | 있음 | 백업 여부 확인` 행을 사용자 저장소 케이스로 한정하고 ai-crew-kit clone 케이스는 별도 행("자동 삭제")으로 분리하여 모순 해소. 보존 목록에 `.claude/SECURITY.md` 명시(사용자도 자기 hook 추가 시 보안 원칙 적용 가치).
