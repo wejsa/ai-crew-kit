@@ -48,7 +48,7 @@
 | `/skill-onboard` | 기존 프로젝트에 AI Crew Kit 적용 (kit clone 감지 시 자동 정리) |
 | `/skill-onboard --scan-only` | 스캔만 수행 (설정 생성 없음) |
 
-> **ai-crew-kit clone 자동 정리** (`/skill-init`, `/skill-onboard` 공통): origin URL 정규식 + initial commit fingerprint 둘 다 일치 + 더티/미푸시/비-main 가드 통과 시 kit 잔여 파일(`CHANGELOG.md`, `docs/`, `examples/`, `tests/`, `scripts/`, `.github/`, `memory/`, `LICENSE`, `.claude/temp/`, `.claude/hooks/tests/`)을 추가 확인 없이 자동 삭제. 가드 미통과 시 정리 SKIP하고 일반 진행 (kit 개발자 환경 보호).
+> **ai-crew-kit clone 자동 정리** (`/skill-init`, `/skill-onboard` 공통): origin URL 정규식 + initial commit fingerprint 둘 다 일치 + 더티/미푸시/비-main 가드 통과 시 kit 잔여 14종(`CHANGELOG.md`, `docs/`, `examples/`, `tests/`, `scripts/`, `.github/`, `memory/`, `LICENSE`, `README.md`, `CLAUDE.md`, `VERSION`, `.claude/temp/`, `.claude/hooks/tests/`, `.claude/state/`, `.claude/settings.local.json`)을 추가 확인 없이 자동 삭제. README.md/CLAUDE.md/VERSION은 Step 6에서 사용자 프로젝트용으로 새로 생성. 가드 미통과 시 정리 SKIP하고 일반 진행 (kit 개발자 환경 보호).
 
 ### 개발 워크플로우 🔵
 

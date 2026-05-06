@@ -47,9 +47,9 @@ complexity-hint: medium
      2. `rm -rf .git && git init -b main`
      3. kit 잔여 파일 자동 삭제 (한 줄):
         ```bash
-        rm -rf CHANGELOG.md docs examples tests scripts .github memory LICENSE .claude/temp .claude/hooks/tests
+        rm -rf CHANGELOG.md docs examples tests scripts .github memory LICENSE README.md CLAUDE.md VERSION .claude/temp .claude/hooks/tests .claude/state .claude/settings.local.json
         ```
-        보존: `.claude/` (프레임워크 본체), `.gitignore`, `.gitattributes`
+        보존: `.claude/` (프레임워크 본체, 단 `hooks/tests/`/`state/`/`settings.local.json` 제외), `.gitignore`, `.gitattributes`, `.claude/SECURITY.md`. 삭제된 `CLAUDE.md`/`README.md`/`VERSION`은 Step 5에서 사용자 프로젝트용으로 새로 생성됨 (`README.md.bak` 백업 불필요 — kit clone 케이스이므로).
      4. 보고: `"✓ ai-crew-kit clone 감지 → 표준 초기화 + kit 잔여 N개 자동 정리"`
    - **시나리오 B 주의** (사용자 코드가 이미 함께 있는 경우): 사용자 코드가 보통 `src/`/`app/`/`lib/` 등 비충돌 경로면 안전. 단, 사용자가 자기 `docs/`/`tests/`/`scripts/`/`.github/workflows/`를 동일 경로에 미리 복사한 경우 함께 삭제됨. 의심 시 사용자에게 사전 백업(`tar czf .pre-onboard-backup-$(date +%s).tar.gz docs tests scripts .github`) 권장.
    - 검출 자동 스킵된 경우(시나리오 C): 기존 동작 유지, 영향 없음.
@@ -101,6 +101,8 @@ AskUserQuestion: 프로젝트 이름 (디렉토리명 기본값), 설명, 에이
 
 ### Step 4: 기존 파일 백업
 README.md → README.md.bak / CLAUDE.md → CLAUDE.md.bak (존재 시)
+
+> **kit clone 케이스 예외**: 사전 조건 2번에서 자동 정리로 README.md/CLAUDE.md/VERSION이 이미 삭제되었으므로 본 단계에서 백업 대상 없음. 자연스럽게 스킵됨.
 
 ### Step 5: 설정 파일 생성
 skill-init Step 6 동일: project.json (buildCommands 포함), backlog.json, CLAUDE.md, README.md, VERSION (기존 있으면 유지)

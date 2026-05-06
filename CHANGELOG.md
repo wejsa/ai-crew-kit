@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`.claude/skills/skill-init/SKILL.md`** — Step 1 cleanup 대상에 4종 추가: `README.md`, `CLAUDE.md`, `VERSION` (Step 6에서 사용자 프로젝트용으로 어차피 덮어씀이지만 정리 단계에서 명시 삭제로 일관성 확보), `.claude/state/` (kit dev runtime state — `hook-trigger-count` 등), `.claude/settings.local.json` (kit 개발자 로컬 권한 설정 — 사용자 프로젝트에 무관). 총 cleanup 항목 10종 → 14종. Step 1 표 `CLAUDE.md | 있음 | 백업 여부 확인` 행을 사용자 저장소 케이스로 한정하고 ai-crew-kit clone 케이스는 별도 행("자동 삭제")으로 분리하여 모순 해소. 보존 목록에 `.claude/SECURITY.md` 명시(사용자도 자기 hook 추가 시 보안 원칙 적용 가치).
+- **`.claude/skills/skill-onboard/SKILL.md`** — 동일 cleanup 14종으로 동기화. Step 4 백업 단계에 "kit clone 케이스 예외" 명시(자동 정리에서 이미 삭제되었으므로 백업 대상 없음 — 자연스럽게 스킵).
+- **`README.md`, `docs/getting-started.md`, `docs/skill-reference.md`, `docs/concepts.md`** — cleanup 14종 목록과 README.md/CLAUDE.md/VERSION이 Step 6에서 새로 생성됨을 명시하도록 갱신.
+
+### Notes
+
+- 사용자 영향: kit clone에서 init 시 사용자 프로젝트가 더 깨끗하게 시작됨. `.claude/settings.local.json`(kit 개발자 권한 설정 노출)과 `.claude/state/`(kit runtime state) 잡티 제거. README.md/CLAUDE.md/VERSION은 어차피 Step 6에서 덮어쓰던 동작을 Step 1에서 명시 삭제로 변경하여 init 진행 중 kit metadata 잠시 노출되던 UX 거슬림 해소.
+- v2.0.2 → v2.0.3 사용자 영향 없음. 자동 마이그레이션 불필요.
+- 보존 결정: `.claude/SECURITY.md`(사용자 hook 추가 시 동일 보안 원칙 적용), `.gitignore`/`.gitattributes`(사용자에게도 유효).
+
 ## [2.0.2] - 2026-05-05
 
 > **skill-init/onboard에서 ai-crew-kit clone 자동 정리 (patch)** — 사용자가 ai-crew-kit clone에서 신규/기존 프로젝트로 진입할 때 Claude가 보수적으로 멈추거나 kit 잔여 파일(CHANGELOG.md, docs/, examples/ 등) 처리를 수동으로 묻던 UX 결함 해결. skill-init Step 1, skill-onboard 사전 조건에 "표준 진입 플로우 — 추가 확인 없이 자동 실행" 명시. 검출 기준(origin URL 정규식 + initial commit fingerprint) + 자기 보호 가드 3종(tracked dirty / 미푸시 / 비-main·detached) 통과 시 kit 잔여 10개 항목(`CHANGELOG.md`, `docs/`, `examples/`, `tests/`, `scripts/`, `.github/`, `memory/`, `LICENSE`, `.claude/temp/`, `.claude/hooks/tests/`) 자동 삭제. 외부 리뷰 2라운드 모두 반영(M1 검출 기준 / M2 dev 가드 / M3 Guard 1 untracked 우회로 시나리오 B UX 보존 / m1·m4·m5·m6).

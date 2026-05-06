@@ -101,7 +101,8 @@ complexity-hint: light
 | Git remote origin | ai-crew-kit 가리킴 | **표준 진입 플로우** — 추가 확인 없이 자동 실행 (아래 "ai-crew-kit clone 자동 정리" 참조) |
 | Git remote origin | 사용자 저장소 가리킴 | 유지 |
 | project.json | 있음 | 재초기화 경고 (--reset 없으면) |
-| CLAUDE.md | 있음 | 백업 여부 확인 |
+| CLAUDE.md | 있음 (사용자 저장소 케이스) | 백업 여부 확인 |
+| CLAUDE.md | 있음 (ai-crew-kit clone 케이스) | 자동 삭제 (Step 6에서 새로 생성) |
 
 #### ai-crew-kit clone 자동 정리 (표준 진입 플로우)
 
@@ -155,11 +156,12 @@ fi
 2. `rm -rf .git && git init -b main` (kit 히스토리 제거 + 새 사용자 리포 초기화)
 3. **kit 잔여 파일 자동 삭제** (사용자 프로젝트에 불필요):
    ```bash
-   rm -rf CHANGELOG.md docs examples tests scripts .github memory LICENSE .claude/temp .claude/hooks/tests
+   rm -rf CHANGELOG.md docs examples tests scripts .github memory LICENSE README.md CLAUDE.md VERSION .claude/temp .claude/hooks/tests .claude/state .claude/settings.local.json
    ```
    - 한 줄 통합 (m4: backslash 셸 호환성 회피)
-   - 보존: `.claude/` (프레임워크 본체, hooks/tests/ 제외), `.gitignore`, `.gitattributes`
-   - `CLAUDE.md`, `README.md`, `VERSION`은 Step 6에서 사용자 프로젝트용으로 새로 생성/덮어씀
+   - **보존**: `.claude/` (프레임워크 본체 — `hooks/tests/`, `state/`, `settings.local.json` 제외), `.gitignore`, `.gitattributes`, `.claude/SECURITY.md` (사용자도 자기 hook 추가 시 보안 원칙 적용)
+   - **삭제 후 Step 6에서 새로 생성**: `CLAUDE.md`, `README.md`, `VERSION` (사용자 프로젝트용 템플릿 기반), `project.json`, `backlog.json` 등
+   - **kit dev 잡티 정리**: `.claude/settings.local.json` (kit 개발자 로컬 권한 설정 — 사용자 프로젝트에 무관), `.claude/state/` (kit 개발 runtime state — `hook-trigger-count` 등). 사용자는 자기 state로 새로 시작.
    - **주의**: 사용자가 동일 경로(`docs/`, `tests/`, `scripts/` 등)에 자기 콘텐츠를 미리 복사해둔 경우 함께 삭제됨. skill-onboard 시나리오 B에서는 사용자 코드가 보통 `src/`/`app/`/`lib/` 등 다른 경로라 안전하나, 동일 경로 복사 의심 시 `tar czf .skill-init-rollback-$(date +%s).tar.gz` 백업 권장.
 4. 보고: `"✓ ai-crew-kit clone 감지 → 표준 초기화 + kit 잔여 N개 자동 정리"`
 5. Step 2로 즉시 진행 (LICENSE, kit 파일 처리 여부에 대해 사용자에게 묻지 않음)
