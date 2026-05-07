@@ -40,15 +40,19 @@ complexity-hint: light
 
 ### 케이스별 흐름 요약 (일반 모드)
 
+입력 횟수는 **AskUserQuestion / 자유 입력 / Enter 확인**을 모두 포함한 사용자 상호작용 횟수입니다.
+
 | Case | 입력 충실도 | 흐름 | 사용자 입력 횟수 |
 |------|-----------|------|----------------|
-| 1. rich + 추천 수락 + 백로그 Y | 50자↑ + 키워드 ≥ 2 | 2 → 4(확인) → 5(A) → 6 → 7 → 8 → 9(Y) → 10 | **4-5회** |
-| 2. lean + 추천 수락 + 백로그 Y | 50자↓ | 2 → 3(3질문) → 4 → 5(A) → 6 → 7 → 8 → 9(Y) → 10 | **7-8회** |
-| 3. 일부 수정 | rich/lean 무관 | 5(B) → 항목별 수정 | +2-4회 |
-| 4. 직접 선택 (escape hatch) | rich/lean 무관 | 5(C) → 도메인/스택 수동 | +6회 |
-| 5. 백로그 N | rich/lean 무관 | 9(N) → 빈 백로그 | -1회 |
-| 6. --quick (파일 감지) | 기존 프로젝트 | 자동 | **0회** |
-| 7. --quick (디렉토리명 매칭) | 빈 디렉토리 | 디렉토리명 → 도메인 | **0회** |
+| 1. rich + 추천 수락 + 백로그 Y(A) | 50자↑ + 키워드 ≥ 2 | 2(요구사항) → 4(이름 Enter) → 5(A) → 6(에이전트) → 7(워크플로우) → 8(스킬) → 9 사전(Y) → 9 결과(A) → 10 | **6-7회** |
+| 2. lean + 추천 수락 + 백로그 Y(A) | 50자↓ | 2 → 3(3질문) → 4(이름 Enter) → 5(A) → 6 → 7 → 8 → 9(Y) → 9(A) → 10 | **9-10회** |
+| 3. 추천 일부 수정 (B) | rich/lean 무관 | 5(B) → 수정 항목 multi-select → 항목별 1회씩 | Case 1·2 + 2~5회 |
+| 4. 직접 선택 (escape hatch C) | rich/lean 무관 | 5(C) → 도메인 → backend → frontend → DB → cache → infra | Case 1·2 + 6회 |
+| 5. 백로그 분해 거절 (9 N) | rich/lean 무관 | 9 사전(N) → 9 결과 단계 skip | Case 1·2 - 1회 |
+| 6. 백로그 수정 후 진행 (9 B→A) | rich/lean 무관 | 9 결과(B) → 피드백 자유 서술 → 재확인(A) | Case 1·2 + 2회 (최대 4회: B 2회 한도) |
+| 7. --quick (파일 감지) | 기존 프로젝트 | 자동 | **0회** |
+| 8. --quick (디렉토리명 매칭) | 빈 디렉토리 | 디렉토리명 → 도메인 | **0회** |
+| 9. --quick 폴백 | 빈 디렉토리 + 매칭 실패 | 백엔드 1회 질문 | **1회** |
 
 ### --quick 자동 감지
 
@@ -75,17 +79,27 @@ complexity-hint: light
 
 ### Step 1: 환경 검증
 
+#### 평가 순서 (반드시 다음 순서로)
+
+1. **Git 저장소 확인** — 없으면 `git init -b main`
+2. **ai-crew-kit clone 자동 정리** (아래 "표준 진입 플로우" 절) — 검출 + 가드 통과 시 즉시 실행. 통과 후에는 디렉토리가 깨끗해지므로 이후 가드는 자연스럽게 통과.
+3. **기존 코드 감지 가드** (자동 정리가 SKIP되거나 비대상일 때만 의미 있음) — 아래 "기존 코드 감지 안내" 절
+4. **`project.json` 존재 확인** — 있으면 재초기화 경고 (`--reset` 없으면 진행 여부 확인). `--reset` 모드면 Step 10에서 자동 백업.
+
 | 항목 | 조건 | 처리 |
 |------|------|------|
 | Git 저장소 | 없음 | `git init -b main` |
-| Git remote origin | ai-crew-kit 가리킴 | 표준 진입 — 자동 정리 (아래) |
+| Git remote origin | ai-crew-kit 가리킴 + fingerprint 일치 | 자동 정리 (M1+M2 통과 시) |
 | Git remote origin | 사용자 저장소 | 유지 |
-| project.json | 있음 | 재초기화 경고 (`--reset` 없으면) |
-| **기존 코드 파일** | `src/`, `app/`, `lib/`, 빌드 파일 등 감지 | **`skill-onboard` 권장 안내** + 계속 진행 여부 확인 (Y=skill-init 진행, N=중단) |
+| **기존 코드 파일** (자동 정리 후 또는 비대상) | `src/`, `app/`, `lib/`, 빌드 파일 등 감지 | `skill-onboard` 권장 안내 + 계속 진행 여부 확인 (Y=진행, N=중단) |
+| project.json | 있음 + `--reset` 없음 | 진행 여부 확인 (N=중단, Y=Step 10에서 백업 없이 덮어쓰기) |
+| project.json | 있음 + `--reset` | **경고 생략** (사용자 의사 명시) → Step 10에서 자동 백업 후 덮어쓰기 |
 
-#### 기존 코드 감지 안내 (신규)
+#### 기존 코드 감지 안내
 
-`build.gradle*`, `pom.xml`, `package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml` 또는 `src/`/`app/`/`lib/` 디렉토리 중 하나라도 존재하면 다음 메시지 출력 후 계속 진행 여부 확인:
+위 평가 순서 3단계. ai-crew-kit 자동 정리 통과 후에는 kit 잔여 파일이 모두 삭제된 상태이므로 본 가드가 트리거되지 않습니다. 자동 정리가 SKIP된 경우(사용자 자기 리포 또는 fingerprint 불일치)에만 다음 검사가 실효합니다.
+
+검사 대상: `build.gradle*`, `pom.xml`, `package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml` 또는 `src/`/`app/`/`lib/` 디렉토리 중 하나라도 존재.
 
 ```
 ⚠ 기존 코드 파일이 감지되었습니다.
@@ -94,8 +108,6 @@ complexity-hint: light
 
   계속 skill-init으로 진행하시겠습니까? [y/N]
 ```
-
-- ai-crew-kit clone 자동 정리 케이스(아래)는 본 가드보다 우선 적용되므로 영향 없음.
 
 #### ai-crew-kit clone 자동 정리 (표준 진입 플로우)
 
@@ -160,7 +172,7 @@ fi
 한 줄로 간단히 적어도 되고, 도메인/사용자 규모/주요 기능 등을 자세히 적어도 됩니다.
 ```
 
-입력값을 `userRequirement` 변수로 보관. 빈 입력 시 한 번 더 요청.
+입력값을 `userRequirement` 변수로 보관. 빈 입력 시 **최대 1회 재요청**, 재요청에도 빈 입력이면 `userRequirement = "(미지정 — 디렉토리명 기반 일반 프로젝트)"` 값으로 진행 (lean으로 평가되어 Step 3 인터뷰가 보강).
 
 **충실도 평가**:
 - **rich**: 50자 이상 AND 도메인/규모/기능 키워드 ≥ 2개 → Step 3 SKIP, Step 4로
@@ -178,21 +190,38 @@ AskUserQuestion 최대 3회. **rich 입력이면 본 Step 전체 SKIP** (사용�
 
 ### Step 4: 프로젝트 메타 자동 결정
 
-**프로젝트명 결정 우선순위**:
-1. `userRequirement`에서 LLM 추출 (예: "Tasky라는 칸반…" → `Tasky`)
-2. 추출 불가 시 **현재 디렉토리 basename** (대부분 IDE 관행)
-3. 위 결정값을 사용자에게 1줄로 제시 + Enter=수락 / 정정 시 입력
+**프로젝트명 결정 우선순위** (각 단계는 검증 통과 시에만 채택, 실패 시 다음 단계로):
+
+1. **userRequirement에서 명시적 추출**: `userRequirement`에 "X라는 …", "X 만들고 싶어", "이름은 X" 같이 **고유명사가 명시된 경우에만** LLM이 추출. 명시 없이 LLM이 임의로 작명하지 말 것 (hallucination 방지).
+2. **현재 디렉토리 basename**: 1번 실패 시 `basename "$(pwd)"` 사용.
+3. **basename 검증**: 다음 중 하나라도 해당하면 무효 처리하고 4번으로 폴백:
+   - 무의미 토큰: `.`, `..`, `tmp`, `temp`, `test`, `untitled`, `new-project`, `my-project`
+   - 빈 문자열 또는 공백만
+   - 단일 글자 (예: `a`, `1`)
+4. **사용자 입력 요청**: 1~3 모두 실패 시 AskUserQuestion으로 "프로젝트명을 입력하세요" 1회.
+5. 위 결정값을 사용자에게 1줄로 제시 + Enter=수락 / 정정 시 입력.
 
 ```
-프로젝트명: Tasky (디렉토리명 또는 요구사항에서 자동 추출)
+프로젝트명: Tasky (요구사항에서 추출 / 디렉토리명 / 사용자 입력)
    [Enter] 수락 / 입력 시 정정
 ```
 
-**taskPrefix 결정**: 프로젝트명에서 영문 대문자 4-6자 추출 (예: `Tasky` → `TASK`, `ShopHub` → `SHOP`). 충돌/모호할 때만 확인.
+**taskPrefix 결정 알고리즘** (project.schema.json pattern: `^[A-Z][A-Z0-9-]*$` 만족):
 
-**설명**: `userRequirement` 첫 문장 자동 사용. 사용자 확인만.
+1. 프로젝트명에서 영문 알파벳만 추출 (한글/특수문자/숫자 제거)
+2. 추출 결과를 **대문자**로 변환
+3. 길이 기반 처리:
+   - **4-6자**: 그대로 사용 (예: `Tasky` → `TASKY`, `ShopHub` → `SHOPHUB` → 6자 절단으로 `SHOPHUB`)
+   - **3자 이하**: 디폴트 `TASK` 사용 (의미 있는 prefix 형성 불가)
+   - **7자 이상**: 첫 4자 절단 (예: `ShopHubMall` → `SHOP`)
+4. 최종 결과가 schema pattern 위반(예: 영문 0자) → `TASK` 폴백
+5. 한글 basename(예: `학생-앱`) → 1단계에서 영문 0자 → `TASK` 폴백, **이 케이스는 모호하므로 일반 모드에서 1회 정정 입력 받음** (`--quick`은 `TASK` 자동 확정)
 
-> 결과: 일반적으로 추가 입력 0회. 잘못된 추측만 정정.
+`{prefix}` 결과를 사용자에게 1줄 제시. 일반 모드에서 다음 케이스만 정정 입력 받음: ① 한글/영문0자 폴백 ② 다른 프로젝트와 prefix 충돌 ③ 사용자가 명시적으로 정정. 그 외에는 자동 확정.
+
+**설명**: `userRequirement` 첫 문장 자동 사용. 빈 입력이거나 추출 실패 시 빈 문자열 (schema에서 description은 optional).
+
+> 결과: 일반적으로 추가 입력 0회. 무의미한 디렉토리명/한글 케이스에서만 1회 정정.
 
 ### Step 5: 도메인 + 스택 추천 ★
 
@@ -310,13 +339,14 @@ AskUserQuestion: Standard (권장, 전체 체이닝) / Fast (리뷰 생략, 프�
 
 **LLM 프롬프트 끝**: **"Be deterministic. Same requirements must yield same phase structure and similar task count."**
 
-**각 task 필드** (backlog.schema.json 준수):
+**각 task 필드** (backlog.schema.json 준수 — required: `id`, `title`, `status`, `priority`, `createdAt`):
 ```json
 {
   "id": "{PREFIX}-{NNN}",
   "title": "...",
   "description": "1-2줄 요약 + 핵심 산출물",
   "status": "todo",
+  "type": "feature",
   "priority": "critical|high|medium|low",
   "phase": <int>,
   "dependencies": [],
@@ -327,10 +357,26 @@ AskUserQuestion: Standard (권장, 전체 체이닝) / Fast (리뷰 생략, 프�
   "lockTTL": 3600,
   "lockedFiles": [],
   "steps": [],
-  "currentStep": 0,
   "workflowState": null
 }
 ```
+
+> `currentStep`은 의도적으로 생성하지 않습니다. schema에서 `minimum: 1`이므로 0은 위반이며, `skill-plan`이 task를 픽업할 때 1로 설정합니다 (필드 부재 = 미시작).
+
+**phase 객체 생성** (backlog.json `phases` 필드, schema는 `name`/`status` required, key는 정수 문자열):
+```json
+"phases": {
+  "1": { "name": "기반/인프라", "description": "...", "status": "todo" },
+  "2": { "name": "핵심 도메인", "description": "...", "status": "todo" },
+  "3": { "name": "부가 기능", "description": "...", "status": "todo" },
+  "4": { "name": "운영/품질", "description": "...", "status": "todo" }
+}
+```
+- 키는 phase 번호의 정수 문자열 (`"1"`~`"4"`)
+- task에 매칭되지 않는 phase는 생략 (LLM이 분해 결과에 phase 번호를 사용한 것만 채움)
+- `name`은 4-카테고리 고정 명칭 (기반/인프라, 핵심 도메인, 부가 기능, 운영/품질)
+- `description`은 LLM이 해당 프로젝트 맥락에 맞춰 1줄 작성 (예: PHASE-2의 "주문/결제/배송 핵심 흐름"). 채울 내용 없으면 생략 가능 (schema에서 optional).
+- `status`는 모두 `"todo"`로 초기화 (schema enum: `todo`/`in_progress`/`done` 3종만)
 
 #### 사용자 확인 (분해 결과 출력 후)
 
@@ -351,15 +397,39 @@ PHASE-2: 핵심 도메인
 ```
 
 - **A**: 그대로 backlog.json에 채워 Step 10으로.
-- **B**: 사용자 피드백을 LLM에 전달하여 재생성 → 재확인.
+- **B**: 사용자 피드백을 LLM에 전달하여 재생성 → 재확인. **최대 2회까지만 재시도** (1차/2차 재생성). 3회차 재확인부터는 [B] 옵션 비활성화 → [A] 진행 또는 [C] 빈 백로그 중 선택만 허용. 무한 루프 및 토큰 폭증 방지.
 - **C**: 본 분해 결과 폐기, 빈 backlog.json으로 Step 10으로.
 
 ### Step 10: 파일 생성
 
+#### 사전 처리 (--reset 모드일 때만)
+
+`--reset` 옵션으로 진입한 경우, 기존 설정을 안전하게 백업한 뒤 새로 생성합니다.
+
+1. 타임스탬프 백업 디렉토리 생성: `.claude/temp/reset-backup-$(date +%Y%m%d-%H%M%S)/`
+2. 다음 파일이 존재하면 백업 디렉토리로 이동:
+   - `project.json` → 백업
+   - `.claude/state/backlog.json` → 백업 (특히 진행 중 task가 있으면 새 분해 결과와 충돌 위험 차단)
+   - `CLAUDE.md`, `README.md`, `VERSION` → 백업
+3. 백업 완료 후 사용자에게 1줄 보고: `"✓ 기존 설정을 .claude/temp/reset-backup-{timestamp}/ 에 백업했습니다."`
+4. 이후 1~8 단계로 진행 (덮어쓰기가 아닌 새로 쓰기 형태가 됨)
+
+> 일반 모드(--reset 없음)에서 기존 `project.json`이 발견되면 Step 1 환경 검증에서 이미 경고하고 사용자가 진행을 선택했을 것입니다. Step 10에서는 추가 백업 없이 덮어씁니다 (사용자 의사 확정).
+
+#### 파일 생성 절차
+
 1. **project.json**: name, description, domain, techStack, agents, conventions (taskPrefix, branchStrategy:git-flow, commitFormat:conventional, prLineLimit:500, testCoverage:80, workflowProfile, skillProfile), createdAt, kitVersion, kitSource. skillProfile=`custom`이면 `conventions.customSkills` 포함
+   - **`kitSource` 결정 규칙**:
+     - Step 1 ai-crew-kit 자동 정리를 거친 경우: `KIT_SOURCE_URL` 값 사용
+     - 자동 정리 미발동(사용자 자기 리포로 시작 또는 git remote 미설정)인 경우: `"https://github.com/wejsa/ai-crew-kit"` 기본값 (kit 시드 출처 문서화 목적)
 2. **backlog.json**:
-   - Step 9를 N/C로 종료한 경우: `metadata` (lastTaskNumber:0, version:1, projectPrefix), `summary` (전체 0), `phases:{}`, `tasks:{}`
-   - Step 9를 Y(A)로 종료한 경우: 분해 결과 적용 — `metadata.lastTaskNumber` = 생성 task 수, `summary.todo` = 생성 task 수, `phases` 채움, `tasks` 채움
+   - **공통**: `metadata`는 `{ "lastTaskNumber": <N>, "version": 1, "projectPrefix": "<PREFIX>", "createdAt": "<ISO8601>", "updatedAt": "<ISO8601>" }`
+   - Step 9를 **N/C**로 종료한 경우: `lastTaskNumber: 0`, `summary: { total:0, done:0, inProgress:0, review:0, todo:0 }`, `phases: {}`, `tasks: {}`
+   - Step 9를 **Y(A)**로 종료한 경우:
+     - `lastTaskNumber` = 생성 task 수
+     - `summary.todo` = 생성 task 수, `summary.total` = 생성 task 수, 나머지 0
+     - `phases` = Step 9 분해 결과의 phase 객체 (위 Step 9의 phase JSON 형식 그대로)
+     - `tasks` = task ID(`{PREFIX}-001` …)를 key로, Step 9 task 객체를 value로
 3. **CLAUDE.md**: `.claude/templates/CLAUDE.md.tmpl` 마커 치환
 4. **VERSION**: `echo "0.1.0" > VERSION`
 5. **README.md**: `.claude/templates/README.md.tmpl` 마커 치환
