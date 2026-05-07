@@ -211,9 +211,9 @@ AskUserQuestion 최대 3회. **rich 입력이면 본 Step 전체 SKIP** (사용�
 1. 프로젝트명에서 영문 알파벳만 추출 (한글/특수문자/숫자 제거)
 2. 추출 결과를 **대문자**로 변환
 3. 길이 기반 처리:
-   - **4-6자**: 그대로 사용 (예: `Tasky` → `TASKY`, `ShopHub` → `SHOPHUB` → 6자 절단으로 `SHOPHUB`)
+   - **4-6자**: 그대로 사용 (예: `Tasky` → `TASKY`, `Shop` → `SHOP`)
    - **3자 이하**: 디폴트 `TASK` 사용 (의미 있는 prefix 형성 불가)
-   - **7자 이상**: 첫 4자 절단 (예: `ShopHubMall` → `SHOP`)
+   - **7자 이상**: **첫 6자 절단** (예: 영문자만 추출 결과가 `SHOPHUB`(7자) → `SHOPHU`, `SHOPHUBMALL`(11자) → `SHOPHU`). 정보 보존을 위해 4자가 아닌 6자까지 유지.
 4. 최종 결과가 schema pattern 위반(예: 영문 0자) → `TASK` 폴백
 5. 한글 basename(예: `학생-앱`) → 1단계에서 영문 0자 → `TASK` 폴백, **이 케이스는 모호하므로 일반 모드에서 1회 정정 입력 받음** (`--quick`은 `TASK` 자동 확정)
 
@@ -350,7 +350,6 @@ AskUserQuestion: Standard (권장, 전체 체이닝) / Fast (리뷰 생략, 프�
   "priority": "critical|high|medium|low",
   "phase": <int>,
   "dependencies": [],
-  "specFile": null,
   "createdAt": "<ISO8601>",
   "assignee": null,
   "assignedAt": null,
@@ -361,7 +360,9 @@ AskUserQuestion: Standard (권장, 전체 체이닝) / Fast (리뷰 생략, 프�
 }
 ```
 
-> `currentStep`은 의도적으로 생성하지 않습니다. schema에서 `minimum: 1`이므로 0은 위반이며, `skill-plan`이 task를 픽업할 때 1로 설정합니다 (필드 부재 = 미시작).
+> **의도적 부재 필드**:
+> - `currentStep`: schema `minimum: 1`이므로 0은 위반. `skill-plan`이 task를 픽업할 때 1로 설정 (필드 부재 = 미시작)
+> - `specFile`: schema `type: "string"`이라 null 불가, init 시점엔 spec 파일이 없으므로 필드 자체를 omit (`skill-feature`/`skill-plan`이 필요 시 채움)
 
 **phase 객체 생성** (backlog.json `phases` 필드, schema는 `name`/`status` required, key는 정수 문자열):
 ```json
