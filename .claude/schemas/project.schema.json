@@ -34,15 +34,15 @@
         },
         "frontend": {
           "type": "string",
-          "enum": ["nextjs", "react", "vue", "none"],
+          "enum": ["nextjs", "react", "react-vite", "vue", "vue-nuxt", "astro", "none"],
           "default": "none",
-          "description": "프론트엔드 프레임워크"
+          "description": "프론트엔드 프레임워크. skill-init/skill-onboard 파일 기반 감지 결과(react-vite/vue-nuxt/astro)와 정합."
         },
         "database": {
           "type": "string",
-          "enum": ["mysql", "postgresql", "mongodb", "none"],
+          "enum": ["mysql", "postgresql", "mongodb", "sqlite", "none"],
           "default": "mysql",
-          "description": "데이터베이스"
+          "description": "데이터베이스. sqlite는 로컬/MVP 용도."
         },
         "cache": {
           "type": "string",
