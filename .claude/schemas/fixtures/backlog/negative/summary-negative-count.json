@@ -7,8 +7,11 @@
     "updatedAt": "2026-05-11T00:00:00+00:00"
   },
   "summary": {
-    "total": 0,
-    "done": 0
+    "total": -1,
+    "done": 0,
+    "inProgress": 0,
+    "review": 0,
+    "todo": 0
   },
   "phases": {},
   "tasks": {}

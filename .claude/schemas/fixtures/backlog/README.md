@@ -21,7 +21,7 @@ backlog/
     ├── task-id-lowercase.json                   id pattern 위반
     ├── phase-status-blocked.json                phase status enum 위반
     ├── metadata-missing-required.json           metadata 필수 필드 누락
-    └── summary-missing-required.json            summary 필수 필드 누락
+    └── summary-negative-count.json              summary.total = -1 (minimum:0 위반)
 ```
 
 ## 추가 규칙
