@@ -50,3 +50,16 @@ jobs:
           if [ "$found" -eq 0 ]; then
             echo "No example project.json files (skip)"
           fi
+
+      - name: Validate example backlog.json files (Issue #65 sleeper-bug guard)
+        run: |
+          shopt -s nullglob
+          found=0
+          for f in examples/*/.claude/state/backlog.json; do
+            found=1
+            echo "→ $f"
+            check-jsonschema --schemafile .claude/schemas/backlog.schema.json "$f"
+          done
+          if [ "$found" -eq 0 ]; then
+            echo "No example backlog.json files (skip)"
+          fi

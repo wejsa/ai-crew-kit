@@ -213,6 +213,10 @@
           "type": "string",
           "description": "스텝 제목"
         },
+        "description": {
+          "type": "string",
+          "description": "스텝 상세 설명 (선택). skill-plan/skill-impl이 컨텍스트 힌트로 활용."
+        },
         "status": {
           "type": "string",
           "enum": ["pending", "in_progress", "pr_created", "merged", "done", "skipped"],
@@ -222,6 +226,11 @@
           "type": "array",
           "items": { "type": "string" },
           "description": "스텝에서 수정하는 파일 목록"
+        },
+        "estimatedLines": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "예상 변경 라인 수 (선택, v1 호환 — skill-plan 추정용)."
         },
         "prLineLimit": {
           "type": "integer",

@@ -199,6 +199,7 @@ v{version}: {title}
 ## 보존 대상 (프로젝트 파일)
 
 - `.claude/state/*` — **디렉토리 전체 보존** (사용자 누적 데이터). 주요 파일: `backlog.json`, `completed.json`, `lessons-learned.json` (Phase 7), `health-history.json`, `continuation-plan.md` 등
+  - **v1 → v2 backlog 호환**: `backlog.schema.json`은 v1.x ↔ v2 사이 차이가 없어 변환 룰 불필요. `migrations.json`은 `project.json`만 다루며 `backlog.json`은 그대로 보존된다. v1 시기 `step.description` / `step.estimatedLines` 같은 옵셔널 필드도 현 schema에 옵셔널로 포함되어 검증 통과 (Issue #65, 회귀 보호: `tests/upgrade/test_backlog_compat.py`).
 - `.claude/settings.local.json` — 로컬 권한 override
 - `.claude/temp/` — 진행 중 plan 파일, 백업 디렉토리
 - `.claude/plans/` — 사용자 plan 산출물
