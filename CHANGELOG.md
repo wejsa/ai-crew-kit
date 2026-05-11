@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **`.claude/schemas/project.schema.json` — frontend/database enum 확장 (#66)**: `skill-init` Step 5 escape hatch C 흐름과 `--quick` 모드 파일 기반 감지가 사용하는 스택 값이 schema enum에서 누락되어 생성된 `project.json`이 검증 실패하던 결함 수정. `techStack.frontend`에 `react-vite`, `vue-nuxt`, `astro` 추가, `techStack.database`에 `sqlite` 추가. 기존 enum 값은 그대로 유지하여 마이그레이션 영향 0. SKILL.md/skill-onboard/skill-impl이 이미 이 값들로 동작 중이었음.
+- **`.claude/schemas/backlog.schema.json` — v1 backlog 호환 + 현존 example 정합 (#65)**: step 정의에 옵셔널 `description` / `estimatedLines` 필드 추가. v1.x 시기 실제 backlog가 사용하던 두 필드가 `additionalProperties:false`에 막혀 거부되던 sleeper bug 해소. 동일 결함이 `examples/ecommerce-shop/.claude/state/backlog.json`에도 잠재해 schema 검증을 silently 위반하던 상태였음. CI 가드 추가(`.github/workflows/schema-validation.yml`)로 examples backlog도 schema 검증되며, v1.45.1 examples 박제 fixture(`tests/upgrade/fixtures/v1-{ecommerce,fintech}-backlog.json`) + pytest(`test_backlog_compat.py`)로 회귀 보호. `backlog.schema.json`은 v1↔v2 schema diff 0 — 변환 룰 자체가 불필요하므로 `migrations.json` 추가 없음. `skill-upgrade`는 기존대로 `.claude/state/*` 보존만 수행하며 SKILL.md에 v1 호환 정책 명문화.
 
 ## [2.1.0] - 2026-05-11
 

@@ -29,6 +29,13 @@ def schema() -> dict:
 
 
 @pytest.fixture(scope="session")
+def backlog_schema() -> dict:
+    """backlog.schema.json 로드 (v1 backlog 호환 회귀 — Issue #65)."""
+    with (SCHEMAS_DIR / "backlog.schema.json").open(encoding="utf-8") as f:
+        return json.load(f)
+
+
+@pytest.fixture(scope="session")
 def migrations() -> dict:
     """migrations.json 로드."""
     with (SCHEMAS_DIR / "migrations.json").open(encoding="utf-8") as f:
@@ -45,4 +52,17 @@ def v1_fixture_path(request) -> Path:
 def v1_fixture(v1_fixture_path: Path) -> dict:
     """v1 fixture를 dict로 로드."""
     with v1_fixture_path.open(encoding="utf-8") as f:
+        return json.load(f)
+
+
+@pytest.fixture(params=sorted(FIXTURES_DIR.glob("v1-*-backlog.json")), ids=lambda p: p.stem)
+def v1_backlog_path(request) -> Path:
+    """v1-*-backlog.json fixture 경로 (parametrize) — Issue #65."""
+    return request.param
+
+
+@pytest.fixture
+def v1_backlog(v1_backlog_path: Path) -> dict:
+    """v1 backlog fixture를 dict로 로드."""
+    with v1_backlog_path.open(encoding="utf-8") as f:
         return json.load(f)

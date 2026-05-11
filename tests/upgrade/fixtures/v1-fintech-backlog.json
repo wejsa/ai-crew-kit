@@ -1,0 +1,48 @@
+{
+  "metadata": {
+    "lastTaskNumber": 1,
+    "projectPrefix": "TASK",
+    "version": 1,
+    "createdAt": "2026-02-03T00:00:00Z",
+    "updatedAt": "2026-02-03T00:00:00Z"
+  },
+  "summary": {
+    "total": 1,
+    "done": 0,
+    "inProgress": 0,
+    "review": 0,
+    "todo": 1
+  },
+  "phases": {
+    "PHASE-1": {
+      "name": "인증 시스템 구현",
+      "description": "JWT 기반 인증 시스템 구현 (Token Rotation, Reuse Detection 포함)",
+      "status": "todo"
+    }
+  },
+  "tasks": {
+    "TASK-001": {
+      "id": "TASK-001",
+      "title": "JWT 토큰 인증",
+      "description": "JWT 기반 인증 시스템 구현",
+      "status": "todo",
+      "priority": "high",
+      "phase": 1,
+      "dependencies": [],
+      "specFile": "docs/requirements/TASK-001-spec.md",
+      "steps": [
+        {
+          "number": 1,
+          "title": "스캐폴딩 + JWT 서비스 인터페이스/모델/구현",
+          "status": "pending"
+        },
+        {
+          "number": 2,
+          "title": "JWT 인증 필터, 컨트롤러, 설정, 테스트",
+          "status": "pending"
+        }
+      ],
+      "createdAt": "2026-02-03T00:00:00Z"
+    }
+  }
+}

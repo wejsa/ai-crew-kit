@@ -1,0 +1,63 @@
+{
+  "metadata": {
+    "lastTaskNumber": 2,
+    "projectPrefix": "SHOP",
+    "version": 1,
+    "createdAt": "2026-02-15T00:00:00Z",
+    "updatedAt": "2026-02-15T00:00:00Z"
+  },
+  "summary": {
+    "total": 2,
+    "done": 0,
+    "inProgress": 0,
+    "review": 0,
+    "todo": 2
+  },
+  "phases": {
+    "PHASE-1": {
+      "name": "상품 및 주문 기본 기능",
+      "description": "상품 카탈로그 API + 주문 처리 시스템 (상태 머신, 재고 차감)",
+      "status": "todo"
+    }
+  },
+  "tasks": {
+    "SHOP-001": {
+      "id": "SHOP-001",
+      "title": "상품 카탈로그 API",
+      "description": "상품 CRUD API 구현. 카테고리, 검색, 페이지네이션 포함.",
+      "status": "todo",
+      "priority": "high",
+      "phase": 1,
+      "dependencies": [],
+      "specFile": "docs/requirements/SHOP-001-spec.md",
+      "createdAt": "2026-02-15T00:00:00Z"
+    },
+    "SHOP-002": {
+      "id": "SHOP-002",
+      "title": "주문 처리 시스템",
+      "description": "주문 생성, 상태 관리(상태 머신), 재고 차감. 전자상거래법 준수.",
+      "status": "todo",
+      "priority": "high",
+      "phase": 1,
+      "dependencies": ["SHOP-001"],
+      "specFile": "docs/requirements/SHOP-002-spec.md",
+      "createdAt": "2026-02-15T00:00:00Z",
+      "steps": [
+        {
+          "number": 1,
+          "title": "주문 CRUD + 상태 머신",
+          "description": "Order/OrderItem 엔티티, 상태 머신, 주문 생성/조회/취소 API, 재고 예약",
+          "status": "pending",
+          "estimatedLines": 400
+        },
+        {
+          "number": 2,
+          "title": "가격 계산 + 테스트",
+          "description": "가격 계산 로직, 쿠폰 검증, 에러 핸들링, 테스트 10건",
+          "status": "pending",
+          "estimatedLines": 350
+        }
+      ]
+    }
+  }
+}
