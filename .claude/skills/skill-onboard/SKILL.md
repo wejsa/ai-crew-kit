@@ -23,9 +23,13 @@ complexity-hint: medium
 
 | 항목 | skill-init | skill-onboard |
 |------|-----------|---------------|
-| 대상 | 새 프로젝트 | 기존 코드베이스 |
-| 정보 수집 | 대화형 질문 | 코드베이스 자동 스캔 |
-| 기존 파일 | 없음 | 백업 후 생성 |
+| 대상 | 새 프로젝트 (빈 디렉토리) | 기존 코드베이스 |
+| 첫 입력 | 요구사항 자유 서술 | 자동 스캔 결과 검증 |
+| 도메인/스택 결정 | LLM 추론 추천 → 사용자 확인 | 파일 감지 결과 → 사용자 검증 |
+| 백로그 | 요구사항에서 자동 분해 가능 (opt-in) | 빈 backlog.json |
+| 기존 파일 | 없음 (있으면 init 진행 전 경고) | 백업 후 생성 |
+
+> **이 디렉토리에 코드 파일이 없다면 `/skill-init`을 사용하세요.** skill-onboard는 기존 코드베이스 자동 스캔이 핵심이라 빈 디렉토리에서 의미 있는 결과를 만들 수 없습니다.
 
 ## 사전 조건 (MUST-EXECUTE-FIRST — 하나라도 실패 시 STOP)
 1. Git 저장소 확인 → 없으면 "git init 먼저 실행" 안내
@@ -59,6 +63,17 @@ complexity-hint: medium
 ## 실행 플로우
 
 ### Step 1: 코드베이스 스캔
+
+**선행 가드**: `src/`/`app/`/`lib/` 디렉토리 또는 빌드 파일(`build.gradle*`, `pom.xml`, `package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`) 중 하나도 없는 빈 디렉토리면 다음 안내 후 종료 옵션 제시:
+
+```
+⚠ 코드 파일이 감지되지 않았습니다.
+  skill-onboard는 기존 코드베이스 자동 스캔이 목적입니다.
+  빈 디렉토리에서 신규 프로젝트를 시작하려면 /skill-init 을 사용하세요.
+
+  계속 skill-onboard로 진행하시겠습니까? [y/N]
+```
+
 
 **백엔드**: build.gradle.kts → spring-boot-kotlin / build.gradle → spring-boot-java / pom.xml → spring-boot-java / go.mod → go / pyproject.toml/requirements.txt → python (FastAPI/Django 판별) / package.json + express/fastify/nestjs → nodejs-typescript
 
@@ -105,7 +120,7 @@ README.md → README.md.bak / CLAUDE.md → CLAUDE.md.bak (존재 시)
 > **kit clone 케이스 예외**: 사전 조건 2번에서 자동 정리로 README.md/CLAUDE.md/VERSION이 이미 삭제되었으므로 본 단계에서 백업 대상 없음. 자연스럽게 스킵됨.
 
 ### Step 5: 설정 파일 생성
-skill-init Step 6 동일: project.json (buildCommands 포함), backlog.json, CLAUDE.md, README.md, VERSION (기존 있으면 유지)
+skill-init Step 10 동일: project.json (buildCommands 포함), backlog.json (빈 값으로 초기화 — 자동 분해는 init 전용), CLAUDE.md, README.md, VERSION (기존 있으면 유지)
 커스텀 스킬: `.claude/skills/custom/` 존재 시 스캔 → CLAUDE.md CUSTOM_SECTION에 삽입
 
 ### Step 6: Git 설정
