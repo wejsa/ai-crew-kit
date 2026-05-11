@@ -1,0 +1,41 @@
+name: skill-init regression tests
+
+on:
+  push:
+    branches: [main, develop, 'feature/**', 'fix/**', 'claude/**']
+    paths:
+      - '.claude/skills/skill-init/**'
+      - '.claude/skills/skill-onboard/**'
+      - '.claude/schemas/backlog.schema.json'
+      - '.claude/schemas/project.schema.json'
+      - '.claude/schemas/fixtures/backlog/**'
+      - 'tests/skill_init/**'
+      - '.github/workflows/skill-init-tests.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - '.claude/skills/skill-init/**'
+      - '.claude/skills/skill-onboard/**'
+      - '.claude/schemas/backlog.schema.json'
+      - '.claude/schemas/project.schema.json'
+      - '.claude/schemas/fixtures/backlog/**'
+      - 'tests/skill_init/**'
+      - '.github/workflows/skill-init-tests.yml'
+
+jobs:
+  test:
+    name: pytest tests/skill-init
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install --upgrade pytest jsonschema
+
+      - name: Run skill-init regression tests
+        run: pytest tests/skill_init/ -v --tb=short
