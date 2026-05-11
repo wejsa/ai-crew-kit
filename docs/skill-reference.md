@@ -34,9 +34,9 @@
 
 | 명령어 | 설명 |
 |--------|------|
-| `/skill-init` | 프로젝트 초기화 (ai-crew-kit clone 감지 시 kit 잔여 자동 정리) |
-| `/skill-init --quick` | 제로 결정 빠른 초기화 |
-| `/skill-init --reset` | 기존 설정 초기화 (재설정) |
+| `/skill-init` | 프로젝트 초기화 (**v2.1+** 요구사항 우선 플로우: 자유 서술 → LLM 도메인/스택 추천 → 백로그 자동 분해 opt-in. ai-crew-kit clone 감지 시 kit 잔여 자동 정리) |
+| `/skill-init --quick` | 제로 결정 빠른 초기화 (디렉토리명 매칭 → 파일 감지 → 빈 백로그) |
+| `/skill-init --reset` | 기존 설정 초기화 (`.claude/temp/reset-backup-{ts}-{pid}/`로 자동 백업 + `MANIFEST.txt` 체크섬 기록) |
 | `/skill-status` | 현재 상태 확인 |
 | `/skill-status --health` | 시스템 건강 점검 |
 | `/skill-status --health --fix` | 건강 점검 + Orphan 자동 복구 |
@@ -48,7 +48,9 @@
 | `/skill-onboard` | 기존 프로젝트에 AI Crew Kit 적용 (kit clone 감지 시 자동 정리) |
 | `/skill-onboard --scan-only` | 스캔만 수행 (설정 생성 없음) |
 
-> **ai-crew-kit clone 자동 정리** (`/skill-init`, `/skill-onboard` 공통): origin URL 정규식 + initial commit fingerprint 둘 다 일치 + 더티/미푸시/비-main 가드 통과 시 kit 잔여 14종(`CHANGELOG.md`, `docs/`, `examples/`, `tests/`, `scripts/`, `.github/`, `memory/`, `LICENSE`, `README.md`, `CLAUDE.md`, `VERSION`, `.claude/temp/`, `.claude/hooks/tests/`, `.claude/state/`, `.claude/settings.local.json`)을 추가 확인 없이 자동 삭제. README.md/CLAUDE.md/VERSION은 Step 6에서 사용자 프로젝트용으로 새로 생성. 가드 미통과 시 정리 SKIP하고 일반 진행 (kit 개발자 환경 보호).
+> **ai-crew-kit clone 자동 정리** (`/skill-init`, `/skill-onboard` 공통): origin URL 정규식 + initial commit fingerprint 둘 다 일치 + 더티/미푸시/비-main 가드 통과 시 kit 잔여 14종(`CHANGELOG.md`, `docs/`, `examples/`, `tests/`, `scripts/`, `.github/`, `memory/`, `LICENSE`, `README.md`, `CLAUDE.md`, `VERSION`, `.claude/temp/`, `.claude/hooks/tests/`, `.claude/state/`, `.claude/settings.local.json`)을 추가 확인 없이 자동 삭제. README.md/CLAUDE.md/VERSION은 Step 10에서 사용자 프로젝트용으로 새로 생성. 가드 미통과 시 정리 SKIP하고 일반 진행 (kit 개발자 환경 보호).
+>
+> **v2.1+ 요구사항 우선 플로우** (`/skill-init` 일반 모드): Step 2 요구사항 자유 서술 → Step 3 lean 시 최대 3질문 → Step 4 메타 자동 결정(+sanitization) → Step 5 LLM 추천 + 차순위 → Step 6~8 에이전트/프로필 → Step 9 백로그 자동 분해 (opt-in, Phase 4-카테고리 + Hard limits ≤30 + 컴플라이언스 priority 강제). 입력 신뢰 경계 섹션이 prompt injection 방어. 재현성 표 (결정적 vs 경험적 관측 분리). 자세히는 [skill-init/SKILL.md](https://github.com/wejsa/ai-crew-kit/blob/main/.claude/skills/skill-init/SKILL.md) 참조.
 
 ### 개발 워크플로우 🔵
 

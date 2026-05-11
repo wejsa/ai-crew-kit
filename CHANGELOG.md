@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-05-11
+
+> **skill-init 요구사항 우선 플로우 재설계 + 백로그 자동 분해 opt-in (minor)** — 기존 "도메인 → 스택 → (백로그 별도)" 순서를 "요구사항 자유 서술 → 도메인/스택 LLM 추천 → 백로그 자동 분해(opt-in)" 흐름으로 뒤집어 실제 제품 개발 사고 흐름과 일치시킴. 사용자가 한 줄 또는 여러 문단의 요구사항을 입력하면 Phase 4-카테고리 백로그(10-25 task)가 즉시 준비되어 `/skill-plan`/`/skill-impl` 체인으로 바로 진입 가능. 6 라운드 자체 리뷰 + 수정으로 입력 신뢰 경계(prompt injection 방어), sanitization(셸/path traversal 차단), Hard limits 강제, 컴플라이언스 priority 강제 격상, 절단 가시성 확보 등 안전장치 충실. 정적 검증 13/13 PASS.
+
+### Added
+
+- **`.claude/skills/skill-init/SKILL.md` — 요구사항 우선 플로우 (Step 2~9 신설)**:
+  - **입력 신뢰 경계 섹션 (신규)**: Step 2/3/4/9 사용자 입력이 Step 1 destructive 분기 / Step 9 컴플라이언스 격상 / Step 10 백업/덮어쓰기 결정을 변경할 권한 없음 명시. "ignore previous instructions" 등 메타 지시 무시. 비가시 문자(zero-width chars U+200B/200C/200D/FEFF, ZWJ) sanitization strip.
+  - **Step 2 요구사항 자유 서술 입력**: 한 줄~여러 문단. 빈 입력 시 최대 1회 재요청 후 placeholder 진입. **입력 상한** 5000자/50줄 + project.json description 200자.
+  - **Step 3 정보 보강** (lean 입력일 때만 최대 3질문). rich 입력이면 SKIP.
+  - **Step 4 프로젝트 메타 자동 결정**: 프로젝트명 5단계 폴백 + **sanitization 강제** (화이트리스트 + 길이 1-50 + 셸 메타 차단). taskPrefix 알고리즘.
+  - **Step 5 LLM 추론 추천**: 도메인 + 스택 단일 추천 + 차순위 옵션 부기. 재현성 결정 규칙 표.
+  - **Step 9 백로그 자동 분해 (opt-in, 신규)**: Phase 4-카테고리 고정 템플릿. **Hard limits 강제** (phase당 ≤10, 전체 ≤30, critical 포함 절대 상한 — 사용자 우회 불가). **Priority 강제 + 컴플라이언스 격상** (강제 그룹 / 심사 그룹 분리). **절단 보고 형식**으로 critical 누락 가시성 확보.
+  - **task.phase ↔ phases 키 매핑 규칙** + orphan phase drop 강제.
+  - **Step 10 사전 처리 (`--reset`)**: PID suffix 백업 디렉토리 + `MANIFEST.txt` + `MANIFEST.sha256`. `--reset` + 진행 중 task ≥ 1 시 1회 confirm.
+  - **Step 11**: 백로그 시작 가이드 / 빈 백로그 안내 / **v1 데이터 복원 안내**.
+- **재현성 정책 표**: 결정적 항목 vs 경험적 관측 정직 분리. LLM sampling 한계 명시.
+- **`.claude/skills/skill-onboard/SKILL.md`**: 빈 디렉토리 시 `/skill-init` 권장 안내 + 차이점 표 보강.
+
+### Changed
+
+- **Step 1 평가 순서**: 자동 정리 실행 시 코드 감지 가드 SKIP / 진행 중 task 분기 세분화.
+- **Step 1 보존/삭제 14종 표 형태** (정밀도 보존).
+- **--quick 케이스 흐름 표**: 9 케이스로 확장. 입력 횟수 명시.
+
+### Fixed
+
+- **6 라운드 자체 리뷰 + 수정 (CRITICAL 13 + MAJOR 60 + MINOR 30 누적)**:
+  - 1차→2차: schema 위반 11건 (currentStep:0, specFile:null, phase 객체, --reset 처리 등)
+  - 3차 5관점: phase 매핑 룰, task 템플릿 빈값 omit (skill-impl 동적 lockTTL 보호), 재현성 SLA 다운그레이드, 프로젝트명 sanitization, 입력 신뢰 경계
+  - 4차: v1 detector 정정, project.json v2 GA 필드, Hard limits critical 보호, 컴플라이언스 키워드 확장, MANIFEST 무결성
+  - **5차 scope down**: v1→v2 위임 분기 제거 (skill-upgrade v1 task 변환 미수행 확인 — 거짓 약속 차단). v1 자동 변환은 #65로 분리
+  - 6차: Hard ceiling 수치 모순 정정, 컴플라이언스 절단 가시성, 재현성 정책 강제/심사 분리, v1 데이터 복원 안내
+
+### Notes
+
+- **사용자 영향 (v2.0.x → v2.1.0)**:
+  - `/skill-init` 흐름 변경 (요구사항 우선). `--quick` 모드는 기존 동작 유지.
+  - 신규 기능: 백로그 자동 분해 (opt-in). N이면 기존과 동일 빈 백로그.
+  - `--reset`: 백업 디렉토리 명세 강화. v1 사용자는 백업 후 새 v2 빈 백로그 (수동 복원).
+  - schema/backlog 형식 변경 없음. 기존 v2 프로젝트 호환.
+- **후속 Issue**: #62 test 영속화 / #63 cleanup protocol / #65 v1→v2 자동 마이그레이션 (v2.1+) / #66 escape hatch enum mismatch
+- 자체 정적 검증 13/13 PASS.
+
 ## [2.0.3] - 2026-05-06
 
 > **kit clone cleanup 4종 추가 (patch)** — v2.0.2의 ai-crew-kit clone 자동 정리에 누락된 항목 보강. cleanup 10종 → 14종. `README.md`/`CLAUDE.md`/`VERSION`(Step 6 새로 생성과 일관성), `.claude/state/`(kit dev runtime state), `.claude/settings.local.json`(kit 개발자 로컬 권한 설정 — 사용자 무관) 추가. Step 1 표의 `CLAUDE.md` 행을 사용자 저장소/kit clone 케이스로 분리하여 모순 해소.

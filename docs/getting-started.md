@@ -33,7 +33,7 @@ claude
 /skill-init --quick
 ```
 
-## 초기화 흐름
+## 초기화 흐름 (v2.1.0+, 요구사항 우선)
 
 ```
 /skill-init 실행
@@ -43,34 +43,47 @@ claude
     │       ├── 자기 보호 가드 (더티/미푸시/비-main 차단)
     │       ├── kit 히스토리 제거 (rm -rf .git && git init -b main)
     │       └── kit 잔여 14종 자동 삭제
-    │           CHANGELOG.md, docs/, examples/, tests/, scripts/,
-    │           .github/, memory/, LICENSE,
-    │           README.md, CLAUDE.md, VERSION,    ← Step 6에서 새로 생성
-    │           .claude/temp/, .claude/hooks/tests/,
-    │           .claude/state/, .claude/settings.local.json
     │
-    ├── 2. 프로젝트 정보 입력 (이름, 설명)
+    ├── 2. 요구사항 자유 서술 입력 ★ (한 줄 또는 여러 문단)
+    │       예: "B2B SaaS로 팀 협업용 칸반 보드. 멀티테넌시 필수,
+    │             50개 회사/회사당 100명, GDPR 대응."
+    │       → 충실도 평가 (rich/lean)
     │
-    ├── 3. 도메인 선택
-    │       ├── 🏦 fintech (결제/정산/오픈뱅킹/마이데이터)
-    │       ├── 🛒 ecommerce (이커머스/마켓플레이스/구독)
-    │       ├── ☁️ saas (멀티테넌트/구독결제/RBAC)
-    │       ├── 🏥 healthcare (PHI/진료기록/처방/HIPAA)
-    │       └── 🔧 general (범용)
+    ├── 3. 정보 보강 (lean 입력일 때만 최대 3질문)
+    │       └── 도메인 / 사용자 규모 / 핵심 기능
     │
-    ├── 4. 기술 스택 선택 (Backend, DB, Cache 등)
+    ├── 4. 프로젝트 메타 자동 결정 (이름/taskPrefix/설명)
+    │       └── 5단계 폴백 + sanitization
     │
-    ├── 5. 에이전트 팀 구성 (필수 3개 + 선택 6개)
+    ├── 5. 도메인 + 스택 LLM 추천 ★
+    │       ├── 재현성 결정 규칙 표 (registry/매핑 1차 근거)
+    │       └── [A] 수락 / [B] 일부 수정 / [C] 직접 선택 (escape hatch)
     │
-    └── 6. 설정 파일 자동 생성
-            ├── .claude/state/project.json (kitSource = ai-crew-kit URL 보존)
-            ├── .claude/state/backlog.json
-            ├── CLAUDE.md
-            ├── README.md  (프로젝트 전용)
-            └── VERSION    (0.1.0)
+    ├── 6. 에이전트 팀 구성 (스택 기반 자동 + 선택)
+    │
+    ├── 7. 워크플로우 프로필 (standard / fast)
+    │
+    ├── 8. 스킬 프로파일 (full / developer / docs-only / custom)
+    │
+    ├── 9. 백로그 자동 분해 (opt-in) ★ — 사전 Y/N 확인
+    │       └── Phase 4-카테고리 고정 템플릿
+    │           ├── PHASE-1 기반/인프라
+    │           ├── PHASE-2 핵심 도메인
+    │           ├── PHASE-3 부가 기능
+    │           └── PHASE-4 운영/품질
+    │
+    ├── 10. 파일 생성
+    │       ├── .claude/state/project.json (kitSource = ai-crew-kit URL)
+    │       ├── backlog.json (Step 9 결과 또는 빈 객체)
+    │       ├── CLAUDE.md / README.md / VERSION
+    │       └── --reset 시: .claude/temp/reset-backup-{ts}-{pid}/ + MANIFEST.txt
+    │
+    └── 11. 완료 안내 (백로그 시작 가이드 또는 빈 백로그 안내)
 ```
 
-> **--quick 모드**: 2~5단계를 자동 감지/기본값으로 건너뛰어 즉시 시작합니다. 나중에 `/skill-init --reset`으로 재설정할 수 있습니다.
+> **--quick 모드**: Step 2~9를 자동 감지/기본값으로 건너뛰어 즉시 시작합니다 (디렉토리명 기반 도메인 매칭 → 파일 감지 → 빈 백로그). 나중에 `/skill-init --reset`으로 재설정할 수 있습니다.
+>
+> **재현성**: 동일 요구사항으로 두 번 초기화하면 도메인/Backend/Database/Phase 4-카테고리 구조/priority 분포는 결정적으로 동일. Task 개수(±2)와 wording은 LLM sampling 한계로 경험적 관측 (SLA 아님).
 
 > **1단계 자동 정리**: ai-crew-kit clone에서 시작한 경우 kit dev 잡티 14종(CHANGELOG, docs, examples, tests, scripts, .github, memory, LICENSE, README.md, CLAUDE.md, VERSION, .claude/temp, .claude/hooks/tests, .claude/state, .claude/settings.local.json)이 추가 확인 없이 자동 삭제되어 깨끗한 사용자 프로젝트로 시작합니다. README.md/CLAUDE.md/VERSION은 Step 6에서 사용자 프로젝트용으로 새로 생성됩니다. **검출 기준**: `git remote origin`이 `[/:]ai-crew-kit(\.git)?$` 매칭 + initial commit SHA가 `ab0269a14...` (kit fingerprint)와 일치. **가드**: 더티 워킹 트리/미푸시 커밋/비-main 브랜치 중 하나라도 해당하면 정리 SKIP하고 일반 진행 (kit 개발자 보호). kit 가이드 문서(getting-started, customization 등)는 GitHub 리포에서 항상 참조 가능 — `project.json.kitSource`로 기록됨.
 
