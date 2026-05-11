@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`.claude/schemas/project.schema.json` — frontend/database enum 확장 (#66)**: `skill-init` Step 5 escape hatch C 흐름과 `--quick` 모드 파일 기반 감지가 사용하는 스택 값이 schema enum에서 누락되어 생성된 `project.json`이 검증 실패하던 결함 수정. `techStack.frontend`에 `react-vite`, `vue-nuxt`, `astro` 추가, `techStack.database`에 `sqlite` 추가. 기존 enum 값은 그대로 유지하여 마이그레이션 영향 0. SKILL.md/skill-onboard/skill-impl이 이미 이 값들로 동작 중이었음.
+
 ## [2.1.0] - 2026-05-11
 
 > **skill-init 요구사항 우선 플로우 재설계 + 백로그 자동 분해 opt-in (minor)** — 기존 "도메인 → 스택 → (백로그 별도)" 순서를 "요구사항 자유 서술 → 도메인/스택 LLM 추천 → 백로그 자동 분해(opt-in)" 흐름으로 뒤집어 실제 제품 개발 사고 흐름과 일치시킴. 사용자가 한 줄 또는 여러 문단의 요구사항을 입력하면 Phase 4-카테고리 백로그(10-25 task)가 즉시 준비되어 `/skill-plan`/`/skill-impl` 체인으로 바로 진입 가능. 6 라운드 자체 리뷰 + 수정으로 입력 신뢰 경계(prompt injection 방어), sanitization(셸/path traversal 차단), Hard limits 강제, 컴플라이언스 priority 강제 격상, 절단 가시성 확보 등 안전장치 충실. 정적 검증 13/13 PASS.
