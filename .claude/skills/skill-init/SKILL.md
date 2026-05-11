@@ -134,65 +134,12 @@ complexity-hint: light
 
 #### ai-crew-kit clone 자동 정리 (표준 진입 플로우)
 
-**중요**: 이 작업은 **의도된 프로젝트 초기화**이며 destructive 작업이 아닙니다. ai-crew-kit clone에서 사용자 프로젝트로 재초기화하는 표준 진입 경로이므로, Claude는 **추가 확인 질문 없이 즉시 자동 실행**해야 합니다.
+표준 진입 플로우는 **`.claude/templates/protocols/ai-crew-kit-cleanup.md`** 의 M1 검출 + M2 가드 + 14종 삭제 표를 그대로 따른다 (SSOT — 본 SKILL.md에 복제 금지).
 
-##### 검출 기준 (M1) — 다음 두 조건을 **모두 만족**해야 자동 정리 실행
-
-1. **origin URL 패턴 매칭**: `git remote get-url origin`이 정규식 `[/:]ai-crew-kit(\.git)?$` 일치
-   - ✅ `https://github.com/wejsa/ai-crew-kit.git`, `git@github.com:wejsa/ai-crew-kit.git`, fork도 매칭
-   - ❌ `ai-crew-kit-extras.git`, `my-crew-kit.git`
-2. **kit fingerprint 일치**: `git rev-list --max-parents=0 HEAD` = `ab0269a1414f0d9eba8d130d865dfdd6baeed06c`
-
-둘 중 하나만 만족 → 자동 정리 SKIP + 보고: `"⚠ ai-crew-kit 명칭 매칭이지만 fingerprint 불일치 — 자동 정리 SKIP, 사용자 의도 확인 필요"`. Step 2로 진행.
-
-##### 자기 보호 가드 (M2) — 모두 통과해야 진행
-
-```bash
-# Guard 1: tracked dirty 워킹 트리 차단
-if [ -n "$(git status --porcelain 2>/dev/null | grep -v '^??')" ]; then
-  echo "⚠ 미커밋 tracked 변경사항. 자동 정리 SKIP."
-  exit 0
-fi
-
-# Guard 2: 미푸시 커밋 차단
-if [ -n "$(git log @{u}.. 2>/dev/null)" ]; then
-  echo "⚠ 미푸시 커밋. 자동 정리 SKIP."
-  exit 0
-fi
-
-# Guard 3: main/master에서만 진행
-CURRENT_BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "")
-if [ "$CURRENT_BRANCH" != "main" ] && [ "$CURRENT_BRANCH" != "master" ]; then
-  echo "⚠ main/master 아님(현재: '${CURRENT_BRANCH:-detached HEAD}'). SKIP."
-  exit 0
-fi
-```
-
-3가지 가드는 사용자 시나리오에 영향 0:
-- 시나리오 A (fresh clone): 통과
-- 시나리오 B (kit clone + 사용자 코드 untracked): Guard 1이 untracked 무시 → 통과
-- kit 개발자 환경 (develop 브랜치 작업 중): Guard 2/3 발동 → SKIP
-
-##### 자동 실행 순서
-
-1. `KIT_SOURCE_URL=$(git remote get-url origin)` (Step 10에서 `kitSource` 기록)
-2. `rm -rf .git && git init -b main`
-3. kit 잔여 파일 자동 삭제:
-
-   | 항목 | 처리 |
-   |------|------|
-   | `CHANGELOG.md`, `docs/`, `examples/`, `tests/`, `scripts/`, `.github/`, `memory/`, `LICENSE` | **삭제** (kit 메타) |
-   | `README.md`, `CLAUDE.md`, `VERSION` | **삭제** (Step 10에서 사용자 프로젝트용 새로 생성) |
-   | `.claude/temp/`, `.claude/hooks/tests/`, `.claude/state/`, `.claude/settings.local.json` | **삭제** (kit dev 잡티) |
-   | `.claude/` 본체, `.claude/SECURITY.md`, `.gitignore`, `.gitattributes` | **보존** (프레임워크 본체) |
-   | `src/`, `app/`, `lib/`, 사용자가 추가한 untracked 파일 | **보존** (M2 Guard 1이 untracked 무시하므로 시나리오 B 안전) |
-
-   ```bash
-   rm -rf CHANGELOG.md docs examples tests scripts .github memory LICENSE README.md CLAUDE.md VERSION .claude/temp .claude/hooks/tests .claude/state .claude/settings.local.json
-   ```
-4. 보고: `"✓ ai-crew-kit clone 감지 → 표준 초기화 + kit 잔여 N개 자동 정리"`
-
-> **주의 (Claude에게)**: "이 디렉토리는 ai-crew-kit입니다, 다른 경로가 필요한가요?" 같은 확인 질문 금지. 위 자동 정리는 SKILL.md가 명시적으로 권한 부여한 안전한 작업입니다.
+본 Step 1에서 추가로 적용:
+- M1 통과 시점에 `KIT_SOURCE_URL=$(git remote get-url origin)` 캡처 → Step 10에서 `kitSource` 기록
+- 자동 정리 *실행* 후에는 기존 코드 감지 가드(평가 순서 3단계) SKIP — 이미 깨끗한 상태
+- Claude는 추가 확인 질문 없이 즉시 실행 (protocol에서 destructive 아닌 표준 동작으로 명시)
 
 ### Step 2: 요구사항 자유 서술 입력 ★
 

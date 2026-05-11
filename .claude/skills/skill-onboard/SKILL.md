@@ -33,31 +33,12 @@ complexity-hint: medium
 
 ## 사전 조건 (MUST-EXECUTE-FIRST — 하나라도 실패 시 STOP)
 1. Git 저장소 확인 → 없으면 "git init 먼저 실행" 안내
-2. **ai-crew-kit clone 자동 정리** (표준 진입 플로우):
-   - **추가 확인 질문 없이 즉시 실행** — 의도된 초기화이며 destructive 작업이 아님
-   - **검출 기준** (둘 다 만족 시 실행):
-     1. `git remote get-url origin`이 정규식 `[/:]ai-crew-kit(\.git)?$` 일치
-     2. `git rev-list --max-parents=0 HEAD`가 `ab0269a1414f0d9eba8d130d865dfdd6baeed06c` (ai-crew-kit initial commit)와 일치
-     - 둘 중 하나라도 불일치 → 자동 스킵 + Step 1 코드베이스 스캔으로 일반 진행
-   - **자기 보호 가드** (3가지 모두 통과해야 정리 진행):
-     1. **tracked dirty** 워킹 트리(`git status --porcelain | grep -v '^??'` 출력 있음) → SKIP
-        - **untracked 파일은 통과**: 시나리오 B에서 사용자가 src/, app/, lib/ 등에 자기 코드를 *복사만* 한 상태(`git add` 미실행)는 untracked → 통과하여 정리 진행. 사용자 코드 보존 + kit 잡티 제거.
-        - tracked 수정/추가/삭제만 차단(kit 개발자 미커밋 작업 보호).
-     2. 미푸시 커밋(`git log @{u}..` 출력 있음) → SKIP
-     3. main/master 브랜치만 진행. 비-main, detached HEAD(빈 문자열), 빈 값 모두 SKIP (kit dev 환경은 보통 develop/feature/* 또는 tag checkout)
-     - 가드 미통과 시 보고 후 Step 1로 일반 진행 (정리 없이)
-   - **실행 순서** (검출+가드 통과 시):
-     1. `KIT_SOURCE_URL=$(git remote get-url origin)` 저장 (Step 5에서 `kitSource`로 기록)
-     2. `rm -rf .git && git init -b main`
-     3. kit 잔여 파일 자동 삭제 (한 줄):
-        ```bash
-        rm -rf CHANGELOG.md docs examples tests scripts .github memory LICENSE README.md CLAUDE.md VERSION .claude/temp .claude/hooks/tests .claude/state .claude/settings.local.json
-        ```
-        보존: `.claude/` (프레임워크 본체, 단 `hooks/tests/`/`state/`/`settings.local.json` 제외), `.gitignore`, `.gitattributes`, `.claude/SECURITY.md`. 삭제된 `CLAUDE.md`/`README.md`/`VERSION`은 Step 5에서 사용자 프로젝트용으로 새로 생성됨 (`README.md.bak` 백업 불필요 — kit clone 케이스이므로).
-     4. 보고: `"✓ ai-crew-kit clone 감지 → 표준 초기화 + kit 잔여 N개 자동 정리"`
-   - **시나리오 B 주의** (사용자 코드가 이미 함께 있는 경우): 사용자 코드가 보통 `src/`/`app/`/`lib/` 등 비충돌 경로면 안전. 단, 사용자가 자기 `docs/`/`tests/`/`scripts/`/`.github/workflows/`를 동일 경로에 미리 복사한 경우 함께 삭제됨. 의심 시 사용자에게 사전 백업(`tar czf .pre-onboard-backup-$(date +%s).tar.gz docs tests scripts .github`) 권장.
-   - 검출 자동 스킵된 경우(시나리오 C): 기존 동작 유지, 영향 없음.
-   - Claude는 "다른 경로가 필요한가요?" 같은 확인 질문을 하지 말 것
+2. **ai-crew-kit clone 자동 정리**: 표준 진입 플로우는 **`.claude/templates/protocols/ai-crew-kit-cleanup.md`** 의 M1 검출 + M2 가드 + 14종 삭제 표를 그대로 따른다 (SSOT — 본 SKILL.md에 복제 금지).
+
+   본 skill-onboard에서 추가로 적용:
+   - M1 통과 시점에 `KIT_SOURCE_URL` 캡처 → Step 5에서 `kitSource` 기록
+   - 자동 정리 *실행* 시 `CLAUDE.md`/`README.md`/`VERSION`이 이미 삭제되므로 Step 4 백업 단계는 자연 SKIP (kit clone 케이스 예외)
+   - 가드 미통과 또는 M1 불일치 시 정리 SKIP → Step 1 코드베이스 스캔으로 일반 진행 (시나리오 C)
 3. 기존 AI Crew Kit 설정 (project.json) → AskUserQuestion으로 덮어쓰기 확인
 
 ## 실행 플로우
