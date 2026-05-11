@@ -7,10 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.1] - 2026-05-11
+
+> **schema 정합성 sleeper bug 2건 일괄 수정 (patch)** — v2.1.0 PR #61 6차 자체 리뷰 후속 이슈 2건(#66 escape hatch enum mismatch / #65 v1 backlog 호환)을 함께 해소. (#66) `skill-init` Step 5 escape hatch C + `--quick` 파일 감지가 이미 `react-vite`/`vue-nuxt`/`astro`/`sqlite`를 사용 중이었으나 `project.schema.json` enum에 누락되어 생성 결과가 검증 실패하던 결함 수정. (#65) v1.x 시기 실제 backlog가 사용하던 `step.description` / `step.estimatedLines`가 `additionalProperties:false`에 막혀 거부되던 sleeper bug 해소 — `examples/ecommerce-shop/backlog.json`도 동일 결함으로 silent 위반 중이었음. 본문에서 가정된 "v1→v2 task 자동 마이그레이션"은 실제 `backlog.schema.json` diff가 0이라 변환 룰 자체가 불필요했고, 진짜 결함은 step 옵셔널 필드 부재였음. 회귀 보호 fixture/pytest + CI 가드 추가로 동일 패턴 재발 방지. 마이그레이션 영향 0 (기존 enum/필드 유지, 옵셔널 확장만).
+
 ### Fixed
 
 - **`.claude/schemas/project.schema.json` — frontend/database enum 확장 (#66)**: `skill-init` Step 5 escape hatch C 흐름과 `--quick` 모드 파일 기반 감지가 사용하는 스택 값이 schema enum에서 누락되어 생성된 `project.json`이 검증 실패하던 결함 수정. `techStack.frontend`에 `react-vite`, `vue-nuxt`, `astro` 추가, `techStack.database`에 `sqlite` 추가. 기존 enum 값은 그대로 유지하여 마이그레이션 영향 0. SKILL.md/skill-onboard/skill-impl이 이미 이 값들로 동작 중이었음.
 - **`.claude/schemas/backlog.schema.json` — v1 backlog 호환 + 현존 example 정합 (#65)**: step 정의에 옵셔널 `description` / `estimatedLines` 필드 추가. v1.x 시기 실제 backlog가 사용하던 두 필드가 `additionalProperties:false`에 막혀 거부되던 sleeper bug 해소. 동일 결함이 `examples/ecommerce-shop/.claude/state/backlog.json`에도 잠재해 schema 검증을 silently 위반하던 상태였음. CI 가드 추가(`.github/workflows/schema-validation.yml`)로 examples backlog도 schema 검증되며, v1.45.1 examples 박제 fixture(`tests/upgrade/fixtures/v1-{ecommerce,fintech}-backlog.json`) + pytest(`test_backlog_compat.py`)로 회귀 보호. `backlog.schema.json`은 v1↔v2 schema diff 0 — 변환 룰 자체가 불필요하므로 `migrations.json` 추가 없음. `skill-upgrade`는 기존대로 `.claude/state/*` 보존만 수행하며 SKILL.md에 v1 호환 정책 명문화.
+
+### Notes
+
+- **사용자 영향 (v2.1.0 → v2.1.1)**: 마이그레이션/액션 불필요. schema 옵셔널 확장만이라 기존 `project.json`/`backlog.json` 호환.
+- **CI 가드 추가**: `Schema Validation` 잡에 `examples/*/.claude/state/backlog.json` 검증 단계 추가. 자기 fork에서 examples를 수정 중이라면 schema 위반 시 즉시 fail.
+- **v1.x 사용자**: 이전에 `skill-upgrade` 후 `step.description`/`step.estimatedLines` 필드 때문에 schema 위반이 보고됐다면 본 패치로 해소. 별도 작업 없음.
+- 후속 Open Issue: #64 (v2.1.0 통합 추적 메타 이슈, 5/11 릴리스로 본질 종결).
 
 ## [2.1.0] - 2026-05-11
 
