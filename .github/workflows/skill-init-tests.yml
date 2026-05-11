@@ -9,7 +9,7 @@ on:
       - '.claude/schemas/backlog.schema.json'
       - '.claude/schemas/project.schema.json'
       - '.claude/schemas/fixtures/backlog/**'
-      - 'tests/skill-init/**'
+      - 'tests/skill_init/**'
       - '.github/workflows/skill-init-tests.yml'
   pull_request:
     branches: [main, develop]
@@ -19,7 +19,7 @@ on:
       - '.claude/schemas/backlog.schema.json'
       - '.claude/schemas/project.schema.json'
       - '.claude/schemas/fixtures/backlog/**'
-      - 'tests/skill-init/**'
+      - 'tests/skill_init/**'
       - '.github/workflows/skill-init-tests.yml'
 
 jobs:
@@ -38,4 +38,4 @@ jobs:
         run: pip install --upgrade pytest jsonschema
 
       - name: Run skill-init regression tests
-        run: pytest tests/skill-init/ -v --tb=short
+        run: pytest tests/skill_init/ -v --tb=short
