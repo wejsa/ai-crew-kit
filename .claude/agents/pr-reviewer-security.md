@@ -40,7 +40,7 @@ domain 값은 호출 시 프롬프트에서 전달됩니다.
 - 알려진 CRITICAL CVE가 있는 의존성 추가
 - HTTPS 미사용 (프로덕션 엔드포인트)
 
-### MAJOR (머지 전 수정 권장)
+### MAJOR (개선 권고 — 머지 차단 없음)
 - 입력 검증 누락 (사용자 입력을 검증 없이 사용)
 - CORS 설정 과도하게 허용 (*, credentials: true 조합)
 - Rate Limiting 미적용 API
