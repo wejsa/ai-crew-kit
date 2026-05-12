@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.2] - 2026-05-12
+
+> **머지 결정 일관성 — MAJOR 라벨을 정책에 맞춤 (patch)** — PR 리뷰 결과 보고가 어떤 때는 "CRITICAL만 수정", 어떤 때는 "MAJOR도 수정 후 재리뷰"로 흔들리던 비일관성 해소. 자동화 결정 게이트(`skill-review-pr` Step 4/6/7은 CRITICAL만 차단)와 agent 라벨("MAJOR = 머지 전 수정 권장")의 SSOT 충돌이 원인이었음. 자동화 로직과 `skill-fix` 파싱은 **전혀 건드리지 않고** 4개 agent의 MAJOR 헤더와 1개 매핑 표 행만 정책에 맞춰 정렬했으며, `skill-review-pr/SKILL.md` 주의사항에 "심각도별 머지 정책" SSOT 블록을 추가하여 LLM이 결과 보고할 때 본 규칙을 우선하도록 명문화. 토큰 비용 변화 0 (auto-fix 루프는 CRITICAL에만 적용된다는 사실도 함께 명문화). 본 PR(#71) 자체 리뷰가 새 정책의 첫 적용 사례로, MINOR 1건을 "수정 후 재리뷰 권장"이 아닌 "정보 제공"으로 보고하여 정책이 의도대로 작동함을 확인.
+
+### Fixed
+
+- **agent 라벨 4건 통일 (#71)**: `pr-reviewer-domain.md`, `pr-reviewer-security.md`, `pr-reviewer-test.md`, `agent-db-designer.md`의 `### MAJOR (머지 전 수정 권장)` 헤더를 `### MAJOR (개선 권고 — 머지 차단 없음)`로 정렬. `agent-qa.md` P2→MAJOR 매핑 행도 "개선 권고, 머지 차단 없음"으로 정렬. 자동화 결정 게이트(`skill-review-pr` Step 4/6/7)는 이미 CRITICAL만 차단으로 동작 중이었으나 agent 라벨이 "MAJOR=머지 전 수정 권장"으로 표기되어 LLM에게 "재리뷰 권하라"는 상충 시그널을 주던 결함 해소.
+- **`skill-review-pr/SKILL.md` SSOT 블록 신설 (#71)**: 주의사항 섹션에 "심각도별 머지 정책" 블록 추가 — CRITICAL=차단·수정 후 재리뷰 / MAJOR=권고·머지 가능(다음 PR/별도 Task로 처리) / MINOR=참고. LLM이 이전 회차의 표현보다 본 규칙을 우선하도록 명시. auto-fix 루프는 CRITICAL에만 적용된다는 사실을 명문화하여 토큰 비용 통제 의도를 SSOT에 박제. 기존 "CRITICAL 이슈는 반드시 수정 필요" 한 줄은 본 블록에 흡수.
+
+### Notes
+
+- **사용자 영향 (v2.1.1 → v2.1.2)**: 마이그레이션/액션 불필요. 자동화 로직 변경 없음 — `skill-review-pr` 결정 로직, `skill-fix` 파싱, `fixLoopCount` 루프 가드 모두 그대로. 다음 PR 리뷰부터 결과 보고 표현이 일관(CRITICAL=수정 필수, MAJOR=정보 제공)되게만 바뀜.
+- **토큰 비용**: 변화 0. 대안으로 검토된 "MAJOR까지 차단+auto-fix" 방향은 루프 길어져 토큰 폭증 위험으로 거부.
+- **변경 범위**: 6 파일, +12/-6. Trivial PR 경량 리뷰 단일 라운드로 완료(자기 PR → COMMENT).
+
 ## [2.1.1] - 2026-05-11
 
 > **schema 정합성 sleeper bug 2건 일괄 수정 (patch)** — v2.1.0 PR #61 6차 자체 리뷰 후속 이슈 2건(#66 escape hatch enum mismatch / #65 v1 backlog 호환)을 함께 해소. (#66) `skill-init` Step 5 escape hatch C + `--quick` 파일 감지가 이미 `react-vite`/`vue-nuxt`/`astro`/`sqlite`를 사용 중이었으나 `project.schema.json` enum에 누락되어 생성 결과가 검증 실패하던 결함 수정. (#65) v1.x 시기 실제 backlog가 사용하던 `step.description` / `step.estimatedLines`가 `additionalProperties:false`에 막혀 거부되던 sleeper bug 해소 — `examples/ecommerce-shop/backlog.json`도 동일 결함으로 silent 위반 중이었음. 본문에서 가정된 "v1→v2 task 자동 마이그레이션"은 실제 `backlog.schema.json` diff가 0이라 변환 룰 자체가 불필요했고, 진짜 결함은 step 옵셔널 필드 부재였음. 회귀 보호 fixture/pytest + CI 가드 추가로 동일 패턴 재발 방지. 마이그레이션 영향 0 (기존 enum/필드 유지, 옵셔널 확장만).
