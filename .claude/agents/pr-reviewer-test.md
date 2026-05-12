@@ -45,7 +45,7 @@ agent-qa의 제안 결과가 `.claude/temp/workflow-{id}/qa-suggestions.md`에 �
 - 동시성 관련 코드에 동시성 테스트 없음 (재고 차감, 락 처리)
 - 테스트에서 실제 외부 서비스 호출 (Mock/Stub 미사용)
 
-### MAJOR (머지 전 수정 권장)
+### MAJOR (개선 권고 — 머지 차단 없음)
 - 에러/예외 케이스 테스트 누락 (Happy Path만 존재)
 - 경계값 테스트 누락 (0, null, empty, max값)
 - 테스트 파일 자체가 누락 (신규 서비스/컨트롤러에 테스트 없음)
