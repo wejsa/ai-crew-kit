@@ -32,8 +32,16 @@ ERROR_LOG="$STATE_DIR/hook-errors.log"
 BACKLOG="$STATE_DIR/backlog.json"
 DISABLE_FLAG="$STATE_DIR/hook-disabled.flag"
 COUNTER_FILE="$STATE_DIR/hook-trigger-count"
-TRIGGER_WINDOW_SECONDS=10
-TRIGGER_MAX=3
+
+# 임계값/윈도우 외부화 (v2.1.3): 멀티파일 Edit이 잦은 단독 작업자가 자체적으로 완화 가능.
+# 기본값은 TFT R1/R2 권장값 그대로 유지 → 미설정 시 회귀 0.
+# 비숫자/0 이하 입력은 무시하고 기본값 사용.
+TRIGGER_WINDOW_SECONDS="${CCK_HOOK_WINDOW_SEC:-10}"
+TRIGGER_MAX="${CCK_HOOK_THRESHOLD:-3}"
+case "$TRIGGER_WINDOW_SECONDS" in ''|*[!0-9]*) TRIGGER_WINDOW_SECONDS=10 ;; esac
+case "$TRIGGER_MAX" in ''|*[!0-9]*) TRIGGER_MAX=3 ;; esac
+[ "$TRIGGER_WINDOW_SECONDS" -lt 1 ] 2>/dev/null && TRIGGER_WINDOW_SECONDS=10
+[ "$TRIGGER_MAX" -lt 1 ] 2>/dev/null && TRIGGER_MAX=3
 
 mkdir -p "$STATE_DIR" 2>/dev/null || exit 0
 

@@ -15,6 +15,8 @@ tests=(
   "test-post-tool-use-lock-reentry.sh"
   "test-post-tool-use-auto-disable.sh"
   "test-post-tool-use-heartbeat.sh"
+  "test-threshold-env-override.sh"
+  "test-diagnose.sh"
 )
 
 passed=0

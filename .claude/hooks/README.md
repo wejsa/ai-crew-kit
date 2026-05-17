@@ -17,6 +17,7 @@ Claude Code 네이티브 훅으로 ai-crew-kit 워크플로우 자동화를 구�
 ├── README.md                     이 파일
 ├── lib/
 │   └── atomic-write.sh           flock/mkdir 기반 원자적 쓰기 helper (R5)
+├── diagnose.sh                   v2.1.3: read-only hook 진단 도구
 ├── session-start.sh              SessionStart: git sync + 상태 로드
 ├── stop.sh                       Stop: 만료 잠금 해제 + continuation-plan 갱신
 └── post-tool-use.sh              PostToolUse: lockedAt heartbeat + 3단계 무한 루프 방어
@@ -97,13 +98,94 @@ exec 0</dev/null                  # stdin을 /dev/null로 — 자식 프로세�
 
 **graceful skip**: jq 미설치, stdin 비어있음, 소유 Task 없음 → 쓰기 없이 exit 0.
 
-**수동 복구**: 자동 비활성화 발동 시 원인 점검 후 플래그 삭제:
+**임계값/윈도우 외부화 (v2.1.3+)**: 환경변수로 기본값을 override 가능. 멀티파일 Edit이 잦은 단독 작업자가 자동 비활성화를 자주 보면 완화하세요.
+
+| 환경변수 | 기본값 | 의미 |
+|---------|--------|------|
+| `CCK_HOOK_THRESHOLD` | 3 | 윈도우 내 허용 호출 횟수 — 이를 **초과**하면 자동 비활성화 |
+| `CCK_HOOK_WINDOW_SEC` | 10 | 카운트 누적 윈도우(초) |
+
+비숫자/0 이하 값은 무시되고 기본값으로 폴백합니다. 미설정 시 회귀 0 (TFT R1/R2 권장값).
+
+**수동 복구**: 자동 비활성화 발동 시 원인 점검 후 플래그 삭제. 점검은 `diagnose.sh` 권장(아래 §진단 도구).
 ```bash
 rm .claude/state/hook-disabled.flag
 rm .claude/state/hook-trigger-count
 ```
 
 ---
+
+## 진단 도구 (v2.1.3+)
+
+`diagnose.sh`는 **read-only** 진단입니다. flag/counter/lock/log/settings를 한 번에 점검하고 현재 상태의 영향과 행동 옵션을 단정합니다. 어떤 파일도 mutate하지 않습니다.
+
+```bash
+bash .claude/hooks/diagnose.sh
+```
+
+출력 예시:
+```
+[등록 상태]   SessionStart/PostToolUse/Stop 등록 + 스크립트 존재
+[PostToolUse] status: 🔴 DISABLED since 2026-05-12T11:55:50Z (3d ago)
+              trigger-count: window_start=... count=4
+              추정 원인: 응답 1회당 Edit/Write ≥4회 호출
+[Stop]        continuation-plan.md: absent (idle 스킵 정상)
+              만료된 lock: 0건 / 만료 임박: 0건
+[영향 평가]   in_progress 1건 (lockedBy 0건) → 🟢 비활성 영향 없음
+[행동 옵션]   [A] 그대로 / [B] 복구 / [C] 임계값 완화
+```
+
+## 자동 비활성화 진단 가이드
+
+### 흔한 원인 TOP 3
+
+기본 임계값 `10초/3회 초과`는 다음 패턴에서 쉽게 깨집니다.
+
+1. **응답 1회에 Edit/Write 4회 이상 연속** — 멀티파일 리팩토링 시 가장 흔함
+2. **MultiEdit 1회 + 후속 Edit 2~3회** — MultiEdit도 같은 매처에 잡힘
+3. **자동화 스크립트 / 워크플로우 일괄 수정** — 짧은 시간 다발 호출
+
+### `hook-trigger-count` 포맷 해석
+
+파일 내용 예시: `1778586941 4`
+- 첫 숫자 = 윈도우 시작 Unix epoch (UTC)
+- 두 번째 숫자 = 누적 카운트
+- 디코딩: `date -u -d @1778586941` 또는 `diagnose.sh`가 ISO8601로 변환해 표시
+
+### 복구 결정 트리
+
+```
+현재 in_progress Task 중 lockedBy 설정된 게 있나?
+├─ 없음 → 영향 0. 복구 불필요 (그대로 진행 가능)
+└─ 있음 → 작업 예상 시간이 10분 초과 예정?
+          ├─ 아니오 → 그대로 가능 (stop.sh가 만료된 lock만 해제, 단기 작업은 무영향)
+          └─ 예    → 복구 권장 (heartbeat 갱신으로 lock 강제 해제 방지)
+                    또는 임계값 완화 (CCK_HOOK_THRESHOLD=8 등)
+```
+
+`diagnose.sh`가 위 트리를 자동 판정해서 `[영향 평가]` 섹션에 결론을 출력합니다.
+
+### Stop 부재 ≠ 미동작
+
+`continuation-plan.md`가 없는 건 **Stop 미동작이 아니라** `workflowState=idle` 또는 `in_progress=0건` 시 의도적 스킵의 결과입니다. Stop 실제 동작을 확인하려면:
+
+```bash
+# 능동 검증 (mutate 가능 — 만료된 lock이 있다면 해제됨)
+echo '{"stop_hook_active": false}' | bash .claude/hooks/stop.sh
+
+# 또는 read-only로 만료 후보만 확인
+bash .claude/hooks/diagnose.sh  # [Stop] 섹션
+```
+
+### 임계값 권장값
+
+| 사용 패턴 | `CCK_HOOK_THRESHOLD` | 비고 |
+|----------|---------------------:|------|
+| 단독 작업, 멀티파일 흔함 | 8 | 응답당 Edit 다수 일반적 |
+| 팀 작업, 동시 세션 운용 | 3 (기본) | TFT R1/R2 권장값 |
+| 자동화 스크립트 다발 | flag 영구화 | `touch .claude/state/hook-disabled.flag` |
+
+영구 적용은 `.claude/settings.json`의 hook 정의에 `env`를 추가하거나, shell rc 파일에 export하세요.
 
 ## 디버깅
 
