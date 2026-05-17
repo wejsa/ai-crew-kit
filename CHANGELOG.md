@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **사용자 영향 (v2.1.2 → v2.1.3)**: 마이그레이션/액션 불필요. 기본 동작 100% 동일. 멀티파일 Edit 작업이 잦아 자동 비활성화가 자주 발동했다면 `export CCK_HOOK_THRESHOLD=8`로 완화 가능.
 - **권장 사용 흐름**: 자동 비활성화 발동 시 `bash .claude/hooks/diagnose.sh` 1회 실행으로 영향 평가 + 행동 옵션 확인. transcript 추적 불필요한 상황 다수 (lockedBy 0건이면 영향 없음으로 즉시 단정).
 - **변경 범위**: 6 파일 영역(post-tool-use.sh, diagnose.sh 신규, hooks/README.md, tests 2 신규, run-all.sh, README/VERSION/CHANGELOG 버전 메타). 검증: `bash -n` PASS, `run-all.sh` 12/12 PASS.
+- **PR #72 자체 리뷰 반영 (1차)**: CI shellcheck SC2034 (diagnose.sh 미사용 `have_git` 제거), M001 (diagnose.sh "추정 원인" 메시지가 effective `CCK_HOOK_THRESHOLD`/`CCK_HOOK_WINDOW_SEC` 반영하도록 — env override 의도와 일관), H001 (테스트 fail 카운터 미연결 패턴 → if/else 분기로 false PASS 차단), H002 (`WINDOW_SEC=1` 시나리오 신설 — 2초 sleep 후 카운터 리셋 검증), H003 (`break` 후 후속 assertion `early_fail` 가드), H004 (`THRESHOLD=5` 시나리오 `WINDOW=3600` 고정 — CI 부하 무관 결정론). M005 방어적 일관성으로 diagnose.sh의 counter 파일 비숫자 sanitize 패턴도 동기화.
 
 ## [2.1.2] - 2026-05-12
 

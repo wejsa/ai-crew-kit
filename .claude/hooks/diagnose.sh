@@ -35,7 +35,15 @@ ERROR_LOG="$STATE_DIR/hook-errors.log"
 CONT_PLAN="$STATE_DIR/continuation-plan.md"
 
 have_jq=0; command -v jq >/dev/null 2>&1 && have_jq=1
-have_git=0; command -v git >/dev/null 2>&1 && have_git=1
+
+# Effective threshold/window — post-tool-use.sh와 동일한 fallback 규칙.
+# "추정 원인" 메시지에 반영해서 env override 의도와 일관된 출력 보장 (M001).
+EFFECTIVE_THRESHOLD="${CCK_HOOK_THRESHOLD:-3}"
+EFFECTIVE_WINDOW="${CCK_HOOK_WINDOW_SEC:-10}"
+case "$EFFECTIVE_THRESHOLD" in ''|*[!0-9]*) EFFECTIVE_THRESHOLD=3 ;; esac
+case "$EFFECTIVE_WINDOW"    in ''|*[!0-9]*) EFFECTIVE_WINDOW=10 ;; esac
+[ "$EFFECTIVE_THRESHOLD" -lt 1 ] 2>/dev/null && EFFECTIVE_THRESHOLD=3
+[ "$EFFECTIVE_WINDOW"    -lt 1 ] 2>/dev/null && EFFECTIVE_WINDOW=10
 
 # Unix epoch → ISO8601 (UTC). date -u 호환(GNU/BSD).
 to_iso() {
@@ -98,9 +106,13 @@ else
 fi
 if [ -f "$COUNTER" ]; then
   read -r win_start cnt < "$COUNTER" 2>/dev/null || { win_start=0; cnt=0; }
-  printf '  trigger-count: window_start=%s count=%s\n' "$(to_iso "${win_start:-0}")" "${cnt:-0}"
-  if [ -n "${cnt:-}" ] && [ "${cnt:-0}" -ge 4 ] 2>/dev/null; then
-    printf '  추정 원인: 응답 1회당 Edit/Write ≥%s회 호출 (10초 윈도우 초과)\n' "$cnt"
+  # 비숫자/공백 sanitize — counter 파일 오염 방지 (M005 방어적 일관성)
+  case "${win_start:-}" in ''|*[!0-9]*) win_start=0 ;; esac
+  case "${cnt:-}"       in ''|*[!0-9]*) cnt=0 ;; esac
+  printf '  trigger-count: window_start=%s count=%s\n' "$(to_iso "$win_start")" "$cnt"
+  if [ "$cnt" -gt "$EFFECTIVE_THRESHOLD" ] 2>/dev/null; then
+    printf '  추정 원인: 응답 1회당 Edit/Write %s회 (%s초 윈도우 내 임계값 %s 초과)\n' \
+      "$cnt" "$EFFECTIVE_WINDOW" "$EFFECTIVE_THRESHOLD"
   fi
 else
   printf '  trigger-count: (파일 없음 — 최근 발동 흔적 없음)\n'
