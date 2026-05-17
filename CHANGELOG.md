@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.3] - 2026-05-17
+
+> **hook 진단 도구 + threshold 외부화 (patch)** — PostToolUse 자동 비활성화 발동 후 "지금 어떻게 할 건가" 결정에 필요한 진단·영향 평가·복구 가이드가 README 산문 곳곳에 흩어져 있어 LLM이 사용자 질문을 받았을 때 transcript 의존적 추측으로 끝나던 UX 결함 해소. **read-only** `diagnose.sh` 신설로 flag/counter/lock/log/settings를 한 번에 점검하고 영향 결론(🟢/🟡)을 단정. `post-tool-use.sh` 임계값(`TRIGGER_MAX=3`)·윈도우(`TRIGGER_WINDOW_SECONDS=10`)를 `CCK_HOOK_THRESHOLD`/`CCK_HOOK_WINDOW_SEC` 환경변수로 외부화 — 멀티파일 Edit이 잦은 단독 작업자가 기본값(3)이 너무 빡빡할 때 자체 완화 가능. **회귀 0**: env 미설정 시 동작 100% 동일, TFT R1/R2 권장값 그대로. 비숫자/0 값은 무시되고 기본값 fallback. README "자동 비활성화 진단 가이드" 섹션 신설(원인 TOP 3, hook-trigger-count 포맷 해석, 복구 결정 트리, "Stop 부재 ≠ 미동작" 명시, 임계값 권장값 표). 회귀 테스트 2건 추가로 12/12 PASS.
+
+### Added
+
+- **`.claude/hooks/diagnose.sh` (신규)**: read-only hook 진단 도구. 4개 섹션 출력 — `[등록 상태]`(settings.json + 스크립트 존재), `[PostToolUse]`(flag/counter/trigger-count 해석 + 추정 원인 + env override 가시화), `[Stop]`(continuation-plan + 만료 lock 후보 카운트), `[영향 평가]`(in_progress + lockedBy 기반 🟢/🟡 결론), `[행동 옵션]`(복구/임계값 완화/방치 선택지). `backlog.json`/`flag`/`counter`/`continuation-plan.md` 어느 것도 mutate하지 않음(SHA256 회귀 테스트로 검증). jq/git 미설치, settings.json/backlog.json 부재 시 가용 항목만 출력하고 exit 0 graceful skip.
+- **`.claude/hooks/README.md` 진단 가이드 섹션 신설**: "흔한 원인 TOP 3", "`hook-trigger-count` 포맷 해석", "복구 결정 트리", "Stop 부재 ≠ 미동작", "임계값 권장값 표"(단독/팀/자동화 패턴별). 진단 도구 사용 예시 출력 첨부.
+- **회귀 테스트 2건**: `test-threshold-env-override.sh`(4 시나리오: THRESHOLD=5/비숫자/0/미설정), `test-diagnose.sh`(6 시나리오: clean/flag+no-lock/flag+lock/no-backlog/no-settings/read-only SHA256 검증). `run-all.sh` 등록.
+
+### Changed
+
+- **`.claude/hooks/post-tool-use.sh` 임계값 외부화**: 하드코딩 `TRIGGER_WINDOW_SECONDS=10` / `TRIGGER_MAX=3` → `CCK_HOOK_WINDOW_SEC`/`CCK_HOOK_THRESHOLD` env override. 미설정·비숫자·0 이하 값은 기본값(10/3) fallback. **회귀 0** — 기존 `test-post-tool-use-auto-disable.sh` 4회째 발동 시나리오 100% 유지.
+
+### Notes
+
+- **사용자 영향 (v2.1.2 → v2.1.3)**: 마이그레이션/액션 불필요. 기본 동작 100% 동일. 멀티파일 Edit 작업이 잦아 자동 비활성화가 자주 발동했다면 `export CCK_HOOK_THRESHOLD=8`로 완화 가능.
+- **권장 사용 흐름**: 자동 비활성화 발동 시 `bash .claude/hooks/diagnose.sh` 1회 실행으로 영향 평가 + 행동 옵션 확인. transcript 추적 불필요한 상황 다수 (lockedBy 0건이면 영향 없음으로 즉시 단정).
+- **변경 범위**: 6 파일 영역(post-tool-use.sh, diagnose.sh 신규, hooks/README.md, tests 2 신규, run-all.sh, README/VERSION/CHANGELOG 버전 메타). 검증: `bash -n` PASS, `run-all.sh` 12/12 PASS.
+- **PR #72 자체 리뷰 반영 (1차)**: CI shellcheck SC2034 (diagnose.sh 미사용 `have_git` 제거), M001 (diagnose.sh "추정 원인" 메시지가 effective `CCK_HOOK_THRESHOLD`/`CCK_HOOK_WINDOW_SEC` 반영하도록 — env override 의도와 일관), H001 (테스트 fail 카운터 미연결 패턴 → if/else 분기로 false PASS 차단), H002 (`WINDOW_SEC=1` 시나리오 신설 — 2초 sleep 후 카운터 리셋 검증), H003 (`break` 후 후속 assertion `early_fail` 가드), H004 (`THRESHOLD=5` 시나리오 `WINDOW=3600` 고정 — CI 부하 무관 결정론). M005 방어적 일관성으로 diagnose.sh의 counter 파일 비숫자 sanitize 패턴도 동기화.
+
 ## [2.1.2] - 2026-05-12
 
 > **머지 결정 일관성 — MAJOR 라벨을 정책에 맞춤 (patch)** — PR 리뷰 결과 보고가 어떤 때는 "CRITICAL만 수정", 어떤 때는 "MAJOR도 수정 후 재리뷰"로 흔들리던 비일관성 해소. 자동화 결정 게이트(`skill-review-pr` Step 4/6/7은 CRITICAL만 차단)와 agent 라벨("MAJOR = 머지 전 수정 권장")의 SSOT 충돌이 원인이었음. 자동화 로직과 `skill-fix` 파싱은 **전혀 건드리지 않고** 4개 agent의 MAJOR 헤더와 1개 매핑 표 행만 정책에 맞춰 정렬했으며, `skill-review-pr/SKILL.md` 주의사항에 "심각도별 머지 정책" SSOT 블록을 추가하여 LLM이 결과 보고할 때 본 규칙을 우선하도록 명문화. 토큰 비용 변화 0 (auto-fix 루프는 CRITICAL에만 적용된다는 사실도 함께 명문화). 본 PR(#71) 자체 리뷰가 새 정책의 첫 적용 사례로, MINOR 1건을 "수정 후 재리뷰 권장"이 아닌 "정보 제공"으로 보고하여 정책이 의도대로 작동함을 확인.
