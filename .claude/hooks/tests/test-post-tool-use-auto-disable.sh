@@ -23,9 +23,9 @@ SID="burst-session"
 cat > "$BACKLOG" <<EOF
 {
   "workflowState": "active",
-  "tasks": [
-    {"id": "T1", "status": "in_progress", "lockedAt": null, "lockedBy": "$SID"}
-  ]
+  "tasks": {
+    "T1": {"id": "T1", "status": "in_progress", "lockedAt": null, "lockedBy": "$SID"}
+  }
 }
 EOF
 
@@ -73,9 +73,9 @@ fi
 
 # 플래그 존재 상태에서 후속 호출은 즉시 종료 — lockedAt이 갱신되지 않아야 함
 # (4회 발동 당시 이미 락 경쟁 가능성 있으므로 flag 남은 상태 확인만 수행)
-BEFORE_LOCK="$(jq -r '.tasks[0].lockedAt' "$BACKLOG")"
+BEFORE_LOCK="$(jq -r '.tasks["T1"].lockedAt' "$BACKLOG")"
 run_hook "5"
-AFTER_LOCK="$(jq -r '.tasks[0].lockedAt' "$BACKLOG")"
+AFTER_LOCK="$(jq -r '.tasks["T1"].lockedAt' "$BACKLOG")"
 assert_eq "$BEFORE_LOCK" "$AFTER_LOCK" "플래그 존재 시 heartbeat 갱신 차단" || fail=$((fail + 1))
 
 # ── 10초 윈도우 롤오버 (H008): 과거 타임스탬프 주입 → 카운터 리셋 검증 ──

@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-05-24
+
+> **lock 의미 schema 정렬 + 초기 셋업 트리거 보호 (minor)** — v2.1.4 PR-A의 후속 의미 정렬 PR-B. `backlog.schema.json`이 `assignee`/`assignedAt`(불변 할당)만 정의해 두고 hook과 진단·헬스체크가 사실상 `lockedBy`/`lockedAt`(가변 잠금 heartbeat)을 별개로 사용해온 어휘 불일치를 정식 schema 필드로 박제(옵션 A — hook 코드 무변경, schema에 신규 필드 추가). 부가로 v2.1.4 PR-A 작업 도중 라이브 시연된 B5(skill-init 작업 자체가 10초/3회 임계를 발동시켜 자동 비활성화) false-positive를 `.claude/state/init-in-progress.flag` 마커로 카운터 진입 자체 차단. skill-init Step 0/11 + skill-onboard Step 0/7에 마커 생성/제거 절차 + 1시간 TTL stale 자동 회수로 SKILL 비정상 종료 대비. hooks/README/skill-health-check 가이드 어휘가 모두 schema 정합 명시. v2.1.4가 미처 손대지 못한 `test-post-tool-use-auto-disable.sh` array fixture도 dict로 마이그레이션하여 schema 정합 100% 달성. 14/14 PASS (PR-A 13 + 신규 1). minor 의미: schema 확장(옵셔널 필드 추가, backward-compatible)이지만 의미 모델이 정식 정의되므로 patch 대신 minor.
+
+### Added
+
+- **`.claude/schemas/backlog.schema.json` — `lockedBy`/`lockedAt` 필드 추가**: `task` 정의에 옵셔널 필드 2종 추가 (둘 다 `["string", "null"]` / `["string", "null"] format date-time`). `assignee`/`assignedAt`(불변 할당)와 의미 분리 명시 — `lockedBy`는 현재 잠금 보유 세션(가변), `lockedAt`은 PostToolUse heartbeat 시각(가변, Stop 10분 TTL 만료 시 null). 기존 `assignee`/`assignedAt` description에도 "불변" 의미 보강. 마이그레이션 영향 0(옵셔널 필드 추가, 기존 backlog.json은 그대로 통과).
+- **`.claude/hooks/post-tool-use.sh` — 0-A단계 init-in-progress.flag 체크 (v2.2.0)**: STATE_DIR 변수군에 `INIT_FLAG` + `INIT_FLAG_TTL_SECONDS=3600` 신설. 0단계(hook-disabled.flag) 직후, jq 의존성 체크 전에 마커 존재 시 즉시 exit 0(카운터 진입 자체 차단). 마커 mtime이 TTL 초과면 자동 회수 + log_err 기록(stale 마커 안전장치). stat -c %Y(Linux) / -f %m(macOS) fallback 패턴.
+- **`.claude/skills/skill-init/SKILL.md` Step 0/11 — 트리거 보호 마커 절차**: Step 1 직전 `Step 0: 트리거 보호 마커 생성` 신설(`mkdir -p .claude/state && touch init-in-progress.flag`), Step 11 끝에 `트리거 보호 마커 제거` 절차 명시(`rm -f init-in-progress.flag`). 실패 경로(`|| true`) graceful + 1시간 TTL 안전장치 양면 방어.
+- **`.claude/skills/skill-onboard/SKILL.md` Step 0/7 — 동일 패턴**: 사전 조건 직후 Step 0 마커 생성, Step 7 완료 리포트 직후 마커 제거. abort 경로(빈 디렉토리 N 선택 등)에서도 가능한 한 제거 명시.
+- **`.claude/hooks/tests/test-init-flag-bypass.sh` (신규)**: 5 assertion × 3 시나리오 — (1) 마커 존재 + 5회 호출 → flag/counter 둘 다 미생성(카운터 진입 자체 차단), (2) 마커 부재 + 4회 → 정상 비활성화(회귀 보호), (3) stale 마커(1h+1s 후퇴) + 4회 → 자동 회수 + 정상 비활성화. `touch -d "$past_iso"` / `touch -t "YYYYMMDDHHMM"` 양쪽 fallback.
+
+### Changed
+
+- **`.claude/hooks/README.md` — 3단계 표 → 0-A 단계 포함 + schema 정합 명시**: PostToolUse 동작 표에 `0-A | init-in-progress.flag 존재 (mtime ≤ 1h) | 즉시 exit 0` 행 추가. "lockedBy/lockedAt은 v2.2.0부터 backlog.schema.json 정식 필드(가변 잠금 의미, assignee/assignedAt(불변 할당)와 구분)" 명시. 단계 표 헤더 "3단계 무한 루프 방어 + init 보호 마커" 갱신.
+- **`.claude/skills/skill-health-check/SKILL.md` SI-03 — schema cross-ref**: "lockedBy 필드가 있는 Task" 검사 설명에 "둘 다 v2.2.0+ backlog.schema.json 정식 필드 — 가변 잠금 의미, assignee/assignedAt(불변 할당)와 구분" 명시. autoFix 설명에 "lockedBy/lockedAt을 null로" 명시. stop.sh 10분 TTL 대비 본 검사 1시간 TTL이 보수적인 이유 추가.
+- **`.claude/hooks/tests/test-post-tool-use-auto-disable.sh` fixture 마이그레이션 (v2.1.4 잔재)**: v1 array `[{...}]` → schema 정합 dict `{"T1": {...}}`. v2.1.4 PR-A 시점에 `.tasks[0]` 인덱싱이 우연히 동작(heartbeat 경로 미진입)해 마이그레이션 누락. 본 PR로 schema↔fixture 정합 100% 달성.
+- **`.claude/hooks/tests/run-all.sh`**: 신규 `test-init-flag-bypass.sh` 등록. 13 → 14 케이스.
+
+### Notes
+
+- **사용자 영향 (v2.1.4 → v2.2.0)**: 마이그레이션/액션 불필요. schema 신규 필드는 옵셔널이라 기존 backlog.json 그대로 호환. hook 동작은 마커 마련 외 변화 없음(0단계가 0-A로 한 칸 분기 추가만).
+- **루트 backlog.json/project.json 수동 이동 안내**: PR-A에서 분리한 후속 작업. 기존에 잘못 루트에 생성한 프로젝트는 다음 명령으로 이동 권장. `git mv backlog.json .claude/state/ && git mv project.json .claude/state/ && git commit -m "fix: move backlog/project state to v2 SSOT path"`. v2.0+ hook이 `.claude/state/` SSOT에서만 작동하므로 이동 전에는 hook 무동작(corruption은 PR-A로 차단됨).
+- **변경 범위**: 9 파일 (schema 1 + hook 1 + skill 2 + 테스트 신규 1 + 테스트 마이그레이션 1 + run-all 1 + 가이드 2) + 버전 메타 3. 검증: `bash -n` PASS, `run-all.sh` 14/14 PASS, `validate-schema.sh` 12/12 PASS.
+- **PR-A 메타 사건 종결**: v2.1.4 작업 중 본 리포에서 발생한 PostToolUse 자동 비활성화 false-positive를 본 PR의 init-in-progress.flag 마커가 근본 차단. 향후 skill-init/onboard 사용 중 동일 사건 재발 없음.
+
 ## [2.1.4] - 2026-05-24
 
 > **backlog.json corruption 차단 + 경로 SSOT 정합 (patch)** — schema 정합성 검토 중 발견된 데이터 손실 가능 결함 2건 + SSOT 모순 1건 일괄 차단. `backlog.schema.json:73-79`은 `tasks: type=object`(key=Task ID dict)로 정의되어 있으나 `post-tool-use.sh:163` / `stop.sh:83`이 `.tasks |= map(...)` 사용 — jq `map(f)`는 array 변환 연산자라 dict 적용 시 `{"TASK-001":...,"TASK-002":...}` → `[{...},{...}]`로 평탄화되어 **key가 영구 손실**되는 corruption. 현재까지는 `lockedBy` 필드 불일치(schema는 `assignee`)로 `HAS_OWNED=false`가 우연히 corruption 분기를 막아왔으나, 이후 의미 정렬 PR에서 `lockedBy`를 첫 정렬할 때 즉시 활성화되는 sleeper. `with_entries(.value |= ...)`로 dict 의미 유지하며 동일 결과 산출. 부수적으로 `skill-init/SKILL.md` Step 10 `project.json`/`backlog.json` 생성 절차에서 경로 미명시로 인해 LLM이 프로젝트 루트에 작성하던 결함과, line 486 주석 "프로젝트 루트. `.claude/state/`가 아님"의 `CLAUDE.md.tmpl:308/310` SSOT 정면 모순을 함께 해소. 회귀 보호 신규 테스트 `test-tasks-dict-shape.sh`(11 assertion, dict type/key 보존 + heartbeat + 만료 해제 + 빈 dict 코너) 추가, 기존 4개 array fixture를 schema 정합 dict로 마이그레이션. 13/13 PASS.
