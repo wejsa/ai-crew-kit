@@ -18,6 +18,7 @@ tests=(
   "test-threshold-env-override.sh"
   "test-diagnose.sh"
   "test-tasks-dict-shape.sh"
+  "test-init-flag-bypass.sh"
 )
 
 passed=0

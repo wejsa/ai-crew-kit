@@ -97,6 +97,17 @@ complexity-hint: light
 
 ## 일반 모드 실행 플로우
 
+### Step 0: 트리거 보호 마커 생성 (v2.2.0+)
+
+본격 진행 전 PostToolUse hook의 자동 비활성화(10초/3회 임계)를 일시 차단합니다. skill-init은 다수 Write를 짧은 시간에 발생시키므로 기본 임계값에서 false-positive 비활성화가 발생하기 쉽습니다.
+
+```bash
+mkdir -p .claude/state 2>/dev/null
+touch .claude/state/init-in-progress.flag 2>/dev/null || true
+```
+
+> `post-tool-use.sh`는 본 마커 존재 시 0-A단계에서 즉시 exit 0(카운터 진입 자체 차단). 마커는 1시간 TTL로 자동 회수되므로 SKILL이 비정상 종료해도 안전. Step 11 종료 시 명시적 제거.
+
 ### Step 1: 환경 검증
 
 #### 평가 순서 (반드시 다음 순서로)
@@ -593,6 +604,16 @@ chmod 444 "$BACKUP_DIR/MANIFEST.txt" "$BACKUP_DIR/MANIFEST.sha256" 2>/dev/null |
 ```
 
 > kit 가이드 문서는 사용자 프로젝트에 포함되지 않습니다. ai-crew-kit GitHub 리포의 `docs/`에서 참조. `kitVersion` 태그가 GitHub에 없을 경우 `blob/main` 안내.
+
+#### 트리거 보호 마커 제거 (v2.2.0+, 필수)
+
+Step 0에서 생성한 마커를 명시적으로 제거하여 다음 일반 Edit/Write에 hook 임계가 다시 정상 동작하도록 합니다. 사용자 보고 출력 *직후* 실행:
+
+```bash
+rm -f .claude/state/init-in-progress.flag 2>/dev/null || true
+```
+
+> 제거 실패해도 1시간 TTL로 hook이 stale 회수하므로 사용자 영향 0. 단 즉시 정상화를 위해 본 단계는 필수. Step 1\~10 도중 abort된 경우(예: 사용자 N 선택, 환경 검증 실패)에도 가능한 한 본 명령을 실행하고 종료(graceful 패턴).
 
 ## Layered Override 적용
 설정 우선순위: 사용자 입력 > domains/{domain}/domain.json > domains/_base/ > 하드코딩 기본값
