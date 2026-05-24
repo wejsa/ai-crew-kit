@@ -17,6 +17,7 @@ tests=(
   "test-post-tool-use-heartbeat.sh"
   "test-threshold-env-override.sh"
   "test-diagnose.sh"
+  "test-tasks-dict-shape.sh"
 )
 
 passed=0

@@ -22,9 +22,9 @@ OLD_LOCKED_AT="2020-01-01T00:00:00Z"
 cat > "$BACKLOG" <<EOF
 {
   "workflowState": "active",
-  "tasks": [
-    {"id": "T1", "status": "in_progress", "lockedAt": "$OLD_LOCKED_AT", "lockedBy": "$SID"}
-  ]
+  "tasks": {
+    "T1": {"id": "T1", "status": "in_progress", "lockedAt": "$OLD_LOCKED_AT", "lockedBy": "$SID"}
+  }
 }
 EOF
 
@@ -39,7 +39,7 @@ touch "$LOCK"
   <<<"{\"session_id\":\"$SID\",\"tool_input\":{\"file_path\":\"src/foo.kt\"}}" \
   >/dev/null 2>&1)
 
-t1_after="$(jq -r '.tasks[0].lockedAt' "$BACKLOG")"
+t1_after="$(jq -r '.tasks["T1"].lockedAt' "$BACKLOG")"
 assert_eq "$OLD_LOCKED_AT" "$t1_after" "락 존재 시 lockedAt 미갱신 (재진입 방지)" || fail=$((fail + 1))
 assert_file_exists "$LOCK" "사전 설치된 락은 보존됨 (훅이 제거 안 함)" || fail=$((fail + 1))
 
@@ -49,7 +49,7 @@ rm -f "$LOCK"
   bash "$SANDBOX/.claude/hooks/post-tool-use.sh" \
   <<<"{\"session_id\":\"$SID\",\"tool_input\":{\"file_path\":\"src/foo.kt\"}}" \
   >/dev/null 2>&1)
-t1_after="$(jq -r '.tasks[0].lockedAt' "$BACKLOG")"
+t1_after="$(jq -r '.tasks["T1"].lockedAt' "$BACKLOG")"
 if [ "$t1_after" != "$OLD_LOCKED_AT" ] && [ "$t1_after" != "null" ]; then
   echo "  ✓ 락 해제 후 재호출 → lockedAt 갱신됨 (now=$t1_after)"
 else

@@ -19,15 +19,15 @@ now_epoch="$(date -u +%s)"
 expired_iso="$(date -u -d "@$((now_epoch - 1200))" '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date -u -r "$((now_epoch - 1200))" '+%Y-%m-%dT%H:%M:%SZ')"
 fresh_iso="$(date -u -d "@$((now_epoch - 60))" '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date -u -r "$((now_epoch - 60))" '+%Y-%m-%dT%H:%M:%SZ')"
 
-# 3 Task: 만료 / 미만료 / 비-ISO8601
+# 3 Task: 만료 / 미만료 / 비-ISO8601 (schema 정합 dict 형식 — key=Task ID)
 cat > "$BACKLOG" <<EOF
 {
   "workflowState": "active",
-  "tasks": [
-    {"id": "T1", "status": "in_progress", "lockedAt": "$expired_iso", "lockedBy": "session-a"},
-    {"id": "T2", "status": "in_progress", "lockedAt": "$fresh_iso", "lockedBy": "session-b"},
-    {"id": "T3", "status": "in_progress", "lockedAt": "garbage-not-iso", "lockedBy": "session-c"}
-  ]
+  "tasks": {
+    "T1": {"id": "T1", "status": "in_progress", "lockedAt": "$expired_iso", "lockedBy": "session-a"},
+    "T2": {"id": "T2", "status": "in_progress", "lockedAt": "$fresh_iso", "lockedBy": "session-b"},
+    "T3": {"id": "T3", "status": "in_progress", "lockedAt": "garbage-not-iso", "lockedBy": "session-c"}
+  }
 }
 EOF
 
@@ -36,9 +36,9 @@ EOF
   bash "$SANDBOX/.claude/hooks/stop.sh" <<< '{"stop_hook_active":false}' >/dev/null 2>&1)
 
 # 검증: T1 해제됨, T2 유지, T3은 (현재 구현은 0으로 fallback → 해제됨; M002 이슈로 기록)
-t1_locked="$(jq -r '.tasks[0].lockedAt' "$BACKLOG")"
-t2_locked="$(jq -r '.tasks[1].lockedAt' "$BACKLOG")"
-t3_locked="$(jq -r '.tasks[2].lockedAt' "$BACKLOG")"
+t1_locked="$(jq -r '.tasks["T1"].lockedAt' "$BACKLOG")"
+t2_locked="$(jq -r '.tasks["T2"].lockedAt' "$BACKLOG")"
+t3_locked="$(jq -r '.tasks["T3"].lockedAt' "$BACKLOG")"
 
 assert_eq "null" "$t1_locked" "T1 (expired ISO8601) 잠금 해제됨" || fail=$((fail + 1))
 assert_eq "$fresh_iso" "$t2_locked" "T2 (fresh ISO8601) 잠금 유지됨" || fail=$((fail + 1))
