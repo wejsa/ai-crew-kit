@@ -21,9 +21,9 @@ OLD_LOCKED_AT="2020-01-01T00:00:00Z"
 cat > "$BACKLOG" <<EOF
 {
   "workflowState": "active",
-  "tasks": [
-    {"id": "T1", "status": "in_progress", "lockedAt": "$OLD_LOCKED_AT", "lockedBy": "$SID"}
-  ]
+  "tasks": {
+    "T1": {"id": "T1", "status": "in_progress", "lockedAt": "$OLD_LOCKED_AT", "lockedBy": "$SID"}
+  }
 }
 EOF
 
@@ -39,22 +39,22 @@ run_hook() {
 
 # 상대 경로 .claude/state/...
 run_hook ".claude/state/backlog.json"
-t1_after="$(jq -r '.tasks[0].lockedAt' "$BACKLOG")"
+t1_after="$(jq -r '.tasks["T1"].lockedAt' "$BACKLOG")"
 assert_eq "$OLD_LOCKED_AT" "$t1_after" "상대 경로 .claude/state/ 제외 → lockedAt 미갱신" || fail=$((fail + 1))
 
 # 절대 경로 /some/abs/path/.claude/state/...
 run_hook "$SANDBOX/.claude/state/something.json"
-t1_after="$(jq -r '.tasks[0].lockedAt' "$BACKLOG")"
+t1_after="$(jq -r '.tasks["T1"].lockedAt' "$BACKLOG")"
 assert_eq "$OLD_LOCKED_AT" "$t1_after" "절대 경로 .claude/state/ 제외 → lockedAt 미갱신" || fail=$((fail + 1))
 
 # .claude/temp/ 경로
 run_hook ".claude/temp/scratch.md"
-t1_after="$(jq -r '.tasks[0].lockedAt' "$BACKLOG")"
+t1_after="$(jq -r '.tasks["T1"].lockedAt' "$BACKLOG")"
 assert_eq "$OLD_LOCKED_AT" "$t1_after" ".claude/temp/ 제외 → lockedAt 미갱신" || fail=$((fail + 1))
 
 # 대조군: 일반 소스 파일 → heartbeat 갱신됨
 run_hook "src/foo.kt"
-t1_after="$(jq -r '.tasks[0].lockedAt' "$BACKLOG")"
+t1_after="$(jq -r '.tasks["T1"].lockedAt' "$BACKLOG")"
 if [ "$t1_after" != "$OLD_LOCKED_AT" ] && [ "$t1_after" != "null" ]; then
   echo "  ✓ 일반 소스 파일 → lockedAt 갱신됨 (now=$t1_after)"
 else

@@ -20,11 +20,11 @@ OTHER_SID="someone-else"
 cat > "$BACKLOG" <<EOF
 {
   "workflowState": "active",
-  "tasks": [
-    {"id": "T1", "status": "in_progress", "lockedAt": "2020-01-01T00:00:00Z", "lockedBy": "$OWNER_SID"},
-    {"id": "T2", "status": "in_progress", "lockedAt": "2020-01-01T00:00:00Z", "lockedBy": "$OTHER_SID"},
-    {"id": "T3", "status": "completed", "lockedAt": "2020-01-01T00:00:00Z", "lockedBy": "$OWNER_SID"}
-  ]
+  "tasks": {
+    "T1": {"id": "T1", "status": "in_progress", "lockedAt": "2020-01-01T00:00:00Z", "lockedBy": "$OWNER_SID"},
+    "T2": {"id": "T2", "status": "in_progress", "lockedAt": "2020-01-01T00:00:00Z", "lockedBy": "$OTHER_SID"},
+    "T3": {"id": "T3", "status": "completed", "lockedAt": "2020-01-01T00:00:00Z", "lockedBy": "$OWNER_SID"}
+  }
 }
 EOF
 
@@ -36,9 +36,9 @@ fail=0
   <<<"{\"session_id\":\"$OWNER_SID\",\"tool_input\":{\"file_path\":\"src/App.kt\"}}" \
   >/dev/null 2>&1)
 
-t1="$(jq -r '.tasks[0].lockedAt' "$BACKLOG")"
-t2="$(jq -r '.tasks[1].lockedAt' "$BACKLOG")"
-t3="$(jq -r '.tasks[2].lockedAt' "$BACKLOG")"
+t1="$(jq -r '.tasks["T1"].lockedAt' "$BACKLOG")"
+t2="$(jq -r '.tasks["T2"].lockedAt' "$BACKLOG")"
+t3="$(jq -r '.tasks["T3"].lockedAt' "$BACKLOG")"
 
 if [ "$t1" != "2020-01-01T00:00:00Z" ] && [ "$t1" != "null" ]; then
   echo "  ✓ T1 (owner+in_progress) lockedAt 갱신됨 → $t1"

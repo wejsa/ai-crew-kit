@@ -157,13 +157,18 @@ if [ -f "$BACKLOG" ]; then
   ' "$BACKLOG" 2>/dev/null || echo false)"
 
   if [ "$HAS_OWNED" = "true" ] && command -v atomic_write >/dev/null 2>&1; then
+    # schema는 .tasks를 object(dict, key=Task ID)로 정의. jq `map(f)`는 array 변환 연산자이므로
+    # dict에 적용하면 [{...},{...}]로 평탄화되어 키가 영구 손실됨. `with_entries(.value |= ...)`로
+    # dict 의미를 유지하면서 값만 in-place 갱신. v1 array fixture에는 무동작(early skip)으로 안전.
     atomic_write "$BACKLOG" jq \
       --arg sid "$SESSION_ID" \
       --arg now "$NOW_ISO" \
-      '.tasks |= map(
-        if .status == "in_progress" and (.lockedBy // "") == $sid
-        then . + {lockedAt: $now}
-        else . end
+      '.tasks |= with_entries(
+        .value |= (
+          if .status == "in_progress" and (.lockedBy // "") == $sid
+          then . + {lockedAt: $now}
+          else . end
+        )
       )' "$BACKLOG"
   fi
 fi

@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.4] - 2026-05-24
+
+> **backlog.json corruption 차단 + 경로 SSOT 정합 (patch)** — schema 정합성 검토 중 발견된 데이터 손실 가능 결함 2건 + SSOT 모순 1건 일괄 차단. `backlog.schema.json:73-79`은 `tasks: type=object`(key=Task ID dict)로 정의되어 있으나 `post-tool-use.sh:163` / `stop.sh:83`이 `.tasks |= map(...)` 사용 — jq `map(f)`는 array 변환 연산자라 dict 적용 시 `{"TASK-001":...,"TASK-002":...}` → `[{...},{...}]`로 평탄화되어 **key가 영구 손실**되는 corruption. 현재까지는 `lockedBy` 필드 불일치(schema는 `assignee`)로 `HAS_OWNED=false`가 우연히 corruption 분기를 막아왔으나, 이후 의미 정렬 PR에서 `lockedBy`를 첫 정렬할 때 즉시 활성화되는 sleeper. `with_entries(.value |= ...)`로 dict 의미 유지하며 동일 결과 산출. 부수적으로 `skill-init/SKILL.md` Step 10 `project.json`/`backlog.json` 생성 절차에서 경로 미명시로 인해 LLM이 프로젝트 루트에 작성하던 결함과, line 486 주석 "프로젝트 루트. `.claude/state/`가 아님"의 `CLAUDE.md.tmpl:308/310` SSOT 정면 모순을 함께 해소. 회귀 보호 신규 테스트 `test-tasks-dict-shape.sh`(11 assertion, dict type/key 보존 + heartbeat + 만료 해제 + 빈 dict 코너) 추가, 기존 4개 array fixture를 schema 정합 dict로 마이그레이션. 13/13 PASS.
+
+### Fixed
+
+- **`.claude/hooks/post-tool-use.sh:163-167` corruption 차단**: `.tasks |= map(...)` → `.tasks |= with_entries(.value |= (...))` 전환. jq `map(f) = [.[] | f]`로 array 변환되어 schema-정합 dict가 array로 평탄화 + key 영구 손실되던 sleeper bug 차단. 현재 `lockedBy`/`assignee` 필드 불일치(B3, PR-B 대상)로 분기 미진입 상태이나, 의미 정렬 직후 활성화될 위험을 선제 차단. 동작 변화 0(B3 미해결 상태 그대로면 무동작 유지).
+- **`.claude/hooks/stop.sh:80-89` corruption 차단**: 만료 lock 해제 블록도 동일 패턴(`with_entries(.value |= ...)`) 적용. backlog.schema.json:73-79 정합. dict 키 보존하면서 만료된 task의 `lockedAt`/`lockedBy`만 null로 초기화.
+- **`.claude/skills/skill-init/SKILL.md:486` SSOT 모순 정정**: "프로젝트 루트. `.claude/state/`가 아님 — v2.0.3 cleanup 대상이며 사용자 프로젝트엔 부재" 주석 삭제 — `CLAUDE.md.tmpl:308`(backlog.json은 `.claude/state/backlog.json`), `:310`(project.json), hook의 `STATE_DIR=".claude/state"` 하드코딩과 정면 모순이었음. v2.0.3 cleanup은 kit clone에서 init할 때만 적용되는 일회성 정리이지 사용자 프로젝트 부재 근거가 아님. 정정 후: `.claude/state/{project,backlog}.json` 경로 그대로 백업 + 루트 폴백 감지(v1 잔재용).
+- **`.claude/skills/skill-init/SKILL.md` Step 10 경로 명시**: 파일 생성 절차 1·2번 헤더에 `(경로: .claude/state/project.json)` / `(경로: .claude/state/backlog.json)` 명시. 상단에 "상태 파일 경로 SSOT (v2.0+)" 박스 추가 — `mkdir -p .claude/state` 선행 의무, 루트 작성 시 hook/SSOT 어긋남 명시. LLM이 절차 텍스트만 보고 루트에 작성하던 결함 차단.
+
+### Added
+
+- **`.claude/hooks/tests/test-tasks-dict-shape.sh` (신규)**: schema-정합 dict fixture 회귀 보호. 11 assertion 3 시나리오 — (1) PostToolUse heartbeat 후 `.tasks` 타입 `object` 유지 + 키 3개 보존 + 소유 Task만 lockedAt 갱신 + 미소유/완료 Task 미변경, (2) Stop 만료 해제 후 동일 보존 + 만료 Task만 `lockedAt`/`lockedBy` null, (3) 빈 dict (`tasks: {}`) 호출 후에도 type=object 유지. 향후 `map(f)` 재발 즉시 fail.
+
+### Changed
+
+- **`.claude/hooks/tests/{test-lock-expiry,test-post-tool-use-path-exclude,test-post-tool-use-lock-reentry,test-post-tool-use-heartbeat}.sh` fixture 마이그레이션**: v1 array `.tasks: [{...}, {...}]` → schema 정합 dict `.tasks: {"T1": {...}, "T2": {...}}`로 통일. assertion도 `.tasks[0].lockedAt` → `.tasks["T1"].lockedAt` 인덱싱 변경. hook의 `with_entries` 전환으로 array fixture가 호출 후 `{"0":...}` 객체로 변환되어 깨지던 회귀 차단. 본 PR 정신(schema↔fixture 정합) 자기 적용.
+- **`.claude/hooks/tests/run-all.sh`**: 신규 `test-tasks-dict-shape.sh` 등록. 12 → 13 케이스.
+
+### Notes
+
+- **사용자 영향 (v2.1.3 → v2.1.4)**: 마이그레이션/액션 불필요. hook 동작 변화 0(현재 분기 미진입이므로). 신규 init 프로젝트는 `.claude/state/` 경로 자동 적용. **기존에 잘못 루트에 `backlog.json`/`project.json`을 생성한 프로젝트**는 `git mv backlog.json .claude/state/ && git mv project.json .claude/state/`로 수동 이동 권장(자동 마이그레이션은 PR-B 후속에서 skill-health-check 감지 항목으로 도입 예정).
+- **lockedBy/lockedAt vs assignee/assignedAt 의미 정렬**(B3/B4): 본 PR 범위 외. PR-B(v2.2.0)에서 `backlog.schema.json`에 `lockedBy`/`lockedAt` 필드 추가 + diagnose.sh/health-check 가이드 정렬 + B5(트리거 카운터 init/onboard 중 일시 무시 마커) 동시 처리. 본 PR은 corruption 차단 + 경로 SSOT만 다룸(긴급도 분리).
+- **변경 범위**: 9 파일 (hook 2 + skill-init SKILL.md 1 + 신규 테스트 1 + 마이그레이션 테스트 4 + run-all.sh 1) + 버전 메타 3. 검증: `bash -n` PASS, `run-all.sh` 13/13 PASS.
+
 ## [2.1.3] - 2026-05-17
 
 > **hook 진단 도구 + threshold 외부화 (patch)** — PostToolUse 자동 비활성화 발동 후 "지금 어떻게 할 건가" 결정에 필요한 진단·영향 평가·복구 가이드가 README 산문 곳곳에 흩어져 있어 LLM이 사용자 질문을 받았을 때 transcript 의존적 추측으로 끝나던 UX 결함 해소. **read-only** `diagnose.sh` 신설로 flag/counter/lock/log/settings를 한 번에 점검하고 영향 결론(🟢/🟡)을 단정. `post-tool-use.sh` 임계값(`TRIGGER_MAX=3`)·윈도우(`TRIGGER_WINDOW_SECONDS=10`)를 `CCK_HOOK_THRESHOLD`/`CCK_HOOK_WINDOW_SEC` 환경변수로 외부화 — 멀티파일 Edit이 잦은 단독 작업자가 기본값(3)이 너무 빡빡할 때 자체 완화 가능. **회귀 0**: env 미설정 시 동작 100% 동일, TFT R1/R2 권장값 그대로. 비숫자/0 값은 무시되고 기본값 fallback. README "자동 비활성화 진단 가이드" 섹션 신설(원인 TOP 3, hook-trigger-count 포맷 해석, 복구 결정 트리, "Stop 부재 ≠ 미동작" 명시, 임계값 권장값 표). 회귀 테스트 2건 추가로 12/12 PASS.

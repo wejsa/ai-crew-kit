@@ -482,10 +482,11 @@ mkdir -p "$BACKUP_DIR" || {
 ##### 2. 백업 대상 파일 이동 (실재 경로만)
 
 존재하는 경우만 이동:
-- `project.json` → `$BACKUP_DIR/`
-- `backlog.json` → `$BACKUP_DIR/` (프로젝트 루트. `.claude/state/`가 아님 — `.claude/state/`는 v2.0.3에서 cleanup 대상이며 사용자 프로젝트엔 부재)
+- `.claude/state/project.json` → `$BACKUP_DIR/.claude_state/project.json` (v2 SSOT)
+- `.claude/state/backlog.json` → `$BACKUP_DIR/.claude_state/backlog.json` (v2 SSOT)
 - `CLAUDE.md`, `README.md`, `VERSION` → `$BACKUP_DIR/`
-- `.claude/state/` (있는 경우만 — v1 잔재 가능성) → `$BACKUP_DIR/.claude_state/`
+- **루트 폴백 감지** (v1 잔재 또는 잘못된 위치): `./project.json`, `./backlog.json`이 발견되면 `$BACKUP_DIR/`(루트 직하)로 별도 백업하고 v1 데이터 복원 안내 대상으로 표시 (Step 11)
+- `.claude/state/` 디렉토리 전체가 추가로 존재할 경우 (위 두 파일 외 부수 파일 — `hook-errors.log` 등): `$BACKUP_DIR/.claude_state/`로 동봉
 
 각 `mv` 실패 시 STOP (silent 무시 금지). `mv: cannot move 'X' to '$BACKUP_DIR/X'` 발생 → "백업 실패. 원본 보존됨. 다시 시도하세요." 보고 후 종료.
 
@@ -526,7 +527,9 @@ chmod 444 "$BACKUP_DIR/MANIFEST.txt" "$BACKUP_DIR/MANIFEST.sha256" 2>/dev/null |
 
 #### 파일 생성 절차
 
-1. **project.json**:
+> **상태 파일 경로 SSOT (v2.0+)**: `project.json` / `backlog.json`은 **반드시 `.claude/state/` 하위**에 생성합니다. 디렉토리 부재 시 `mkdir -p .claude/state` 선행. 루트(`./project.json`, `./backlog.json`)에 작성하면 `post-tool-use.sh`/`stop.sh` hook과 `CLAUDE.md.tmpl`(line 308/310)의 SSOT 기대와 어긋나 hook이 무동작·진단이 오작동합니다. v1 잔재가 루트에 발견되면 Step 10 `--reset` 백업 경로가 자동 감지합니다.
+
+1. **project.json** (경로: `.claude/state/project.json`):
    - 필드: `version` (schema 버전, semver), `name`, `description`, `domain`, `techStack`, `agents.enabled/disabled`, `conventions`, `createdAt`, `kitVersion`, `kitSource`
      - `version`: `"1.0.0"` (project.schema.json 버전, semver pattern `^\d+\.\d+\.\d+$`)
    - `conventions`: `taskPrefix`, `branchStrategy: "git-flow"`, `commitFormat: "conventional"`, `prLineLimit: 500`, `testCoverage: 80`, `workflowProfile`, `skillProfile`, `overridePriority: "domain-first"`. skillProfile=`custom`이면 `customSkills` 배열 포함.
@@ -539,7 +542,7 @@ chmod 444 "$BACKUP_DIR/MANIFEST.txt" "$BACKUP_DIR/MANIFEST.sha256" 2>/dev/null |
    - **`kitSource` 결정 규칙**:
      - Step 1 ai-crew-kit 자동 정리를 거친 경우: `KIT_SOURCE_URL` 값 사용
      - 자동 정리 미발동(사용자 자기 리포로 시작 또는 git remote 미설정)인 경우: `"https://github.com/wejsa/ai-crew-kit"` 기본값 (kit 시드 출처 문서화 목적)
-2. **backlog.json**:
+2. **backlog.json** (경로: `.claude/state/backlog.json`):
    - **공통**: `metadata`는 `{ "lastTaskNumber": <N>, "version": 1, "projectPrefix": "<PREFIX>", "createdAt": "<ISO8601>", "updatedAt": "<ISO8601>" }`
    - Step 9를 **N/C**로 종료한 경우: `lastTaskNumber: 0`, `summary: { total:0, done:0, inProgress:0, review:0, todo:0 }`, `phases: {}`, `tasks: {}`
    - Step 9를 **Y(A)**로 종료한 경우:
