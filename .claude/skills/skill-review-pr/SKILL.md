@@ -84,13 +84,15 @@ complexity-hint: heavy
 1. `--mode` CLI 옵션 (PR 단위 오버라이드)
 2. `project.json`의 `review.agents` (커스텀)
 3. `project.json`의 `review.mode` (프리셋)
-4. 디폴트: `full`
+4. **자동 Tier 분류** (아래 "자동 Tier 분류" 섹션 참조)
 
 **프리셋 → 에이전트 매핑**:
 | 모드 | 에이전트 |
 |------|---------|
 | `full` | domain, security, test |
 | `standard` | domain, security |
+
+> 4단계 자동 Tier 분류는 사용자가 `project.json`에 `review` 섹션을 명시하지 않은 경우에만 적용된다. `review.mode` 또는 `review.agents`가 설정되어 있으면 자동 분류는 비활성화된다 (사용자 의도 우선).
 
 ## 사전 조건 (MUST-EXECUTE-FIRST — 하나라도 실패 시 STOP)
 1. project.json 존재
@@ -103,7 +105,7 @@ complexity-hint: heavy
 CLAUDE.md "경량 점검 프로토콜" 3단계 실행: ①PR-backlog 일치 ②Stale 감지 ③Intent 복구
 
 ## 워크플로우 진행 표시
-CLAUDE.md 진행 표시 프로토콜. 현재 단계: "코드 리뷰 중 (보안/도메인/테스트 3관점)"
+CLAUDE.md 진행 표시 프로토콜. 현재 단계: "코드 리뷰 중 ({Tier 라벨 또는 모드 이름} — {N} 에이전트)"
 
 ## 워크플로우 상태 추적
 CLAUDE.md 상태 추적 패턴. currentSkill="skill-review-pr"
@@ -113,17 +115,45 @@ CLAUDE.md 상태 추적 패턴. currentSkill="skill-review-pr"
 2. CLAUDE.md 트리거 테이블로 매칭 컨벤션 식별
 3. 도메인 체크리스트 Read: `_base/checklists/common.md`(필수) + `{domain}/checklists/`
 
-## 경량 리뷰 판정 (Trivial PR Fast Path)
+## 자동 Tier 분류 (sub-agent 수 자동 결정)
 
-PR 정보 수집(Step 1) 후 아래 조건을 **모두** 만족하면 3-agent 리뷰를 스킵하고 직접 리뷰한다:
-1. 변경 줄 수: additions + deletions ≤ 50
-2. 변경 파일: src/ 코드 파일 변경 0건 (문서, 설정, 버전 파일만 변경)
-3. 변경 내용: 보안 키워드 미포함 (password, secret, token, auth, cors, sql, inject)
+PR 정보 수집(Step 1) 후 PR 특성을 기반으로 sub-agent 호출 수를 자동 조정한다. **`project.json`에 `review` 섹션(`review.mode` 또는 `review.agents`)이 명시되어 있으면 본 분류는 비활성화되고 "리뷰 모드 해석"이 우선한다.**
 
-**경량 리뷰 플로우**: Step 1 → Step 2(체크리스트) → Step 4~7 (Step 2.5 Rules 로드 및 서브에이전트 스킵, 직접 diff 확인 후 결정)
-리포트에 "ℹ️ Trivial PR — 경량 리뷰 적용" 표시.
+### Tier 판정 (위에서 아래로 첫 매치 적용)
 
-조건 미충족 시 일반 플로우(Step 2.5 Rules 로드 + 3-agent 병렬 리뷰) 진행.
+| Tier | 조건 | sub-agent | 라벨 |
+|------|------|-----------|------|
+| **T0** | ≤50줄 · src/ 변경 0건 · 보안 키워드 0 | 0 (직접 리뷰) | Trivial |
+| **T1a** | 100% 테스트 파일 변경 · ≤200줄 · 보안 키워드 0 | 1 (`pr-reviewer-test`) | Test-only |
+| **T1b** | 100% 의존성 매니페스트 변경 · src/ 변경 0건 | 1 (`pr-reviewer-security`) | Deps-only |
+| **T3** | >200줄 **OR** 보안 키워드 hit **OR** criticalPaths 매치 | 3 (domain+security+test) | Full |
+| **T2** | 그 외 (기본값) | 2 (domain+security) | Standard |
+
+### 패턴 정의
+
+**테스트 파일** (T1a):
+- 디렉토리: `tests/**`, `test/**`, `__tests__/**`, `src/test/**` (Maven/Gradle)
+- 파일명: `**/*.{test,spec}.{js,ts,jsx,tsx,mjs,cjs}`, `**/*_test.{py,go}`, `**/test_*.py`, `**/*Test.{java,kt}`, `**/*Spec.{java,kt,groovy}`
+
+**의존성 매니페스트** (T1b):
+- JS/TS: `package.json`, `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, `bun.lockb`
+- Python: `requirements*.txt`, `pyproject.toml`, `poetry.lock`, `Pipfile`, `Pipfile.lock`
+- JVM: `pom.xml`, `build.gradle`, `build.gradle.kts`, `gradle.lockfile`
+- Go/Rust: `go.mod`, `go.sum`, `Cargo.toml`, `Cargo.lock`
+- 기타: `composer.json`, `composer.lock`, `Gemfile`, `Gemfile.lock`
+
+**보안 키워드** (대소문자 무관, 변경 파일 경로 또는 diff 본문 매치): `password`, `secret`, `token`, `auth`, `cors`, `sql`, `inject`
+
+**criticalPaths** (옵셔널):
+- `.claude/domains/{domain}/domain.json`에 `criticalPaths: ["src/payment/**", ...]` 배열이 있으면 변경 파일과 글롭 매치 검사
+- 도메인 메타에 미정의면 본 트리거는 자연 SKIP (schema 변경 별도)
+
+### Tier별 플로우
+- **T0**: Step 1 → 2(체크리스트) → 4~7 (Step 2.5 + sub-agent 스킵, 직접 diff 확인 후 결정)
+- **T1a / T1b**: Step 1 → 2 → 2.5 → 3(단일 sub-agent) → 4~7
+- **T2 / T3**: Step 1 → 2 → 2.5 → 3(다중 sub-agent) → 4~7
+
+> PR 코멘트 최상단 출력 형식은 "출력 → 분류 헤더" 섹션 참조 (SSOT).
 
 ---
 
@@ -154,7 +184,7 @@ diff는 임시 파일에 저장하여 에이전트가 Read로 참조하도록 �
 
 `.claude/rules/{domain}/{language}/`에 도메인 비즈니스 제약 파일이 있으면 자동 참조.
 
-**Trivial 경량 리뷰 시 SKIP** (서브에이전트 미호출이므로 전달 불필요).
+**T0(Trivial) 시 SKIP** (서브에이전트 미호출이므로 전달 불필요). T1a/T1b도 도메인 에이전트가 호출되지 않으므로 `rules_paths` 전달 불필요(자연 SKIP).
 
 #### 절차
 1. `project.json`에서 `domain`, `techStack.backend` 읽기. 둘 중 하나라도 부재 시 SKIP.
@@ -180,11 +210,11 @@ diff는 임시 파일에 저장하여 에이전트가 Read로 참조하도록 �
 **에이전트 결정**: "리뷰 모드 해석" 섹션의 우선순위로 실행할 에이전트 목록 결정.
 결정된 에이전트만 **하나의 메시지에서 동시 호출**:
 
-| sub-agent | 파일 | 관점 | 모드 |
+| sub-agent | 파일 | 관점 | 호출 조건 (모드 / Tier) |
 |-----------|------|------|------|
-| pr-reviewer-domain | `.claude/agents/pr-reviewer-domain.md` | 도메인 + 아키텍처 | 항상 |
-| pr-reviewer-security | `.claude/agents/pr-reviewer-security.md` | 보안 + 컴플라이언스 | full, standard |
-| pr-reviewer-test | `.claude/agents/pr-reviewer-test.md` | 테스트 품질 | full만 |
+| pr-reviewer-domain | `.claude/agents/pr-reviewer-domain.md` | 도메인 + 아키텍처 | 모드: full, standard / Tier: T2, T3 |
+| pr-reviewer-security | `.claude/agents/pr-reviewer-security.md` | 보안 + 컴플라이언스 | 모드: full, standard / Tier: T1b, T2, T3 |
+| pr-reviewer-test | `.claude/agents/pr-reviewer-test.md` | 테스트 품질 | 모드: full / Tier: T1a, T3 |
 
 각 Task: Read로 agent 파일 로드 후 지침에 따라 리뷰.
 **토큰 절감**: PR diff를 프롬프트에 직접 포함하지 않는다. 대신 에이전트에게 다음을 전달:
@@ -209,7 +239,7 @@ diff는 임시 파일에 저장하여 에이전트가 Read로 참조하도록 �
 CRITICAL 1개 이상 → 전체 REQUEST_CHANGES
 
 ### 5. PR 코멘트 작성
-- 코멘트 본문 최상단에 "리뷰 모드 헤더" + (rules_paths 비어있지 않을 때만) "적용 Rules 헤더" 삽입 — Claude의 응답 출력만이 아니라 실제 PR 코멘트 본문에도 반드시 포함.
+- 코멘트 본문 최상단에 **분류 헤더**(명시 `review` 설정 시 "리뷰 모드 헤더", 자동 분류 시 "Tier 헤더") + (rules_paths 비어있지 않을 때만) "적용 Rules 헤더" 삽입 — Claude의 응답 출력만이 아니라 실제 PR 코멘트 본문에도 반드시 포함. T0(Trivial)은 분류 헤더만, 적용 Rules 헤더 미출력.
 `gh pr comment` — 전체 요약 (관점별 상태/이슈 수, 체크리스트 결과, 주요 피드백)
 `gh api repos/.../pulls/{N}/comments` — 이슈별 인라인 코멘트 (심각도, 설명, 권장 수정 코드)
 
@@ -235,20 +265,30 @@ execution-log.json: APPROVED → action="approved", REQUEST_CHANGES → action="
   - 직접 코드 수정 금지. skill-fix 없이 REQUEST_CHANGES 후 종료 금지.
 
 ## 출력
-필수 포함: PR 번호/제목/작성자/브랜치, **리뷰 모드 + 실행 에이전트 목록**, **적용 Rules**(있을 때만), 체크리스트 결과, 관점별 리뷰 테이블(CRITICAL/MAJOR/MINOR 수), 주요 피드백 목록, 결정(APPROVED/REQUEST_CHANGES), 다음 자동 스킬
+필수 포함: PR 번호/제목/작성자/브랜치, **분류 헤더(리뷰 모드 또는 Tier) + 실행 에이전트 목록**, **적용 Rules**(있을 때만), 체크리스트 결과, 관점별 리뷰 테이블(CRITICAL/MAJOR/MINOR 수), 주요 피드백 목록, 결정(APPROVED/REQUEST_CHANGES), 다음 자동 스킬
 
-### 리뷰 모드 헤더 (PR 코멘트 최상단)
+### 분류 헤더 (PR 코멘트 최상단, 둘 중 하나만 출력)
+
+**(A) 리뷰 모드 헤더** — `project.json`에 `review` 설정이 명시된 경우:
 ```
 🔍 리뷰 모드: standard (2/3 에이전트)
    실행: domain, security | 미실행: test
    설정 변경: /skill-review-pr config --mode full
 ```
 
-### 적용 Rules 헤더 (rules_paths가 비어있지 않을 때만, 리뷰 모드 헤더 다음 줄)
+**(B) Tier 헤더** — 자동 분류가 적용된 경우 (`review` 미설정):
+```
+🎯 자동 분류: T2 Standard (2 에이전트) — domain, security
+   강제 변경: /skill-review-pr config --mode full
+```
+
+T0(Trivial)도 동일 형식으로 `T0 Trivial (0 에이전트) — 직접 리뷰`.
+
+### 적용 Rules 헤더 (rules_paths가 비어있지 않을 때만, 분류 헤더 다음 줄)
 ```
 📋 적용 Rules: healthcare/python (1개) — phi-logging-guard.md
 ```
-- `rules_paths`가 비어있거나 Trivial 경량 리뷰면 본 헤더 자체를 출력하지 않는다 (노이즈 방지).
+- `rules_paths`가 비어있거나 T0(직접 리뷰)이면 본 헤더 자체를 출력하지 않는다 (노이즈 방지).
 
 ## 에러 복구
 CLAUDE.md "에러 복구 프로토콜" 참조. 미존재 시 3회 재시도 후 사용자 보고.
