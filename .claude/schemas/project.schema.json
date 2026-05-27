@@ -366,6 +366,56 @@
         }
       },
       "additionalProperties": false
+    },
+    "review": {
+      "type": "object",
+      "description": "리뷰 모드/임계치 설정 (skill-review-pr). 미설정 시 자동 Tier 분류 적용. mode와 agents는 상호 배타.",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["full", "standard"],
+          "description": "프리셋 모드 (full: 3-agent, standard: domain+security 2-agent). 명시 시 자동 Tier 분류 비활성화"
+        },
+        "agents": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["domain", "security", "test"]
+          },
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "커스텀 에이전트 조합. domain은 필수 — 누락 시 자동 추가됨. 명시 시 자동 Tier 분류 비활성화"
+        },
+        "thresholds": {
+          "type": "object",
+          "description": "confidence score (0-100) 게시·결정 임계치. 미설정 시 디폴트(80/60/50) 적용",
+          "properties": {
+            "critical": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100,
+              "default": 80,
+              "description": "CRITICAL 이슈가 머지 차단 + 게시되는 최소 confidence (미만은 MAJOR로 강등 게시)"
+            },
+            "major": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100,
+              "default": 60,
+              "description": "MAJOR 이슈가 게시되는 최소 confidence (미만은 드롭)"
+            },
+            "minor": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100,
+              "default": 50,
+              "description": "MINOR 이슈가 게시되는 최소 confidence (미만은 드롭)"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false,

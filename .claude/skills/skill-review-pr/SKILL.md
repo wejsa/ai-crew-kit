@@ -253,10 +253,60 @@ diff는 임시 파일에 저장하여 에이전트가 Read로 참조하도록 �
 - 1개 실패: AskUserQuestion (재시도/스킵/중단). --auto-fix 시 자동 재시도→실패시 스킵
 - 2개+ 실패: 즉시 중단
 
-### 4. 결과 병합
-이슈 ID 재채번: CRITICAL→C001~, MAJOR→H001~, MINOR→M001~
-위반 항목 통합 테이블 (체크리스트, 항목, 심각도, 파일:라인)
-CRITICAL 1개 이상 → 전체 REQUEST_CHANGES
+### 3.5. Confidence 채점 (false-positive 필터)
+
+Step 3에서 sub-agent들이 도출한 이슈 목록을 **독립 채점 단계**로 confidence 0~100 부여. self-bias 회피 목적으로 sub-agent와는 별도 호출.
+
+**T0(Trivial) 시 SKIP** — 0-agent 직접 리뷰는 채점 대상 없음.
+**이슈 0개 시 SKIP** — 자연 통과.
+
+#### 절차
+1. Step 3의 sub-agent 결과를 통합해 `{id, severity, file, line, description, source_agent}` 형식 이슈 리스트 구성.
+2. 각 이슈를 별도 Task로 채점 호출 (병렬 가능). 호출 모델은 sub-agent보다 가벼운 티어 권장 (parent 모델 상속 정책 유지 — 사용자 플랜 의존, 강제 지정 X).
+3. 각 채점 Task 입력: 이슈 1건 + PR diff 경로(`/tmp/pr-{N}-diff.txt`) + (도메인 이슈일 때만) 관련 `rules_paths`.
+4. 채점 Task 출력: confidence 정수 (0~100) + 한 줄 근거.
+
+#### Confidence Rubric (채점 Task에게 그대로 전달)
+- **0**: 명백한 false positive. 가벼운 검토에도 무너지거나 PR과 무관한 기존 이슈.
+- **25**: 약한 의심. 실제 이슈일 수도 있으나 검증 불가. 스타일 이슈가 CLAUDE.md/rules에 명시 안 됨.
+- **50**: 실제 이슈지만 minor nitpick. PR 맥락에서 영향 작음.
+- **75**: 확신 — 실무에서 발현될 가능성 높음. 또는 CLAUDE.md/rules에 직접 명시된 항목.
+- **100**: 확정 — 증거가 직접 입증.
+
+#### False-positive 가이드 (채점 Task에게 전달)
+- PR과 무관한 pre-existing 이슈
+- 버그처럼 보이지만 실제 버그 아닌 패턴
+- 시니어 엔지니어가 지적 안 할 nitpick
+- 린터/타입체커/컴파일러가 잡을 이슈 (별도 CI)
+- CLAUDE.md/rules에 명시 안 된 일반 품질 이슈
+- 코드에서 명시적 silence된 항목 (lint ignore 주석 등)
+- 사용자가 수정하지 않은 라인의 이슈
+
+### 4. 결과 병합 + 결정 매트릭스
+이슈 ID 재채번: CRITICAL→C001~, MAJOR→H001~, MINOR→M001~. 위반 항목 통합 테이블 (체크리스트, 항목, 심각도, confidence, 파일:라인).
+
+#### 결정 매트릭스 (severity × confidence)
+
+임계치는 `project.json`의 `review.thresholds`에서 로드. 미설정 시 디폴트 적용 (critical=80, major=60, minor=50).
+
+| severity | confidence | 처리 |
+|----------|-----------|------|
+| CRITICAL | ≥ critical (디폴트 80) | **게시 + REQUEST_CHANGES 트리거** |
+| CRITICAL | < critical | **MAJOR로 강등 게시** (드롭 X — 실제 이슈 누락 위험 방지). REQUEST_CHANGES 트리거 안 함 |
+| MAJOR | ≥ major (디폴트 60) | 게시 |
+| MAJOR | < major | 드롭 |
+| MINOR | ≥ minor (디폴트 50) | 게시 |
+| MINOR | < minor | 드롭 |
+
+**REQUEST_CHANGES 트리거**: CRITICAL × confidence ≥ critical 이슈가 **1개 이상**일 때만. 매트릭스 강등으로 CRITICAL이 0개가 되면 APPROVED 흐름.
+
+#### 드롭/강등 통계 헤더 (PR 코멘트 본문)
+드롭된 이슈 수와 강등된 CRITICAL 수를 헤더에 노출 — 사용자가 자동 필터링을 인지하고 임계치 조정 가능:
+```
+🎯 Confidence 필터: 12개 이슈 발견 → 5개 게시 (드롭 6, CRITICAL→MAJOR 강등 1)
+   임계치 조정: project.json의 review.thresholds.{critical|major|minor}
+```
+T0이거나 이슈 0개면 본 헤더 미출력.
 
 ### 5. PR 코멘트 작성
 - 코멘트 본문 최상단에 **분류 헤더**(명시 `review` 설정 시 "리뷰 모드 헤더", 자동 분류 시 "Tier 헤더") + (rules_paths 비어있지 않을 때만) "적용 Rules 헤더" 삽입 — Claude의 응답 출력만이 아니라 실제 PR 코멘트 본문에도 반드시 포함. T0(Trivial)은 분류 헤더만, 적용 Rules 헤더 미출력.
@@ -264,10 +314,14 @@ CRITICAL 1개 이상 → 전체 REQUEST_CHANGES
 `gh api repos/.../pulls/{N}/comments` — 이슈별 인라인 코멘트 (심각도, 설명, 권장 수정 코드)
 
 ### 6. 리뷰 결정
+
+**Step 4의 결정 매트릭스 결과를 사용**: CRITICAL × confidence ≥ critical 임계치 이슈가 1개 이상이면 REQUEST_CHANGES, 그렇지 않으면 APPROVE/COMMENT. (CRITICAL이 강등으로 0개가 된 경우 APPROVE 흐름).
+
 **자기 PR 감지**: PR author == 현재 user → 승인 불가, COMMENT로 대체
-- CRITICAL 0개 + 타인 PR → `gh pr review --approve`
-- CRITICAL 0개 + 자기 PR → `gh pr review --comment` (승인 SKIP)
-- CRITICAL 1개+ → `gh pr review --request-changes`
+
+- CRITICAL(필터 후) 0개 + 타인 PR → `gh pr review --approve`
+- CRITICAL(필터 후) 0개 + 자기 PR → `gh pr review --comment` (승인 SKIP)
+- CRITICAL(필터 후) 1개+ → `gh pr review --request-changes`
 
 ### 6.5 실행 로그
 execution-log.json: APPROVED → action="approved", REQUEST_CHANGES → action="request_changes"
@@ -279,13 +333,15 @@ execution-log.json: APPROVED → action="approved", REQUEST_CHANGES → action="
 - REQUEST_CHANGES → 종료, "수정 후 재실행" 안내
 
 #### --auto-fix 모드
-- CRITICAL 0개 → 일반 승인 플로우
-- CRITICAL 1개+ → workflowState.fixLoopCount 증가 후 `Skill tool: skill="skill-fix", args="{prNumber}"`
+- CRITICAL(필터 후) 0개 → 일반 승인 플로우
+- CRITICAL(필터 후) 1개+ → workflowState.fixLoopCount 증가 후 `Skill tool: skill="skill-fix", args="{prNumber}"`
   - fixLoopCount 3회째 CRITICAL → skill-fix 호출 금지, REQUEST_CHANGES 즉시 중단 (루프 가드)
   - 직접 코드 수정 금지. skill-fix 없이 REQUEST_CHANGES 후 종료 금지.
 
+> **Confidence 매트릭스와의 결합**: fix loop 진입 조건은 **CRITICAL × confidence ≥ critical 임계치**인 이슈만. confidence 미달로 MAJOR 강등된 항목은 fix loop 대상 아님(false-positive 무한 fix-redo 방지).
+
 ## 출력
-필수 포함: PR 번호/제목/작성자/브랜치, **분류 헤더(리뷰 모드 또는 Tier) + 실행 에이전트 목록**, **적용 Rules**(있을 때만), 체크리스트 결과, 관점별 리뷰 테이블(CRITICAL/MAJOR/MINOR 수), 주요 피드백 목록, 결정(APPROVED/REQUEST_CHANGES), 다음 자동 스킬
+필수 포함: PR 번호/제목/작성자/브랜치, **분류 헤더(리뷰 모드 또는 Tier) + 실행 에이전트 목록**, **Confidence 필터 헤더**(채점 결과 있을 때만), **적용 Rules**(있을 때만), 체크리스트 결과, 관점별 리뷰 테이블(CRITICAL/MAJOR/MINOR 수 — 모두 필터 후 기준), 주요 피드백 목록(이슈마다 confidence 점수 병기), 결정(APPROVED/REQUEST_CHANGES), 다음 자동 스킬
 
 ### 분류 헤더 (PR 코멘트 최상단, 둘 중 하나만 출력)
 
@@ -304,6 +360,18 @@ execution-log.json: APPROVED → action="approved", REQUEST_CHANGES → action="
 
 T0(Trivial)도 동일 형식으로 `T0 Trivial (0 에이전트) — 직접 리뷰`.
 
+### Confidence 필터 헤더 (분류 헤더 다음 줄)
+
+Step 3.5 채점 결과가 있을 때만 출력. T0(채점 SKIP)이거나 이슈 0개면 출력 안 함.
+
+```
+🎯 Confidence 필터: 12개 이슈 발견 → 5개 게시 (드롭 6, CRITICAL→MAJOR 강등 1)
+   임계치 조정: project.json의 review.thresholds.{critical|major|minor}
+```
+
+- 드롭 0 + 강등 0이면 헤더 자체 미출력 (노이즈 방지).
+- 임계치가 명시(`review.thresholds`)되어 있으면 안내 문구 대신 현재 임계치 표시: `현재 임계치: critical=80, major=60, minor=50 (디폴트)` 또는 `현재 임계치: critical=90, major=70, minor=60 (project.json)`.
+
 ### 적용 Rules 헤더 (rules_paths가 비어있지 않을 때만, 분류 헤더 다음 줄)
 ```
 📋 적용 Rules: healthcare/python (1개) — phi-logging-guard.md
@@ -318,8 +386,12 @@ CLAUDE.md "에러 복구 프로토콜" 참조. 미존재 시 3회 재시도 후 
 - 자기 PR은 GitHub 정책상 승인 불가 → COMMENT 후 머지 진행
 
 ### 심각도별 머지 정책 (일관 규칙 — LLM 보고 시 준수)
-- **CRITICAL**: 머지 차단. 반드시 수정 후 재리뷰
-- **MAJOR**: 머지 차단 **없음**. 개선 권고로 PR 코멘트에 남기되, 사용자에게 "수정 후 재리뷰"를 강요하지 않는다. 다음 PR/별도 개선 Task로 처리 가능
-- **MINOR**: 참고 사항. 머지 영향 없음
 
-> 결과 보고 시 MAJOR/MINOR를 "수정 후 재리뷰 권장"으로 표현하지 않는다. 이전 회차에서 본 표현이 있더라도 본 규칙을 우선한다. auto-fix 루프는 CRITICAL에만 적용된다 (토큰 비용 통제).
+> 모든 정책은 **Step 3.5 confidence 매트릭스 필터링 이후의 심각도** 기준. confidence 미달로 강등/드롭된 항목은 본 정책 적용 대상 아님.
+
+- **CRITICAL (게시)**: 머지 차단. 반드시 수정 후 재리뷰. 정의: confidence ≥ critical 임계치 (디폴트 80)
+- **CRITICAL → MAJOR 강등**: 머지 차단 **없음** (MAJOR 정책 적용). 채점이 약한 확신이라 판단한 경우 — 사람 검토 권장만
+- **MAJOR (게시)**: 머지 차단 없음. 개선 권고로 PR 코멘트에 남기되, 사용자에게 "수정 후 재리뷰"를 강요하지 않는다. 다음 PR/별도 개선 Task로 처리 가능
+- **MINOR (게시)**: 참고 사항. 머지 영향 없음
+
+> 결과 보고 시 MAJOR/MINOR를 "수정 후 재리뷰 권장"으로 표현하지 않는다. 이전 회차에서 본 표현이 있더라도 본 규칙을 우선한다. auto-fix 루프는 CRITICAL(게시)에만 적용된다 (토큰 비용 통제 + false-positive 무한 fix-redo 차단).
