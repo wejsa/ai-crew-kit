@@ -27,7 +27,7 @@ complexity-hint: heavy
 | `config --mode full` | 프리셋 변경 (full: 전체 3 에이전트) |
 | `config --agents domain,security` | 커스텀 에이전트 조합 설정 |
 | `config --agents domain,test` | 커스텀 에이전트 조합 설정 |
-| `config --reset` | 디폴트(full) 복원 |
+| `config --reset` | `review` 섹션 삭제 (자동 Tier 분류 활성화) |
 
 ### 실행 로직
 1. `project.json` 읽기
@@ -63,15 +63,30 @@ complexity-hint: heavy
 - 잘못된 에이전트명 → 에러 + 유효 목록 안내
 
 ### 현재 설정 표시 형식
+
+`project.json`에 `review` 섹션 유무에 따라 분기 출력.
+
+**(A) review 미설정** — 자동 Tier 분류 적용:
 ```
 📋 리뷰 모드 설정
 ─────────────────
-모드: full (디폴트)
-에이전트: domain, security, test
+모드: 자동 Tier 분류 (디폴트) — PR 특성에 따라 T0/T1a/T1b/T2/T3 자동 결정
+에이전트: PR마다 0~3개 가변 (Tier 표 참조)
 
-변경: /skill-review-pr config --mode standard
-커스텀: /skill-review-pr config --agents domain,test
-초기화: /skill-review-pr config --reset
+명시 변경: /skill-review-pr config --mode standard
+커스텀:    /skill-review-pr config --agents domain,test
+```
+
+**(B) review.mode 또는 review.agents 명시** — 자동 분류 OFF:
+```
+📋 리뷰 모드 설정
+─────────────────
+모드: standard (명시)
+에이전트: domain, security
+
+자동 분류 복원: /skill-review-pr config --reset
+변경:          /skill-review-pr config --mode full
+커스텀:        /skill-review-pr config --agents domain,test,security
 ```
 
 ### config 서브커맨드 감지 후 STOP — 아래 리뷰 플로우 진행 금지.
@@ -123,11 +138,13 @@ PR 정보 수집(Step 1) 후 PR 특성을 기반으로 sub-agent 호출 수를 �
 
 | Tier | 조건 | sub-agent | 라벨 |
 |------|------|-----------|------|
-| **T0** | ≤50줄 · src/ 변경 0건 · 보안 키워드 0 | 0 (직접 리뷰) | Trivial |
-| **T1a** | 100% 테스트 파일 변경 · ≤200줄 · 보안 키워드 0 | 1 (`pr-reviewer-test`) | Test-only |
-| **T1b** | 100% 의존성 매니페스트 변경 · src/ 변경 0건 | 1 (`pr-reviewer-security`) | Deps-only |
+| **T1a** | 변경 파일 1건 이상 · 100% 테스트 파일 변경 · ≤200줄 · 보안 키워드 0 | 1 (`pr-reviewer-test`) | Test-only |
+| **T1b** | 변경 파일 1건 이상 · 100% 의존성 매니페스트 변경 · src/ 변경 0건 · 보안 키워드 0 | 1 (`pr-reviewer-security`) | Deps-only |
+| **T0** | 변경 파일 1건 이상 · ≤50줄 · src/ 변경 0건 · 보안 키워드 0 | 0 (직접 리뷰) | Trivial |
 | **T3** | >200줄 **OR** 보안 키워드 hit **OR** criticalPaths 매치 | 3 (domain+security+test) | Full |
-| **T2** | 그 외 (기본값) | 2 (domain+security) | Standard |
+| **T2** | 그 외 (catch-all 기본값) | 2 (domain+security) | Standard |
+
+> **순서 의도**: 작은 특수 케이스(T1a/T1b)를 T0보다 먼저 평가해야 30줄 test/deps PR이 0-agent로 흡수되지 않음. T3가 T2 위인 이유는 T3가 양성 조건(OR), T2는 음성 catch-all이라서. 변경 파일 0건(rebase-only, mode-change-only 등) PR은 T1a/T1b/T0 모두 "1건 이상" 조건으로 자연 탈락 → T3 미매치 → T2 catch-all에서 사람 검토 흐름으로 진입.
 
 ### 패턴 정의
 
@@ -142,7 +159,10 @@ PR 정보 수집(Step 1) 후 PR 특성을 기반으로 sub-agent 호출 수를 �
 - Go/Rust: `go.mod`, `go.sum`, `Cargo.toml`, `Cargo.lock`
 - 기타: `composer.json`, `composer.lock`, `Gemfile`, `Gemfile.lock`
 
-**보안 키워드** (대소문자 무관, 변경 파일 경로 또는 diff 본문 매치): `password`, `secret`, `token`, `auth`, `cors`, `sql`, `inject`
+**보안 키워드** (대소문자 무관, **변경 파일 경로 부분문자열 매치만**): `password`, `secret`, `token`, `auth`, `cors`, `sql`, `inject`
+- diff 본문은 매치 대상 아님 (false-positive 폭발 방지 — `// @author` 주석, SQL 마이그레이션 키워드, DI `@Inject` 등이 자동 T3 격상되지 않도록)
+- 매치 예: `src/auth/`, `oauth-routes.ts`, `token-bucket.ts`, `migrations/202xx-add-sql-index.sql`은 hit. `src/profile.ts` 내부에 `"password"` 문자열만 있는 경우는 hit 아님
+- 코드 본문 secret 누출 검출은 별도 secret-scanning 책임 영역 (본 분류기 범위 밖)
 
 **criticalPaths** (옵셔널):
 - `.claude/domains/{domain}/domain.json`에 `criticalPaths: ["src/payment/**", ...]` 배열이 있으면 변경 파일과 글롭 매치 검사
