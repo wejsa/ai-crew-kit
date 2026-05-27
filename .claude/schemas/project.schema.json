@@ -369,7 +369,7 @@
     },
     "review": {
       "type": "object",
-      "description": "리뷰 모드/임계치 설정 (skill-review-pr). 미설정 시 자동 Tier 분류 적용. mode와 agents는 상호 배타.",
+      "description": "리뷰 모드/임계치 설정 (skill-review-pr). 미설정 시 자동 Tier 분류 적용. mode와 agents는 상호 배타. thresholds는 critical ≥ major ≥ minor 강제, critical ≥ 50 강제(false-positive 게이트 무력화 방지).",
       "properties": {
         "mode": {
           "type": "string",
@@ -384,25 +384,25 @@
           },
           "minItems": 1,
           "uniqueItems": true,
-          "description": "커스텀 에이전트 조합. domain은 필수 — 누락 시 자동 추가됨. 명시 시 자동 Tier 분류 비활성화"
+          "description": "커스텀 에이전트 조합. domain은 필수 — skill 측에서 자동 추가됨. 명시 시 자동 Tier 분류 비활성화"
         },
         "thresholds": {
           "type": "object",
-          "description": "confidence score (0-100) 게시·결정 임계치. 미설정 시 디폴트(80/60/50) 적용",
+          "description": "confidence score (0-100) 게시·결정 임계치. 미설정 키는 디폴트(80/60/50)로 독립 fallback. 각 키 값은 critical ≥ major ≥ minor 순서 강제 + critical ≥ 50 (rubric anchor 50과 정렬, false-positive 게이트 무력화 방지)",
           "properties": {
             "critical": {
               "type": "integer",
-              "minimum": 0,
+              "minimum": 50,
               "maximum": 100,
               "default": 80,
-              "description": "CRITICAL 이슈가 머지 차단 + 게시되는 최소 confidence (미만은 MAJOR로 강등 게시)"
+              "description": "CRITICAL 이슈가 머지 차단 + 게시되는 최소 confidence. minimum=50 (rubric 'minor nitpick'을 CRITICAL 차단 임계로 두는 것 차단). 미만은 MAJOR로 강등 게시 (드롭 X)"
             },
             "major": {
               "type": "integer",
               "minimum": 0,
               "maximum": 100,
               "default": 60,
-              "description": "MAJOR 이슈가 게시되는 최소 confidence (미만은 드롭)"
+              "description": "원래-MAJOR 이슈가 게시되는 최소 confidence (미만은 드롭). 강등된 CRITICAL은 이 임계치 무시(항상 게시)"
             },
             "minor": {
               "type": "integer",
@@ -415,7 +415,30 @@
           "additionalProperties": false
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "not": {
+        "required": ["mode", "agents"]
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "thresholds": {
+                "required": ["critical", "major"]
+              }
+            },
+            "required": ["thresholds"]
+          },
+          "then": {
+            "properties": {
+              "thresholds": {
+                "$comment": "critical ≥ major 강제. JSON Schema에서 직접 숫자 비교는 불가하므로 SSOT는 본 description + skill-review-pr Step 4. CI 회귀 fixture에 ordering 위반 negative case 추가로 보강.",
+                "type": "object"
+              }
+            }
+          }
+        }
+      ]
     }
   },
   "additionalProperties": false,

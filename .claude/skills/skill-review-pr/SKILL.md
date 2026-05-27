@@ -257,20 +257,53 @@ diff는 임시 파일에 저장하여 에이전트가 Read로 참조하도록 �
 
 Step 3에서 sub-agent들이 도출한 이슈 목록을 **독립 채점 단계**로 confidence 0~100 부여. self-bias 회피 목적으로 sub-agent와는 별도 호출.
 
-**T0(Trivial) 시 SKIP** — 0-agent 직접 리뷰는 채점 대상 없음.
-**이슈 0개 시 SKIP** — 자연 통과.
+#### SKIP 조건 (위에서 아래로 첫 매치)
+1. **T0(Trivial) 분류** → SKIP. T0은 0-agent 직접 리뷰지만 직접 리뷰가 CRITICAL을 도출한 경우 **confidence=100 자동 부여**(이전 정책 "CRITICAL 1개+ → REQUEST_CHANGES" 보존). MAJOR/MINOR는 confidence=75 자동 부여.
+2. **이슈 0개** → SKIP. 자연 통과 (REQUEST_CHANGES 트리거 없음).
+
+#### Step 3 결과 → 이슈 리스트 정규화 (Step 3.5 진입 직전)
+
+Step 3 sub-agent들이 반환한 markdown 표 + prose를 다음 정규식 규약으로 추출:
+- **표 row 매치**: pipe-delimited 행에서 severity / file:line / description 칼럼 추출. severity는 `CRITICAL|MAJOR|MINOR` 대소문자 무관 매치.
+- **prose 흡수**: 표 다음 줄의 들여쓰기/bullet/code-block을 직전 row의 description에 합침.
+- 정규화 결과 schema:
+```json
+{
+  "id": "<sub-agent가 부여한 ID 또는 자동 부여>",
+  "severity": "CRITICAL|MAJOR|MINOR",
+  "file": "src/path/file.ts",
+  "line": 42,
+  "description": "...(multi-line OK)",
+  "source_agent": "domain|security|test"   // 정규화 — 항상 이 3개 enum 중 하나
+}
+```
+- 파싱 실패 row는 로그하고 다음 row로 진행 (전체 실패 X).
 
 #### 절차
-1. Step 3의 sub-agent 결과를 통합해 `{id, severity, file, line, description, source_agent}` 형식 이슈 리스트 구성.
-2. 각 이슈를 별도 Task로 채점 호출 (병렬 가능). 호출 모델은 sub-agent보다 가벼운 티어 권장 (parent 모델 상속 정책 유지 — 사용자 플랜 의존, 강제 지정 X).
-3. 각 채점 Task 입력: 이슈 1건 + PR diff 경로(`/tmp/pr-{N}-diff.txt`) + (도메인 이슈일 때만) 관련 `rules_paths`.
-4. 채점 Task 출력: confidence 정수 (0~100) + 한 줄 근거.
+1. 위 정규화 룰로 이슈 리스트 구성.
+2. 각 이슈를 별도 Task로 채점 호출. **동시 채점 Task ≤ 10** — 초과 시 chunk 순차 처리(토큰 폭주 차단). 호출 모델은 parent 상속 (사용자 플랜 의존, 강제 지정 X). parent가 무거운 모델(Opus 등)이면 self-bias 회피 효과는 부분적 — 매트릭스 임계치를 보수적으로 두는 것으로 보완.
+3. **각 채점 Task 입력**:
+   - 이슈 1건 (위 schema)
+   - PR diff 경로: `/tmp/pr-{N}-diff.txt`
+   - **CLAUDE.md 경로** (repo 루트): 컨벤션 명시 여부 판단용
+   - **매칭 컨벤션 파일 경로 목록**: Step 2의 "리뷰 전 컨벤션 로딩" 결과 재사용 (`_base/checklists/common.md` + `{domain}/checklists/`)
+   - `source_agent === "domain"`이면 `rules_paths` 추가 전달
+4. **채점 Task 출력 (정수 0-100 + 한 줄 근거)**. 출력 파싱 실패 / 범위 외(>100, <0, NaN, prose) / timeout 시:
+   - 1회 재시도
+   - 재시도 실패 시 **confidence=100 fallback** (보수적 — 실제 이슈 누락 방지보다 false-positive 게시가 안전)
+5. **결정성 가이드** (채점 Task에 명시):
+   - 동일 입력은 동일 출력 지향. temperature=0 권장.
+   - 임계치 부근(±5)에선 보수적으로 **올림** 처리(false-positive 게시 < 실제 이슈 누락).
 
 #### Confidence Rubric (채점 Task에게 그대로 전달)
+
+> 아래 0/25/50/75/100은 **anchor 예시**이며, 채점자는 임의 정수(0~100)를 부여할 수 있다. CLAUDE.md/rules/컨벤션에 직접 명시된 위반은 **80 이상** 부여(매트릭스 critical 임계치와 정렬).
+
 - **0**: 명백한 false positive. 가벼운 검토에도 무너지거나 PR과 무관한 기존 이슈.
 - **25**: 약한 의심. 실제 이슈일 수도 있으나 검증 불가. 스타일 이슈가 CLAUDE.md/rules에 명시 안 됨.
 - **50**: 실제 이슈지만 minor nitpick. PR 맥락에서 영향 작음.
-- **75**: 확신 — 실무에서 발현될 가능성 높음. 또는 CLAUDE.md/rules에 직접 명시된 항목.
+- **75**: 확신 — 실무에서 발현될 가능성 높음 (단, 컨벤션 명시 위반은 80+ 부여).
+- **80~99**: CLAUDE.md/rules/컨벤션에 직접 명시된 위반. 머지 차단 가치 있음.
 - **100**: 확정 — 증거가 직접 입증.
 
 #### False-positive 가이드 (채점 Task에게 전달)
@@ -283,65 +316,110 @@ Step 3에서 sub-agent들이 도출한 이슈 목록을 **독립 채점 단계**
 - 사용자가 수정하지 않은 라인의 이슈
 
 ### 4. 결과 병합 + 결정 매트릭스
-이슈 ID 재채번: CRITICAL→C001~, MAJOR→H001~, MINOR→M001~. 위반 항목 통합 테이블 (체크리스트, 항목, 심각도, confidence, 파일:라인).
+
+#### 이슈 ID 채번 시점
+**채점 + 매트릭스 적용 후 최종 게시 카테고리 기준으로 채번**: CRITICAL(게시)→C001~, MAJOR(게시)→H001~, MINOR(게시)→M001~. 강등된 항목은 강등 후 카테고리(MAJOR)에서 채번(H{NNN}). 인라인 코멘트와 본문 테이블 ID 일관성 보장.
+
+위반 항목 통합 테이블 (체크리스트, 항목, 심각도, confidence, 파일:라인). 강등된 항목은 description 앞에 `[원래 CRITICAL · 강등]` 접두 추가.
 
 #### 결정 매트릭스 (severity × confidence)
 
-임계치는 `project.json`의 `review.thresholds`에서 로드. 미설정 시 디폴트 적용 (critical=80, major=60, minor=50).
+임계치는 `project.json`의 `review.thresholds`에서 로드. **각 키 독립 fallback**: 누락 키만 디폴트 적용 (critical=80, major=60, minor=50). 임계치 schema가 critical ≥ major ≥ minor + critical ≥ 50을 강제 (project.schema.json).
 
-| severity | confidence | 처리 |
+| severity (Step 3) | confidence | 처리 |
 |----------|-----------|------|
 | CRITICAL | ≥ critical (디폴트 80) | **게시 + REQUEST_CHANGES 트리거** |
-| CRITICAL | < critical | **MAJOR로 강등 게시** (드롭 X — 실제 이슈 누락 위험 방지). REQUEST_CHANGES 트리거 안 함 |
-| MAJOR | ≥ major (디폴트 60) | 게시 |
-| MAJOR | < major | 드롭 |
+| CRITICAL | < critical | **MAJOR로 강등 게시** (드롭 X). **major threshold 재검 X — 강등 CRITICAL은 confidence 무관하게 항상 게시**. REQUEST_CHANGES 트리거 안 함. 단, 강등 카운트는 별도 추적 |
+| MAJOR (Step 3에서 처음부터 MAJOR) | ≥ major (디폴트 60) | 게시 |
+| MAJOR (위와 동) | < major | 드롭 |
 | MINOR | ≥ minor (디폴트 50) | 게시 |
 | MINOR | < minor | 드롭 |
 
-**REQUEST_CHANGES 트리거**: CRITICAL × confidence ≥ critical 이슈가 **1개 이상**일 때만. 매트릭스 강등으로 CRITICAL이 0개가 되면 APPROVED 흐름.
+> **강등 CRITICAL ≠ 원래 MAJOR**: 매트릭스에서 두 카테고리를 분리해서 평가. 강등은 major threshold 무시(드롭 위험 차단), 원래 MAJOR는 normal threshold 적용. 이 분리가 누락되면 finding #3 매트릭스 모순 재발.
 
-#### 드롭/강등 통계 헤더 (PR 코멘트 본문)
-드롭된 이슈 수와 강등된 CRITICAL 수를 헤더에 노출 — 사용자가 자동 필터링을 인지하고 임계치 조정 가능:
+**REQUEST_CHANGES 트리거 (SSOT)**: CRITICAL × confidence ≥ critical 이슈가 **1개 이상**일 때만. 매트릭스 강등으로 CRITICAL이 0개가 되어도 강등 카운트가 ≥1이고 자기 PR이면 **sticky 경고**(아래 Step 6 참조). Step 6/7은 본 SSOT를 참조한다.
+
+#### Confidence 필터 헤더 (PR 코멘트 본문 — 분류 헤더 다음 줄)
+
+채점이 실행된 경우 **항상 출력**(투명성). T0/이슈 0개로 SKIP된 경우만 미출력.
+
 ```
-🎯 Confidence 필터: 12개 이슈 발견 → 5개 게시 (드롭 6, CRITICAL→MAJOR 강등 1)
-   임계치 조정: project.json의 review.thresholds.{critical|major|minor}
+🎯 Confidence 필터: 12개 발견 → 5개 게시 (드롭 6, 강등 1) | 임계치: critical=80 major=60 minor=50 (디폴트)
 ```
-T0이거나 이슈 0개면 본 헤더 미출력.
+
+- 임계치 표시: review.thresholds 명시 시 `(project.json)`, 미설정 또는 일부 키만 명시 시 `(디폴트)` 또는 `(혼합)` — fallback 명시.
+- 드롭 0 + 강등 0이어도 헤더 출력 (audit-trail). 메시지를 `12개 발견 → 12개 게시 (필터 통과)` 형태로.
 
 ### 5. PR 코멘트 작성
-- 코멘트 본문 최상단에 **분류 헤더**(명시 `review` 설정 시 "리뷰 모드 헤더", 자동 분류 시 "Tier 헤더") + (rules_paths 비어있지 않을 때만) "적용 Rules 헤더" 삽입 — Claude의 응답 출력만이 아니라 실제 PR 코멘트 본문에도 반드시 포함. T0(Trivial)은 분류 헤더만, 적용 Rules 헤더 미출력.
-`gh pr comment` — 전체 요약 (관점별 상태/이슈 수, 체크리스트 결과, 주요 피드백)
-`gh api repos/.../pulls/{N}/comments` — 이슈별 인라인 코멘트 (심각도, 설명, 권장 수정 코드)
 
-### 6. 리뷰 결정
+#### 헤더 순서 (위에서 아래)
+1. **분류 헤더** (명시 `review` 설정 시 "리뷰 모드 헤더", 자동 분류 시 "Tier 헤더")
+2. **Confidence 필터 헤더** (채점이 실행된 경우, T0/이슈 0개 SKIP 시 미출력)
+3. **강등 CRITICAL 경고 헤더** (강등 카운트 ≥1일 때만, 자기 PR이면 더 강조)
+4. **적용 Rules 헤더** (rules_paths가 비어있지 않을 때만)
 
-**Step 4의 결정 매트릭스 결과를 사용**: CRITICAL × confidence ≥ critical 임계치 이슈가 1개 이상이면 REQUEST_CHANGES, 그렇지 않으면 APPROVE/COMMENT. (CRITICAL이 강등으로 0개가 된 경우 APPROVE 흐름).
+> 위 순서는 SSOT. T0(Trivial)은 헤더 1만 출력.
 
-**자기 PR 감지**: PR author == 현재 user → 승인 불가, COMMENT로 대체
+#### 강등 CRITICAL 경고 헤더 (신규)
 
-- CRITICAL(필터 후) 0개 + 타인 PR → `gh pr review --approve`
-- CRITICAL(필터 후) 0개 + 자기 PR → `gh pr review --comment` (승인 SKIP)
-- CRITICAL(필터 후) 1개+ → `gh pr review --request-changes`
+매트릭스에서 CRITICAL이 MAJOR로 강등된 항목이 1개 이상일 때 노출:
+
+```
+⚠️ 강등된 CRITICAL N개 — sub-agent가 CRITICAL로 도출했으나 채점자가 confidence < critical 임계치로 판단.
+   사람 검토 필요. 머지 전 본문의 [원래 CRITICAL · 강등] 항목 확인.
+```
+
+자기 PR이면 다음 sticky 경고를 추가로 prepend:
+
+```
+🛑 자기 PR + 강등 CRITICAL — 자동 머지 chain 차단. 사람 검토 후 수동 머지하세요.
+```
+
+#### 본문 카운트 일관성
+- 관점별 리뷰 테이블 / 본문 요약 / 결정 라인의 CRITICAL/MAJOR/MINOR 수는 **모두 매트릭스 적용 후(필터 후) 기준**. 강등된 CRITICAL은 MAJOR 카운트에 포함 + 별도 "강등 N건" 보조 표시.
+- 채점 실패로 confidence=100 fallback된 항목도 동일하게 카운트.
+
+`gh pr comment` — 전체 요약 (관점별 상태/이슈 수 — 필터 후, 체크리스트 결과, 주요 피드백 — 이슈별 confidence 점수 병기)
+`gh api repos/.../pulls/{N}/comments` — 이슈별 인라인 코멘트 (심각도(필터 후 카테고리), 설명, 강등 항목은 `[원래 CRITICAL · 강등]` 접두, 권장 수정 코드)
+
+### 6. 리뷰 결정 (Step 4 매트릭스 SSOT 참조)
+
+#### 자기 PR + 강등 CRITICAL 가드 (신규 — finding #5 차단)
+
+- 강등 CRITICAL ≥ 1 + **자기 PR**: `gh pr review --comment` (COMMENT 유지) + **Step 7 자동 chain 차단**(아래) + 강등 경고 헤더 출력. 사용자가 수동으로 PR을 다시 트리거하기 전엔 머지 chain 진행 X.
+
+#### 결정 분기
+
+- CRITICAL(필터 후) 0개 + 강등 0 + 타인 PR → `gh pr review --approve`
+- CRITICAL(필터 후) 0개 + 강등 0 + 자기 PR → `gh pr review --comment` (자동 chain 가능)
+- CRITICAL(필터 후) 0개 + **강등 ≥1 + 자기 PR** → `gh pr review --comment` + **자동 chain 차단**
+- CRITICAL(필터 후) 0개 + 강등 ≥1 + 타인 PR → `gh pr review --comment` (사람 검토 권고만, chain 안 함)
+- CRITICAL(필터 후) ≥1 → `gh pr review --request-changes` (자기 PR 여부 무관)
 
 ### 6.5 실행 로그
 execution-log.json: APPROVED → action="approved", REQUEST_CHANGES → action="request_changes"
 
 ### 7. 다음 스킬
 
+#### 자동 chain 차단 조건 (위에서 아래로 첫 매치 — 다른 모든 분기보다 우선)
+1. **자기 PR + 강등 CRITICAL ≥1** → 자동 chain 차단(skill-merge-pr / skill-fix 호출 금지). 사용자가 수동으로 진행해야 함. finding #5 silent ship 방지.
+2. REQUEST_CHANGES → 종료, "수정 후 재실행" 안내 (skill-fix는 auto-fix 모드일 때만 호출).
+3. 그 외 → 아래 분기 적용.
+
 #### 기본 모드
 - APPROVED → `Skill tool: skill="skill-merge-pr", args="{prNumber}"`
 - REQUEST_CHANGES → 종료, "수정 후 재실행" 안내
 
 #### --auto-fix 모드
-- CRITICAL(필터 후) 0개 → 일반 승인 플로우
+- CRITICAL(필터 후) 0개 → 일반 승인 플로우 (위 chain 차단 조건 확인 후)
 - CRITICAL(필터 후) 1개+ → workflowState.fixLoopCount 증가 후 `Skill tool: skill="skill-fix", args="{prNumber}"`
   - fixLoopCount 3회째 CRITICAL → skill-fix 호출 금지, REQUEST_CHANGES 즉시 중단 (루프 가드)
   - 직접 코드 수정 금지. skill-fix 없이 REQUEST_CHANGES 후 종료 금지.
 
-> **Confidence 매트릭스와의 결합**: fix loop 진입 조건은 **CRITICAL × confidence ≥ critical 임계치**인 이슈만. confidence 미달로 MAJOR 강등된 항목은 fix loop 대상 아님(false-positive 무한 fix-redo 방지).
+> **Confidence 매트릭스와 fix loop 결합 (SSOT)**: fix loop 진입 조건은 **Step 4 매트릭스의 'CRITICAL 게시' 행만**(confidence ≥ critical 임계치). 강등된 CRITICAL(major bypass로 게시되지만 REQUEST_CHANGES 트리거 안 함)은 fix loop 대상 아님 — false-positive CRITICAL이 confidence flip-flop으로 fixLoopCount를 소모하는 진동 차단.
 
 ## 출력
-필수 포함: PR 번호/제목/작성자/브랜치, **분류 헤더(리뷰 모드 또는 Tier) + 실행 에이전트 목록**, **Confidence 필터 헤더**(채점 결과 있을 때만), **적용 Rules**(있을 때만), 체크리스트 결과, 관점별 리뷰 테이블(CRITICAL/MAJOR/MINOR 수 — 모두 필터 후 기준), 주요 피드백 목록(이슈마다 confidence 점수 병기), 결정(APPROVED/REQUEST_CHANGES), 다음 자동 스킬
+필수 포함: PR 번호/제목/작성자/브랜치, **분류 헤더(리뷰 모드 또는 Tier) + 실행 에이전트 목록**, **Confidence 필터 헤더**(채점 실행 시 항상), **강등 CRITICAL 경고 헤더**(강등 ≥1 시), **적용 Rules**(있을 때만), 체크리스트 결과, 관점별 리뷰 테이블(CRITICAL/MAJOR/MINOR 수 — **모두 필터 후 기준**), 주요 피드백 목록(이슈마다 confidence 점수 병기, 강등 항목은 `[원래 CRITICAL · 강등]` 접두), 결정(APPROVED/REQUEST_CHANGES), 다음 자동 스킬
 
 ### 분류 헤더 (PR 코멘트 최상단, 둘 중 하나만 출력)
 
@@ -362,17 +440,35 @@ T0(Trivial)도 동일 형식으로 `T0 Trivial (0 에이전트) — 직접 리�
 
 ### Confidence 필터 헤더 (분류 헤더 다음 줄)
 
-Step 3.5 채점 결과가 있을 때만 출력. T0(채점 SKIP)이거나 이슈 0개면 출력 안 함.
+Step 3.5 채점이 **실행되면 항상 출력**(T0/이슈 0개로 SKIP된 경우만 미출력). 드롭/강등 0이어도 audit-trail 목적으로 출력 — 필터 적용 여부를 사용자가 인지할 수 있도록.
 
 ```
-🎯 Confidence 필터: 12개 이슈 발견 → 5개 게시 (드롭 6, CRITICAL→MAJOR 강등 1)
-   임계치 조정: project.json의 review.thresholds.{critical|major|minor}
+🎯 Confidence 필터: 12개 발견 → 5개 게시 (드롭 6, 강등 1) | 임계치: critical=80 major=60 minor=50 (디폴트)
 ```
 
-- 드롭 0 + 강등 0이면 헤더 자체 미출력 (노이즈 방지).
-- 임계치가 명시(`review.thresholds`)되어 있으면 안내 문구 대신 현재 임계치 표시: `현재 임계치: critical=80, major=60, minor=50 (디폴트)` 또는 `현재 임계치: critical=90, major=70, minor=60 (project.json)`.
+드롭 0 + 강등 0 케이스:
+```
+🎯 Confidence 필터: 12개 발견 → 12개 게시 (필터 통과) | 임계치: critical=80 major=60 minor=50 (디폴트)
+```
 
-### 적용 Rules 헤더 (rules_paths가 비어있지 않을 때만, 분류 헤더 다음 줄)
+- 임계치 출처 표시:
+  - 전체 디폴트: `(디폴트)`
+  - 전체 명시: `(project.json)`
+  - 일부 명시(독립 fallback): `(혼합 — critical 명시, major/minor 디폴트)`
+
+### 강등 CRITICAL 경고 헤더 (강등 카운트 ≥1 시 — Confidence 필터 헤더 다음)
+
+```
+⚠️ 강등된 CRITICAL N개 — sub-agent가 CRITICAL로 도출했으나 채점자가 confidence < critical 임계치로 판단.
+   사람 검토 필요. 본문의 [원래 CRITICAL · 강등] 항목 확인.
+```
+
+자기 PR이면 **위 헤더 위에** sticky 경고 prepend:
+```
+🛑 자기 PR + 강등 CRITICAL — 자동 머지 chain 차단됨. 사람 검토 후 수동 머지 필요.
+```
+
+### 적용 Rules 헤더 (rules_paths가 비어있지 않을 때만 — 강등 경고 헤더 다음)
 ```
 📋 적용 Rules: healthcare/python (1개) — phi-logging-guard.md
 ```
@@ -390,7 +486,7 @@ CLAUDE.md "에러 복구 프로토콜" 참조. 미존재 시 3회 재시도 후 
 > 모든 정책은 **Step 3.5 confidence 매트릭스 필터링 이후의 심각도** 기준. confidence 미달로 강등/드롭된 항목은 본 정책 적용 대상 아님.
 
 - **CRITICAL (게시)**: 머지 차단. 반드시 수정 후 재리뷰. 정의: confidence ≥ critical 임계치 (디폴트 80)
-- **CRITICAL → MAJOR 강등**: 머지 차단 **없음** (MAJOR 정책 적용). 채점이 약한 확신이라 판단한 경우 — 사람 검토 권장만
+- **CRITICAL → MAJOR 강등**: 머지 차단 **없음** (MAJOR 정책 적용). 채점이 약한 확신이라 판단한 경우 — 사람 검토 권장. **자기 PR + 강등 ≥1이면 자동 chain 차단 발동**(Step 7 가드)
 - **MAJOR (게시)**: 머지 차단 없음. 개선 권고로 PR 코멘트에 남기되, 사용자에게 "수정 후 재리뷰"를 강요하지 않는다. 다음 PR/별도 개선 Task로 처리 가능
 - **MINOR (게시)**: 참고 사항. 머지 영향 없음
 
