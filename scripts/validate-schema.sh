@@ -147,10 +147,17 @@ if [ -d "$POSITIVE_DIR" ]; then
 fi
 
 # ── 4. negative fixtures — 모두 validate 실패해야 ────────────
+# review-thresholds-ordering-violation.json은 JSON Schema cross-field 비교 한계로
+# schema는 통과하나, 별도 Python ordering 검증으로 거부 처리(아래 5번 블록).
+ORDERING_FIXTURE="review-thresholds-ordering-violation.json"
 if [ -d "$NEGATIVE_DIR" ] && [ "$VALIDATOR" != "fallback" ]; then
   for f in "$NEGATIVE_DIR"/*.json; do
     [ -f "$f" ] || continue
     name="$(basename "$f")"
+    # ordering violation은 schema 우회 → 별도 검증 블록에서 처리, 본 루프 SKIP
+    if [ "$name" = "$ORDERING_FIXTURE" ]; then
+      continue
+    fi
     if validate_against_schema "$f"; then
       fail "negative/$name — 스키마가 거부해야 하는데 통과됨"
       FAIL=$((FAIL + 1))
@@ -159,6 +166,73 @@ if [ -d "$NEGATIVE_DIR" ] && [ "$VALIDATOR" != "fallback" ]; then
       PASS=$((PASS + 1))
     fi
   done
+fi
+
+# ── 5. ordering 검증 (review.thresholds critical ≥ major ≥ minor) ────────
+# JSON Schema Draft-07이 cross-field 숫자 비교 불가하므로 별도 Python 검증.
+# - 모든 positive fixture에서 ordering 위반 시 FAIL
+# - ordering-violation negative fixture는 위반이 감지되어야 PASS
+if command -v python3 >/dev/null 2>&1 && [ -d "$POSITIVE_DIR" ]; then
+  ORDERING_CHECK=$(python3 - <<'PY'
+import json
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve()  # never resolves to a real file — use cwd-relative
+# Better: rely on positional args
+PY
+)
+  # 단순 inline 검증
+  python3 - "$POSITIVE_DIR" "$NEGATIVE_DIR/$ORDERING_FIXTURE" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+positive_dir = Path(sys.argv[1])
+ordering_neg = Path(sys.argv[2])
+pass_count = 0
+fail_count = 0
+
+def check_ordering(data):
+    """Returns None if no thresholds, else (critical, major, minor) tuple."""
+    t = data.get("review", {}).get("thresholds")
+    if not t:
+        return None
+    c = t.get("critical", 80)
+    m = t.get("major", 60)
+    n = t.get("minor", 50)
+    return (c, m, n) if (c >= m >= n) else False
+
+for p in sorted(positive_dir.glob("*.json")):
+    data = json.loads(p.read_text())
+    result = check_ordering(data)
+    if result is False:
+        print(f"FAIL_ORDERING: positive/{p.name} — critical/major/minor 순서 위반")
+        fail_count += 1
+    else:
+        pass_count += 1
+
+# Negative ordering fixture는 위반이어야 함
+if ordering_neg.exists():
+    data = json.loads(ordering_neg.read_text())
+    result = check_ordering(data)
+    if result is False:
+        print(f"PASS_ORDERING: negative/{ordering_neg.name} (기대대로 ordering 위반 감지)")
+        pass_count += 1
+    else:
+        print(f"FAIL_ORDERING: negative/{ordering_neg.name} — 위반이어야 하나 통과")
+        fail_count += 1
+
+sys.exit(0 if fail_count == 0 else 1)
+PY
+  ORDERING_EXIT=$?
+  if [ $ORDERING_EXIT -eq 0 ]; then
+    pass "review.thresholds ordering (positive + negative ordering fixture)"
+    PASS=$((PASS + 1))
+  else
+    fail "review.thresholds ordering 검증 실패"
+    FAIL=$((FAIL + 1))
+  fi
 fi
 
 echo ""
