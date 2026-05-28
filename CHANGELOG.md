@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **사용자 영향 (v2.3.0 → v2.3.1)**: 마이그레이션 불필요. `workflowState.lastReviewDecision` 필드 신설은 in-session state라 schema 변경 X — 다음 skill-review-pr 호출이 자동 갱신.
 - **자체 리뷰 메타**: PR #78 첫 push가 본 PR이 차단하려던 silent-isolation 시나리오를 fixLoopCount 잔재로 그대로 재발시킬 수 있음을 자체 1 사이클에서 발견 → fix-up commit `6fc89ce`로 lastReviewDecision AND 조건 도입. fix-up 후 머지. 본 패치 자체가 "fix-up 사이클이 안전성 필수" 메타 학습의 실증.
 - **후속 (별도 issue)**: P1 #2 — skill-review-pr/sub-agent 인라인 코멘트 라벨 형식 SSOT 부재(`🔴 **CRITICAL**` / `[CRITICAL]` 정규식이 sub-agent 출력 형식 가변에 약함). 별도 PR로 sub-agent 출력 형식 SSOT 추가 필요.
-- **Closes**: #14 (v2.3.0 release notes에서 후속으로 명시)
+- **참고 (v2.3.1 정정 commit)**: 본 PR이 해소한 항목은 v2.3.0 PR #76 자체 리뷰 **finding #14**(사이클 1 분류 번호) — GitHub Issue #14가 아님(GitHub Issue #14는 무관한 v1.44.0 기술 스택 추천 작업으로 이미 closed). PR #78 commit/release notes에 박제된 `Closes #14` 키워드는 해당 issue에 영향 없음(이미 closed). 본 항목으로 정정 명시.
 
 ## [2.3.0] - 2026-05-28
 
@@ -55,7 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **사용자 영향 (v2.2.0 → v2.3.0)**: 마이그레이션 불필요. `review` 섹션 미설정 사용자(=다수)는 디폴트 동작이 "full 3-agent"에서 "자동 Tier 분류(대부분 T2 2-agent, T3는 보안 키워드 hit / 200줄 초과 / criticalPaths 매치 시 강제)"로 변경. **흔한 작은 PR은 헤비 경로 자동 우회 + 보안/대규모 변경은 여전히 풀 리뷰**. 강제 변경: `/skill-review-pr config --mode full`. `review.thresholds` 옵셔널 신규 — 디폴트 80/60/50 적용.
 - **알려진 한계 (v2.4 재설계 — RFC #77)**: 1) confidence 정수 + 단일 임계치 게이트의 본질적 trade-off(fallback 80은 MAJOR/MINOR 임계 모두 통과 / Rubric 75↔임계 80 갭으로 컨벤션 미명시 진성 CRITICAL 자동 강등), 2) 강등 H{NNN} ID 채번 재리뷰 시 shift, 3) 강등 개념 7가지 용어 혼용, 4) Step 4 매트릭스 ↔ Step 6 5분기 매핑 부재, 5) H/M prefix 통념 반대 매핑. 본 release는 "confidence 기반 false-positive 필터의 **첫 iteration**" — RFC에 방향 A(band-gap) / B(multi-criteria) / C(외부 도구 위임) / D(단순화) 4안 박제.
-- **후속 PR**: #14 skill-fix가 강등 CRITICAL 미감지(PR #76 직접 후속), #77 RFC 답변 + 실 PR 200건 채점 시뮬레이션 데이터 수집.
+- **후속 PR**: PR #76 자체 리뷰 **finding #14**(skill-fix가 강등 CRITICAL 미감지 — PR #76 직접 후속, v2.3.1에서 해소), #77 RFC 답변 + 실 PR 200건 채점 시뮬레이션 데이터 수집. (※ "#14"는 본 release 자체 리뷰의 finding 분류 번호로 GitHub Issue #14가 아님)
 - **메타 학습**: 두 PR 자체 /code-review 사이클에서 각각 P0 5~6건 발견 — fix-up 후 재리뷰 1 사이클이 안정성 필수. mini-Ralph 자동 진행 모드(사용자가 결정 옵션 매번 확인 부담 해소)는 단순 fix-up엔 효과적이나 본질적 design trade-off는 인터셉트 필요.
 
 ## [2.2.0] - 2026-05-24
