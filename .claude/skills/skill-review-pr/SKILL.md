@@ -403,8 +403,9 @@ Step 3 sub-agent들이 반환한 markdown 표 + prose를 다음 정규식 규약
 
 > **자기 PR + CRITICAL ≥1 + 강등 ≥1 동시 발생**: 첫 행(CRITICAL ≥1) 매치 → REQUEST_CHANGES 우선. chain 차단 가드는 두 번째 행에서만 발동 (CRITICAL=0이라는 전제 충족 시). 즉 진짜 차단해야 할 케이스는 "겉으로 CRITICAL 0개로 보이지만 채점이 약하게 본 강등만 있는" 자기 PR. 진짜 CRITICAL이 있으면 REQUEST_CHANGES가 더 강한 신호.
 
-### 6.5 실행 로그
-execution-log.json: APPROVED → action="approved", REQUEST_CHANGES → action="request_changes"
+### 6.5 실행 로그 + workflowState 갱신
+- execution-log.json: APPROVED → action="approved", REQUEST_CHANGES → action="request_changes"
+- **workflowState.lastReviewDecision 갱신** (skill-fix 모드 판정 SSOT): 본 회차 결정값을 `APPROVED` / `COMMENT` / `REQUEST_CHANGES` 중 하나로 저장. skill-fix가 auto-fix vs 수동 호출 모드를 정확히 분기하기 위함(fixLoopCount 단독으로는 직전 루프 잔재가 잘못 분류).
 
 ### 7. 다음 스킬
 
