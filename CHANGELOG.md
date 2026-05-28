@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.1] - 2026-05-28
+
+> **skill-fix 강등 CRITICAL 인지 (patch)** — v2.3.0 PR #76이 도입한 confidence 매트릭스에서 강등된 CRITICAL이 MAJOR 라벨로 게시되어 `skill-fix`가 사전조건 `🔴 CRITICAL 존재` 체크에 매치 못해 silent 격리되던 결함 해소. 사용자가 강등 경고 헤더(`⚠️ 강등된 CRITICAL N개`)를 보고 `/skill-fix {N}` 수동 호출 시 강등 항목도 fix 후보로 인정. 호출 모드별 분기: **auto-fix 모드**(`workflowState.fixLoopCount` ≥ 1 **AND** `lastReviewDecision="REQUEST_CHANGES"`)는 정상 게시 CRITICAL만(SSOT — false-positive 진동 차단). **수동 호출 모드**(그 외)는 정상 + 강등 둘 다. **자체 /code-review 1 사이클**에서 fixLoopCount 단독 판정의 silent-isolation 재발 시나리오(직전 auto-fix 잔재 → manual 호출 오분류) 발견 → `lastReviewDecision`을 AND 조건으로 묶어 엄격 정의. `workflowState.lastReviewDecision`은 skill-review-pr Step 6.5에서 매 리뷰마다 갱신(APPROVED/COMMENT/REQUEST_CHANGES). 부수로 커밋 메시지 ID 표기 SSOT 단일화(정상=`[C{NNN}]`, 강등=`[H{NNN}(원래 CRITICAL · 강등)]`).
+
+### Fixed
+
+- **`.claude/skills/skill-fix/SKILL.md` — 강등 CRITICAL 인지 모드별 분기** (PR #78, 9cd060b):
+  - 사전조건 #5: "fix 후보 이슈 존재"로 일반화 + 모드별 정의(auto-fix는 `fixLoopCount ≥ 1 AND lastReviewDecision="REQUEST_CHANGES"`, 수동은 그 외)
+  - Step 2 파싱: `[원래 CRITICAL · 강등]` 접두로 강등 항목 매치. 이슈에 `isDemoted` 마커 부여
+  - Step 6 커밋 메시지 ID 표기 SSOT 단일화
+  - Step 7 수동 호출 + 강등 fix 시나리오 흐름 명시(자동 재호출 X)
+  - 주의사항에 v2.3+ 강등 매트릭스 인지 + 자기 PR chain 차단 흐름 명시
+- **`.claude/skills/skill-review-pr/SKILL.md` Step 6.5 — `workflowState.lastReviewDecision` 갱신**: skill-fix가 auto-fix vs 수동 모드를 fixLoopCount 단독이 아닌 lastReviewDecision과 함께 정확히 분기하도록 매 리뷰마다 결정값(`APPROVED`/`COMMENT`/`REQUEST_CHANGES`) 저장. 직전 auto-fix 루프가 APPROVE로 끝난 뒤 사용자가 강등 항목을 수동 fix 시도하는 silent-isolation 재발 시나리오 차단.
+
+### Notes
+
+- **사용자 영향 (v2.3.0 → v2.3.1)**: 마이그레이션 불필요. `workflowState.lastReviewDecision` 필드 신설은 in-session state라 schema 변경 X — 다음 skill-review-pr 호출이 자동 갱신.
+- **자체 리뷰 메타**: PR #78 첫 push가 본 PR이 차단하려던 silent-isolation 시나리오를 fixLoopCount 잔재로 그대로 재발시킬 수 있음을 자체 1 사이클에서 발견 → fix-up commit `6fc89ce`로 lastReviewDecision AND 조건 도입. fix-up 후 머지. 본 패치 자체가 "fix-up 사이클이 안전성 필수" 메타 학습의 실증.
+- **후속 (별도 issue)**: P1 #2 — skill-review-pr/sub-agent 인라인 코멘트 라벨 형식 SSOT 부재(`🔴 **CRITICAL**` / `[CRITICAL]` 정규식이 sub-agent 출력 형식 가변에 약함). 별도 PR로 sub-agent 출력 형식 SSOT 추가 필요.
+- **Closes**: #14 (v2.3.0 release notes에서 후속으로 명시)
+
 ## [2.3.0] - 2026-05-28
 
 > **skill-review-pr 헤비함 감소 2단계 (minor)** — PR 리뷰가 매번 3-agent 병렬 호출 + sub-agent 도출 이슈 전부 게시 정책으로 사용자 토큰 폭주·노이즈 부담이 컸음을 진단(체감 컨텍스트 1.7K~1.9K 줄 × 3 병렬 + 모델 미지정 → 부모 상속 = 사실상 Opus 3개). 두 PR로 분리 해소: **PR #75 1단계** = PR 특성 기반 자동 Tier 분류(T0 Trivial / T1a Test-only / T1b Deps-only / T2 Standard / T3 Full)로 흔한 작은 PR이 가벼운 경로로 자동 라우팅. **PR #76 2단계** = sub-agent 도출 이슈를 독립 채점 단계(Step 3.5)로 confidence 0-100 부여 후 severity × confidence 매트릭스(CRITICAL conf<critical은 MAJOR 강등 게시·드롭 X로 누락 위험 차단)로 게시·결정 자동 필터링 + `review.thresholds` 외부화. 부수로 `project.schema.json`에 `review` 섹션(mode/agents/thresholds) 정식 등록 — v1.36.0~v2.2.0까지 `/skill-review-pr config`가 추가하던 `review.*` 값이 top-level `additionalProperties: false`에 silent 위반하던 sleeper 해소. **자체 /code-review → fix-up → 재리뷰 사이클**로 두 PR 각각 P0 안전 회귀 5~6건씩 발견·해소(silent ship, 머지 차단 escalation, 매트릭스 모순). 2단계 사이클 2에서 본질적 design trade-off 발견(confidence 정수 + 단일 임계치 게이트의 한계) → α 옵션(현 iteration 머지 + v2.4 재설계 RFC 분리) 적용. 두 PR 합산 19 files +850/-90.
