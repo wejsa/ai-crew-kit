@@ -25,7 +25,10 @@ fixtures/
     ├── excludepaths-legacy.json        TFT R1에서 제거된 excludePaths 커스텀 키
     ├── review-mode-and-agents-both.json review.mode + review.agents 동시 설정 (not 제약 위반)
     ├── review-critical-below-minimum.json review.thresholds.critical < 50 (minimum 위반 — false-positive 게이트 무력화 차단)
-    └── review-agents-unknown.json      review.agents에 enum 외 값 (domain/security/test 외 'perf' 등)
+    ├── review-agents-unknown.json      review.agents에 enum 외 값 (domain/security/test 외 'perf' 등)
+    ├── review-agents-missing-domain.json review.agents에 domain 누락 (contains 제약 위반)
+    └── review-thresholds-ordering-violation.json review.thresholds 순서 위반 (critical=60 < major=90).
+                                          JSON Schema cross-field 비교 불가하므로 validate-schema.sh의 별도 ordering 검증 블록에서 처리.
 ```
 
 ## 추가 규칙

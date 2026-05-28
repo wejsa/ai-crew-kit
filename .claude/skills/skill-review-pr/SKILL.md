@@ -258,8 +258,11 @@ diff는 임시 파일에 저장하여 에이전트가 Read로 참조하도록 �
 Step 3에서 sub-agent들이 도출한 이슈 목록을 **독립 채점 단계**로 confidence 0~100 부여. self-bias 회피 목적으로 sub-agent와는 별도 호출.
 
 #### SKIP 조건 (위에서 아래로 첫 매치)
-1. **T0(Trivial) 분류** → SKIP. T0은 0-agent 직접 리뷰지만 직접 리뷰가 CRITICAL을 도출한 경우 **confidence=100 자동 부여**(이전 정책 "CRITICAL 1개+ → REQUEST_CHANGES" 보존). MAJOR/MINOR는 confidence=75 자동 부여.
-2. **이슈 0개** → SKIP. 자연 통과 (REQUEST_CHANGES 트리거 없음).
+1. **T0(Trivial) 분류** → 채점 단계 자체 SKIP. T0은 0-agent 직접 리뷰이며 결정 매트릭스도 우회한다. T0 결정 규칙(legacy 정책 보존):
+   - T0 + CRITICAL ≥1 → 즉시 REQUEST_CHANGES (자기 PR 여부 무관). fix loop는 --auto-fix일 때만 진입.
+   - T0 + CRITICAL=0 → APPROVE (타인 PR) / COMMENT (자기 PR).
+   - T0에선 confidence·강등·드롭·매트릭스 개념 전체가 적용되지 않음. Confidence 필터 헤더 미출력. 본문에 '[T0 직접 리뷰]' 표시.
+2. **이슈 0개** → SKIP. 자연 통과 (REQUEST_CHANGES 트리거 없음). Confidence 필터 헤더 미출력.
 
 #### Step 3 결과 → 이슈 리스트 정규화 (Step 3.5 진입 직전)
 
@@ -281,7 +284,7 @@ Step 3 sub-agent들이 반환한 markdown 표 + prose를 다음 정규식 규약
 
 #### 절차
 1. 위 정규화 룰로 이슈 리스트 구성.
-2. 각 이슈를 별도 Task로 채점 호출. **동시 채점 Task ≤ 10** — 초과 시 chunk 순차 처리(토큰 폭주 차단). 호출 모델은 parent 상속 (사용자 플랜 의존, 강제 지정 X). parent가 무거운 모델(Opus 등)이면 self-bias 회피 효과는 부분적 — 매트릭스 임계치를 보수적으로 두는 것으로 보완.
+2. 각 이슈를 별도 Task로 채점 호출. **동시 채점 Task ≤ 10** (chunk 순차). **총 채점 Task ≤ 30 (절대 상한)** — 초과 시 상위 30개(severity CRITICAL > MAJOR > MINOR 순, 동일 severity 내 sub-agent 보고 순)만 채점하고 나머지는 `confidence = critical 임계치 값`으로 보수적 처리(원래 severity 보존, 결정 매트릭스 그대로 적용). PR 코멘트에 "토큰 cap으로 N개 미채점" 명시. 호출 모델은 parent 상속 (사용자 플랜 의존, 강제 지정 X). parent가 무거운 모델(Opus 등)이면 self-bias 회피 효과는 부분적 — 매트릭스 임계치를 보수적으로 두는 것으로 보완.
 3. **각 채점 Task 입력**:
    - 이슈 1건 (위 schema)
    - PR diff 경로: `/tmp/pr-{N}-diff.txt`
@@ -290,10 +293,10 @@ Step 3 sub-agent들이 반환한 markdown 표 + prose를 다음 정규식 규약
    - `source_agent === "domain"`이면 `rules_paths` 추가 전달
 4. **채점 Task 출력 (정수 0-100 + 한 줄 근거)**. 출력 파싱 실패 / 범위 외(>100, <0, NaN, prose) / timeout 시:
    - 1회 재시도
-   - 재시도 실패 시 **confidence=100 fallback** (보수적 — 실제 이슈 누락 방지보다 false-positive 게시가 안전)
+   - 재시도 실패 시 **fallback confidence = critical 임계치 값** (디폴트 80). 채점 인프라 장애가 모든 sub-agent CRITICAL을 자동 머지 차단으로 escalate하는 위험 차단 — confidence를 임계치 경계에 두어 매트릭스가 CRITICAL은 그대로 게시, MAJOR/MINOR는 임계치 통과 여부에 따라. **로그에 "scoring-failure-fallback" 마커 명시**(사용자가 신뢰성 저하를 인지하도록).
 5. **결정성 가이드** (채점 Task에 명시):
-   - 동일 입력은 동일 출력 지향. temperature=0 권장.
-   - 임계치 부근(±5)에선 보수적으로 **올림** 처리(false-positive 게시 < 실제 이슈 누락).
+   - 동일 입력은 동일 출력 지향. (Claude Code Task tool은 temperature/seed를 노출하지 않으므로 모델 측 결정성은 비-결정적일 수 있음 — 본 가이드는 LLM에 대한 안내이며 강제 X.)
+   - 임계치 경계 부근에서 ±5 올림 같은 휴리스틱 적용 X — 본 가이드의 75 anchor와 결합 시 모든 '확신' 이슈가 자동 CRITICAL로 격상되어 본 PR false-positive 필터 목적과 충돌. 채점자는 rubric anchor에 정직하게 매핑한다.
 
 #### Confidence Rubric (채점 Task에게 그대로 전달)
 
@@ -324,7 +327,11 @@ Step 3 sub-agent들이 반환한 markdown 표 + prose를 다음 정규식 규약
 
 #### 결정 매트릭스 (severity × confidence)
 
-임계치는 `project.json`의 `review.thresholds`에서 로드. **각 키 독립 fallback**: 누락 키만 디폴트 적용 (critical=80, major=60, minor=50). 임계치 schema가 critical ≥ major ≥ minor + critical ≥ 50을 강제 (project.schema.json).
+임계치는 `project.json`의 `review.thresholds`에서 로드. **각 키 독립 fallback**: 누락 키만 디폴트 적용.
+
+> **디폴트 값 SSOT**: `project.schema.json`의 `properties.review.thresholds.{critical,major,minor}.default` 필드. 본 문서가 인용하는 80/60/50은 **schema 기본값의 사본**이며, schema 갱신 시 본 문서의 모든 80/60/50 표기를 함께 갱신해야 한다 (`grep -nE '\\b(80|60|50)\\b' .claude/skills/skill-review-pr/SKILL.md`로 위치 확인). 임계치 schema가 critical 최소 50을 강제 (project.schema.json).
+
+> **Ordering sanity check (Step 4 진입 직전 필수)**: 로드된 임계치가 `critical ≥ major ≥ minor` 조건 위반(예: critical=60, major=90) 시 **디폴트 80/60/50으로 강제 복원 + PR 코멘트 헤더에 경고**: "⚠️ thresholds ordering 위반 → 디폴트(80/60/50)로 강제. project.json의 review.thresholds 수정 필요". JSON Schema는 cross-field 비교 불가이므로 본 단계가 마지막 방어선.
 
 | severity (Step 3) | confidence | 처리 |
 |----------|-----------|------|
@@ -384,37 +391,39 @@ Step 3 sub-agent들이 반환한 markdown 표 + prose를 다음 정규식 규약
 
 ### 6. 리뷰 결정 (Step 4 매트릭스 SSOT 참조)
 
-#### 자기 PR + 강등 CRITICAL 가드 (신규 — finding #5 차단)
+#### 결정 분기 (위에서 아래로 첫 매치 — CRITICAL 게시 우선, 그 다음 강등 가드, 마지막 정상)
 
-- 강등 CRITICAL ≥ 1 + **자기 PR**: `gh pr review --comment` (COMMENT 유지) + **Step 7 자동 chain 차단**(아래) + 강등 경고 헤더 출력. 사용자가 수동으로 PR을 다시 트리거하기 전엔 머지 chain 진행 X.
+| 조건 | 결정 | chain |
+|------|------|------|
+| CRITICAL(필터 후) ≥1 | `gh pr review --request-changes` (자기 PR 여부 무관) | --auto-fix 모드면 skill-fix loop, 아니면 종료 |
+| CRITICAL(필터 후) 0개 + **강등 ≥1 + 자기 PR** | `gh pr review --comment` + **강등 경고 헤더(sticky)** | **자동 chain 차단 발동**(Step 7). 사용자 수동 머지 필요 |
+| CRITICAL(필터 후) 0개 + 강등 ≥1 + 타인 PR | `gh pr review --approve` + 강등 경고 헤더 | **chain 진행**(throughput 보존). 사람 검토 권고는 헤더로만 |
+| CRITICAL(필터 후) 0개 + 강등 0 + 타인 PR | `gh pr review --approve` | chain 진행 |
+| CRITICAL(필터 후) 0개 + 강등 0 + 자기 PR | `gh pr review --comment` (자기 승인 GitHub 정책 회피) | chain 진행 가능 |
 
-#### 결정 분기
-
-- CRITICAL(필터 후) 0개 + 강등 0 + 타인 PR → `gh pr review --approve`
-- CRITICAL(필터 후) 0개 + 강등 0 + 자기 PR → `gh pr review --comment` (자동 chain 가능)
-- CRITICAL(필터 후) 0개 + **강등 ≥1 + 자기 PR** → `gh pr review --comment` + **자동 chain 차단**
-- CRITICAL(필터 후) 0개 + 강등 ≥1 + 타인 PR → `gh pr review --comment` (사람 검토 권고만, chain 안 함)
-- CRITICAL(필터 후) ≥1 → `gh pr review --request-changes` (자기 PR 여부 무관)
+> **자기 PR + CRITICAL ≥1 + 강등 ≥1 동시 발생**: 첫 행(CRITICAL ≥1) 매치 → REQUEST_CHANGES 우선. chain 차단 가드는 두 번째 행에서만 발동 (CRITICAL=0이라는 전제 충족 시). 즉 진짜 차단해야 할 케이스는 "겉으로 CRITICAL 0개로 보이지만 채점이 약하게 본 강등만 있는" 자기 PR. 진짜 CRITICAL이 있으면 REQUEST_CHANGES가 더 강한 신호.
 
 ### 6.5 실행 로그
 execution-log.json: APPROVED → action="approved", REQUEST_CHANGES → action="request_changes"
 
 ### 7. 다음 스킬
 
-#### 자동 chain 차단 조건 (위에서 아래로 첫 매치 — 다른 모든 분기보다 우선)
-1. **자기 PR + 강등 CRITICAL ≥1** → 자동 chain 차단(skill-merge-pr / skill-fix 호출 금지). 사용자가 수동으로 진행해야 함. finding #5 silent ship 방지.
-2. REQUEST_CHANGES → 종료, "수정 후 재실행" 안내 (skill-fix는 auto-fix 모드일 때만 호출).
-3. 그 외 → 아래 분기 적용.
+#### 자동 chain 차단 조건 — Step 6 결정 분기의 chain 컬럼 SSOT 참조
 
-#### 기본 모드
-- APPROVED → `Skill tool: skill="skill-merge-pr", args="{prNumber}"`
-- REQUEST_CHANGES → 종료, "수정 후 재실행" 안내
+Step 7은 별도 분기를 정의하지 않는다. **Step 6 결정 분기 표의 'chain' 컬럼이 chain 진행/차단의 SSOT**. 본 섹션은 모드별 실행 동작만 명시.
+
+#### 기본 모드 (--auto-fix 미사용)
+- Step 6 결정 = APPROVE + chain 진행 → `Skill tool: skill="skill-merge-pr", args="{prNumber}"`
+- Step 6 결정 = COMMENT + chain 진행 → `Skill tool: skill="skill-merge-pr", args="{prNumber}"` (자기 PR + 강등 0 케이스만)
+- Step 6 결정 = COMMENT + chain 차단 → 종료. 사용자 수동 머지 안내 (자기 PR + 강등 ≥1 케이스).
+- Step 6 결정 = REQUEST_CHANGES → 종료, "수정 후 재실행" 안내.
 
 #### --auto-fix 모드
-- CRITICAL(필터 후) 0개 → 일반 승인 플로우 (위 chain 차단 조건 확인 후)
-- CRITICAL(필터 후) 1개+ → workflowState.fixLoopCount 증가 후 `Skill tool: skill="skill-fix", args="{prNumber}"`
-  - fixLoopCount 3회째 CRITICAL → skill-fix 호출 금지, REQUEST_CHANGES 즉시 중단 (루프 가드)
-  - 직접 코드 수정 금지. skill-fix 없이 REQUEST_CHANGES 후 종료 금지.
+- Step 6 결정 = APPROVE 또는 COMMENT + chain 진행 → 일반 승인 플로우 (위 기본 모드와 동일).
+- Step 6 결정 = COMMENT + chain 차단 → 종료. fix loop 진입 안 함(자기 PR + 강등은 사람 검토 신호).
+- Step 6 결정 = REQUEST_CHANGES → `workflowState.fixLoopCount` 증가 후 `Skill tool: skill="skill-fix", args="{prNumber}"`
+  - fixLoopCount 3회째 REQUEST_CHANGES → skill-fix 호출 금지, 즉시 중단 (루프 가드).
+  - 직접 코드 수정 금지. skill-fix 없이 종료 금지.
 
 > **Confidence 매트릭스와 fix loop 결합 (SSOT)**: fix loop 진입 조건은 **Step 4 매트릭스의 'CRITICAL 게시' 행만**(confidence ≥ critical 임계치). 강등된 CRITICAL(major bypass로 게시되지만 REQUEST_CHANGES 트리거 안 함)은 fix loop 대상 아님 — false-positive CRITICAL이 confidence flip-flop으로 fixLoopCount를 소모하는 진동 차단.
 
