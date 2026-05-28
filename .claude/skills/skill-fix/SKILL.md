@@ -19,8 +19,10 @@ complexity-hint: medium
 3. PR 번호 지정됨
 4. PR 존재 + OPEN 상태
 5. **fix 후보 이슈가 존재** (PR 리뷰 코멘트에서 확인). 호출 모드별 정의:
-   - **auto-fix 모드** (`workflowState.fixLoopCount` ≥ 1 — skill-review-pr이 자동 체이닝): 정상 게시 CRITICAL 1개 이상. v2.3+ confidence 매트릭스에서 **강등된 CRITICAL은 fix 대상 아님**(SSOT — false-positive 무한 fix-redo 차단)
-   - **수동 호출 모드** (`/skill-fix {N}` 직접 호출, fixLoopCount=0 또는 미정의): 정상 게시 CRITICAL 또는 **강등 CRITICAL** 중 1개 이상. 사용자가 명시 호출했다면 강등 항목도 수정 후보로 인정(skill-review-pr 강등 경고 헤더를 보고 결정한 경우)
+   - **auto-fix 모드** (`workflowState.fixLoopCount` ≥ 1 **AND** `workflowState.lastReviewDecision` = "REQUEST_CHANGES"): 정상 게시 CRITICAL 1개 이상. v2.3+ confidence 매트릭스에서 **강등된 CRITICAL은 fix 대상 아님**(SSOT — false-positive 무한 fix-redo 차단)
+   - **수동 호출 모드** (그 외 — `/skill-fix {N}` 직접 호출, fixLoopCount=0, 또는 `lastReviewDecision`이 APPROVED/COMMENT인 경우): 정상 게시 CRITICAL 또는 **강등 CRITICAL** 중 1개 이상. 사용자가 명시 호출했다면 강등 항목도 수정 후보로 인정(skill-review-pr 강등 경고 헤더를 보고 결정한 경우)
+
+> **모드 판정 SSOT**: fixLoopCount 단독으로는 직전 auto-fix 루프 잔재가 manual 호출을 오분류할 수 있음(예: 1회 fix→APPROVE 후 사용자가 강등 항목 수동 fix 시도). 그래서 `lastReviewDecision`을 AND 조건으로 묶어 "직전 결정이 REQUEST_CHANGES일 때만 auto-fix 모드"로 엄격 정의. APPROVED/COMMENT 이후 호출은 항상 수동 모드. `lastReviewDecision`은 skill-review-pr Step 6.5에서 갱신.
 
 ## 워크플로우 진행 표시
 CLAUDE.md 진행 표시 프로토콜. fixLoopCount에서 현재 회차 N 확인 → "CRITICAL 이슈 자동 수정 중 (회차: N/2)"
@@ -44,14 +46,14 @@ CLAUDE.md 상태 추적 패턴. currentSkill="skill-fix"
 
 PR 리뷰 코멘트에서 직접 파싱 (`gh api repos/{owner}/{repo}/pulls/{number}/comments`). v2.3+ 강등 매트릭스 인지로 모드별 분기:
 
-**auto-fix 모드** (`workflowState.fixLoopCount` ≥ 1):
+**auto-fix 모드** (사전 조건 #5 정의 — fixLoopCount ≥ 1 AND lastReviewDecision="REQUEST_CHANGES"):
 - 정상 게시 CRITICAL만 매치: `🔴 **CRITICAL**` 또는 `[CRITICAL]` 태그
 - description 앞에 **`[원래 CRITICAL · 강등]`** 접두가 있는 항목은 **제외** (skill-review-pr SSOT — fix loop 진입 조건은 매트릭스의 "CRITICAL 게시" 행만, 강등은 false-positive 진동 차단 목적)
 
-**수동 호출 모드** (fixLoopCount=0 또는 미정의):
+**수동 호출 모드** (그 외):
 - 정상 게시 CRITICAL: `🔴 **CRITICAL**` 또는 `[CRITICAL]` 태그
 - **강등 CRITICAL 추가**: PR 코멘트 본문에서 `[원래 CRITICAL · 강등]` 접두를 포함하는 인라인 코멘트 (MAJOR 라벨로 렌더되지만 원래 CRITICAL). skill-review-pr 강등 경고 헤더(`⚠️ 강등된 CRITICAL N개`)를 보고 사용자가 수동 호출한 시나리오 지원
-- 두 종류 모두 path, line, body 필드 추출. 각 이슈에 `isDemoted: true/false` 마커 부여(Step 6 커밋 메시지·Step 7 재호출 로직에서 활용)
+- 두 종류 모두 path, line, body 필드 추출. 각 이슈에 `isDemoted: true/false` 마커 부여(Step 6 커밋 메시지 ID prefix 분기 용도)
 
 **모드 무관 공통 추출**: path, line, body 필드
 
@@ -67,8 +69,11 @@ PR 리뷰 코멘트에서 직접 파싱 (`gh api repos/{owner}/{repo}/pulls/{num
 실패 시 수정 재시도 (최대 3회), 3회 실패 → 에러 보고 후 종료.
 
 ### 6. 커밋 & 푸시
-커밋: `fix: 코드 리뷰 피드백 반영` + 이슈별 [C00N] 또는 [H00N(강등)] 설명 + Co-Authored-By → push
-- 강등 항목 fix는 ID 그대로 `[H{NNN}(원래 CRITICAL · 강등)]` 형식으로 표기 — PR #76 ID 채번 규칙(강등은 H 채널 사용) 일관
+커밋: `fix: 코드 리뷰 피드백 반영` + 이슈별 ID 설명 + Co-Authored-By → push
+- 정상 게시 CRITICAL: `[C{NNN}]` (예: `[C001] X에서 SQL injection 가능성 차단`)
+- 강등 CRITICAL: `[H{NNN}(원래 CRITICAL · 강등)]` (예: `[H003(원래 CRITICAL · 강등)] Y의 락 누락`) — PR #76 ID 채번 규칙(강등은 H 채널 사용)과 일관
+- 표기 SSOT: 위 두 형식만 사용. 회고/통계 grep 시 단일 패턴 보장.
+
 **기존 PR 브랜치에서 작업** (새 브랜치 생성 금지)
 
 ### 6.5 실행 로그
