@@ -61,16 +61,58 @@
 | `/skill-impl` | 코드 구현 (스텝별) |
 | `/skill-impl --next` | 다음 스텝 진행 |
 | `/skill-review` | 코드 리뷰 |
-| `/skill-review-pr {번호}` | PR 리뷰 |
+| `/skill-review-pr {번호}` | PR 리뷰 (v2.3+: PR 특성 기반 자동 Tier 분류 + confidence 채점) |
 | `/skill-review-pr {번호} --auto-fix` | PR 리뷰 + CRITICAL 이슈 자동 수정 |
-| `/skill-review-pr {번호} --mode standard` | standard 모드로 리뷰 (일회성) |
-| `/skill-review-pr config` | 리뷰 모드 설정 확인 |
+| `/skill-review-pr {번호} --mode standard` | standard 모드로 리뷰 (일회성, 자동 Tier 분류 우회) |
+| `/skill-review-pr config` | 리뷰 모드 설정 확인 (review 섹션 유무에 따라 자동 분류/명시 설정 표시) |
 | `/skill-review-pr config --mode standard` | 프리셋 변경 (domain+security) |
 | `/skill-review-pr config --mode full` | 프리셋 변경 (전체 3 에이전트) |
-| `/skill-review-pr config --agents domain,test` | 커스텀 에이전트 조합 |
-| `/skill-review-pr config --reset` | 디폴트(full) 복원 |
+| `/skill-review-pr config --agents domain,test` | 커스텀 에이전트 조합 (domain은 schema-level 필수) |
+| `/skill-review-pr config --reset` | `review` 섹션 삭제 (자동 Tier 분류 활성화) |
 | `/skill-fix {번호}` | CRITICAL 이슈 수정 |
 | `/skill-merge-pr {번호}` | PR 머지 |
+
+#### v2.3+ 자동 Tier 분류 (`review` 미설정 디폴트)
+
+`project.json`에 `review.mode`/`review.agents` 명시 안 하면 PR 특성으로 sub-agent 호출 수 자동 결정:
+
+| Tier | 조건 | sub-agent |
+|------|------|-----------|
+| **T1a** Test-only | 100% 테스트 파일 · ≤200줄 · 보안 키워드 0 | 1 (`pr-reviewer-test`) |
+| **T1b** Deps-only | 100% 의존성 매니페스트 · src/ 변경 0 · 보안 키워드 0 | 1 (`pr-reviewer-security`) |
+| **T0** Trivial | ≤50줄 · src/ 변경 0 · 보안 키워드 0 | 0 (직접 리뷰) |
+| **T3** Full | >200줄 OR 보안 키워드 OR `criticalPaths` 매치 | 3 (domain+security+test) |
+| **T2** Standard | 그 외 (catch-all) | 2 (domain+security) |
+
+흔한 작은 PR(테스트 추가, deps bump, docs 변경)이 헤비 경로를 자동 우회. 보안/대규모 변경은 여전히 T3 풀 리뷰.
+
+#### v2.3+ Confidence 채점 + 결정 매트릭스 (옵셔널 외부화)
+
+sub-agent 도출 이슈에 0-100 점수 부여 후 severity × confidence 매트릭스로 게시·결정 결정:
+
+| 조건 | 처리 |
+|------|------|
+| CRITICAL × conf ≥ critical 임계치 | 게시 + REQUEST_CHANGES |
+| CRITICAL × conf < critical | **MAJOR 강등 게시** (드롭 X, 누락 방지) + 자기 PR이면 자동 chain 차단 |
+| MAJOR × conf < major | 드롭 |
+| MINOR × conf < minor | 드롭 |
+
+임계치 커스텀 (디폴트 80/60/50):
+```json
+{
+  "review": {
+    "thresholds": {
+      "critical": 85,
+      "major": 65,
+      "minor": 55
+    }
+  }
+}
+```
+
+각 키 독립 fallback — 일부만 명시해도 나머지는 디폴트 적용. critical ≥ 50 강제(false-positive 게이트 무력화 차단).
+
+> 자세한 분류 매트릭스·rubric은 [skill-review-pr SKILL.md](https://github.com/wejsa/ai-crew-kit/blob/main/.claude/skills/skill-review-pr/SKILL.md) 참조.
 
 ### 운영/인프라 🔵
 

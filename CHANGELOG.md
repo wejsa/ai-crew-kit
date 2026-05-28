@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-05-28
+
+> **skill-review-pr 헤비함 감소 2단계 (minor)** — PR 리뷰가 매번 3-agent 병렬 호출 + sub-agent 도출 이슈 전부 게시 정책으로 사용자 토큰 폭주·노이즈 부담이 컸음을 진단(체감 컨텍스트 1.7K~1.9K 줄 × 3 병렬 + 모델 미지정 → 부모 상속 = 사실상 Opus 3개). 두 PR로 분리 해소: **PR #75 1단계** = PR 특성 기반 자동 Tier 분류(T0 Trivial / T1a Test-only / T1b Deps-only / T2 Standard / T3 Full)로 흔한 작은 PR이 가벼운 경로로 자동 라우팅. **PR #76 2단계** = sub-agent 도출 이슈를 독립 채점 단계(Step 3.5)로 confidence 0-100 부여 후 severity × confidence 매트릭스(CRITICAL conf<critical은 MAJOR 강등 게시·드롭 X로 누락 위험 차단)로 게시·결정 자동 필터링 + `review.thresholds` 외부화. 부수로 `project.schema.json`에 `review` 섹션(mode/agents/thresholds) 정식 등록 — v1.36.0~v2.2.0까지 `/skill-review-pr config`가 추가하던 `review.*` 값이 top-level `additionalProperties: false`에 silent 위반하던 sleeper 해소. **자체 /code-review → fix-up → 재리뷰 사이클**로 두 PR 각각 P0 안전 회귀 5~6건씩 발견·해소(silent ship, 머지 차단 escalation, 매트릭스 모순). 2단계 사이클 2에서 본질적 design trade-off 발견(confidence 정수 + 단일 임계치 게이트의 한계) → α 옵션(현 iteration 머지 + v2.4 재설계 RFC 분리) 적용. 두 PR 합산 19 files +850/-90.
+
+### Added
+
+- **`skill-review-pr` 자동 Tier 분류 (PR #75, `3f2bad4`)**: `project.json`에 `review.mode`/`review.agents` 미설정 시 PR 특성(변경 줄 수·테스트/의존성 파일 비율·`src/` 변경 여부·보안 키워드·`criticalPaths` 매치) 기반으로 T0~T3 5단계 자동 분류. 매트릭스 표 순서가 곧 첫 매치 우선순위(T1a → T1b → T0 → T3 → T2) — 작은 test/deps PR이 T0에 흡수되지 않음. `review` 명시 설정은 자동 분류 비활성화(사용자 의도 우선). 분류 결과 헤더 PR 코멘트 본문에 노출(`🎯 자동 분류: T2 Standard (2 에이전트) — domain, security`).
+- **`skill-review-pr` Confidence 채점 + 결정 매트릭스 (PR #76, `0eaa0d4`)**: Step 3 sub-agent 결과를 Step 3.5 독립 채점(self-bias 회피 + 채점 Task에 CLAUDE.md/매칭 컨벤션/`rules_paths`(domain 이슈) 전달) → severity × confidence 매트릭스(CRITICAL conf<critical → MAJOR 강등 게시·드롭 X / MAJOR conf<major → 드롭 / MINOR conf<minor → 드롭) → 자기 PR + 강등 CRITICAL ≥1이면 자동 chain 차단(skill-merge-pr/skill-fix 미호출, sticky 경고). T0(Trivial)은 채점·매트릭스 우회(legacy `CRITICAL ≥1 → REQUEST_CHANGES` 보존). 동시 채점 Task ≤10(chunk), 총 ≤30(절대 상한, 초과 시 상위 채번·나머지 fallback). 채점 실패(파싱/timeout) 시 1회 재시도 → confidence=critical 임계치 값 fallback + `scoring-failure-fallback` 로그 마커.
+- **`project.schema.json` `review` 섹션 정식 등록**: `review.mode`(enum: full/standard), `review.agents`(items enum: domain/security/test + `contains: {const: domain}` 강제 — 수동 편집 우회 차단), `review.thresholds`(critical/major/minor — critical `minimum: 50`로 false-positive 게이트 무력화 차단, 각 키 디폴트 80/60/50 독립 fallback). `not: {required: [mode, agents]}`로 mode/agents 상호 배타 강제. critical ≥ major ≥ minor ordering은 JSON Schema cross-field 비교 한계로 schema 표면 강제 X — Step 4 sanity check + `validate-schema.sh` ordering 블록 + ordering-violation fixture 3중 방어선.
+- **CI fixture 신규 9종** (`schemas/fixtures/`):
+  - Positive 4: `v2-review-mode-full.json` / `v2-review-agents-custom.json` / `v2-review-thresholds-full.json` / `v2-review-thresholds-partial.json` (독립 fallback 검증)
+  - Negative 5: `review-mode-and-agents-both.json` (not 제약) / `review-critical-below-minimum.json` (≥50 강제) / `review-agents-unknown.json` (enum) / `review-agents-missing-domain.json` (contains) / `review-thresholds-ordering-violation.json` (별도 ordering 블록에서 감지)
+  - 검증: `validate-schema.sh` 21/21 PASS (positive 8 + negative 11 + ordering 1 + 기존 1).
+- **`pr-reviewer-test` T1a "테스트 자체 품질 모드" 분기**: 소스 변경 0 + 테스트 100% 변경 시 소스↔테스트 매핑 절차 건너뛰고 신규 테스트의 assert 유효성/경계값/스멜/도메인 체크리스트 커버를 우선 평가. T1a에서 false-negative 누락 차단.
+
+### Changed
+
+- **`skill-review-pr` 결정 분기 — 자기 PR + 강등 가드 신설**: 기존 `CRITICAL 0개 + 자기 PR → COMMENT` 단일 분기 → 5행 표 (CRITICAL ≥1 우선, 강등 ≥1 + 자기 PR → chain 차단, 강등 ≥1 + 타인 PR → APPROVE chain 진행 throughput 보존, 강등 0 정상 분기). REQUEST_CHANGES 우선이라 자기 PR + CRITICAL + 강등 동시 케이스는 REQUEST_CHANGES로 흡수.
+- **Step 7 다음 스킬 → Step 6 매트릭스 SSOT 참조 재구성**: chain 차단 분기 중복 제거. 모드별 동작은 Step 4 매트릭스의 chain 컬럼만 따른다 — 분기 정의 단일화.
+- **`skill-review-pr config --reset` 의미 갱신**: 기존 "디폴트(full) 복원" 거짓 안내 → "`review` 섹션 삭제 (자동 Tier 분류 활성화)". 현재 설정 표시도 (A) 자동 분류 / (B) 명시 설정 분기로 갱신해 디폴트 동작과 사용자 멘탈 모델 정렬.
+- **보안 키워드 매치 채널 — diff 본문 제외**: 기존 "변경 파일 경로 또는 diff 본문 매치"로 false-positive 폭발(`// @author` 주석·SQL 마이그레이션·DI `@Inject` 등이 모두 T3 격상) → "변경 파일 경로 부분문자열 매치만". 코드 본문 secret 누출 검출은 secret-scanning 책임 영역으로 분리 명시.
+- **`scripts/validate-schema.sh` — ordering 검증 블록 신설**: positive fixture 전체 + ordering-violation negative fixture를 Python heredoc으로 cross-field 검증. JSON Schema 한계 보완.
+
+### Notes
+
+- **사용자 영향 (v2.2.0 → v2.3.0)**: 마이그레이션 불필요. `review` 섹션 미설정 사용자(=다수)는 디폴트 동작이 "full 3-agent"에서 "자동 Tier 분류(대부분 T2 2-agent, T3는 보안 키워드 hit / 200줄 초과 / criticalPaths 매치 시 강제)"로 변경. **흔한 작은 PR은 헤비 경로 자동 우회 + 보안/대규모 변경은 여전히 풀 리뷰**. 강제 변경: `/skill-review-pr config --mode full`. `review.thresholds` 옵셔널 신규 — 디폴트 80/60/50 적용.
+- **알려진 한계 (v2.4 재설계 — RFC #77)**: 1) confidence 정수 + 단일 임계치 게이트의 본질적 trade-off(fallback 80은 MAJOR/MINOR 임계 모두 통과 / Rubric 75↔임계 80 갭으로 컨벤션 미명시 진성 CRITICAL 자동 강등), 2) 강등 H{NNN} ID 채번 재리뷰 시 shift, 3) 강등 개념 7가지 용어 혼용, 4) Step 4 매트릭스 ↔ Step 6 5분기 매핑 부재, 5) H/M prefix 통념 반대 매핑. 본 release는 "confidence 기반 false-positive 필터의 **첫 iteration**" — RFC에 방향 A(band-gap) / B(multi-criteria) / C(외부 도구 위임) / D(단순화) 4안 박제.
+- **후속 PR**: #14 skill-fix가 강등 CRITICAL 미감지(PR #76 직접 후속), #77 RFC 답변 + 실 PR 200건 채점 시뮬레이션 데이터 수집.
+- **메타 학습**: 두 PR 자체 /code-review 사이클에서 각각 P0 5~6건 발견 — fix-up 후 재리뷰 1 사이클이 안정성 필수. mini-Ralph 자동 진행 모드(사용자가 결정 옵션 매번 확인 부담 해소)는 단순 fix-up엔 효과적이나 본질적 design trade-off는 인터셉트 필요.
+
 ## [2.2.0] - 2026-05-24
 
 > **lock 의미 schema 정렬 + 초기 셋업 트리거 보호 (minor)** — v2.1.4 PR-A의 후속 의미 정렬 PR-B. `backlog.schema.json`이 `assignee`/`assignedAt`(불변 할당)만 정의해 두고 hook과 진단·헬스체크가 사실상 `lockedBy`/`lockedAt`(가변 잠금 heartbeat)을 별개로 사용해온 어휘 불일치를 정식 schema 필드로 박제(옵션 A — hook 코드 무변경, schema에 신규 필드 추가). 부가로 v2.1.4 PR-A 작업 도중 라이브 시연된 B5(skill-init 작업 자체가 10초/3회 임계를 발동시켜 자동 비활성화) false-positive를 `.claude/state/init-in-progress.flag` 마커로 카운터 진입 자체 차단. skill-init Step 0/11 + skill-onboard Step 0/7에 마커 생성/제거 절차 + 1시간 TTL stale 자동 회수로 SKILL 비정상 종료 대비. hooks/README/skill-health-check 가이드 어휘가 모두 schema 정합 명시. v2.1.4가 미처 손대지 못한 `test-post-tool-use-auto-disable.sh` array fixture도 dict로 마이그레이션하여 schema 정합 100% 달성. 14/14 PASS (PR-A 13 + 신규 1). minor 의미: schema 확장(옵셔널 필드 추가, backward-compatible)이지만 의미 모델이 정식 정의되므로 patch 대신 minor.
