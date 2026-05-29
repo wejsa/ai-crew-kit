@@ -245,3 +245,44 @@ def test_backlog_negative_fixtures_fail(fixture_path: Path, backlog_schema: dict
     doc = json.loads(fixture_path.read_text(encoding="utf-8"))
     errors = schema_errors(doc, backlog_schema)
     assert errors, f"negative/{fixture_path.name} should violate schema but passed"
+
+
+# ── PreToolUse 머지 게이트 신호 A 회귀 박제 (v2.4.1) ────────────────────
+# v2.4.0 게이트(pre-tool-use.sh)는 workflowState.lastReviewDecision를 읽고
+# step/workflowState.prNumber로 PR을 join한다. 이 필드들이 populated 상태로
+# schema를 통과함을 보증해 additionalProperties:false sleeper(v2.1.1/v2.3.0/
+# v2.4.0 클래스)를 차단하고, 게이트의 --argjson 숫자 join이 매치하는 정수
+# 타입 계약을 박제한다. (기존 positive fixture는 모두 workflowState=null이라
+# 이 경로를 검증하지 못했음.)
+GATE_FIXTURE = "task-with-workflowstate-and-lock.json"
+
+
+def test_workflowstate_gate_fields_pass_and_typed(backlog_schema: dict) -> None:
+    """게이트가 읽는 populated workflowState/step/lock 필드가 schema 통과 + 올바른 타입."""
+    doc = json.loads((BACKLOG_FIXTURES / "positive" / GATE_FIXTURE).read_text("utf-8"))
+    assert schema_errors(doc, backlog_schema) == [], "게이트 fixture가 schema를 통과해야 함"
+
+    ws = doc["tasks"]["TASK-001"]["workflowState"]
+    # 신호 A의 결정적 트리거 — 존재 + enum 값
+    assert ws["lastReviewDecision"] == "REQUEST_CHANGES"
+    # 게이트 jq join은 --argjson(숫자)과 비교 → 반드시 정수여야 매치 (P0-②)
+    assert isinstance(ws["prNumber"], int) and not isinstance(ws["prNumber"], bool)
+    assert isinstance(ws["fixLoopCount"], int)
+    # step.prNumber(SSOT — skill-impl Step 8)도 정수
+    assert isinstance(doc["tasks"]["TASK-001"]["steps"][0]["prNumber"], int)
+    # 가변 잠금 필드(v2.2.0)도 populated 상태로 통과
+    assert doc["tasks"]["TASK-001"]["lockedBy"]
+    assert doc["tasks"]["TASK-001"]["lockedAt"]
+
+
+def test_workflowstate_string_prnumber_rejected(backlog_schema: dict) -> None:
+    """문자열 prNumber는 schema 거부 — CLAUDE.md.tmpl이 문자열 placeholder를
+    쓰면 검증 실패 + 게이트 join 미스(P0-②)가 발생하던 sleeper의 회귀 차단."""
+    doc = json.loads((BACKLOG_FIXTURES / "positive" / GATE_FIXTURE).read_text("utf-8"))
+    doc["tasks"]["TASK-001"]["workflowState"]["prNumber"] = "42"  # 문자열 = 위반
+    errors = schema_errors(doc, backlog_schema)
+    # workflowState는 oneOf:[$ref, null]이므로 내부 type 위반이 workflowState 경로의
+    # oneOf 실패로 표면화된다(정수|null 계약 위반 = 거부됨).
+    assert any(path.endswith("workflowState") and v == "oneOf" for path, v in errors), (
+        f"문자열 prNumber는 workflowState oneOf 위반으로 거부되어야 함; errors: {errors}"
+    )

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+> **v2.4.0 머지 게이트 신뢰성 패치** — v2.4.0 직후 전체 프로젝트 분석에서, 방금 도입한 PreToolUse 머지 게이트의 **결정적 신호(신호 A)가 프로덕션에서 silent no-op**일 수 있음을 발견. 게이트는 `workflowState.lastReviewDecision == REQUEST_CHANGES`를 읽고 `prNumber`(정수)로 PR을 join하는데, LLM이 따르는 표준 템플릿(`CLAUDE.md.tmpl`)이 ① `lastReviewDecision`를 아예 누락하고 ② `prNumber`/`fixLoopCount`를 **문자열 placeholder**로 모델링하고 있었음 — 문자열은 schema 거부(`integer|null`) + 게이트의 숫자 join 미스. 결과적으로 자기 PR(kit 주 사용 케이스) 리뷰에서 게이트가 안 켜질 수 있던, v2.4.0이 막겠다던 바로 그 구멍의 재현. 프레임워크가 반복적으로 맞는 `additionalProperties:false` sleeper 버그 클래스(v2.1.1/v2.3.0/v2.4.0)와 동일.
+
+### Fixed
+
+- **`CLAUDE.md.tmpl` workflowState 템플릿** — 게이트 전제조건 복구: ① `lastReviewDecision: null` 필드 추가(skill-review-pr Step 6.5 소유 명시), ② `prNumber`/`fixLoopCount`를 문자열 placeholder → **정수/`null` 리터럴**로 교체 + 타입·소유권 주의 블록 신설(따옴표 금지 사유 = schema 거부 + 게이트 join 미스), ③ "완료/부분 갱신 시 `lastReviewDecision`/`prNumber` 드롭 금지 — workflowState는 항상 전체 객체로 다시 쓴다" 경고 추가(미해결 CRITICAL PR 머지 방지).
+
+### Added (회귀 박제)
+
+- **`fixtures/backlog/positive/task-with-workflowstate-and-lock.json`** — populated workflowState(`lastReviewDecision=REQUEST_CHANGES`, `prNumber`/`fixLoopCount` 정수) + `lockedBy`/`lockedAt` + `step.prNumber` 정수를 실제 shape로 검증. 기존 positive fixture는 모두 `workflowState=null`이라 이 경로를 검증 못 했음(sleeper가 매번 통과하던 정확한 사각지대).
+- **`test_schema_compliance.py` 2 케이스** — (1) 게이트가 읽는 필드 존재 + 정수 타입 단언, (2) 문자열 `prNumber`가 schema 거부됨을 무장(P0-② 타입 계약 회귀 차단).
+- **`test-pre-tool-use-merge-gate.sh` §10 (4 assertion)** — 신호 B(GitHub `reviewDecision`)를 stub `gh`로 검증: `CHANGES_REQUESTED`→block / `APPROVED`→allow / gh 실패→fail-open / 신호 A 우선. 기존엔 `CCK_GATE_NO_GH=1`로 전면 스킵되던 경로.
+
 ## [2.4.0] - 2026-05-29
 
 > **PreToolUse 머지 품질 게이트 (1순위 하네스 개선)** — 하네스 엔지니어링 리뷰에서 식별된 단일 최대 구조적 미스매치 해소: "CRITICAL은 머지 차단"이 그동안 prose 지시(skill-merge-pr/CLAUDE.md/skill-review-pr 519줄)였을 뿐 **결정적 강제가 없었다**. LLM이 review 분기를 한 번만 잘못 따라도 미해결 CRITICAL PR이 auto-merge되는 구멍. 신뢰 가능한 레이어(hook)는 bookkeeping(heartbeat/lock)만 하고, 신뢰 불가 레이어(prose+LLM)가 정작 핵심 게이트를 맡던 역전 구조를, **`gh pr merge`를 PreToolUse hook이 직접 deny**하는 것으로 바로잡음.

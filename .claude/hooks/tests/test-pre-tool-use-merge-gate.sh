@@ -3,7 +3,8 @@
 #
 # 검증: `gh pr merge`만 게이트, 신호 A(backlog 기반) 차단/통과, 우회/비활성/fail-open,
 #       PR-번호 추출 견고성(URL·플래그·선행0·정규화), step.prNumber/workflowState.prNumber 양 join.
-# 신호 B(GitHub)는 CCK_GATE_NO_GH=1로 전면 스킵 → 네트워크 비의존 결정적 테스트.
+# 신호 A 테스트는 CCK_GATE_NO_GH=1로 신호 B를 스킵 → 네트워크 비의존 결정적.
+# 신호 B(GitHub reviewDecision)는 §10에서 stub `gh`를 PATH에 올려 결정적으로 검증(v2.4.1).
 #
 # ⚠️ fixture는 **실제 스킬이 쓰는 shape**를 모사한다(자체 리뷰 finding #1):
 #    PR 번호는 step.prNumber에 기록되고(skill-impl Step 8), workflowState에는
@@ -72,6 +73,26 @@ run_hook() {
   printf '%s' "$?"
 }
 
+# 신호 B 러너: stub `gh`를 PATH 선두에 올리고 CCK_GATE_NO_GH=0으로 실행.
+# stub은 `gh pr view N --json reviewDecision -q .reviewDecision` 호출에 <decision>을
+# echo한다. <decision>이 "__ERR__"면 exit 1(네트워크/인증 실패 모사 → fail-open 검증).
+# 사용: run_hook_gh <dir> <command> <decision>
+run_hook_gh() {
+  local dir="$1" cmd="$2" decision="$3"
+  local bindir="$dir/stubbin"
+  mkdir -p "$bindir"
+  if [ "$decision" = "__ERR__" ]; then
+    printf '#!/usr/bin/env bash\nexit 1\n' > "$bindir/gh"
+  else
+    printf '#!/usr/bin/env bash\nprintf "%%s\\n" "%s"\n' "$decision" > "$bindir/gh"
+  fi
+  chmod +x "$bindir/gh"
+  local json
+  json="$(jq -nc --arg c "$cmd" '{tool_name:"Bash", tool_input:{command:$c}}')"
+  CLAUDE_PROJECT_DIR="$dir" CCK_GATE_NO_GH=0 PATH="$bindir:$PATH" bash "$HOOK" <<<"$json" >/dev/null 2>&1
+  printf '%s' "$?"
+}
+
 S=$(new_sandbox)
 
 # ── 1. 비대상 명령 → allow ──────────────────────────
@@ -134,6 +155,16 @@ assert_eq "2" "$(run_hook "$S" "gh pr merge 42 --squash")" "workflowState.prNumb
 print_header "9. 다중 공백 'gh   pr   merge   42' → block(2)"
 write_backlog "$S" 42 REQUEST_CHANGES
 assert_eq "2" "$(run_hook "$S" "gh   pr   merge   42   --squash")" "공백 정규화 후 차단" || fails=$((fails+1))
+
+# ── 10. 신호 B (GitHub reviewDecision) — stub gh, backlog 부재(신호 A 미발동) ──
+# backlog 없는 sandbox에서 신호 A는 스킵되고, stub gh의 reviewDecision만으로 판정.
+print_header "10. 신호 B: stub gh reviewDecision → block/allow/fail-open"
+S10=$(new_sandbox)   # backlog 없음 → 신호 A 미발동, 신호 B 단독 검증
+assert_eq "2" "$(run_hook_gh "$S10" "gh pr merge 7 --squash" CHANGES_REQUESTED)" "CHANGES_REQUESTED → block(2)" || fails=$((fails+1))
+assert_eq "0" "$(run_hook_gh "$S10" "gh pr merge 7 --squash" APPROVED)" "APPROVED → allow(0)" || fails=$((fails+1))
+assert_eq "0" "$(run_hook_gh "$S10" "gh pr merge 7 --squash" __ERR__)" "gh 실패(네트워크/인증) → fail-open allow(0)" || fails=$((fails+1))
+# 신호 A(backlog REQUEST_CHANGES)가 있으면 신호 B(APPROVED)와 무관하게 차단 — A 우선
+assert_eq "2" "$(run_hook_gh "$S" "gh pr merge 42 --squash" APPROVED)" "신호 A(REQUEST_CHANGES) 우선 — gh가 APPROVED여도 차단" || fails=$((fails+1))
 
 printf '\n'
 if [ "$fails" -eq 0 ]; then
