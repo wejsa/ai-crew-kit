@@ -387,7 +387,23 @@ Step 3 sub-agent들이 반환한 markdown 표 + prose를 다음 정규식 규약
 - 채점 실패로 confidence=100 fallback된 항목도 동일하게 카운트.
 
 `gh pr comment` — 전체 요약 (관점별 상태/이슈 수 — 필터 후, 체크리스트 결과, 주요 피드백 — 이슈별 confidence 점수 병기)
-`gh api repos/.../pulls/{N}/comments` — 이슈별 인라인 코멘트 (심각도(필터 후 카테고리), 설명, 강등 항목은 `[원래 CRITICAL · 강등]` 접두, 권장 수정 코드)
+`gh api repos/.../pulls/{N}/comments` — 이슈별 인라인 코멘트 (라벨은 아래 "인라인 코멘트 라벨 형식 (SSOT)" 준수, 설명, 권장 수정 코드)
+
+#### 인라인 코멘트 라벨 형식 (SSOT — skill-fix 파싱 계약)
+
+인라인 코멘트(`gh api .../pulls/{N}/comments`)의 본문 **첫 줄**은 다음 라벨로 시작한다. **본 섹션이 최종 게시 라벨 형식의 단일 진실 소스**이며, `skill-fix` Step 2가 이 형식을 정규식으로 파싱한다. sub-agent가 emit하는 markdown 표 셀 텍스트(`CRITICAL`/`MAJOR`/`MINOR`)는 중간 산출물일 뿐 — 인라인 코멘트로 게시될 때의 라벨은 본 SSOT가 결정한다.
+
+| 게시 카테고리 (필터 후) | 인라인 코멘트 첫 줄 라벨 |
+|------------------------|------------------------|
+| CRITICAL (정상 게시, confidence ≥ critical) | `🔴 **CRITICAL**` |
+| MAJOR (처음부터 MAJOR, 정상 게시) | `🟠 **MAJOR**` |
+| MINOR (정상 게시) | `🟡 **MINOR**` |
+| CRITICAL → MAJOR 강등 | `🟠 **MAJOR** [원래 CRITICAL · 강등]` |
+
+- **강등 항목**은 MAJOR 라벨로 렌더하되 **반드시 `[원래 CRITICAL · 강등]` 마커를 라벨과 같은 줄에 병기**한다. 라벨 자체는 MAJOR이므로 skill-fix는 이 마커로만 강등을 식별한다(라벨만으로는 정상 MAJOR와 구분 불가).
+- **confidence 점수**는 본문 **끝**에 병기한다: 예) `... confidence: 85`. 라벨 줄에 섞지 않는다(파싱 단순화 + 첫 줄 라벨 정규식 안정성).
+- **이슈 ID**(`[C{NNN}]`/`[H{NNN}]`/`[M{NNN}]`, Step 4 채번 규칙)는 라벨 다음에 표기 가능하다. 강등은 `H` 채널을 사용한다.
+- 이모지(`🔴`/`🟠`/`🟡`)는 시각 보조이며, skill-fix 파싱은 `**CRITICAL**` 볼드 토큰과 `[원래 CRITICAL · 강등]` 마커를 기준으로 한다(이모지 누락에도 견고하도록).
 
 ### 6. 리뷰 결정 (Step 4 매트릭스 SSOT 참조)
 

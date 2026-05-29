@@ -156,6 +156,8 @@ PR diff에 의존성 파일 변경(package.json, build.gradle, go.mod, pyproject
 
 ## 출력 형식 (반드시 준수)
 
+> 본 에이전트는 **markdown 표만 emit**한다(셀의 심각도 텍스트 = `CRITICAL`/`MAJOR`/`MINOR`). PR 인라인 코멘트로 게시될 때의 **최종 라벨 형식(`🔴 **CRITICAL**` 등 + 강등 마커)은 `skill-review-pr` SKILL.md Step 5 "인라인 코멘트 라벨 형식 (SSOT)"가 결정**한다 — 본 에이전트는 confidence 강등/드롭/채번을 수행하지 않는다.
+
 ### 1️⃣ 컴플라이언스
 | 심각도 | 체크리스트 | 항목 | 파일:라인 | 설명 |
 |--------|-----------|------|----------|------|
