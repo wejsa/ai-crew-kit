@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.3] - 2026-05-29
+
 > **SessionStart 훅 — develop 미반영 워크트리 claim 감지 (다중 워크트리 동시 선택 안전장치)** — 다중 워크트리 환경에서 한 워크트리가 Task를 claim하면 그 변경이 `worktree-<name>` 브랜치에 먼저 박힌 뒤 별도 단계로 develop SSOT에 전파된다(CLAUDE.md 워크트리 프로토콜 "상태 파일 반영" 행). 그 전파 지연 윈도우 동안 develop tip만 보는 다른 세션은 in-flight claim을 보지 못해 같은 Task를 동시 선택할 수 있었음 — `session-start.sh`가 "✓ 최신 상태 (develop)"라고 안내해 거짓 안심을 주던 사각지대. skill-plan §1.5 조기 잠금과 §0.5 TTL 자동 해제는 claim이 **develop까지 전파된 뒤**에만 유효하므로 이 윈도우를 못 막았음. 근본 차단(develop SSOT 직접 claim)이 아닌 **가시화 보완**으로, hook이 `origin/worktree-*` 브랜치를 직접 스캔해 경고한다.
 
 ### Added
