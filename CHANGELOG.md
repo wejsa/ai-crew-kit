@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+> **PreToolUse 머지 품질 게이트 (1순위 하네스 개선)** — 하네스 엔지니어링 리뷰에서 식별된 단일 최대 구조적 미스매치 해소: "CRITICAL은 머지 차단"이 그동안 prose 지시(skill-merge-pr/CLAUDE.md/skill-review-pr 519줄)였을 뿐 **결정적 강제가 없었다**. LLM이 review 분기를 한 번만 잘못 따라도 미해결 CRITICAL PR이 auto-merge되는 구멍. 신뢰 가능한 레이어(hook)는 bookkeeping(heartbeat/lock)만 하고, 신뢰 불가 레이어(prose+LLM)가 정작 핵심 게이트를 맡던 역전 구조를, **`gh pr merge`를 PreToolUse hook이 직접 deny**하는 것으로 바로잡음.
+
+### Added
+
+- **`.claude/hooks/pre-tool-use.sh` (PreToolUse / Bash 매처) — 머지 품질 게이트**: `gh pr merge` 직전 미해결 CRITICAL PR을 결정적으로 차단(`exit 2`). 차단 신호 — **A(state, 오프라인 결정적)**: PR N 소유 Task(`step.prNumber==N` 또는 `workflowState.prNumber==N`)의 `workflowState.lastReviewDecision=="REQUEST_CHANGES"`. PR 번호 SSOT는 `step.prNumber`(skill-impl Step 8)라 거기서도 join해야 발동(자체 리뷰 finding #1로 초안의 `workflowState.prNumber` 단독 join이 프로덕션 no-op임을 잡아 수정). PR 번호 추출은 토큰 기반 순수-숫자 매칭(URL `/pull/N`·플래그·선행0 정규화 — finding #2). **B(GitHub, best-effort)**: `reviewDecision==CHANGES_REQUESTED`. 둘 중 하나라도 차단이면 deny + stderr 복구 안내. **인프라 실패(jq/git/gh 부재·파싱 불가·backlog 부재·네트워크)는 fail-open(exit 0)** — 게이트 자체 장애가 정상 머지를 막지 않음. 제어 env: `CCK_MERGE_GATE=off`(전면 비활성)·`CCK_GATE_BYPASS=1`(1회 의도적 우회)·`CCK_GATE_NO_GH=1`(신호 B 스킵, 오프라인).
+- **`.claude/hooks/tests/test-pre-tool-use-merge-gate.sh`** (run-all.sh 등록): **실제 backlog shape**(step.prNumber + workflowState.lastReviewDecision)로 fixture 구성해 join을 진짜로 검증. 비대상 통과 / 차단+사유 / APPROVED·COMMENT 통과 / 우회·비활성 / fail-open(backlog 부재·번호 없음·미매칭) / 추출 견고성(URL·플래그·선행0·greedy 우회) / SHA 임베드 숫자 비추출 / workflowState.prNumber 경로 / 공백 정규화. 19 assertion.
+- **`backlog.schema.json` `workflowState.lastReviewDecision`** 정식 등록 (enum APPROVED/COMMENT/REQUEST_CHANGES/null): skill-review-pr Step 6.5와 skill-fix가 이미 참조했으나 schema 미등록(`additionalProperties:false`)으로 거부되던 **sleeper 해소** — 게이트 신호 A의 전제조건이자 skill-fix 모드 판정 복구.
+
+### Changed
+
+- **`scripts/check-hook-blocking.sh` (HI-04)**: ① **정규식 허점 메움** — 구 패턴은 `exit` 앞에 다른 내용이 있어야만 매치하여 단독 `  exit 2`를 놓쳤음(awk 기반 주석 제외 검출로 교체, 단독·복합 형태 모두 포착). ② **Gate 훅 opt-in 예외** — 파일 상단 `# hi04-exempt: gate-hook` 마커 선언 시 exit-2 검사 면제(`set -e` 검사는 유지 — fail-open 보장). Bookkeeping(비블로킹) vs Gate(설계상 블로킹) 훅 카테고리 구분을 정적 검사에 반영.
+- **`.claude/settings.json`**: `PreToolUse`(matcher `Bash`, timeout 10) 훅 등록.
+- **`.claude/hooks/README.md`**: "훅의 두 카테고리: Bookkeeping vs Gate" 섹션 신설(차단 정책 정반대 + fail-open 원칙 SSOT), PreToolUse 게이트 동작·env·한계 문서화.
+
+### Notes
+
+- **기존 사용자 업그레이드**: `settings.json` 병합으로 PreToolUse 등록을 전파하는 skill-upgrade 로직은 후속 과제. kit 개발 리포 자체는 backlog state가 없어 신호 A는 no-op(실효는 사용자 프로젝트에서 발현).
+- **후속(MVP 범위 외)**: `gh pr create`(빌드 미통과 차단)·`gh pr review --approve`(자기 PR+강등 차단) 게이트는 동일 패턴 복제로 별도 PR. confidence 채점 외부 도구 위임(RFC #77)은 본 게이트가 안전망을 제공해 압박이 완화됨.
+
 ## [2.3.3] - 2026-05-29
 
 > **SessionStart 훅 — develop 미반영 워크트리 claim 감지 (다중 워크트리 동시 선택 안전장치)** — 다중 워크트리 환경에서 한 워크트리가 Task를 claim하면 그 변경이 `worktree-<name>` 브랜치에 먼저 박힌 뒤 별도 단계로 develop SSOT에 전파된다(CLAUDE.md 워크트리 프로토콜 "상태 파일 반영" 행). 그 전파 지연 윈도우 동안 develop tip만 보는 다른 세션은 in-flight claim을 보지 못해 같은 Task를 동시 선택할 수 있었음 — `session-start.sh`가 "✓ 최신 상태 (develop)"라고 안내해 거짓 안심을 주던 사각지대. skill-plan §1.5 조기 잠금과 §0.5 TTL 자동 해제는 claim이 **develop까지 전파된 뒤**에만 유효하므로 이 윈도우를 못 막았음. 근본 차단(develop SSOT 직접 claim)이 아닌 **가시화 보완**으로, hook이 `origin/worktree-*` 브랜치를 직접 스캔해 경고한다.
