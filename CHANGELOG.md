@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+> **SessionStart 훅 — develop 미반영 워크트리 claim 감지 (다중 워크트리 동시 선택 안전장치)** — 다중 워크트리 환경에서 한 워크트리가 Task를 claim하면 그 변경이 `worktree-<name>` 브랜치에 먼저 박힌 뒤 별도 단계로 develop SSOT에 전파된다(CLAUDE.md 워크트리 프로토콜 "상태 파일 반영" 행). 그 전파 지연 윈도우 동안 develop tip만 보는 다른 세션은 in-flight claim을 보지 못해 같은 Task를 동시 선택할 수 있었음 — `session-start.sh`가 "✓ 최신 상태 (develop)"라고 안내해 거짓 안심을 주던 사각지대. skill-plan §1.5 조기 잠금과 §0.5 TTL 자동 해제는 claim이 **develop까지 전파된 뒤**에만 유효하므로 이 윈도우를 못 막았음. 근본 차단(develop SSOT 직접 claim)이 아닌 **가시화 보완**으로, hook이 `origin/worktree-*` 브랜치를 직접 스캔해 경고한다.
+
+### Added
+
+- **`.claude/hooks/session-start.sh` 4단계 — develop 미반영 워크트리 claim 감지**: git sync(1단계) 직후 `origin/worktree-*` 원격 추적 ref만 타깃 fetch 후, 각 브랜치 backlog.json에서 `in_progress`이지만 현재 backlog에는 `todo`로 남은 Task를 경고. 복수 워크트리가 같은 Task를 claim하면 🔴(동시 claim), 단일이면 🔶 + assignee 표시. **현재 세션 자기 브랜치는 제외**, develop에서 이미 `in_progress`(정상 전파됨)거나 `done`/`merged`(머지 후 잔존 브랜치의 stale claim)면 미경고. R4 비블로킹 준수(모든 실패 경로 `|| true`, exit 0).
+- **`.claude/hooks/tests/test-session-start-claims.sh`** (run-all.sh 등록): 베어 원격 + develop/worktree-a/b/c 브랜치로 실제 시나리오 구성. 이중 claim 감지 / 자기 브랜치 제외 / `develop=done` stale 무시 / 워크트리 브랜치 부재 graceful / dict·array backlog 양 형태 / 깨진 JSON·파일 없는 브랜치 견고성 검증. 12 assertion.
+
+### Notes
+
+- **한계**: `worktree-<name>` 네이티브 브랜치 명명만 감지(임의 브랜치명 수동 worktree 미지원). claim이 develop까지 전파된 뒤의 충돌은 skill-plan §1.5 claim-time 검사 영역 — hook은 todo 전파 지연 윈도우만 보완한다(근본 차단 아님).
+- **사용자 영향**: 마이그레이션 불필요. SessionStart 출력에 경고 1블록이 조건부로 추가될 뿐 schema·런타임 state·자동화 로직 무변경. backlog.json 부재 또는 `origin/worktree-*` 브랜치 부재 시 완전 no-op(네트워크 호출 없음).
+
 ## [2.3.2] - 2026-05-29
 
 > **인라인 코멘트 라벨 형식 SSOT 신설 (patch)** — v2.3.1 release notes가 "후속 (별도)"로 박제한 **P1 #2**(PR #76 자체 리뷰 사이클 2 finding #2) 해소. 인라인 코멘트 라벨 형식에 단일 진실 소스가 없어 **3곳이 단절**되어 있었음: sub-agent(`pr-reviewer-domain/security/test`)는 markdown 표 셀 텍스트(`CRITICAL`/`MAJOR`/`MINOR`)만 emit, `skill-review-pr` Step 5는 "심각도(필터 후 카테고리)"라고만 명시하고 **라벨 형식 미명세**, `skill-fix` Step 2는 `🔴 **CRITICAL**` / `[CRITICAL]` 정규식을 기대. LLM 출력 가변으로 일부 세션이 다른 형식을 emit하면 `skill-fix`가 강등/CRITICAL을 **silent 누락**할 위험이 있었음 — v2.3.1이 막은 강등 silent-isolation과 동일 버그 클래스. **옵션 A(단일 컨트롤 포인트)**: `skill-review-pr` Step 5에 라벨 형식 SSOT를 신설하고 skill-fix·sub-agent가 이를 참조하도록 정렬. **자체 /code-review 1 사이클** 결과 클린(findings 0건) — 최고 리스크인 강등 마커 `·`(U+00B7) 코드포인트가 두 파일 간 일관함을 검증. 자동화 로직(모드 분기·강등 매트릭스·fix loop 진입 조건) 무변경 — 라벨 형식 명세만 정렬. 5 files +32/-6.

@@ -63,8 +63,11 @@ exec 0</dev/null                  # stdin을 /dev/null로 — 자식 프로세�
 1. git sync (워크트리면 `git fetch + merge --ff-only`, 일반 클론이면 `git pull --ff-only`)
 2. `.claude/state/continuation-plan.md` 존재 시 stdout 출력
 3. `.claude/state/backlog.json`의 `in_progress` Task 목록 안내
+4. **develop 미반영 워크트리 claim 감지** (다중 워크트리 동시 선택 안전장치) — `origin/worktree-*` 브랜치를 직접 스캔해, 거기서는 `in_progress`인데 현재 backlog에는 `todo`로 남은 Task(= claim이 아직 develop SSOT까지 전파되지 않은 윈도우)를 경고. 같은 Task를 복수 워크트리가 claim하면 🔴, 단일이면 🔶. 현재 세션 자신의 브랜치는 제외하고, develop에서 이미 `in_progress`(정상 전파됨)거나 `done`/`merged`(머지 후 잔존 브랜치의 stale claim)면 경고하지 않는다.
 
-**graceful skip 시나리오**: git 미설치, jq 미설치, 비-git 디렉토리 → 경고 로그 후 계속.
+> 4단계는 `worktree-<name>` 네이티브 브랜치 명명만 감지한다. 임의 브랜치명을 쓰는 수동 worktree는 잡지 못한다. 또한 두 워크트리가 같은 Task를 claim했고 그 중 하나가 이미 develop에 전파된 경우는 §1.5 claim-time 충돌 검사가 1차로 막는 영역이다 — hook은 todo 윈도우만 보완한다.
+
+**graceful skip 시나리오**: git 미설치, jq 미설치, 비-git 디렉토리, `origin/worktree-*` 브랜치 부재 → 경고 로그 또는 조용히 스킵 후 계속.
 
 ### Stop (`stop.sh`)
 
@@ -247,7 +250,7 @@ bash .claude/hooks/tests/run-all.sh           # 전체
 bash .claude/hooks/tests/test-stop-recursion.sh  # 개별
 ```
 
-커버: 재귀 방지, jq/git 미설치, 워크트리 동시 write(flock), 만료 lock 해제, continuation-plan 디바운스/idle 스킵, HI-04 체커 자체.
+커버: 재귀 방지, jq/git 미설치, 워크트리 동시 write(flock), 만료 lock 해제, continuation-plan 디바운스/idle 스킵, develop 미반영 워크트리 claim 감지(이중 claim/자기 제외/stale 무시), HI-04 체커 자체.
 
 ---
 

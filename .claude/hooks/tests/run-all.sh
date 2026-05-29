@@ -9,6 +9,7 @@ tests=(
   "test-atomic-write-parallel.sh"
   "test-lock-expiry.sh"
   "test-session-start-git.sh"
+  "test-session-start-claims.sh"
   "test-continuation-plan.sh"
   "test-hi04-checker.sh"
   "test-post-tool-use-path-exclude.sh"
