@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.2] - 2026-05-29
+
+> **인라인 코멘트 라벨 형식 SSOT 신설 (patch)** — v2.3.1 release notes가 "후속 (별도)"로 박제한 **P1 #2**(PR #76 자체 리뷰 사이클 2 finding #2) 해소. 인라인 코멘트 라벨 형식에 단일 진실 소스가 없어 **3곳이 단절**되어 있었음: sub-agent(`pr-reviewer-domain/security/test`)는 markdown 표 셀 텍스트(`CRITICAL`/`MAJOR`/`MINOR`)만 emit, `skill-review-pr` Step 5는 "심각도(필터 후 카테고리)"라고만 명시하고 **라벨 형식 미명세**, `skill-fix` Step 2는 `🔴 **CRITICAL**` / `[CRITICAL]` 정규식을 기대. LLM 출력 가변으로 일부 세션이 다른 형식을 emit하면 `skill-fix`가 강등/CRITICAL을 **silent 누락**할 위험이 있었음 — v2.3.1이 막은 강등 silent-isolation과 동일 버그 클래스. **옵션 A(단일 컨트롤 포인트)**: `skill-review-pr` Step 5에 라벨 형식 SSOT를 신설하고 skill-fix·sub-agent가 이를 참조하도록 정렬. **자체 /code-review 1 사이클** 결과 클린(findings 0건) — 최고 리스크인 강등 마커 `·`(U+00B7) 코드포인트가 두 파일 간 일관함을 검증. 자동화 로직(모드 분기·강등 매트릭스·fix loop 진입 조건) 무변경 — 라벨 형식 명세만 정렬. 5 files +32/-6.
+
+### Added
+
+- **`.claude/skills/skill-review-pr/SKILL.md` Step 5 — "인라인 코멘트 라벨 형식 (SSOT — skill-fix 파싱 계약)"** (PR #79, `89de100`): 최종 게시 라벨 형식의 단일 진실 소스 표 신설. 정상 게시 `🔴 **CRITICAL**` / `🟠 **MAJOR**` / `🟡 **MINOR**`, 강등 `🟠 **MAJOR** [원래 CRITICAL · 강등]`. confidence는 본문 끝 병기(`confidence: 85`), 이모지는 시각 보조(파싱은 `**CRITICAL**` 볼드 토큰 + `[원래 CRITICAL · 강등]` 마커 기준 — 이모지 누락 견고).
+
+### Fixed
+
+- **`.claude/skills/skill-fix/SKILL.md` Step 2 — 파싱 정규식 명문화 + SSOT 출처 명시**: 정상 게시 CRITICAL `\*\*CRITICAL\*\*`(이모지 무관) + `[CRITICAL]` 레거시, 강등 `\[원래 CRITICAL\s*·\s*강등\]` 마커로만 식별(라벨은 MAJOR로 렌더되므로). 단일 진실 소스가 skill-review-pr Step 5임을 명시.
+- **`.claude/agents/pr-reviewer-{domain,security,test}.md` 출력 형식 — SSOT 위임 명시**: "본 에이전트는 markdown 표만 emit, 최종 인라인 코멘트 라벨은 skill-review-pr Step 5 SSOT가 결정, confidence 강등/드롭/채번 미수행" 1줄 추가.
+
+### Notes
+
+- **사용자 영향 (v2.3.1 → v2.3.2)**: 마이그레이션 불필요. 라벨 형식 명세 정렬만으로 schema·런타임 state·자동화 로직 무변경.
+- **자체 리뷰 메타**: 7개 finder 관점(line-by-line / removed-behavior / cross-file / reuse / simplification / efficiency / altitude)을 doc SSOT 정합성 기준으로 적용. 강등 마커 `·` 코드포인트 drift(이 PR이 막으려는 버그 클래스 자체)를 byte-level 검증 → 두 파일 U+00B7 일관. findings 0건으로 fix-up 없이 머지.
+
 ## [2.3.1] - 2026-05-28
 
 > **skill-fix 강등 CRITICAL 인지 (patch)** — v2.3.0 PR #76이 도입한 confidence 매트릭스에서 강등된 CRITICAL이 MAJOR 라벨로 게시되어 `skill-fix`가 사전조건 `🔴 CRITICAL 존재` 체크에 매치 못해 silent 격리되던 결함 해소. 사용자가 강등 경고 헤더(`⚠️ 강등된 CRITICAL N개`)를 보고 `/skill-fix {N}` 수동 호출 시 강등 항목도 fix 후보로 인정. 호출 모드별 분기: **auto-fix 모드**(`workflowState.fixLoopCount` ≥ 1 **AND** `lastReviewDecision="REQUEST_CHANGES"`)는 정상 게시 CRITICAL만(SSOT — false-positive 진동 차단). **수동 호출 모드**(그 외)는 정상 + 강등 둘 다. **자체 /code-review 1 사이클**에서 fixLoopCount 단독 판정의 silent-isolation 재발 시나리오(직전 auto-fix 잔재 → manual 호출 오분류) 발견 → `lastReviewDecision`을 AND 조건으로 묶어 엄격 정의. `workflowState.lastReviewDecision`은 skill-review-pr Step 6.5에서 매 리뷰마다 갱신(APPROVED/COMMENT/REQUEST_CHANGES). 부수로 커밋 메시지 ID 표기 SSOT 단일화(정상=`[C{NNN}]`, 강등=`[H{NNN}(원래 CRITICAL · 강등)]`).
