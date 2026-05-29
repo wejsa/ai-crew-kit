@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.0] - 2026-05-29
+
 > **PreToolUse 머지 품질 게이트 (1순위 하네스 개선)** — 하네스 엔지니어링 리뷰에서 식별된 단일 최대 구조적 미스매치 해소: "CRITICAL은 머지 차단"이 그동안 prose 지시(skill-merge-pr/CLAUDE.md/skill-review-pr 519줄)였을 뿐 **결정적 강제가 없었다**. LLM이 review 분기를 한 번만 잘못 따라도 미해결 CRITICAL PR이 auto-merge되는 구멍. 신뢰 가능한 레이어(hook)는 bookkeeping(heartbeat/lock)만 하고, 신뢰 불가 레이어(prose+LLM)가 정작 핵심 게이트를 맡던 역전 구조를, **`gh pr merge`를 PreToolUse hook이 직접 deny**하는 것으로 바로잡음.
 
 ### Added
