@@ -44,15 +44,19 @@ CLAUDE.md 상태 추적 패턴. currentSkill="skill-fix"
 
 ### 2. fix 후보 이슈 목록 파싱
 
-PR 리뷰 코멘트에서 직접 파싱 (`gh api repos/{owner}/{repo}/pulls/{number}/comments`). v2.3+ 강등 매트릭스 인지로 모드별 분기:
+PR 리뷰 코멘트에서 직접 파싱 (`gh api repos/{owner}/{repo}/pulls/{number}/comments`). 인라인 코멘트 라벨 형식의 **단일 진실 소스는 `skill-review-pr` SKILL.md Step 5 "인라인 코멘트 라벨 형식 (SSOT)"** — 본 Step의 정규식은 그 SSOT를 파싱 대상으로 가정한다. v2.3+ 강등 매트릭스 인지로 모드별 분기:
+
+**파싱 정규식 (SSOT 기준)**:
+- **정상 게시 CRITICAL**: 본문 첫 줄에 `**CRITICAL**` 볼드 토큰 매치 — regex `\*\*CRITICAL\*\*` (이모지 `🔴` 유무 무관). 레거시 호환으로 `[CRITICAL]` 대괄호 태그도 인정.
+- **강등 CRITICAL**: 본문에 `[원래 CRITICAL · 강등]` 마커 매치 — regex `\[원래 CRITICAL\s*·\s*강등\]`. 라벨 자체는 `**MAJOR**`로 렌더되므로 **마커로만 식별**(라벨로는 정상 MAJOR와 구분 불가).
 
 **auto-fix 모드** (사전 조건 #5 정의 — fixLoopCount ≥ 1 AND lastReviewDecision="REQUEST_CHANGES"):
-- 정상 게시 CRITICAL만 매치: `🔴 **CRITICAL**` 또는 `[CRITICAL]` 태그
-- description 앞에 **`[원래 CRITICAL · 강등]`** 접두가 있는 항목은 **제외** (skill-review-pr SSOT — fix loop 진입 조건은 매트릭스의 "CRITICAL 게시" 행만, 강등은 false-positive 진동 차단 목적)
+- 정상 게시 CRITICAL만 매치 (위 `\*\*CRITICAL\*\*` 또는 `[CRITICAL]`).
+- `[원래 CRITICAL · 강등]` 마커가 있는 항목은 **제외** (skill-review-pr SSOT — fix loop 진입 조건은 매트릭스의 "CRITICAL 게시" 행만, 강등은 false-positive 진동 차단 목적)
 
 **수동 호출 모드** (그 외):
-- 정상 게시 CRITICAL: `🔴 **CRITICAL**` 또는 `[CRITICAL]` 태그
-- **강등 CRITICAL 추가**: PR 코멘트 본문에서 `[원래 CRITICAL · 강등]` 접두를 포함하는 인라인 코멘트 (MAJOR 라벨로 렌더되지만 원래 CRITICAL). skill-review-pr 강등 경고 헤더(`⚠️ 강등된 CRITICAL N개`)를 보고 사용자가 수동 호출한 시나리오 지원
+- 정상 게시 CRITICAL (위 `\*\*CRITICAL\*\*` 또는 `[CRITICAL]`).
+- **강등 CRITICAL 추가**: `[원래 CRITICAL · 강등]` 마커를 포함하는 인라인 코멘트 (MAJOR 라벨로 렌더되지만 원래 CRITICAL). skill-review-pr 강등 경고 헤더(`⚠️ 강등된 CRITICAL N개`)를 보고 사용자가 수동 호출한 시나리오 지원
 - 두 종류 모두 path, line, body 필드 추출. 각 이슈에 `isDemoted: true/false` 마커 부여(Step 6 커밋 메시지 ID prefix 분기 용도)
 
 **모드 무관 공통 추출**: path, line, body 필드
