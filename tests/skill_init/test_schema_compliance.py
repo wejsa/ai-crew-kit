@@ -8,6 +8,7 @@ SKILL.md L590~620 task/phase 객체 사양 + 회귀 차단 케이스.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -286,3 +287,50 @@ def test_workflowstate_string_prnumber_rejected(backlog_schema: dict) -> None:
     assert any(path.endswith("workflowState") and v == "oneOf" for path, v in errors), (
         f"문자열 prNumber는 workflowState oneOf 위반으로 거부되어야 함; errors: {errors}"
     )
+
+
+# ── 머지 게이트 템플릿 emission 회귀 박제 (v2.4.1 fix-up) ───────────────
+# 위 fixture/schema 테스트는 "schema가 올바른 shape를 받아들임"만 검증한다.
+# 그러나 원래 sleeper는 schema가 아니라 **LLM이 따르는 템플릿**에 살았다
+# (prNumber를 문자열 placeholder로, lastReviewDecision 누락). 따라서 게이트의
+# 결정적 신호가 시드되는 두 권위 템플릿을 직접 파싱해 전제조건을 무장한다.
+# 이 테스트가 없으면 누군가 템플릿을 string placeholder로 되돌려도 pytest는 green.
+WORKFLOWSTATE_TEMPLATE_FILES = [
+    REPO_ROOT / ".claude/templates/CLAUDE.md.tmpl",
+    REPO_ROOT / ".claude/skills/skill-backlog/SKILL.md",
+]
+
+
+def _extract_workflowstate_block(text: str) -> str:
+    """첫 `"workflowState": { ... }` 블록을 중괄호 균형으로 추출."""
+    start = text.index('"workflowState"')
+    brace = text.index("{", start)
+    depth = 0
+    for i in range(brace, len(text)):
+        if text[i] == "{":
+            depth += 1
+        elif text[i] == "}":
+            depth -= 1
+            if depth == 0:
+                return text[brace : i + 1]
+    raise AssertionError("workflowState 블록의 닫힘 괄호를 찾지 못함")
+
+
+@pytest.mark.parametrize(
+    "tmpl_path", WORKFLOWSTATE_TEMPLATE_FILES, ids=lambda p: p.name
+)
+def test_workflowstate_template_emits_gate_fields(tmpl_path: Path) -> None:
+    """LLM이 시드받는 workflowState 템플릿이 게이트 전제조건을 충족하는지 직접 검증."""
+    block = _extract_workflowstate_block(tmpl_path.read_text("utf-8"))
+    # 결정적 신호 필드 존재 — 누락 시 게이트 신호 A가 읽을 필드가 없어 silent no-op
+    assert '"lastReviewDecision"' in block, (
+        f"{tmpl_path.name} workflowState 템플릿에 lastReviewDecision 누락 — "
+        f"PreToolUse 머지 게이트 신호 A가 silent no-op됨"
+    )
+    # prNumber/fixLoopCount는 정수|null — 문자열 값으로 모델링하면 schema 거부 +
+    # 게이트의 --argjson 숫자 join 미스(원래 sleeper). `"field": "..."` 형태 금지.
+    for field in ("prNumber", "fixLoopCount"):
+        assert not re.search(rf'"{field}"\s*:\s*"', block), (
+            f"{tmpl_path.name}: {field}가 문자열로 모델링됨 — 정수 또는 null이어야 함"
+            f"(따옴표 시 schema 거부 + 게이트 숫자 join 미스)"
+        )

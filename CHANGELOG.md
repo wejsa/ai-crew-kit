@@ -11,13 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **`CLAUDE.md.tmpl` workflowState 템플릿** — 게이트 전제조건 복구: ① `lastReviewDecision: null` 필드 추가(skill-review-pr Step 6.5 소유 명시), ② `prNumber`/`fixLoopCount`를 문자열 placeholder → **정수/`null` 리터럴**로 교체 + 타입·소유권 주의 블록 신설(따옴표 금지 사유 = schema 거부 + 게이트 join 미스), ③ "완료/부분 갱신 시 `lastReviewDecision`/`prNumber` 드롭 금지 — workflowState는 항상 전체 객체로 다시 쓴다" 경고 추가(미해결 CRITICAL PR 머지 방지).
+- **`CLAUDE.md.tmpl` workflowState 템플릿** — 게이트 전제조건 복구: ① `lastReviewDecision: null` 필드 추가(skill-review-pr Step 6.5 소유 명시), ② `prNumber`/`fixLoopCount`를 문자열 placeholder → **정수/`null` 리터럴**로 교체 + 타입·소유권 주의 블록 신설(따옴표 금지 사유 = schema 거부 + 게이트 join 미스, SSOT=schema 포인터 명시), ③ "완료/부분 갱신 시 `lastReviewDecision`/`prNumber` 드롭 금지 — workflowState는 항상 전체 객체로 다시 쓴다" 경고 추가(미해결 CRITICAL PR 머지 방지).
+- **`skill-backlog/SKILL.md` workflowState 예시** — 동일 누락 수정(자체 리뷰 fix-up): backlog 쓰기 프로토콜의 권위 예시(skill-impl Step 8이 "준수" 지시)도 `lastReviewDecision`/`fixLoopCount`를 누락하고 있었음 → 게이트가 이 경로로도 silent no-op 가능하던 두 번째 구멍 차단.
 
 ### Added (회귀 박제)
 
-- **`fixtures/backlog/positive/task-with-workflowstate-and-lock.json`** — populated workflowState(`lastReviewDecision=REQUEST_CHANGES`, `prNumber`/`fixLoopCount` 정수) + `lockedBy`/`lockedAt` + `step.prNumber` 정수를 실제 shape로 검증. 기존 positive fixture는 모두 `workflowState=null`이라 이 경로를 검증 못 했음(sleeper가 매번 통과하던 정확한 사각지대).
-- **`test_schema_compliance.py` 2 케이스** — (1) 게이트가 읽는 필드 존재 + 정수 타입 단언, (2) 문자열 `prNumber`가 schema 거부됨을 무장(P0-② 타입 계약 회귀 차단).
-- **`test-pre-tool-use-merge-gate.sh` §10 (4 assertion)** — 신호 B(GitHub `reviewDecision`)를 stub `gh`로 검증: `CHANGES_REQUESTED`→block / `APPROVED`→allow / gh 실패→fail-open / 신호 A 우선. 기존엔 `CCK_GATE_NO_GH=1`로 전면 스킵되던 경로.
+- **`fixtures/backlog/positive/task-with-workflowstate-and-lock.json`** — populated workflowState(`lastReviewDecision=REQUEST_CHANGES`, `prNumber`/`fixLoopCount` 정수) + `lockedBy`/`lockedAt` + `step.prNumber` 정수를 실제 shape로 검증. 기존 positive fixture는 모두 `workflowState=null`이라 이 경로를 검증 못 했음.
+- **`test_schema_compliance.py` 3 케이스** — (1) 게이트가 읽는 필드 존재 + 정수 타입(schema 수용), (2) 문자열 `prNumber` schema 거부(타입 계약), (3) **템플릿 emission 검증** — `CLAUDE.md.tmpl`·`skill-backlog/SKILL.md`의 workflowState 블록을 직접 파싱해 `lastReviewDecision` 존재 + `prNumber`/`fixLoopCount` 비-문자열을 단언(템플릿이 string placeholder로 회귀하면 fail — 원래 sleeper가 살던 정확한 위치를 무장).
+- **`test-pre-tool-use-merge-gate.sh` §10 (4 assertion)** — 신호 B(GitHub `reviewDecision`)를 live hook 위에서 stub `gh`로 검증: `CHANGES_REQUESTED`→block / `APPROVED`→allow / gh 실패→fail-open / 신호 A 우선. 기존엔 `CCK_GATE_NO_GH=1`로 전면 스킵되던 경로.
+
+> **커버리지 경계**: pytest = schema 수용성 + 템플릿 emission(정적), bash §10 = live hook 동작(신호 B). 게이트의 `--argjson` 숫자 join 자체는 §2/§6/§8(신호 A) + §10(신호 B)이 실 hook 실행으로 커버.
 
 ## [2.4.0] - 2026-05-29
 

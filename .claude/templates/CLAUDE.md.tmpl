@@ -257,6 +257,7 @@ fi
 ```
 
 **필드 타입·소유권 (PreToolUse 머지 게이트 전제조건 — 위반 시 게이트가 silent no-op):**
+> 타입·enum의 SSOT는 `.claude/schemas/backlog.schema.json`(`definitions.workflowState`). 아래는 그 요약이며, 충돌 시 schema가 우선한다.
 - `prNumber` / `fixLoopCount`: **정수 또는 `null`** — 따옴표 금지. 문자열 `"42"`는 ① schema 거부(`integer|null`), ② `pre-tool-use.sh`의 숫자 join(`--argjson`) 미스로 머지 게이트가 PR을 못 찾음. PR 생성 시 `prNumber`에 **정수** PR 번호 기록.
 - `lastReviewDecision`: `APPROVED` / `COMMENT` / `REQUEST_CHANGES` / `null`. **skill-review-pr Step 6.5가 매 리뷰마다 소유·갱신.** PreToolUse 머지 게이트(`pre-tool-use.sh`)의 결정적 차단 신호 — `REQUEST_CHANGES`면 미해결 CRITICAL로 간주해 `gh pr merge`를 차단한다.
 
