@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.1] - 2026-05-30
+
 > **v2.4.0 머지 게이트 신뢰성 패치** — v2.4.0 직후 전체 프로젝트 분석에서, 방금 도입한 PreToolUse 머지 게이트의 **결정적 신호(신호 A)가 프로덕션에서 silent no-op**일 수 있음을 발견. 게이트는 `workflowState.lastReviewDecision == REQUEST_CHANGES`를 읽고 `prNumber`(정수)로 PR을 join하는데, LLM이 따르는 표준 템플릿(`CLAUDE.md.tmpl`)이 ① `lastReviewDecision`를 아예 누락하고 ② `prNumber`/`fixLoopCount`를 **문자열 placeholder**로 모델링하고 있었음 — 문자열은 schema 거부(`integer|null`) + 게이트의 숫자 join 미스. 결과적으로 자기 PR(kit 주 사용 케이스) 리뷰에서 게이트가 안 켜질 수 있던, v2.4.0이 막겠다던 바로 그 구멍의 재현. 프레임워크가 반복적으로 맞는 `additionalProperties:false` sleeper 버그 클래스(v2.1.1/v2.3.0/v2.4.0)와 동일.
 
 ### Fixed
