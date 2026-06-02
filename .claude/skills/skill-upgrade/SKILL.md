@@ -125,7 +125,7 @@ complexity-hint: light
 - 12-2. domain.json 커스텀 항목 머지 (중복 키는 사용자 값 우선)
 - 12-3. settings.json 머지:
   - **권한**: `permissions.allow` 합집합(중복 제거) + 기존 `permissions.deny` 보존
-  - **`hooks` 필드 동기화**: 새 소스의 hooks 등록을 기준으로, 이벤트별(`PreToolUse`/`PostToolUse`/`SessionStart`/`Stop`)로 **프레임워크 훅 항목**(command가 `$CLAUDE_PROJECT_DIR/.claude/hooks/*.sh` 참조)을 누락 시 추가 + 변경(command/timeout/matcher) 시 갱신. 프레임워크 경로를 참조하지 **않는** 사용자 커스텀 훅 항목은 보존. → v2.4.0 `PreToolUse` 머지 게이트 등록이 기존 시드 프로젝트에 도달하는 경로(이전엔 권한만 머지해 hooks 미전파). `settings.local.json`은 미변경.
+  - **`hooks` 필드 동기화**: 새 소스의 hooks 등록을 기준으로, 이벤트별(`PreToolUse`/`PostToolUse`/`SessionStart`/`Stop`)로 **프레임워크 훅 항목**을 누락 시 추가 + 변경(command/timeout/matcher) 시 갱신. **프레임워크 훅 식별은 경로 접두 무관 + 스크립트 basename 기준**: command가 `.claude/hooks/{session-start,post-tool-use,stop,pre-tool-use,diagnose}.sh`를 참조하면(상대경로 `.claude/hooks/...`·절대경로 `$CLAUDE_PROJECT_DIR/.claude/hooks/...` 모두) 동일 프레임워크 훅으로 간주해 **소스 항목으로 교체**(구버전 상대경로 등록을 제거하고 새 형식으로 대체 — 중복 등록 방지). `.claude/hooks/`를 참조하지 **않는** 사용자 커스텀 훅 항목은 보존. → v2.4.0 `PreToolUse` 머지 게이트 등록이 기존 시드 프로젝트에 도달하는 경로(이전엔 권한만 머지해 hooks 미전파). `settings.local.json`은 미변경.
 - 12-4. project.json: kitVersion 업데이트, kitSource 설정, migrations 적용
 - 12-5. 프로젝트 파일 마이그레이션 (migrations.json의 `add_gitignore_entry` 타입):
   - 대상 entry가 `.gitignore`에 없으면 주석(`comment`)과 함께 추가

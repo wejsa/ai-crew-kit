@@ -52,7 +52,22 @@ def test_settings_hooks_field_sync_documented(text: str) -> None:
 
 
 def test_keep_choice_honored_in_replace(text: str) -> None:
-    """Step 11이 '현재 유지' 선택을 존중해야 함 (하드닝한 hook 보존)."""
-    assert "현재 유지" in text and "보존" in text, (
-        "Step 11이 '현재 유지' 선택 보존을 명시하지 않음 — 사용자 hook 커스터마이징 손실 위험"
+    """Step 11이 '현재 유지' 선택을 복사 후 복원해 존중해야 함 (하드닝한 hook 보존).
+
+    '현재 유지'·'보존'은 6-0/12-3에도 등장하므로, Step 11 복원 절에 고유한
+    '되돌려' 문구로 가드한다(절이 삭제되면 fail)."""
+    assert "되돌려" in text, (
+        "Step 11이 '현재 유지' 파일을 백업본으로 되돌리는 복원 절을 명시하지 않음 "
+        "— 디렉토리 단위 복사가 사용자 hook 커스터마이징을 덮어쓸 위험"
+    )
+
+
+def test_framework_hook_match_is_prefix_agnostic(text: str) -> None:
+    """settings.json hooks 동기화의 프레임워크 훅 식별이 경로 접두 무관이어야 함.
+
+    `$CLAUDE_PROJECT_DIR/` 접두로만 매칭하면 상대경로로 등록된 구버전 프로젝트가
+    중복 등록됨 → 'basename' 또는 '접두 무관' 기준 명시를 가드."""
+    assert "basename" in text or "접두 무관" in text, (
+        "프레임워크 훅 식별이 접두 무관/basename 기준임을 명시하지 않음 "
+        "— 상대경로 등록 프로젝트에서 hooks 중복 등록 위험"
     )
