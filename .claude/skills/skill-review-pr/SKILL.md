@@ -251,8 +251,18 @@ diff는 임시 파일에 저장하여 에이전트가 Read로 참조하도록 �
 | fallback | "⚠️ {에이전트명} 분석 불가 — 수동 확인 필요" |
 
 **오류 처리**:
-- 1개 실패: AskUserQuestion (재시도/스킵/중단). --auto-fix 시 자동 재시도→실패시 스킵
-- 2개+ 실패: 즉시 중단
+- 1개 실패: AskUserQuestion (재시도/스킵/중단). --auto-fix 시 자동 재시도→실패시 스킵. 단 실패 메시지가 아래 **1M 시그니처(필수 조건)** 에 해당하면 "메인 직접 리뷰 폴백"을 1순위 권장 선택지로 제시.
+- **2개+ 실패 — 사유별 분기**:
+  - **인프라/환경 사유 (자동 폴백)** → 즉시 중단하지 않고 **메인 에이전트 직접 리뷰로 자동 폴백** (사용자에게 묻지 않음). **진입은 아래 1M 시그니처가 충족될 때만**:
+    - **1M 시그니처 (필수)**: 실패 메시지에 `1M context` + (`credit` / `extra usage` / `usage required`) 동반 (예: `Usage credits required for 1M context`, `Extra usage is required for 1M context · run /extra-usage to enable`). 이는 Claude Code 서브에이전트가 부모 세션의 1M 컨텍스트 권한을 상속 못 받는 알려진 하네스 제약(서브에이전트 스폰 단계 실패)이며 PR 코드 문제가 아니다.
+    - "모든 서브에이전트가 0 tool use로 스폰 시점 동일 실패"는 **보조 정황일 뿐 단독 트리거가 아니다** (rate-limit·권한 오류·rules 경로 깨짐·잘못된 diff 경로 등도 0 tool use를 유발하므로). 1M 시그니처 없이 0 tool use만으로 자동 폴백하지 않는다.
+  - **그 외 사유 (즉시 중단 — 안전 기본값)** → 1M 시그니처가 **없는** 모든 2개+ 실패(원인 불명, timeout 다수, 권한/rate-limit/rules 경로 오류 등 0 tool use 포함, 리뷰 로직 실패)는 **진단 메시지와 함께 즉시 중단**. 자동 폴백으로 진짜 인프라 장애(예: API 키 무효, 깨진 rules 경로)를 가리지 않는다.
+
+**메인 에이전트 직접 리뷰 폴백 절차** (1M 시그니처 충족 시에만 자동 진입; 2+ 실패는 호출 에이전트가 2개 이상인 T2/T3에서만 도달):
+1. 리뷰 본문·종료 메시지에 **격하 배너** 명시: `⚠️ 리뷰 서브에이전트가 환경 제약(1M 컨텍스트 크레딧)으로 실패 → 메인 에이전트 직접 리뷰로 폴백. 독립 다관점 분리 효과 약화. 근본 해소: 세션을 1M 없는 표준 opus(200K)로 전환 후 재실행.` 로그에 `1M-subagent-fallback` 마커 명시.
+2. 메인 에이전트가 **실패한 서브에이전트들의 `.claude/agents/pr-reviewer-*.md` 정의 + 해당 체크리스트를 직접 Read**하여, 그 실패한 서브에이전트들의 관점을 직접 리뷰한다.
+3. 이후 **Step 3.5(채점) ~ Step 6.5(결정 매트릭스 + workflowState.lastReviewDecision 갱신)를 정상 경로 그대로 끝까지 통과**한다. **Step 6.5 완료가 필수** — `lastReviewDecision`을 기록하지 않고 종료하면 PreToolUse 머지 게이트가 신호 A를 `null`로 읽어 **fail-open(미해결 CRITICAL 머지 통과)** 된다. 정상 통과 시 CRITICAL은 여전히 REQUEST_CHANGES로 머지 차단(머지 게이트 안전망 유지) — 폴백이 게이트를 우회하지 않는다.
+4. 채점 self-bias는 메인이 finding+채점을 겸하므로 더 크나, 매트릭스 보수 임계치로 보완(Step 3.5의 `scoring-failure-fallback`과 동일 정신). Confidence 필터 헤더에 `1M-subagent-fallback` 마커를 동반 출력.
 
 ### 3.5. Confidence 채점 (false-positive 필터)
 
