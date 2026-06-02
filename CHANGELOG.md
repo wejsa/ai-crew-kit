@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.1] - 2026-06-02
+
+> **skill-upgrade hooks 전파 부채 해소** — 기존 skill-upgrade가 `.claude/hooks/`를 업데이트 대상에서 누락하고 settings.json은 권한(`allow`/`deny`)만 머지해, **v2.4.0 PreToolUse 머지 게이트(스크립트 `pre-tool-use.sh` + settings.json 등록)가 기존 시드 프로젝트에 전파되지 않던** 부채를 수정. v2.0 이후 모든 hook 변경(v2.1.3 threshold·v2.2.0 init-flag·v2.3.3 worktree claim 등)이 init 시점에 고정되던 문제도 함께 해소.
+
+### Fixed
+
+- **`skill-upgrade` hook 스크립트 전파**: `.claude/hooks/`를 업데이트 대상 디렉토리 표 + Step 6-0 SHA256 해시 비교 목록 + Step 9 백업에 추가. 훅은 clone/세션 시 자동 실행되는 **보안 민감** 파일이므로 해시 불일치를 미리보기에서 가시화→승인 후 교체하고, 교체 후 `skill-health-check`의 `hook-safety` 카테고리가 위험 패턴을 재검한다. (누락돼 있던 `rules`도 해시 비교 목록에 함께 보정.)
+- **`skill-upgrade` settings.json `hooks` 필드 동기화 (Step 12-3)**: 이전엔 `permissions.allow`/`deny`만 머지하여 신규 hook 등록(v2.4.0 `PreToolUse`)이 전파되지 않았음. 이제 이벤트별로 프레임워크 훅 항목을 추가/갱신한다. 프레임워크 훅 식별은 **경로 접두 무관 + 스크립트 basename 기준**(상대경로·`$CLAUDE_PROJECT_DIR` 절대경로 모두 인식)이라 구버전 상대경로 등록을 새 형식으로 교체해 **중복 등록을 방지**한다. 사용자 커스텀 훅(`.claude/hooks/` 미참조)은 보존.
+- **`skill-upgrade` Step 11 "현재 유지" 존중**: 디렉토리 단위 복사가 사용자의 "현재 유지" 선택을 덮어쓰던 honor gap 수정 — 복사 후 백업본으로 되돌려 보존(특히 하드닝한 hook). "수동 머지"는 소스+현재 병치.
+
+### Added (회귀 박제)
+
+- **`tests/upgrade/test_hooks_propagation.py`** (5 정적 가드): skill-upgrade는 prose-executed라 실행 단위 테스트가 없으므로, 전파의 필요조건(업데이트 표·해시 비교 목록에 hooks 존재, settings.json hooks 동기화 문서화, Step 11 복원 절, 접두 무관 매칭)을 정적으로 회귀 가드. 부채가 재발하면 fail.
+
 ## [2.5.0] - 2026-06-02
 
 > **스킬·에이전트별 모델 라우팅** — 토큰 비용을 작업 성격에 맞게 배분한다. 무거운 구현·빈번한 조언성 백그라운드 분석은 `sonnet`으로, 품질 판단(PR 리뷰 종합·계획·리뷰 탐지 서브에이전트)은 `opus`로 고정. 품질 안전망(버그 탐지=opus 고정, 머지 차단=결정론적 PreToolUse hook, 빌드/테스트/린트/헬스체크 게이트=모델 무관)을 유지한 채 최대 토큰 소비처인 구현 단계를 절감한다.
