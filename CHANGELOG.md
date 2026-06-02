@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.0] - 2026-06-02
+
+> **스킬·에이전트별 모델 라우팅** — 토큰 비용을 작업 성격에 맞게 배분한다. 무거운 구현·빈번한 조언성 백그라운드 분석은 `sonnet`으로, 품질 판단(PR 리뷰 종합·계획·리뷰 탐지 서브에이전트)은 `opus`로 고정. 품질 안전망(버그 탐지=opus 고정, 머지 차단=결정론적 PreToolUse hook, 빌드/테스트/린트/헬스체크 게이트=모델 무관)을 유지한 채 최대 토큰 소비처인 구현 단계를 절감한다.
+
+### Changed
+
+- **`skill-impl` / `skill-merge-pr` → `model: sonnet`**: 구현(최대 토큰 소비처)과 머지(기계적 — 실제 차단은 PreToolUse hook이 수행)를 sonnet으로. 구현 품질의 잔여 위험은 opus 리뷰 + 결정론 게이트(빌드/테스트/린트/헬스체크)가 흡수한다.
+- **`skill-review-pr` → `model: opus`**: PR 리뷰 종합·confidence×severity 매트릭스·REQUEST_CHANGES 결정은 머지 품질 게이트의 신호원이므로 opus 유지.
+- **`pr-reviewer-{domain,security,test}` → `model: opus`**: 버그·보안·테스트갭 탐지를 서브에이전트 frontmatter로 **결정론적 opus 고정**. 체인 호출 시 발생할 수 있는 턴 모델 오버라이드 불확실성과 무관하게 탐지 품질을 보장 — 가장 중요한 "버그 누락 0"을 모델 라우팅 메커니즘에 의존시키지 않는다.
+- **`agent-qa` / `docs-impact-analyzer` → `model: sonnet`**: 조언용·비차단 백그라운드 분석(테스트 품질·문서 영향도)은 sonnet으로. 어떤 게이트도 막지 않으므로 품질 영향 없음.
+
+### Notes
+
+- **`skill-plan`은 model 필드 미설정** — 디폴트(세션 모델)를 따른다. 자기 턴 직접 호출이라 사용자 디폴트 모델로 실행된다.
+- **confidence 채점 Task**(skill-review-pr Step 4)는 기존대로 parent 모델 상속(self-bias 회피 설계상 강제 지정 안 함) — 본 변경과 무관. 핀은 탐지 서브에이전트(Step 3)에만 적용.
+- 본 변경은 **시드되는 사용자 프로젝트의 모델 기본값**을 바꾼다. 기존 시드 프로젝트에는 `skill-upgrade`가 agents/skills 교체 시 전파된다. kit 개발 리포 자체는 skill-impl/review/merge를 실행하지 않으므로 효과는 다운스트림 프로젝트에서 발현.
+
 ## [2.4.1] - 2026-05-30
 
 > **v2.4.0 머지 게이트 신뢰성 패치** — v2.4.0 직후 전체 프로젝트 분석에서, 방금 도입한 PreToolUse 머지 게이트의 **결정적 신호(신호 A)가 프로덕션에서 silent no-op**일 수 있음을 발견. 게이트는 `workflowState.lastReviewDecision == REQUEST_CHANGES`를 읽고 `prNumber`(정수)로 PR을 join하는데, LLM이 따르는 표준 템플릿(`CLAUDE.md.tmpl`)이 ① `lastReviewDecision`를 아예 누락하고 ② `prNumber`/`fixLoopCount`를 **문자열 placeholder**로 모델링하고 있었음 — 문자열은 schema 거부(`integer|null`) + 게이트의 숫자 join 미스. 결과적으로 자기 PR(kit 주 사용 케이스) 리뷰에서 게이트가 안 켜질 수 있던, v2.4.0이 막겠다던 바로 그 구멍의 재현. 프레임워크가 반복적으로 맞는 `additionalProperties:false` sleeper 버그 클래스(v2.1.1/v2.3.0/v2.4.0)와 동일.
