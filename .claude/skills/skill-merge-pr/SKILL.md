@@ -2,6 +2,7 @@
 name: skill-merge-pr
 description: PR 머지 - 승인된 PR을 Squash 머지하고 상태 업데이트. 사용자가 "PR 머지해줘" 또는 /skill-merge-pr을 요청할 때 사용합니다.
 disable-model-invocation: false
+model: sonnet
 allowed-tools: Bash(git:*), Bash(gh:*), Read, Write, Glob, Skill
 argument-hint: "{PR번호}"
 complexity-hint: light
