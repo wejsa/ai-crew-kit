@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.2] - 2026-06-02
+
+> **리뷰 서브에이전트 1M 컨텍스트 실패 자동 폴백** — 부모 세션이 1M 컨텍스트 모델(예: `claude-opus-4-8[1m]`)로 돌 때, `model: opus`로 핀된 리뷰 서브에이전트(`pr-reviewer-{domain,security,test}`)가 부모의 1M 권한/Extra Usage를 상속받지 못해 스폰 단계에서 `Usage credits required for 1M context`로 **전부 실패**하는 Claude Code 하네스 제약(이슈 #51060/#45169) 대응. 기존엔 "2개+ 실패 = 즉시 중단"으로 리뷰가 통째로 막혔다. 이제 이 환경 제약 시그니처를 특정 감지해 **메인 에이전트 직접 리뷰로 자동 폴백**하되, 머지 게이트 안전망(CRITICAL → REQUEST_CHANGES → PreToolUse 차단)은 유지한다. 하네스 버그 자체는 kit가 고칠 수 없으므로 실패 처리·안내를 개선하는 방향. **근본 해소는 세션을 1M 없는 표준 opus(200K)로 전환하는 것**(리뷰 서브에이전트는 200K로 차고 넘침, 모델 등급 동일이라 출력 불변).
+
+### Added
+
+- **`skill-review-pr` 1M 실패 자동 폴백 (Step 3 오류 처리)**: 2개+ 서브에이전트 실패 중 **1M 시그니처**(실패 메시지에 `1M context` + `credit`/`extra usage`/`usage required` 동반)가 충족될 때만 즉시 중단 대신 **메인 에이전트 직접 리뷰로 자동 폴백**. 폴백은 실패한 서브에이전트들의 관점(`.claude/agents/pr-reviewer-*.md` + 체크리스트)을 직접 Read해 리뷰하고, **Step 3.5(채점)~Step 6.5(결정 + `lastReviewDecision` 갱신)를 끝까지 통과**하여 머지 게이트를 우회하지 않는다. `1M-subagent-fallback` 마커 + 격하 배너 출력.
+
+### Changed
+
+- **`skill-review-pr` 오류 처리 — 안전 기본값 유지**: 1M 시그니처가 **없는** 모든 2개+ 실패(원인 불명, timeout 다수, 권한/rate-limit/깨진 rules 경로 등 0 tool use 포함)는 기존대로 **진단과 함께 즉시 중단**. "0 tool use 스폰 실패"는 보조 정황일 뿐 단독 폴백 트리거가 아니다 — 자동 폴백이 진짜 인프라 장애(API 키 무효 등)를 silent하게 가리지 않도록.
+
+### Docs
+
+- **`docs/token-optimization.md`** 실패 시나리오 Q&A 추가: 리뷰 서브에이전트 1M 실패의 원인(하네스 권한 미상속, "크레딧 구매"가 아님 — Max/Team/Enterprise는 1M Opus 포함)과 대응(1순위: `/model`로 세션을 표준 opus 200K 전환 후 재실행 / 2순위: 자동 폴백). 1M은 단일 턴이 진짜 200K를 넘는 거대 맥락일 때만 켜는 특수 모드 권장.
+
 ## [2.5.1] - 2026-06-02
 
 > **skill-upgrade hooks 전파 부채 해소** — 기존 skill-upgrade가 `.claude/hooks/`를 업데이트 대상에서 누락하고 settings.json은 권한(`allow`/`deny`)만 머지해, **v2.4.0 PreToolUse 머지 게이트(스크립트 `pre-tool-use.sh` + settings.json 등록)가 기존 시드 프로젝트에 전파되지 않던** 부채를 수정. v2.0 이후 모든 hook 변경(v2.1.3 threshold·v2.2.0 init-flag·v2.3.3 worktree claim 등)이 init 시점에 고정되던 문제도 함께 해소.
