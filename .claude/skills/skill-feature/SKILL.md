@@ -20,7 +20,7 @@ CLAUDE.md 진행 표시 프로토콜. 워크플로우 시작점: "새 워크플�
 
 ### 1. 기능 분석
 - 범위/목적 파악, 기존 코드 분석, 기술적 실현 가능성
-- 도메인 참고자료 확인: project.json→domain.json keywords→관련 문서 탐색, _base/conventions/ 컨벤션 확인
+- 참고자료 확인: _base/conventions/ 컨벤션 확인
 
 ### 2. 중복 확인
 backlog.json에서 유사 Task 확인 → 병합 또는 별도 생성 여부 확인

@@ -52,7 +52,7 @@ complexity-hint: medium
 - 동일 유형 이슈 2회+ 발생, 리뷰 동일 항목 2회+ 지적, 다른 Task에서 동일 실수 반복
 
 #### 5.2 체크리스트/컨벤션 수정 제안
-대상: `_base/checklists/*.md`, `{domain}/checklists/*.md`, `_base/conventions/*.md`
+대상: `_base/checklists/*.md`, `_base/conventions/*.md`
 **반드시 AskUserQuestion 승인 후에만 파일 수정** (전체 승인 / 선택적 승인 / 반영 안 함)
 CLAUDE.md는 절대 수정 금지.
 

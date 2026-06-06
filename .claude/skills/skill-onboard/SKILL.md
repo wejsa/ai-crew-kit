@@ -25,7 +25,7 @@ complexity-hint: medium
 |------|-----------|---------------|
 | 대상 | 새 프로젝트 (빈 디렉토리) | 기존 코드베이스 |
 | 첫 입력 | 요구사항 자유 서술 | 자동 스캔 결과 검증 |
-| 도메인/스택 결정 | LLM 추론 추천 → 사용자 확인 | 파일 감지 결과 → 사용자 검증 |
+| 스택 결정 | LLM 추론 추천 → 사용자 확인 | 파일 감지 결과 → 사용자 검증 |
 | 백로그 | 요구사항에서 자동 분해 가능 (opt-in) | 빈 backlog.json |
 | 기존 파일 | 없음 (있으면 init 진행 전 경고) | 백업 후 생성 |
 
@@ -94,13 +94,11 @@ touch .claude/state/init-in-progress.flag 2>/dev/null || true
 - vue → vite build / vitest / eslint .
 - astro → astro build / vitest / eslint .
 
-**도메인 추천**: `_registry.json` keywords와 매칭 (디렉토리명 3점, 파일명 2점, README/설명 1점 → 최고점 추천, 동점이면 general)
-
 **기존 구조 분석**: 소스 파일 수, 테스트 존재 여부, 기존 문서
 
 ### Step 2: 스캔 결과 출력 + 확인
-감지된 기술 스택 (항목, 결과, 신뢰도), 빌드 명령어, 도메인 추천, 프로젝트 규모 출력
-AskUserQuestion: "결과 정확" / "기술 스택 수정" / "도메인 변경"
+감지된 기술 스택 (항목, 결과, 신뢰도), 빌드 명령어, 프로젝트 규모 출력
+AskUserQuestion: "결과 정확" / "기술 스택 수정"
 `--scan-only` 모드: 여기서 종료
 
 ### Step 3: 추가 정보 수집

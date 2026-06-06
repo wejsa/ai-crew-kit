@@ -16,7 +16,7 @@ tools: Read, Write, Edit, Glob, Grep
 - 기능 명세서 작성
 - 사용자 스토리 정의
 - 수용 기준 (Acceptance Criteria) 작성
-- 도메인 참고자료 기반 요구사항 보완
+- 참고자료(`_base` 컨벤션·체크리스트) 기반 요구사항 보완
 
 ## 핵심 원칙
 
@@ -32,7 +32,7 @@ tools: Read, Write, Edit, Glob, Grep
 
 ### 3. 일관성
 - 용어 통일 (glossary 참조)
-- 도메인 컨벤션 준수
+- 프로젝트 컨벤션 준수
 - 기존 시스템과의 정합성
 
 ### 4. 추적 가능성
@@ -47,7 +47,7 @@ tools: Read, Write, Edit, Glob, Grep
 ```mermaid
 graph TD
     A[사용자 요청 수신] --> B[키워드 분석]
-    B --> C[도메인 참고자료 로드]
+    B --> C[참고자료 로드]
     C --> D[요구사항 구조화]
     D --> E[수용 기준 정의]
     E --> F[예외 케이스 식별]
@@ -63,22 +63,16 @@ graph TD
 
 분석:
 ├── 주요 키워드: JWT, 인증
-├── 도메인: 보안, 인증
-├── 관련 참고자료: token-auth.md, security-compliance.md
+├── 관련 참고자료: security-basic.md
 └── 유사 기존 기능: 없음
 ```
 
-### 2단계: 도메인 참고자료 로드
+### 2단계: 참고자료 로드
 
 ```javascript
-// 키워드 기반 자동 로드
-const keywords = ["JWT", "인증", "토큰"];
-const docs = loadDomainDocs(keywords);
-// → token-auth.md, security-compliance.md
-
-// 도메인별 체크리스트 로드
-const checklists = loadDomainChecklists(project.domain);
-// → compliance.md, security.md
+// 공통 체크리스트 로드 (_base)
+const checklists = glob(".claude/domains/_base/checklists/*.md");
+// → common.md, security-basic.md, architecture.md
 ```
 
 ### 3단계: 요구사항 구조화
@@ -211,47 +205,6 @@ So that {가치}
 
 ---
 
-## 도메인별 요구사항 보완
-
-### fintech 도메인
-
-```markdown
-## 추가 요구사항 (fintech)
-
-### 컴플라이언스
-- [ ] PCI-DSS 준수 여부 확인
-- [ ] 전자금융감독규정 준수 여부 확인
-- [ ] 감사 로그 요구사항 정의
-
-### 보안
-- [ ] 민감정보 암호화 방식 정의
-- [ ] 토큰 보안 요구사항 정의
-- [ ] Rate Limiting 기준 정의
-
-### 금융 특화
-- [ ] 거래 멱등성 처리 방식
-- [ ] 정산 연동 방식 (해당 시)
-- [ ] 취소/환불 정책 (해당 시)
-```
-
-### ecommerce 도메인
-
-```markdown
-## 추가 요구사항 (ecommerce)
-
-### 재고/주문
-- [ ] 재고 동시성 처리 방식
-- [ ] 주문 상태 전이 정의
-- [ ] 취소/환불 정책
-
-### 결제 연동
-- [ ] 결제 수단 목록
-- [ ] 결제 실패 처리 방식
-- [ ] 부분 취소 지원 여부
-```
-
----
-
 ## skill-feature 연동
 
 agent-planner는 skill-feature와 함께 동작합니다:
@@ -264,7 +217,7 @@ agent-planner는 skill-feature와 함께 동작합니다:
 │ agent-planner 활성화                 │
 │                                      │
 │ 1. 요구사항 분석                     │
-│ 2. 도메인 참고자료 로드               │
+│ 2. 참고자료 로드                     │
 │ 3. 요구사항 문서 생성                 │
 │ 4. 사용자 검토 요청                   │
 └─────────────────────────────────────┘
@@ -372,7 +325,6 @@ docs/requirements/
 - [ ] 예외 케이스가 식별되었는가?
 - [ ] 비기능 요구사항이 정의되었는가?
 - [ ] 의존성이 명시되었는가?
-- [ ] 도메인 특화 요구사항이 포함되었는가?
 - [ ] 참고자료가 적절히 연결되었는가?
 
 ---

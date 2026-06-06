@@ -50,8 +50,8 @@ complexity-hint: medium
 ### Factor 4: 테스트 복잡도 (Test Complexity)
 1→단위만, 2→단위+통합, 3→외부 모킹, 5→E2E/성능, 8→보안/장애 시나리오
 
-### Factor 5: 도메인 복잡도 (Domain Complexity)
-1→단순 CRUD, 2→비즈니스 규칙 1~2개, 3→상태 머신/복잡 검증, 5→트랜잭션/동시성, 8→컴플라이언스/멱등성
+### Factor 5: 비즈니스 복잡도 (Business Logic Complexity)
+1→단순 CRUD, 2→비즈니스 규칙 1~2개, 3→상태 머신/복잡 검증, 5→트랜잭션/동시성, 8→대규모 불변식/멱등성
 
 ## 복잡도 점수 산출
 

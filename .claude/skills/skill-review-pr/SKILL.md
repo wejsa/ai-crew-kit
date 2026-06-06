@@ -1,6 +1,6 @@
 ---
 name: skill-review-pr
-description: PR 리뷰 - GitHub PR에 대한 5관점 통합 리뷰 수행. 사용자가 "PR 리뷰해줘" 또는 /skill-review-pr을 요청할 때 사용합니다.
+description: PR 리뷰 - GitHub PR에 대한 다관점 통합 리뷰 수행. 사용자가 "PR 리뷰해줘" 또는 /skill-review-pr을 요청할 때 사용합니다.
 disable-model-invocation: false
 model: opus
 allowed-tools: Bash(git:*), Bash(gh:*), Read, Write, Glob, Grep, Task, AskUserQuestion
@@ -129,7 +129,7 @@ CLAUDE.md 상태 추적 패턴. currentSkill="skill-review-pr"
 ## 리뷰 전 컨벤션 로딩
 1. PR 변경 파일 확인 (`gh pr view {N} --json files`)
 2. CLAUDE.md 트리거 테이블로 매칭 컨벤션 식별
-3. 도메인 체크리스트 Read: `_base/checklists/common.md`(필수) + `{domain}/checklists/`
+3. 공통 체크리스트 Read: `_base/checklists/common.md`(필수)
 
 ## 자동 Tier 분류 (sub-agent 수 자동 결정)
 
@@ -142,7 +142,7 @@ PR 정보 수집(Step 1) 후 PR 특성을 기반으로 sub-agent 호출 수를 �
 | **T1a** | 변경 파일 1건 이상 · 100% 테스트 파일 변경 · ≤200줄 · 보안 키워드 0 | 1 (`pr-reviewer-test`) | Test-only |
 | **T1b** | 변경 파일 1건 이상 · 100% 의존성 매니페스트 변경 · src/ 변경 0건 · 보안 키워드 0 | 1 (`pr-reviewer-security`) | Deps-only |
 | **T0** | 변경 파일 1건 이상 · ≤50줄 · src/ 변경 0건 · 보안 키워드 0 | 0 (직접 리뷰) | Trivial |
-| **T3** | >200줄 **OR** 보안 키워드 hit **OR** criticalPaths 매치 | 3 (domain+security+test) | Full |
+| **T3** | >200줄 **OR** 보안 키워드 hit | 3 (domain+security+test) | Full |
 | **T2** | 그 외 (catch-all 기본값) | 2 (domain+security) | Standard |
 
 > **순서 의도**: 작은 특수 케이스(T1a/T1b)를 T0보다 먼저 평가해야 30줄 test/deps PR이 0-agent로 흡수되지 않음. T3가 T2 위인 이유는 T3가 양성 조건(OR), T2는 음성 catch-all이라서. 변경 파일 0건(rebase-only, mode-change-only 등) PR은 T1a/T1b/T0 모두 "1건 이상" 조건으로 자연 탈락 → T3 미매치 → T2 catch-all에서 사람 검토 흐름으로 진입.
@@ -165,14 +165,10 @@ PR 정보 수집(Step 1) 후 PR 특성을 기반으로 sub-agent 호출 수를 �
 - 매치 예: `src/auth/`, `oauth-routes.ts`, `token-bucket.ts`, `migrations/202xx-add-sql-index.sql`은 hit. `src/profile.ts` 내부에 `"password"` 문자열만 있는 경우는 hit 아님
 - 코드 본문 secret 누출 검출은 별도 secret-scanning 책임 영역 (본 분류기 범위 밖)
 
-**criticalPaths** (옵셔널):
-- `.claude/domains/{domain}/domain.json`에 `criticalPaths: ["src/payment/**", ...]` 배열이 있으면 변경 파일과 글롭 매치 검사
-- 도메인 메타에 미정의면 본 트리거는 자연 SKIP (schema 변경 별도)
-
 ### Tier별 플로우
-- **T0**: Step 1 → 2(체크리스트) → 4~7 (Step 2.5 + sub-agent 스킵, 직접 diff 확인 후 결정)
-- **T1a / T1b**: Step 1 → 2 → 2.5 → 3(단일 sub-agent) → 4~7
-- **T2 / T3**: Step 1 → 2 → 2.5 → 3(다중 sub-agent) → 4~7
+- **T0**: Step 1 → 2(체크리스트) → 4~7 (sub-agent 스킵, 직접 diff 확인 후 결정)
+- **T1a / T1b**: Step 1 → 2 → 3(단일 sub-agent) → 4~7
+- **T2 / T3**: Step 1 → 2 → 3(다중 sub-agent) → 4~7
 
 > PR 코멘트 최상단 출력 형식은 "출력 → 분류 헤더" 섹션 참조 (SSOT).
 
@@ -201,31 +197,6 @@ diff는 임시 파일에 저장하여 에이전트가 Read로 참조하도록 �
 | 라인 수 제한 | diff 분석 | ⚠️ |
 | 충돌 없음 | mergeable | ✅ |
 
-### 2.5. 도메인 × 언어 Rules 로드 (Phase 4)
-
-`.claude/rules/{domain}/{language}/`에 도메인 비즈니스 제약 파일이 있으면 자동 참조.
-
-**T0(Trivial) 시 SKIP** (서브에이전트 미호출이므로 전달 불필요). T1a/T1b도 도메인 에이전트가 호출되지 않으므로 `rules_paths` 전달 불필요(자연 SKIP).
-
-#### 절차
-1. `project.json`에서 `domain`, `techStack.backend` 읽기. 둘 중 하나라도 부재 시 SKIP.
-2. **language 매핑**: `.claude/rules/README.md`의 "language 매핑 (SSOT)" 표를 Read로 로드 후 `techStack.backend` 값을 매칭하여 디렉토리명 도출. 표에 없는 값(`none` 포함)은 SKIP. 본 SKILL.md에 매핑 표를 복제하지 않음 — README가 단일 진실 소스(drift 방지).
-3. `.claude/rules/{domain}/{language}/*.md` 글롭 (예: `find .claude/rules/healthcare/python -name '*.md' -type f`).
-4. 매칭 파일 경로를 `rules_paths` 리스트에 수집.
-5. **부재 시 SKIP** — 디렉토리 자체가 없거나 매칭 0개면 기존 동작 유지(에이전트에 빈 목록 전달 X).
-6. `_example/_example/` 경로는 매핑 표에 없으므로 자연 SKIP.
-
-#### 출력
-`rules_paths`가 비어있지 않을 때만 PR 코멘트 헤더에 표시:
-```
-📋 적용 Rules: {domain}/{language} ({N}개) — {파일명1}, {파일명2}
-```
-
-#### 적용 대상 에이전트
-- **pr-reviewer-domain**: `rules_paths` 전달 → 도메인 비즈니스 제약 검토에 활용
-- **pr-reviewer-security**: 미전달 (보안 영역은 Phase 5 범용 보안과 분리)
-- **pr-reviewer-test**: 미전달
-
 ### 3. N관점 병렬 리뷰 (모드 기반 sub-agent 선택)
 
 **에이전트 결정**: "리뷰 모드 해석" 섹션의 우선순위로 실행할 에이전트 목록 결정.
@@ -233,15 +204,14 @@ diff는 임시 파일에 저장하여 에이전트가 Read로 참조하도록 �
 
 | sub-agent | 파일 | 관점 | 호출 조건 (모드 / Tier) |
 |-----------|------|------|------|
-| pr-reviewer-domain | `.claude/agents/pr-reviewer-domain.md` | 도메인 + 아키텍처 | 모드: full, standard / Tier: T2, T3 |
-| pr-reviewer-security | `.claude/agents/pr-reviewer-security.md` | 보안 + 컴플라이언스 | 모드: full, standard / Tier: T1b, T2, T3 |
+| pr-reviewer-domain | `.claude/agents/pr-reviewer-domain.md` | 아키텍처 + 로직 일관성 | 모드: full, standard / Tier: T2, T3 |
+| pr-reviewer-security | `.claude/agents/pr-reviewer-security.md` | 보안 | 모드: full, standard / Tier: T1b, T2, T3 |
 | pr-reviewer-test | `.claude/agents/pr-reviewer-test.md` | 테스트 품질 | 모드: full / Tier: T1a, T3 |
 
 각 Task: Read로 agent 파일 로드 후 지침에 따라 리뷰.
 **토큰 절감**: PR diff를 프롬프트에 직접 포함하지 않는다. 대신 에이전트에게 다음을 전달:
 - 변경 파일 목록 (파일명 + additions/deletions 수)
 - diff 파일 경로: `/tmp/pr-{N}-diff.txt`
-- **rules 파일 경로 목록 (`rules_paths`) — pr-reviewer-domain 에이전트에만 전달** (Step 2.5에서 수집). 비어있으면 미전달.
 - 에이전트는 해당 파일을 Read로 자유롭게 참조한다 (시야 제한 없음).
 
 | 항목 | 값 |
@@ -255,8 +225,8 @@ diff는 임시 파일에 저장하여 에이전트가 Read로 참조하도록 �
 - **2개+ 실패 — 사유별 분기**:
   - **인프라/환경 사유 (자동 폴백)** → 즉시 중단하지 않고 **메인 에이전트 직접 리뷰로 자동 폴백** (사용자에게 묻지 않음). **진입은 아래 1M 시그니처가 충족될 때만**:
     - **1M 시그니처 (필수)**: 실패 메시지에 `1M context` + (`credit` / `extra usage` / `usage required`) 동반 (예: `Usage credits required for 1M context`, `Extra usage is required for 1M context · run /extra-usage to enable`). 이는 Claude Code 서브에이전트가 부모 세션의 1M 컨텍스트 권한을 상속 못 받는 알려진 하네스 제약(서브에이전트 스폰 단계 실패)이며 PR 코드 문제가 아니다.
-    - "모든 서브에이전트가 0 tool use로 스폰 시점 동일 실패"는 **보조 정황일 뿐 단독 트리거가 아니다** (rate-limit·권한 오류·rules 경로 깨짐·잘못된 diff 경로 등도 0 tool use를 유발하므로). 1M 시그니처 없이 0 tool use만으로 자동 폴백하지 않는다.
-  - **그 외 사유 (즉시 중단 — 안전 기본값)** → 1M 시그니처가 **없는** 모든 2개+ 실패(원인 불명, timeout 다수, 권한/rate-limit/rules 경로 오류 등 0 tool use 포함, 리뷰 로직 실패)는 **진단 메시지와 함께 즉시 중단**. 자동 폴백으로 진짜 인프라 장애(예: API 키 무효, 깨진 rules 경로)를 가리지 않는다.
+    - "모든 서브에이전트가 0 tool use로 스폰 시점 동일 실패"는 **보조 정황일 뿐 단독 트리거가 아니다** (rate-limit·권한 오류·잘못된 diff 경로 등도 0 tool use를 유발하므로). 1M 시그니처 없이 0 tool use만으로 자동 폴백하지 않는다.
+  - **그 외 사유 (즉시 중단 — 안전 기본값)** → 1M 시그니처가 **없는** 모든 2개+ 실패(원인 불명, timeout 다수, 권한/rate-limit 오류 등 0 tool use 포함, 리뷰 로직 실패)는 **진단 메시지와 함께 즉시 중단**. 자동 폴백으로 진짜 인프라 장애(예: API 키 무효)를 가리지 않는다.
 
 **메인 에이전트 직접 리뷰 폴백 절차** (1M 시그니처 충족 시에만 자동 진입; 2+ 실패는 호출 에이전트가 2개 이상인 T2/T3에서만 도달):
 1. 리뷰 본문·종료 메시지에 **격하 배너** 명시: `⚠️ 리뷰 서브에이전트가 환경 제약(1M 컨텍스트 크레딧)으로 실패 → 메인 에이전트 직접 리뷰로 폴백. 독립 다관점 분리 효과 약화. 근본 해소: 세션을 1M 없는 표준 opus(200K)로 전환 후 재실행.` 로그에 `1M-subagent-fallback` 마커 명시.
@@ -300,8 +270,7 @@ Step 3 sub-agent들이 반환한 markdown 표 + prose를 다음 정규식 규약
    - 이슈 1건 (위 schema)
    - PR diff 경로: `/tmp/pr-{N}-diff.txt`
    - **CLAUDE.md 경로** (repo 루트): 컨벤션 명시 여부 판단용
-   - **매칭 컨벤션 파일 경로 목록**: Step 2의 "리뷰 전 컨벤션 로딩" 결과 재사용 (`_base/checklists/common.md` + `{domain}/checklists/`)
-   - `source_agent === "domain"`이면 `rules_paths` 추가 전달
+   - **매칭 컨벤션 파일 경로 목록**: Step 2의 "리뷰 전 컨벤션 로딩" 결과 재사용 (`_base/checklists/common.md`)
 4. **채점 Task 출력 (정수 0-100 + 한 줄 근거)**. 출력 파싱 실패 / 범위 외(>100, <0, NaN, prose) / timeout 시:
    - 1회 재시도
    - 재시도 실패 시 **fallback confidence = critical 임계치 값** (디폴트 80). 채점 인프라 장애가 모든 sub-agent CRITICAL을 자동 머지 차단으로 escalate하는 위험 차단 — confidence를 임계치 경계에 두어 매트릭스가 CRITICAL은 그대로 게시, MAJOR/MINOR는 임계치 통과 여부에 따라. **로그에 "scoring-failure-fallback" 마커 명시**(사용자가 신뢰성 저하를 인지하도록).
@@ -311,13 +280,13 @@ Step 3 sub-agent들이 반환한 markdown 표 + prose를 다음 정규식 규약
 
 #### Confidence Rubric (채점 Task에게 그대로 전달)
 
-> 아래 0/25/50/75/100은 **anchor 예시**이며, 채점자는 임의 정수(0~100)를 부여할 수 있다. CLAUDE.md/rules/컨벤션에 직접 명시된 위반은 **80 이상** 부여(매트릭스 critical 임계치와 정렬).
+> 아래 0/25/50/75/100은 **anchor 예시**이며, 채점자는 임의 정수(0~100)를 부여할 수 있다. CLAUDE.md/컨벤션에 직접 명시된 위반은 **80 이상** 부여(매트릭스 critical 임계치와 정렬).
 
 - **0**: 명백한 false positive. 가벼운 검토에도 무너지거나 PR과 무관한 기존 이슈.
-- **25**: 약한 의심. 실제 이슈일 수도 있으나 검증 불가. 스타일 이슈가 CLAUDE.md/rules에 명시 안 됨.
+- **25**: 약한 의심. 실제 이슈일 수도 있으나 검증 불가. 스타일 이슈가 CLAUDE.md/컨벤션에 명시 안 됨.
 - **50**: 실제 이슈지만 minor nitpick. PR 맥락에서 영향 작음.
 - **75**: 확신 — 실무에서 발현될 가능성 높음 (단, 컨벤션 명시 위반은 80+ 부여).
-- **80~99**: CLAUDE.md/rules/컨벤션에 직접 명시된 위반. 머지 차단 가치 있음.
+- **80~99**: CLAUDE.md/컨벤션에 직접 명시된 위반. 머지 차단 가치 있음.
 - **100**: 확정 — 증거가 직접 입증.
 
 #### False-positive 가이드 (채점 Task에게 전달)
@@ -325,7 +294,7 @@ Step 3 sub-agent들이 반환한 markdown 표 + prose를 다음 정규식 규약
 - 버그처럼 보이지만 실제 버그 아닌 패턴
 - 시니어 엔지니어가 지적 안 할 nitpick
 - 린터/타입체커/컴파일러가 잡을 이슈 (별도 CI)
-- CLAUDE.md/rules에 명시 안 된 일반 품질 이슈
+- CLAUDE.md/컨벤션에 명시 안 된 일반 품질 이슈
 - 코드에서 명시적 silence된 항목 (lint ignore 주석 등)
 - 사용자가 수정하지 않은 라인의 이슈
 
@@ -374,7 +343,6 @@ Step 3 sub-agent들이 반환한 markdown 표 + prose를 다음 정규식 규약
 1. **분류 헤더** (명시 `review` 설정 시 "리뷰 모드 헤더", 자동 분류 시 "Tier 헤더")
 2. **Confidence 필터 헤더** (채점이 실행된 경우, T0/이슈 0개 SKIP 시 미출력)
 3. **강등 CRITICAL 경고 헤더** (강등 카운트 ≥1일 때만, 자기 PR이면 더 강조)
-4. **적용 Rules 헤더** (rules_paths가 비어있지 않을 때만)
 
 > 위 순서는 SSOT. T0(Trivial)은 헤더 1만 출력.
 
@@ -456,7 +424,7 @@ Step 7은 별도 분기를 정의하지 않는다. **Step 6 결정 분기 표의
 > **Confidence 매트릭스와 fix loop 결합 (SSOT)**: fix loop 진입 조건은 **Step 4 매트릭스의 'CRITICAL 게시' 행만**(confidence ≥ critical 임계치). 강등된 CRITICAL(major bypass로 게시되지만 REQUEST_CHANGES 트리거 안 함)은 fix loop 대상 아님 — false-positive CRITICAL이 confidence flip-flop으로 fixLoopCount를 소모하는 진동 차단.
 
 ## 출력
-필수 포함: PR 번호/제목/작성자/브랜치, **분류 헤더(리뷰 모드 또는 Tier) + 실행 에이전트 목록**, **Confidence 필터 헤더**(채점 실행 시 항상), **강등 CRITICAL 경고 헤더**(강등 ≥1 시), **적용 Rules**(있을 때만), 체크리스트 결과, 관점별 리뷰 테이블(CRITICAL/MAJOR/MINOR 수 — **모두 필터 후 기준**), 주요 피드백 목록(이슈마다 confidence 점수 병기, 강등 항목은 `[원래 CRITICAL · 강등]` 접두), 결정(APPROVED/REQUEST_CHANGES), 다음 자동 스킬
+필수 포함: PR 번호/제목/작성자/브랜치, **분류 헤더(리뷰 모드 또는 Tier) + 실행 에이전트 목록**, **Confidence 필터 헤더**(채점 실행 시 항상), **강등 CRITICAL 경고 헤더**(강등 ≥1 시), 체크리스트 결과, 관점별 리뷰 테이블(CRITICAL/MAJOR/MINOR 수 — **모두 필터 후 기준**), 주요 피드백 목록(이슈마다 confidence 점수 병기, 강등 항목은 `[원래 CRITICAL · 강등]` 접두), 결정(APPROVED/REQUEST_CHANGES), 다음 자동 스킬
 
 ### 분류 헤더 (PR 코멘트 최상단, 둘 중 하나만 출력)
 
@@ -504,12 +472,6 @@ Step 3.5 채점이 **실행되면 항상 출력**(T0/이슈 0개로 SKIP된 경�
 ```
 🛑 자기 PR + 강등 CRITICAL — 자동 머지 chain 차단됨. 사람 검토 후 수동 머지 필요.
 ```
-
-### 적용 Rules 헤더 (rules_paths가 비어있지 않을 때만 — 강등 경고 헤더 다음)
-```
-📋 적용 Rules: healthcare/python (1개) — phi-logging-guard.md
-```
-- `rules_paths`가 비어있거나 T0(직접 리뷰)이면 본 헤더 자체를 출력하지 않는다 (노이즈 방지).
 
 ## 에러 복구
 CLAUDE.md "에러 복구 프로토콜" 참조. 미존재 시 3회 재시도 후 사용자 보고.
