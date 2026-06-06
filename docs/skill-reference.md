@@ -24,7 +24,7 @@
 |------|------|------|
 | 🔵 **일상 (Daily)** | status, plan, impl, review-pr, merge-pr, hotfix | 매일 사용하는 핵심 워크플로우 |
 | 🟢 **주간 (Weekly)** | feature, backlog, report, health-check, retro | 주기적 관리 + 분석 |
-| ⚙️ **설정 (Setup)** | init, onboard, domain, upgrade, create, estimate, docs, validate | 초기 설정 + 확장 |
+| ⚙️ **설정 (Setup)** | init, onboard, upgrade, create, estimate, docs, validate | 초기 설정 + 확장 |
 
 > 처음이라면 **일상 티어 6개**만 익히면 됩니다. 나머지는 필요할 때 참조하세요.
 
@@ -34,7 +34,7 @@
 
 | 명령어 | 설명 |
 |--------|------|
-| `/skill-init` | 프로젝트 초기화 (**v2.1+** 요구사항 우선 플로우: 자유 서술 → LLM 도메인/스택 추천 → 백로그 자동 분해 opt-in. ai-crew-kit clone 감지 시 kit 잔여 자동 정리) |
+| `/skill-init` | 프로젝트 초기화 (**v2.1+** 요구사항 우선 플로우: 자유 서술 → LLM 스택 추천 → 백로그 자동 분해 opt-in. ai-crew-kit clone 감지 시 kit 잔여 자동 정리) |
 | `/skill-init --quick` | 제로 결정 빠른 초기화 (디렉토리명 매칭 → 파일 감지 → 빈 백로그) |
 | `/skill-init --reset` | 기존 설정 초기화 (`.claude/temp/reset-backup-{ts}-{pid}/`로 자동 백업 + `MANIFEST.txt` 체크섬 기록) |
 | `/skill-status` | 현재 상태 확인 |
@@ -50,7 +50,7 @@
 
 > **ai-crew-kit clone 자동 정리** (`/skill-init`, `/skill-onboard` 공통): origin URL 정규식 + initial commit fingerprint 둘 다 일치 + 더티/미푸시/비-main 가드 통과 시 kit 잔여 14종(`CHANGELOG.md`, `docs/`, `examples/`, `tests/`, `scripts/`, `.github/`, `memory/`, `LICENSE`, `README.md`, `CLAUDE.md`, `VERSION`, `.claude/temp/`, `.claude/hooks/tests/`, `.claude/state/`, `.claude/settings.local.json`)을 추가 확인 없이 자동 삭제. README.md/CLAUDE.md/VERSION은 Step 10에서 사용자 프로젝트용으로 새로 생성. 가드 미통과 시 정리 SKIP하고 일반 진행 (kit 개발자 환경 보호).
 >
-> **v2.1+ 요구사항 우선 플로우** (`/skill-init` 일반 모드): Step 2 요구사항 자유 서술 → Step 3 lean 시 최대 3질문 → Step 4 메타 자동 결정(+sanitization) → Step 5 LLM 추천 + 차순위 → Step 6~8 에이전트/프로필 → Step 9 백로그 자동 분해 (opt-in, Phase 4-카테고리 + Hard limits ≤30 + 컴플라이언스 priority 강제). 입력 신뢰 경계 섹션이 prompt injection 방어. 재현성 표 (결정적 vs 경험적 관측 분리). 자세히는 [skill-init/SKILL.md](https://github.com/wejsa/ai-crew-kit/blob/main/.claude/skills/skill-init/SKILL.md) 참조.
+> **v2.1+ 요구사항 우선 플로우** (`/skill-init` 일반 모드): Step 2 요구사항 자유 서술 → Step 3 lean 시 최대 3질문 → Step 4 메타 자동 결정(+sanitization) → Step 5 LLM 스택 추천 + 차순위 → Step 6~8 에이전트/프로필 → Step 9 백로그 자동 분해 (opt-in, Phase 4-카테고리 + Hard limits ≤30 + priority 반영). 입력 신뢰 경계 섹션이 prompt injection 방어. 재현성 표 (결정적 vs 경험적 관측 분리). 자세히는 [skill-init/SKILL.md](https://github.com/wejsa/ai-crew-kit/blob/main/.claude/skills/skill-init/SKILL.md) 참조.
 
 ### 개발 워크플로우 🔵
 
@@ -65,9 +65,9 @@
 | `/skill-review-pr {번호} --auto-fix` | PR 리뷰 + CRITICAL 이슈 자동 수정 |
 | `/skill-review-pr {번호} --mode standard` | standard 모드로 리뷰 (일회성, 자동 Tier 분류 우회) |
 | `/skill-review-pr config` | 리뷰 모드 설정 확인 (review 섹션 유무에 따라 자동 분류/명시 설정 표시) |
-| `/skill-review-pr config --mode standard` | 프리셋 변경 (domain+security) |
+| `/skill-review-pr config --mode standard` | 프리셋 변경 (아키텍처·로직+보안, 에이전트 슬롯: domain+security) |
 | `/skill-review-pr config --mode full` | 프리셋 변경 (전체 3 에이전트) |
-| `/skill-review-pr config --agents domain,test` | 커스텀 에이전트 조합 (domain은 schema-level 필수) |
+| `/skill-review-pr config --agents domain,test` | 커스텀 에이전트 조합 (domain 슬롯 = 아키텍처·로직 리뷰어) |
 | `/skill-review-pr config --reset` | `review` 섹션 삭제 (자동 Tier 분류 활성화) |
 | `/skill-fix {번호}` | CRITICAL 이슈 수정 |
 | `/skill-merge-pr {번호}` | PR 머지 |
@@ -81,7 +81,7 @@
 | **T1a** Test-only | 100% 테스트 파일 · ≤200줄 · 보안 키워드 0 | 1 (`pr-reviewer-test`) |
 | **T1b** Deps-only | 100% 의존성 매니페스트 · src/ 변경 0 · 보안 키워드 0 | 1 (`pr-reviewer-security`) |
 | **T0** Trivial | ≤50줄 · src/ 변경 0 · 보안 키워드 0 | 0 (직접 리뷰) |
-| **T3** Full | >200줄 OR 보안 키워드 OR `criticalPaths` 매치 | 3 (domain+security+test) |
+| **T3** Full | >200줄 OR 보안 키워드 | 3 (domain+security+test) |
 | **T2** Standard | 그 외 (catch-all) | 2 (domain+security) |
 
 흔한 작은 PR(테스트 추가, deps bump, docs 변경)이 헤비 경로를 자동 우회. 보안/대규모 변경은 여전히 T3 풀 리뷰.
@@ -138,11 +138,6 @@ sub-agent 도출 이슈에 0-100 점수 부여 후 severity × confidence 매트
 
 | 명령어 | 설명 |
 |--------|------|
-| `/skill-domain` | 도메인 관리 |
-| `/skill-domain list` | 도메인 목록 조회 |
-| `/skill-domain switch {도메인}` | 도메인 전환 |
-| `/skill-domain add-doc {경로}` | 참고자료 추가 |
-| `/skill-domain add-checklist {경로}` | 체크리스트 추가 |
 | `/skill-create` | 커스텀 스킬 생성 |
 | `/skill-upgrade` | 프레임워크 업그레이드 |
 | `/skill-upgrade --dry-run` | 변경 사항 미리보기 |

@@ -9,7 +9,7 @@ AI Crew Kit을 사용하다가 프레임워크 없이 진행하려는 경우를 
 | 디렉토리/파일 | 역할 | 제거 안전성 |
 |-------------|------|-----------|
 | `.claude/skills/` | 스킬 정의 (SKILL.md) | 안전하게 삭제 가능 |
-| `.claude/domains/` | 도메인 컨벤션, 체크리스트 | 안전하게 삭제 가능 |
+| `.claude/domains/` | 공통 컨벤션·체크리스트 (`_base`/`general`) | 안전하게 삭제 가능 |
 | `.claude/templates/` | CLAUDE.md 생성 템플릿 | 안전하게 삭제 가능 |
 | `.claude/agents/` | 에이전트 정의 | 안전하게 삭제 가능 |
 | `.claude/schemas/` | JSON 스키마 | 안전하게 삭제 가능 |
@@ -81,5 +81,5 @@ rmdir .claude 2>/dev/null
 | 유지할 기능 | 필요 파일 |
 |-----------|----------|
 | Claude Code 기본 지침 | `CLAUDE.md`만 유지 |
-| 도메인 참고자료 | `.claude/domains/{선택한 도메인}/` 유지 |
+| 공통 참고자료 | `.claude/domains/general/docs/` 유지 |
 | 코딩 컨벤션 | `.claude/domains/_base/conventions/` 유지 |

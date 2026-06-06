@@ -1,17 +1,17 @@
 # AI Crew Kit 예제 프로젝트
 
-이 디렉토리는 AI Crew Kit의 사용 예시를 제공합니다.
+이 디렉토리는 AI Crew Kit의 사용 예시를 제공합니다. AI Crew Kit은 도메인 무관 범용 프레임워크이므로, 예제는 특정 비즈니스 도메인이 아니라 **워크플로우와 설정 구조**를 보여주는 데 초점을 둡니다.
 
 ## 예제 목록
 
-### 1. fintech-gateway
+### general-app — 범용 최소 예제
 
-핀테크 도메인의 API Gateway 프로젝트 예제입니다.
+기술 스택에 중립적인 범용 프로젝트 설정 예제입니다.
 
 ```
-fintech-gateway/
+general-app/
 ├── .claude/state/
-│   ├── project.json      # 프로젝트 설정 (fintech 도메인)
+│   ├── project.json      # 프로젝트 설정 (범용)
 │   └── backlog.json      # 백로그 예시
 ├── docs/requirements/
 │   └── TASK-001-spec.md  # 요구사항 문서 예시
@@ -20,52 +20,14 @@ fintech-gateway/
 ```
 
 **특징:**
-- fintech 도메인 설정
-- Spring Boot + Kotlin 기술 스택
-- JWT 인증 기능 예제
+- 도메인 무관 범용 설정
+- 기술 스택 자동 감지 + 빌드/테스트 게이트
 - PM, backend, code-reviewer, qa 에이전트 활성화
-
-### 2. ecommerce-shop
-
-이커머스 도메인의 온라인 쇼핑몰 프로젝트 예제입니다.
-
-```
-ecommerce-shop/
-├── .claude/state/
-│   ├── project.json      # 프로젝트 설정 (ecommerce 도메인)
-│   └── backlog.json      # 백로그 예시
-├── docs/requirements/
-│   ├── SHOP-001-spec.md  # 상품 카탈로그 요구사항
-│   └── SHOP-002-spec.md  # 주문 처리 시스템 요구사항
-├── CLAUDE.md             # 생성된 CLAUDE.md 예시
-└── README.md             # 프로젝트 설명
-```
-
-**특징:**
-- ecommerce 도메인 설정
-- Node.js (TypeScript) + Next.js 기술 스택
-- 주문 처리 + 상품 카탈로그 예제
-- PM, backend, frontend, code-reviewer, qa 에이전트 활성화
-
-### 3. pg-gateway-backlog.json (레거시)
-
-PG Gateway 마이그레이션 프로젝트의 실제 백로그 예시입니다.
-45개의 상세한 Task가 포함된 대규모 백로그 구조를 참고할 수 있습니다.
+- plan → impl → review → merge 오케스트레이션 예시
 
 ---
 
 ## 예제 사용법
-
-### 예제 프로젝트 복사
-
-```bash
-# fintech-gateway 예제를 새 프로젝트로 복사
-cp -r examples/fintech-gateway my-new-project
-cd my-new-project
-
-# 프로젝트 설정 수정
-vi .claude/state/project.json
-```
 
 ### 기존 프로젝트에 적용
 
@@ -87,12 +49,8 @@ cd my-existing-project
 # 새 디렉토리 생성
 mkdir my-project && cd my-project
 
-# AI Crew Kit 초기화
+# AI Crew Kit 초기화 (요구사항 자유 서술 → 스택 LLM 추천 → 에이전트 팀 선택)
 /skill-init
-
-# 도메인: fintech
-# 스택: spring-boot-kotlin
-# 에이전트: pm, backend, code-reviewer, qa
 ```
 
 ---

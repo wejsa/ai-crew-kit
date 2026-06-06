@@ -196,7 +196,7 @@ def test_cumulative_apply_skips_non_project_paths(schema: dict, migrations: dict
     외부 리뷰 #2 — migrations.json v1.39.0의 `backlog.step.prLineLimit`은 project.json
     영역이 아님(`additionalProperties: false`와 충돌). schema-aware 필터로 안전 우회.
     """
-    minimal = {"name": "x", "domain": "fintech", "version": "1.0.0"}
+    minimal = {"name": "x", "version": "1.0.0"}
     apply_migrations(minimal, migrations, TARGET_VERSION, schema_top_level_keys(schema))
 
     assert "backlog" not in minimal, "backlog.* 필드가 project.json에 누락 적용됨 (schema 위반 위험)"

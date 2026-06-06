@@ -1,7 +1,7 @@
 {
-  "name": "fintech-fixture",
-  "description": "v1 fintech project — Phase 8 Step 3 마이그레이션 검증용",
-  "domain": "fintech",
+  "name": "general-fixture",
+  "description": "v1 범용 project — 마이그레이션 회귀 검증용 (도메인 무관)",
+  "domain": "general",
   "version": "1.0.0",
   "kitVersion": "1.45.1",
   "kitSource": "https://github.com/wejsa/ai-crew-kit.git",

@@ -2,17 +2,9 @@
 
 > [← README로 돌아가기](../README.md)
 
-## 지원 도메인
+## 적용 범위
 
-| 도메인 | 설명 | 기본 스택 | 컴플라이언스 |
-|--------|------|----------|-------------|
-| 🏦 **fintech** | 결제, 정산, 오픈뱅킹, 마이데이터 | Spring Boot + MySQL + Redis | PCI-DSS, 전자금융감독규정, 오픈뱅킹규정, 신용정보법 |
-| 🛒 **ecommerce** | 이커머스, 마켓플레이스, 구독 커머스 | Spring Boot + Next.js + MySQL + Redis | 전자상거래법, 소비자보호법, 통신판매중개의무 |
-| ☁️ **saas** | 멀티테넌시, 구독 결제, SaaS 플랫폼 | Spring Boot + PostgreSQL + Redis | GDPR, SOC2, 정보통신망법 |
-| 🏥 **healthcare** | PHI 보호, 진료기록, 처방, 보험 청구 | Spring Boot + PostgreSQL + Redis | HIPAA, 의료법, 생명윤리법 |
-| 🔧 **general** | 범용 프로젝트 | Spring Boot + MySQL | - |
-
-각 도메인에는 전용 **체크리스트**, **참고자료**, **코드 템플릿**이 포함됩니다.
+AI Crew Kit은 특정 도메인에 종속되지 않는 **범용 AI 크루 개발 프레임워크**입니다. 모든 프로젝트 유형에 적용할 수 있으며, 공통 컨벤션·체크리스트·헬스체크(`.claude/domains/_base/`)가 기본 적용됩니다. 프로젝트별 커스텀은 `project.json` 및 `CLAUDE.md`의 `CUSTOM_SECTION`에서 자유롭게 추가합니다.
 
 ## 지원 기술 스택
 
@@ -66,7 +58,7 @@
 |---------|------|------------|
 | **agent-pm** | 오케스트레이션, 워크플로우 관리 | 항상 |
 | **agent-backend** | 백엔드 코드 구현 | 기본 |
-| **agent-code-reviewer** | 5관점 통합 코드 리뷰 | 기본 |
+| **agent-code-reviewer** | 다관점 통합 코드 리뷰 | 기본 |
 | **agent-planner** | 요구사항 정의, 기획 | 선택적 |
 | **agent-frontend** | 프론트엔드 구현 | 선택적 |
 | **agent-db-designer** | DB 설계 분석 (sub-agent) | 선택적 |
@@ -77,8 +69,8 @@
 
 | | 에이전트 | 호출 스킬 | 역할 |
 |---|---------|----------|------|
-| 🔴 | **pr-reviewer-security** | skill-review-pr | 보안 + 컴플라이언스 리뷰 |
-| 🟣 | **pr-reviewer-domain** | skill-review-pr | 도메인 + 아키텍처 리뷰 |
+| 🔴 | **pr-reviewer-security** | skill-review-pr | 보안 리뷰 |
+| 🟣 | **pr-reviewer-domain** | skill-review-pr | 아키텍처 + 비즈니스 로직 일관성 리뷰 |
 | 🔵 | **pr-reviewer-test** | skill-review-pr | 테스트 품질 리뷰 |
 | 📝 | **docs-impact-analyzer** | skill-impl | 문서 영향도 분석 + 초안 제안 |
 | 🟠 | **agent-db-designer** | skill-plan | DB 설계 분석 (병렬) |
@@ -93,14 +85,11 @@
 .claude/
 ├── agents/           # 에이전트 정의
 ├── skills/           # 스킬 정의
-├── domains/          # 도메인 템플릿
-│   ├── _registry.json  # 도메인 카탈로그
+├── domains/          # 공통 컨벤션 + 기본 템플릿
 │   ├── _base/          # 공통 컨벤션 + 체크리스트
-│   │   ├── conventions/  # 개발 컨벤션 (9개)
+│   │   ├── conventions/  # 개발 컨벤션
 │   │   └── checklists/   # 리뷰 체크리스트
-│   ├── fintech/        # 핀테크 도메인
-│   ├── ecommerce/      # 이커머스 도메인
-│   └── general/        # 범용 도메인
+│   └── general/        # 기본 docs (getting-started 등)
 ├── templates/        # 파일 생성 템플릿
 │   ├── CLAUDE.md.tmpl    # CLAUDE.md 템플릿
 │   └── README.md.tmpl   # README.md 템플릿
@@ -184,26 +173,24 @@ AI Crew Kit은 **프롬프트 기반 시스템**입니다.
 
 | 원칙 | 설명 |
 |------|------|
-| **Domain-Driven Kit** | 도메인 선택이 전체 키트 동작 결정 |
-| **Layered Override** | `_base` → `{domain}` → `{domain}/{language}` → `project.json` 순서로 설정 적용 (Phase 4부터 4층) |
+| **Stack-Aware Kit** | 스택 인지로 빌드·리뷰·추천 자동 조정 |
+| **Layered Override** | `domains/_base/`(공통 기본값) → `project.json`(프로젝트 설정) → `CLAUDE.md` `CUSTOM_SECTION`(프로젝트 커스텀) 순서로 설정 적용 |
 | **Agent Orchestration** | PM이 워크플로우에 따라 에이전트 자동 분배 |
 | **Zero-Config Start** | `/skill-init` 한 번으로 즉시 가동 |
 
 ## Layered Override
 
-설정은 다음 순서로 오버라이드됩니다 (v2.0.0-alpha.3 / Phase 4부터 4층):
+설정은 다음 순서로 오버라이드됩니다:
 
 ```
-1. project.json (사용자 설정)              ← 최우선
-2. .claude/rules/{domain}/{language}/      ← 도메인 × 언어 교차 (Phase 4 신설)
-3. domains/{domain}/domain.json            ← 도메인 설정
-4. domains/_base/                          ← 공통 기본값
-   ─────────────────────────────────────────
-   하드코딩 기본값                          ← baseline (카운트 외)
+1. CLAUDE.md CUSTOM_SECTION (프로젝트 커스텀) ← 최우선
+2. project.json                               ← 프로젝트 설정
+3. domains/_base/                             ← 공통 기본값
+   ──────────────────────────────────────────
+   하드코딩 기본값                             ← baseline (카운트 외)
 ```
 
-> 2층(`rules`)은 **PR 리뷰 컨텍스트 한정 적용** — 도메인 비즈니스 제약(MUST/MUST NOT) 표현용. 기존 conventions/checklists/health 영역의 로드 구조는 변경되지 않습니다(2~3층 그대로 유지).
-> 자세한 사용법은 [docs/customization.md](./customization.md#도메인--언어-rules)와 [.claude/rules/README.md](../.claude/rules/README.md) 참조.
+> 자세한 커스터마이징 방법은 [docs/customization.md](./customization.md) 참조.
 
 ## 설계 철학: 프레임워크와 AI의 역할 분리
 

@@ -25,21 +25,6 @@ def base_patterns() -> dict:
 
 
 @pytest.fixture(scope="session")
-def fintech_patterns() -> dict:
-    return _load(".claude/domains/fintech/health/secrets-patterns.json")
-
-
-@pytest.fixture(scope="session")
-def healthcare_patterns() -> dict:
-    return _load(".claude/domains/healthcare/health/secrets-patterns.json")
-
-
-@pytest.fixture(scope="session")
-def ecommerce_patterns() -> dict:
-    return _load(".claude/domains/ecommerce/health/secrets-patterns.json")
-
-
-@pytest.fixture(scope="session")
 def skill_md_text() -> str:
     """skill-health-check/SKILL.md 본문 — SSOT drift 검증용 (M001 후속)."""
     return (REPO_ROOT / ".claude/skills/skill-health-check/SKILL.md").read_text(encoding="utf-8")

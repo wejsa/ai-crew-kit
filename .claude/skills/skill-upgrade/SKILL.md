@@ -76,15 +76,14 @@ complexity-hint: light
 
 **6-0. SHA256 해시 비교 (전체 프레임워크 파일)**
 
-전체 프레임워크 디렉토리(`agents`, `skills`, `domains`, `rules`, `templates`, `schemas`, `workflows`, `docs`, `hooks`)의 모든 파일에 대해 SHA256 해시 비교:
+전체 프레임워크 디렉토리(`agents`, `skills`, `domains`, `templates`, `schemas`, `workflows`, `docs`, `hooks`)의 모든 파일에 대해 SHA256 해시 비교:
 - 동일 경로에 존재하나 해시 불일치 → 사용자 수정 파일로 감지
 - 감지된 파일은 미리보기에 포함 (파일명, 현재 해시 앞 8자, 소스 해시 앞 8자)
 - 덮어쓰기 전 사용자에게 확인 (AskUserQuestion): "소스로 덮어쓰기" / "현재 유지" / "수동 머지"
 - ⚠️ **`hooks/` 스크립트는 clone/세션 시 자동 실행되는 보안 민감 파일**이다. 해시 불일치 hook은 미리보기에서 반드시 가시화하고, 교체 후 `skill-health-check`의 `hook-safety` 카테고리가 위험 패턴을 재검한다. 사용자가 직접 하드닝한 hook을 보존하려면 "현재 유지"를 선택한다(Step 11이 해당 파일 교체에서 제외).
 
-**6-1. 도메인 커스텀 파일 감지**: 현재에만 존재하는 파일 = 사용자 추가 커스텀 파일
-**6-2. domain.json 커스텀 항목 감지**: 사용자 추가 `keywords`, `checklists` 항목 추출
-**6-3. settings.json 커스텀 권한 감지**: 현재에만 있는 `allow[]` 항목 = 커스텀 권한
+**6-1. 커스텀 파일 감지**: `.claude/domains/_base/`·`.claude/domains/general/` 아래에서 현재에만 존재하는 파일 = 사용자 추가 커스텀 체크리스트/컨벤션 파일
+**6-2. settings.json 커스텀 권한 감지**: 현재에만 있는 `allow[]` 항목 = 커스텀 권한
 
 ### Step 7: 변경 미리보기 (diff)
 
@@ -99,6 +98,7 @@ complexity-hint: light
 
 백업 디렉토리: `.claude/temp/upgrade-backup-{YYYYMMDD-HHmmss}/`
 - 프레임워크 디렉토리(**업데이트 대상 표 전체 — `.claude/hooks/` 포함**, Step 11이 삭제하므로 롤백 위해 필수) + settings.json + CLAUDE.md + README.md → `backup.tar.gz`
+- **v3.0.0+ — 잔여 도메인 자산도 백업에 포함**: Step 11.5에서 opt-in 삭제 가능한 `.claude/domains/{fintech,ecommerce,saas,healthcare}/`, `.claude/rules/`, `.claude/domains/_registry.json` 중 현재 존재하는 항목을 `backup.tar.gz`에 함께 담는다(삭제 선택 시 롤백 보장).
 - `tar tzf`로 무결성 검증
 - 현재 kitVersion을 `kitVersion.txt`에 기록
 
@@ -108,7 +108,7 @@ complexity-hint: light
 - CLAUDE.md/README.md에서 `CUSTOM_SECTION_START` 마커 존재 확인
 - 마커 없으면: 전체 파일 백업 + 템플릿 diff로 커스텀 내용 추출 + 경고 출력
 
-**10-1~10-5**: CLAUDE.md/README.md 커스텀 섹션, 도메인 커스텀 파일, domain.json 커스텀 항목, settings.json 커스텀 권한 — 각각 임시 저장
+**10-1~10-4**: CLAUDE.md/README.md 커스텀 섹션, `_base`/`general` 커스텀 파일, settings.json 커스텀 권한 — 각각 임시 저장
 
 ### Step 11: 프레임워크 파일 교체
 
@@ -119,15 +119,26 @@ complexity-hint: light
 - 커스텀 스킬 복원
 - **실패 시 자동 롤백**: `tar xzf "$BACKUP_DIR/backup.tar.gz"` + 잠금 파일 삭제
 
+> **v3.0.0 — 도메인 디렉토리 단위 복사 주의**: `.claude/domains/` 교체는 **디렉토리 통째 삭제 후 복사**가 아니라 `_base`·`general` 등 신규 소스에 존재하는 항목만 동기화한다. 신규 소스에는 `fintech`/`ecommerce`/`saas`/`healthcare` 도메인 디렉토리가 없으므로 **이들은 자연히 미복사**되며, 기존 시드의 잔여 도메인 디렉토리는 **강제로 삭제하지 않고 그대로 둔다**(아래 Step 11.5에서 opt-in 정리).
+
+### Step 11.5: 잔여 도메인 디렉토리 opt-in 정리 (v3.0.0+)
+
+v3.0.0은 도메인 콘텐츠(`fintech`/`ecommerce`/`saas`/`healthcare`)와 `.claude/rules/`, `_registry.json`을 제거했다. 신규 소스에 없어 자연 미복사되지만, **기존 시드에 남은 잔여 디렉토리는 자동 삭제하지 않는다**.
+
+- 잔여 감지: `.claude/domains/{fintech,ecommerce,saas,healthcare}/`, `.claude/rules/`, `.claude/domains/_registry.json` 중 현재 존재하는 항목 목록화 (`_base`·`general`은 **대상 아님 — 절대 삭제 금지**).
+- 잔여가 있으면 AskUserQuestion으로 **opt-in** 제안: "지금 정리(백업 후 삭제)" / "그대로 유지".
+  - "정리" 선택 시에만: Step 9 백업(`backup.tar.gz`)에 이미 포함되어 있음을 확인 → 해당 항목 삭제 → 삭제 목록 리포트.
+  - "유지" 선택(기본 안전값) 시: 그대로 둔다. 도메인 health-check도 함께 제거되므로 "삭제→health-check CRITICAL" 지뢰는 발생하지 않는다.
+- **강제 삭제 금지**: 사용자가 명시적으로 "정리"를 선택하지 않는 한 어떤 잔여 항목도 삭제하지 않는다. `_base`·`general`은 어떤 경우에도 삭제 대상에 포함하지 않는다.
+
 ### Step 12: 커스터마이징 복원 + project.json 마이그레이션
 
-- 12-1. 도메인 커스텀 파일 원위치 복원
-- 12-2. domain.json 커스텀 항목 머지 (중복 키는 사용자 값 우선)
-- 12-3. settings.json 머지:
+- 12-1. `_base`/`general` 커스텀 파일 원위치 복원
+- 12-2. settings.json 머지:
   - **권한**: `permissions.allow` 합집합(중복 제거) + 기존 `permissions.deny` 보존
   - **`hooks` 필드 동기화**: 새 소스의 hooks 등록을 기준으로, 이벤트별(`PreToolUse`/`PostToolUse`/`SessionStart`/`Stop`)로 **프레임워크 훅 항목**을 누락 시 추가 + 변경(command/timeout/matcher) 시 갱신. **프레임워크 훅 식별은 경로 접두 무관 + 스크립트 basename 기준**: command가 `.claude/hooks/{session-start,post-tool-use,stop,pre-tool-use,diagnose}.sh`를 참조하면(상대경로 `.claude/hooks/...`·절대경로 `$CLAUDE_PROJECT_DIR/.claude/hooks/...` 모두) 동일 프레임워크 훅으로 간주해 **소스 항목으로 교체**(구버전 상대경로 등록을 제거하고 새 형식으로 대체 — 중복 등록 방지). `.claude/hooks/`를 참조하지 **않는** 사용자 커스텀 훅 항목은 보존. → v2.4.0 `PreToolUse` 머지 게이트 등록이 기존 시드 프로젝트에 도달하는 경로(이전엔 권한만 머지해 hooks 미전파). `settings.local.json`은 미변경.
-- 12-4. project.json: kitVersion 업데이트, kitSource 설정, migrations 적용
-- 12-5. 프로젝트 파일 마이그레이션 (migrations.json의 `add_gitignore_entry` 타입):
+- 12-3. project.json: kitVersion 업데이트, kitSource 설정, migrations 적용
+- 12-4. 프로젝트 파일 마이그레이션 (migrations.json의 `add_gitignore_entry` 타입):
   - 대상 entry가 `.gitignore`에 없으면 주석(`comment`)과 함께 추가
   - `git ls-files --error-unmatch <entry>` 검사 → 이미 추적 중인 파일 감지 시 `trackedWarning` 메시지 출력 (자동 제거하지 않고 사용자 안내만)
   - 이미 존재하면 no-op
@@ -191,15 +202,14 @@ v{version}: {title}
 |---------|------|
 | `.claude/agents/` | 에이전트 정의 |
 | `.claude/skills/` | 스킬 구현 |
-| `.claude/domains/` | 도메인 설정 (커스텀 파일/항목은 감지→복원) |
-| `.claude/rules/` | 도메인 × 언어 교차 제약 룰 (Phase 4 도입, v2.0.0+) |
+| `.claude/domains/` | `_base`(컨벤션·체크리스트·헬스·템플릿)·`general` 자산 (커스텀 파일은 감지→복원) |
 | `.claude/templates/` | CLAUDE.md.tmpl, README.md.tmpl 등 |
 | `.claude/schemas/` | project.schema.json, migrations.json, secrets-patterns.schema.json, lessons-learned.schema.json |
 | `.claude/workflows/` | 워크플로우 YAML |
 | `.claude/docs/` | 프레임워크 문서 |
 | `.claude/hooks/` | 훅 스크립트 (clone/세션 자동 실행 — **보안 민감**: 해시 비교+승인 후 교체, 교체 후 hook-safety 재검) |
 
-**머지 방식**: `.claude/settings.json` — `permissions.allow` 추가 머지(기존 커스텀 권한 보존) + `hooks` 필드 프레임워크 훅 동기화(Step 12-3, 사용자 커스텀 훅 보존). `settings.local.json`은 보존(미변경).
+**머지 방식**: `.claude/settings.json` — `permissions.allow` 추가 머지(기존 커스텀 권한 보존) + `hooks` 필드 프레임워크 훅 동기화(Step 12-2, 사용자 커스텀 훅 보존). `settings.local.json`은 보존(미변경).
 
 ## 보존 대상 (프로젝트 파일)
 
