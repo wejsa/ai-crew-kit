@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.3] - 2026-06-06
+
+> **마켓플레이스 플러그인 패키징** — ai-crew-kit을 Claude Code 플러그인 마켓플레이스로 배포할 수 있도록 `.claude-plugin/marketplace.json` + `plugin.json` 매니페스트를 추가. 기존엔 `git clone` 후 `/skill-init` 자동 정리(kit 잔여 14종 삭제)로만 진입할 수 있었으나, 이제 `/plugin marketplace add wejsa/ai-crew-kit` → `/plugin install ai-crew-kit@ai-crew-kit`로 **clone·정리 없이** 23개 스킬 + 12개 에이전트 + 품질 게이트 훅(SessionStart/PreToolUse/PostToolUse/Stop)을 한 번에 등록한다. 플러그인 설치 경로는 kit 잔여 파일이 사용자 프로젝트에 섞이지 않아 잡티 0으로 시작된다.
+
+### Added
+
+- **`.claude-plugin/marketplace.json`**: Claude Code 마켓플레이스 매니페스트. `name`/`owner`/`metadata.version` + `plugins[]` 단일 항목(`source: "./"`)으로 리포 루트를 플러그인 소스로 노출. `$schema`로 schemastore 검증.
+- **`.claude-plugin/plugin.json`**: 플러그인 매니페스트. `skills: "./.claude/skills/"`로 스킬 디렉토리를 등록하고, 4개 훅(SessionStart/PreToolUse/PostToolUse/Stop)을 `${CLAUDE_PLUGIN_ROOT}` 기준 경로로 선언. PreToolUse 머지 게이트(v2.4)·PostToolUse heartbeat·Stop continuation-plan이 플러그인 설치 환경에서도 그대로 동작. `keywords`에 도메인(fintech/ecommerce/saas/healthcare) + `code-review`/`quality-gate` 포함.
+
+### Docs
+
+- **`README.md`** 빠른 시작에 "방법 1 — 플러그인으로 설치" 섹션 신설(`/plugin marketplace add` → `/plugin install`), 기존 clone 흐름은 "방법 2"로 정리. "주요 기능" 표에 마켓플레이스 플러그인 패키징 행 추가.
+
+### Notes
+
+- **사용자 영향 (v2.5.2 → v2.5.3)**: 마이그레이션 불필요. 기능 추가만 — 기존 clone 사용자는 영향 없음. 훅 정의는 기존 `.claude/settings.json`과 동일 스크립트를 가리키므로 동작 변화 0.
+- **`${CLAUDE_PROJECT_DIR}` vs `${CLAUDE_PLUGIN_ROOT}`**: SessionStart는 프로젝트의 git/state를 다루므로 `CLAUDE_PROJECT_DIR`, 나머지 3개 훅은 플러그인 번들 내 스크립트를 실행하므로 `CLAUDE_PLUGIN_ROOT` 기준.
+
 ## [2.5.2] - 2026-06-02
 
 > **리뷰 서브에이전트 1M 컨텍스트 실패 자동 폴백** — 부모 세션이 1M 컨텍스트 모델(예: `claude-opus-4-8[1m]`)로 돌 때, `model: opus`로 핀된 리뷰 서브에이전트(`pr-reviewer-{domain,security,test}`)가 부모의 1M 권한/Extra Usage를 상속받지 못해 스폰 단계에서 `Usage credits required for 1M context`로 **전부 실패**하는 Claude Code 하네스 제약(이슈 #51060/#45169) 대응. 기존엔 "2개+ 실패 = 즉시 중단"으로 리뷰가 통째로 막혔다. 이제 이 환경 제약 시그니처를 특정 감지해 **메인 에이전트 직접 리뷰로 자동 폴백**하되, 머지 게이트 안전망(CRITICAL → REQUEST_CHANGES → PreToolUse 차단)은 유지한다. 하네스 버그 자체는 kit가 고칠 수 없으므로 실패 처리·안내를 개선하는 방향. **근본 해소는 세션을 1M 없는 표준 opus(200K)로 전환하는 것**(리뷰 서브에이전트는 200K로 차고 넘침, 모델 등급 동일이라 출력 불변).

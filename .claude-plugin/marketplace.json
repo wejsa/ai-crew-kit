@@ -7,14 +7,14 @@
   },
   "metadata": {
     "description": "AI Crew Kit — AI 에이전트 팀 기반 소프트웨어 개발 프로세스 관리 프레임워크",
-    "version": "2.5.2"
+    "version": "2.5.3"
   },
   "plugins": [
     {
       "name": "ai-crew-kit",
       "source": "./",
       "description": "도메인 선택 → 자동 셋업 → 에이전트 팀 즉시 가동. 23개 스킬 + 12개 에이전트 + 품질 게이트 훅.",
-      "version": "2.5.2",
+      "version": "2.5.3",
       "author": {
         "name": "wejsa"
       },

@@ -99,26 +99,4 @@ Claude Code에는 **SessionStart 이벤트에서 `${CLAUDE_PLUGIN_ROOT}`가 빈 
 - **clone / `/skill-onboard` 로 `.claude/` 가 프로젝트에 존재하는 경우** → SessionStart 훅(git sync, continuation-plan 로드)이 정상 동작합니다. (이것이 AI Crew Kit의 표준 사용 방식)
 - **`.claude/` 없이 순수 플러그인만 설치한 프로젝트** → SessionStart 스크립트는 파일이 없어 조용히 no-op 합니다. 모든 훅은 비블로킹(exit 0) 설계라 세션을 막지 않습니다. git sync가 필요하면 `/skill-onboard` 로 `.claude/` 를 프로젝트에 배치하세요.
 
-### 3-2. Windows CLI 셸은 cmd.exe — bash 래퍼 필요
-
-훅이 전부 `.sh`(bash) 스크립트인데 **Windows의 Claude Code CLI는 기본 셸이 cmd.exe** 라 스크립트를 그대로 실행할 수 없습니다.
-
-**대응(이미 적용됨):** 모든 훅 커맨드를 `bash "..."` 로 감쌌습니다. 이러면 cmd.exe가 `bash` 를 호출하므로 **git-bash 또는 WSL의 bash가 PATH에 있으면** 동작합니다.
-
-| 실행 환경 | 훅 동작 |
-|-----------|---------|
-| **Cowork (Linux 샌드박스)** | `.sh` 네이티브 실행 — 제약 없음 ✅ |
-| macOS / Linux CLI | 네이티브 bash — 제약 없음 ✅ |
-| **Windows CLI** | `bash` 가 PATH에 있어야 함 (Git for Windows 설치 시 git-bash 포함). 경로 변환(`C:\` ↔ `/c/`) 이슈가 있으면 git-bash/WSL 터미널에서 `claude` 를 실행 권장 ⚠️ |
-
-> Windows에서 훅을 쓰지 않으려면 `/plugin` 에서 플러그인을 enable 하되, 훅이 부담되면 프로젝트 `.claude/settings.json` 의 hooks 블록을 비우거나, 스킬·에이전트만 쓰고 훅은 생략해도 됩니다. 스킬·에이전트만으로도 워크플로우 명령은 모두 사용 가능합니다.
-
----
-
-## 4. 설치 후 첫 사용
-
-플러그인을 설치한 뒤, 작업할 프로젝트에서:
-
-```bash
-/skill-onboard      # 기존 코드베이스 스캔 → 도메인·스택 감지 → .claude/ 스캐폴딩 생성
-# 또는 새
+### 3-2. W

@@ -1,12 +1,12 @@
 <div align="center">
 
-# AI Crew Kit v2.5.2
+# AI Crew Kit v2.5.3
 
 **도메인 선택 → 자동 셋업 → 에이전트 팀 즉시 가동**
 
 AI 에이전트 팀 기반 소프트웨어 개발 프로세스 관리 프레임워크
 
-[![Version](https://img.shields.io/badge/version-v2.5.2-blue?style=flat-square)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v2.5.3-blue?style=flat-square)](./CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](./LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/wejsa/ai-crew-kit?style=flat-square)](https://github.com/wejsa/ai-crew-kit)
 [![Built with Claude Code](https://img.shields.io/badge/built_with-Claude_Code-blueviolet?style=flat-square)](https://claude.ai/download)
@@ -20,6 +20,20 @@ AI 에이전트 팀 기반 소프트웨어 개발 프로세스 관리 프레임�
 ---
 
 ## 🚀 빠른 시작
+
+### 방법 1 — 플러그인으로 설치 (신규)
+
+AI Crew Kit은 이제 **Claude Code 플러그인 마켓플레이스**로 설치할 수 있습니다. 23개 스킬 + 12개 에이전트 + 품질 게이트 훅(SessionStart / PreToolUse / PostToolUse / Stop)이 한 번에 등록됩니다.
+
+```bash
+# Claude Code 세션 안에서
+/plugin marketplace add wejsa/ai-crew-kit
+/plugin install ai-crew-kit@ai-crew-kit
+```
+
+설치 후 어느 프로젝트에서나 `/skill-init`로 셋업을 시작합니다. clone과 달리 kit 잔여 파일 정리가 필요 없어 **잡티 0**으로 시작됩니다.
+
+### 방법 2 — clone 후 초기화
 
 ```bash
 git clone https://github.com/wejsa/ai-crew-kit.git my-project
@@ -36,12 +50,16 @@ claude
 
 1. kit git 히스토리 제거 + 새 사용자 리포 초기화
 2. kit 잔여 파일 자동 정리 (14종): `CHANGELOG.md`, `docs/`, `examples/`, `tests/`, `scripts/`, `.github/`, `memory/`, `LICENSE`, `README.md`, `CLAUDE.md`, `VERSION`, `.claude/temp/`, `.claude/hooks/tests/`, `.claude/state/`, `.claude/settings.local.json`
-3. 도메인·기술 스택·에이전트 팀 선택
-4. 사용자 프로젝트용 `CLAUDE.md`/`README.md`/`VERSION`(0.1.0) 새로 생성
-5. `KIT_SOURCE_URL`을 `project.json`의 `kitSource`로 기록 (skill-upgrade가 GitHub에서 kit 가이드 fetch)
+3. **요구사항 자유 서술 → 도메인·기술 스택 LLM 추천 → 에이전트 팀 선택**
+4. **백로그 자동 분해 (opt-in)** — Phase 4-카테고리 템플릿으로 10~25개 Task를 즉시 준비, `/skill-plan`/`/skill-impl` 체인으로 바로 진입
+5. 사용자 프로젝트용 `CLAUDE.md`/`README.md`/`VERSION`(0.1.0) 새로 생성
+6. `KIT_SOURCE_URL`을 `project.json`의 `kitSource`로 기록 (skill-upgrade가 GitHub에서 kit 가이드 fetch)
 
 > [!NOTE]
 > kit clone 자동 정리는 두 안전장치를 통과해야 실행됩니다 — (1) origin URL 정규식 + initial commit fingerprint 일치, (2) 더티/미푸시/비-main 브랜치 가드. 사용자 시나리오에는 영향이 없으며 kit 개발자 환경 사고만 방지합니다.
+
+> [!TIP]
+> **v2.1+ 요구사항 우선 플로우** — 한 줄 또는 여러 문단의 요구사항을 입력하면 도메인/스택을 LLM이 추천하고 백로그까지 자동으로 분해합니다. 입력 신뢰 경계(prompt injection 방어)·sanitization(셸/path traversal 차단)·Hard limits(phase당 ≤10, 전체 ≤30)·컴플라이언스 priority 강제가 기본 적용됩니다.
 
 **이미 코드베이스가 있는 프로젝트라면:**
 
@@ -65,7 +83,7 @@ claude
 |------|------|
 | **백엔드** | Spring Boot (Kotlin · Java), Node.js (TypeScript), Python (FastAPI · Django), Go |
 | **프론트엔드** | Next.js, React (Vite), Vue, Nuxt, Astro |
-| **데이터베이스** | MySQL, PostgreSQL, MongoDB |
+| **데이터베이스** | MySQL, PostgreSQL, MongoDB, SQLite |
 | **인프라** | Redis, RabbitMQ, Docker Compose |
 
 > 프레임워크는 기술 스택에 중립적입니다. 위 스택은 빌드/테스트 자동 감지와 컨벤션이 제공되는 목록이며, Claude는 이 외의 기술(WebSocket, GraphQL, gRPC, Elasticsearch 등)도 자유롭게 구현합니다.
@@ -92,9 +110,9 @@ claude
 | `/skill-feature` | 새 기능 기획 | "새 기능 기획해줘" |
 | `/skill-plan` | 설계 및 스텝 계획 | "다음 작업 가져와줘" |
 | `/skill-impl` | 코드 구현 + PR 생성 | "개발 진행해줘" |
-| `/skill-impl --retry` | 실패 스텝 재시작 | "이어서 진행해줘" |
-| `/skill-backlog dashboard` | Phase 진행률 현황 | "대시보드 보여줘" |
-| `/skill-review-pr` | PR 리뷰 ([모드 설정](./docs/skill-reference.md#개발-워크플로우)) | "PR 123 리뷰해줘" |
+| `/skill-impl --next` | 다음 스텝 진행 | "이어서 진행해줘" |
+| `/skill-backlog` | 백로그 조회/관리 | "백로그 보여줘" |
+| `/skill-review-pr` | PR 리뷰 ([Tier 분류·confidence 채점](./docs/skill-reference.md)) | "PR 123 리뷰해줘" |
 | `/skill-merge-pr` | PR 머지 | "PR 123 머지해줘" |
 | `/skill-retro` | 완료 Task 회고 | "회고 해줘" |
 | `/skill-hotfix` | main 긴급 수정 | "긴급 수정해줘" |
@@ -103,6 +121,19 @@ claude
 | `/skill-health-check` | 코드베이스 건강 검진 | "헬스체크 해줘" |
 
 전체 명령어와 자연어 매핑은 [스킬 레퍼런스](./docs/skill-reference.md)를 참조하세요.
+
+---
+
+## 🛡 머지 품질 게이트 (v2.4+)
+
+"CRITICAL은 머지 차단"이 더 이상 프롬프트 지시(prose)에 의존하지 않습니다. `gh pr merge` 직전 **PreToolUse 훅이 미해결 CRITICAL PR을 결정적으로 차단**합니다.
+
+| 신호 | 출처 | 동작 |
+|------|------|------|
+| **A (state)** | `workflowState.lastReviewDecision == REQUEST_CHANGES` + `step.prNumber` join | 오프라인 결정적 차단 |
+| **B (GitHub)** | `reviewDecision == CHANGES_REQUESTED` | best-effort 차단 |
+
+> 인프라 실패(jq/git/gh 부재·네트워크 등)는 **fail-open** — 게이트 자체 장애가 정상 머지를 막지 않습니다. 제어 env: `CCK_MERGE_GATE=off`(전면 비활성) · `CCK_GATE_BYPASS=1`(1회 우회) · `CCK_GATE_NO_GH=1`(신호 B 스킵).
 
 ---
 
@@ -122,22 +153,36 @@ claude
 
 ---
 
-## ✨ v2.0 신규 기능
+## ✨ 주요 기능
 
-| 기능 | Phase | 사용자 가치 |
-|------|:-----:|------|
-| **Claude Code 네이티브 훅** (SessionStart / PostToolUse / Stop) | Phase 1 | 세션 진입 자동 git sync, lockedAt heartbeat 자동 갱신, 응답 완료 시 continuation-plan 자동 작성 — 미사용 시 v1.x 동작 100% 유지 |
-| **스킬 프로파일 + 토큰 힌트** | Phase 2/3 | 5종 프로파일(`default` ≡ `full` / `developer` / `docs-only` / `custom`)로 CLAUDE.md 노출 스킬 제어. complexity-hint(heavy/medium/light) 토큰 예산 가이드 |
-| **4층 Layered Override + 도메인×언어 rules** | Phase 4 | PR 리뷰가 `.claude/rules/{domain}/{language}/*.md`의 도메인 비즈니스 제약(MUST/MUST NOT)을 자동 인식 — 사용자가 rule 1건 추가하는 즉시 활성. v2.0.0 GA는 메커니즘만 제공(빌트인 콘텐츠 0개) |
-| **AgentShield-lite 시크릿 스캐너** (SEC-05/06/07) | Phase 5 | 하드코딩 시크릿(API 키/AWS/GitHub/Slack) + `.env` 노출 게이트 + 도메인별 민감 데이터(PAN Luhn / SSN / 한국 주민·사업자) CRITICAL 검출 |
-| **lessons-learned 회귀 보호** | Phase 7 | `skill-retro` 학습 데이터에 schema 검증 + secrets 필터(토큰/이메일 자동 redact) + impact 정량(상/중/하) + 33 pytest cases 회귀 보호 |
-| **v1→v2 자동 마이그레이션 + R6 1차 방어선** | Phase 8 | `/skill-upgrade --version v2.0.0` 한 번으로 모든 변경 자동 흡수. R6 자동 검증 9 tests across 4 fixtures (parametrize) — 라운드트립 + 비-trivial 멱등성 + cumulative+filter + fail-fast |
+> v2.0 GA 이후 v2.5.3까지 누적된 핵심 기능입니다. 패치 단위 전체 변경은 [CHANGELOG](./CHANGELOG.md)를 참조하세요.
 
-> **GA examples 안내 (OQ-04)** — v2.0.0 GA 시점 `examples/` 디렉토리는 **`fintech-gateway` (Spring Boot Kotlin) / `ecommerce-shop` (Node.js TypeScript)** 두 도메인만 제공합니다. **`saas` / `healthcare` 도메인은 `tests/upgrade/fixtures/` 단위 fixture 검증만 완료** — 실제 example project는 v2.1+ 후속 범위. 두 도메인 사용자는 `/skill-init`로 동일하게 초기화 가능하나 example 참조용 코드는 v2.1+에서 추가됩니다.
+### 핵심 자동화 (v2.0 GA)
+
+| 기능 | 사용자 가치 |
+|------|------|
+| **Claude Code 네이티브 훅** (SessionStart / PostToolUse / Stop) | 세션 진입 자동 git sync, lockedAt heartbeat 자동 갱신, 응답 완료 시 continuation-plan 자동 작성 |
+| **스킬 프로파일 + 토큰 힌트** | 5종 프로파일(`full` / `developer` / `docs-only` / `custom`)로 CLAUDE.md 노출 스킬 제어 + complexity-hint(heavy/medium/light) 토큰 예산 가이드 |
+| **4층 Layered Override + 도메인×언어 rules** | PR 리뷰가 `.claude/rules/{domain}/{language}/*.md`의 도메인 비즈니스 제약(MUST/MUST NOT)을 자동 인식 — rule 1건 추가 즉시 활성 |
+| **AgentShield-lite 시크릿 스캐너** | 하드코딩 시크릿(API 키/AWS/GitHub/Slack) + `.env` 노출 게이트 + 도메인별 민감 데이터(PAN Luhn / SSN / 한국 주민·사업자) CRITICAL 검출 |
+| **lessons-learned 회귀 보호** | `skill-retro` 학습 데이터에 schema 검증 + secrets 필터(토큰/이메일 자동 redact) + impact 정량(상/중/하) |
+
+### v2.1+ 업데이트
+
+| 버전 | 기능 | 사용자 가치 |
+|:----:|------|------|
+| **v2.1** | 요구사항 우선 init 플로우 + 백로그 자동 분해 | 요구사항 자유 서술 → 도메인/스택 LLM 추천 → Phase 4-카테고리 백로그(opt-in) 즉시 생성. 입력 신뢰 경계·sanitization·Hard limits로 안전 |
+| **v2.3** | `skill-review-pr` 자동 Tier 분류 + confidence 채점 | PR 특성으로 T0~T3 자동 라우팅 — 작은 PR(테스트·deps·docs)은 가벼운 경로, 보안/대규모 변경은 풀 리뷰. severity × confidence 매트릭스로 false-positive 필터(CRITICAL은 강등 게시·드롭 X로 누락 방지) |
+| **v2.4** | PreToolUse 머지 품질 게이트 | 미해결 CRITICAL PR을 `gh pr merge` 단계에서 결정적 차단 — prose+LLM 의존 제거 ([상세](#-머지-품질-게이트-v24)) |
+| **v2.5** | 스킬·에이전트별 모델 라우팅 | 구현/머지는 `sonnet`(토큰 절감), 품질 판단(PR 리뷰 종합·버그 탐지 서브에이전트)은 `opus` 고정. 품질 안전망(opt 고정 + 결정론 게이트) 유지한 채 최대 토큰 소비처 절감 |
+| **v2.5.2** | 리뷰 서브에이전트 1M 컨텍스트 실패 자동 폴백 | 부모 세션이 1M 모델일 때 `model: opus` 핀된 리뷰 서브에이전트가 스폰 실패하는 하네스 제약 대응 — 1M 시그니처 감지 시 메인 에이전트 직접 리뷰로 자동 폴백(머지 게이트 안전망 유지) |
+| **v2.5.3** | 마켓플레이스 플러그인 패키징 | `.claude-plugin/marketplace.json` + `plugin.json`으로 Claude Code 플러그인 마켓플레이스 배포 — `/plugin install`로 23개 스킬 + 12개 에이전트 + 품질 게이트 훅을 clone 없이 한 번에 등록 ([설치](#방법-1--플러그인으로-설치-신규)) |
+
+> **examples 안내** — `examples/` 디렉토리는 **`fintech-gateway` (Spring Boot Kotlin) / `ecommerce-shop` (Node.js TypeScript)** 두 도메인을 제공합니다. **`saas` / `healthcare` 도메인은 `tests/upgrade/fixtures/` 단위 fixture 검증만 완료**되었으며, 실제 example project는 후속 범위입니다. 두 도메인 사용자도 `/skill-init`로 동일하게 초기화할 수 있습니다.
 >
-> **v1.x 사용자**: [v1.x → v2.0.0 마이그레이션 가이드](./docs/v2/migration-guide.md) 참조 — 자동 4 add_field, 수동 작업 거의 없음, 점수 영향 ≤1점.
+> **v1.x 사용자**: [v1.x → v2.0.0 마이그레이션 가이드](./docs/v2/migration-guide.md) 참조 — `/skill-upgrade --version v2.0.0` 자동 마이그레이션(자동 4 add_field, 수동 작업 거의 없음, 점수 영향 ≤1점).
 >
-> **Phase 6 (`skill-compliance-report`) v2.1+ 보류** — 옵션 D 채택(2026-05-01). 위반 탐지 Phase 4/5 중복 + 실수요 미검증으로 보류, 재진입 조건은 [phase-6-compliance.md](./docs/v2/phase-6-compliance.md) §보류 결정 참조.
+> **Phase 6 (`skill-compliance-report`) 보류** — 옵션 D 채택(2026-05-01). 위반 탐지가 Phase 4/5와 중복되고 실수요가 미검증이라 보류, 재진입 조건은 [phase-6-compliance.md](./docs/v2/phase-6-compliance.md) §보류 결정 참조.
 
 ---
 
@@ -149,6 +194,7 @@ claude
 | **Domain-Driven Kit** | 도메인 선택이 컨벤션, 체크리스트, 참고 문서 전체를 결정 |
 | **Layered Override** | `_base` → `{domain}` → `project.json` 순서로 설정 적용 |
 | **Agent Orchestration** | PM이 워크플로우에 따라 에이전트 자동 분배 |
+| **결정적 품질 게이트** | 신뢰 가능한 레이어(hook)가 핵심 게이트(머지 차단)를 담당하고, prose+LLM에 의존하지 않음 |
 | **Zero-Config Start** | `/skill-init` 한 번으로 즉시 가동 |
 
 ---
@@ -159,13 +205,16 @@ claude
 |------|------|
 | [설치 및 시작하기](./docs/getting-started.md) | 설치 상세, 초기화 흐름, 온보딩, **첫 기능 만들기** |
 | [핵심 개념](./docs/concepts.md) | 도메인, 에이전트 팀, 디렉토리 구조, 실행 모델 |
-| [스킬 레퍼런스](./docs/skill-reference.md) | 23개 스킬 전체 목록, 자연어 매핑 |
+| [스킬 레퍼런스](./docs/skill-reference.md) | 전체 스킬 목록, 자연어 매핑, Tier 분류 매트릭스 |
 | [워크플로우 가이드](./docs/workflow-guide.md) | 자동 체이닝, 7가지 워크플로우, 품질 게이트, Git 전략 |
-| [도메인 확장](./docs/customization.md) | 참고자료/체크리스트 추가, 새 도메인 생성, Layered Override |
+| [토큰 최적화](./docs/token-optimization.md) | 스킬 프로파일, 모델 라우팅, 리뷰 Tier, 1M 실패 대응 Q&A |
+| [도메인 확장](./docs/customization.md) | 참고자료/체크리스트 추가, 새 도메인 생성, DB·마이그레이션 도구 변경, Layered Override |
+| [Cowork 플러그인](./docs/cowork-plugin.md) | Cowork 환경에서 kit 활용 |
 | [프레임워크 업그레이드](./docs/upgrade-guide.md) | 업그레이드, 보존 항목, 롤백 |
 | [v1.x → v2.0.0 마이그레이션 가이드](./docs/v2/migration-guide.md) | v2.0 변경 사항, 자동 마이그레이션, FAQ, 롤백 매뉴얼 |
-| [예제 프로젝트](./examples/) | fintech-gateway, ecommerce-shop (saas/healthcare는 v2.1+ 후속) |
+| [예제 프로젝트](./examples/) | fintech-gateway, ecommerce-shop (saas/healthcare는 후속) |
 | [프레임워크 제거 (Eject)](./docs/eject-guide.md) | 제거 절차, 보존 항목, 체크리스트 |
+| [변경 로그](./CHANGELOG.md) | 전체 버전별 변경 이력 |
 
 ---
 
