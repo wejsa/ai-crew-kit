@@ -22,20 +22,6 @@
     "quality-gate"
   ],
   "skills": "./.claude/skills/",
-  "agents": [
-    "./.claude/agents/agent-backend.md",
-    "./.claude/agents/agent-code-reviewer.md",
-    "./.claude/agents/agent-db-designer.md",
-    "./.claude/agents/agent-docs.md",
-    "./.claude/agents/agent-frontend.md",
-    "./.claude/agents/agent-planner.md",
-    "./.claude/agents/agent-pm.md",
-    "./.claude/agents/agent-qa.md",
-    "./.claude/agents/docs-impact-analyzer.md",
-    "./.claude/agents/pr-reviewer-domain.md",
-    "./.claude/agents/pr-reviewer-security.md",
-    "./.claude/agents/pr-reviewer-test.md"
-  ],
   "hooks": {
     "SessionStart": [
       {

@@ -36,18 +36,42 @@ AI Crew Kit는 리포 clone 방식 외에 **Claude Code · Cowork 플러그인**
 
 ## 2. 매니페스트 구조
 
-플러그인은 기존 `.claude/` 디렉토리를 **그대로 재사용**합니다 (파일 중복 없음).
+| 컴포넌트 | 로드 경로 | 동작 |
+|----------|----------|------|
+| 스킬 (23) | `skills` 필드 → `./.claude/skills/` (디렉토리 문자열) | 기본 `skills/`에 **추가** — `<name>/SKILL.md` 자동탐색 |
+| 에이전트 (12) | 루트 `agents/` 디렉토리 (자동탐색, **manifest 필드 없음**) | 플러그인 루트 `agents/*.md`를 서브에이전트로 자동탐색 |
+| 훅 (4) | `hooks` 필드 (plugin.json 인라인) | SessionStart / PreToolUse / PostToolUse / Stop |
 
-| 매니페스트 필드 | 가리키는 경로 | 동작 |
-|----------------|--------------|------|
-| `skills` | `./.claude/skills/` (디렉토리 문자열) | 기본 `skills/`에 **추가** — `<name>/SKILL.md` 23개 스킬 로드 |
-| `agents` | `.claude/agents/*.md` 파일 12개 배열 | 기본 `agents/`를 **대체** — 12개 서브에이전트 로드 |
-| `hooks` | (plugin.json 인라인) | SessionStart / PreToolUse / PostToolUse / Stop |
+스킬은 `.claude/skills/`를 그대로 재사용하지만, **에이전트는 루트 `agents/` 미러가 필요**합니다(아래 주의 참조).
 
-> **주의:** `agents` 필드는 디렉토리 문자열이 아니라 **개별 `.md` 파일 경로 배열**을 요구합니다(`claude plugin validate --strict` 기준). 에이전트를 추가/삭제하면 `plugin.json` 의 `agents` 배열도 함께 갱신해야 합니다. 반면 `skills` 는 디렉토리 문자열을 허용하므로 스킬 추가 시 매니페스트 수정이 필요 없습니다.
+### ⚠️ 에이전트는 루트 `agents/` 미러로 노출 (validate ≠ runtime 함정)
+
+Claude Code 플러그인은 **플러그인 루트의 `agents/` 디렉토리만** 서브에이전트로 자동탐색합니다. 실측으로 확인된 함정:
+
+| manifest `agents` 형식 | `claude plugin validate` | 실제 런타임 로드 |
+|------------------------|:------------------------:|:----------------:|
+| `"./.claude/agents/*.md"` 파일 배열 | ✅ 통과 | ❌ **로드 안 됨 (Agents 0)** |
+| `"./.claude/agents"` 디렉토리 문자열 | ❌ 거부 | — |
+| **필드 없음 + 루트 `agents/` 디렉토리** | ✅ 통과 | ✅ **Agents 12 로드** |
+
+즉 `validate`가 통과해도 `.claude/agents/` 파일배열은 런타임에 로드되지 않습니다. 그래서 매니페스트에서 `agents` 필드를 빼고, **루트 `agents/`에 미러**를 둡니다.
+
+- **SSOT는 `.claude/agents/`** 입니다 (clone/프로젝트 모드에서 Claude Code가 프로젝트 `.claude/agents/`를 자동탐색).
+- 루트 `agents/`는 그 **미러**이며 `scripts/sync-plugin-agents.sh`(또는 `.ps1`)로 재생성합니다.
+- `agents/`는 GitHub 마켓플레이스 clone이 서빙하므로 **반드시 커밋**합니다.
+- 에이전트를 추가/수정하면 sync 스크립트를 다시 실행해 미러를 갱신하고 함께 커밋하세요.
+
+```bash
+# 에이전트 변경 후 미러 동기화 (macOS/Linux/git-bash)
+bash scripts/sync-plugin-agents.sh
+# Windows PowerShell
+# powershell -ExecutionPolicy Bypass -File scripts\sync-plugin-agents.ps1
+git add agents/ .claude/agents/
+git commit -m "chore: sync plugin agents mirror"
+```
 
 덕분에 같은 리포가 **(A) clone해서 쓰는 kit** 이면서 동시에 **(B) 설치형 플러그인** 으로 동작합니다.
-매니페스트는 `claude plugin validate ./ --strict` 로 검증을 통과합니다.
+검증·실측 결과: `claude plugin validate ./ --strict` 통과 + `claude plugin details ai-crew-kit` 에서 **Skills(23) · Agents(12) · Hooks(4)** 로드 확인.
 
 ---
 
