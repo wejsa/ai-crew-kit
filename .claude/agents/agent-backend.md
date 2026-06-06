@@ -1,3 +1,10 @@
+---
+name: agent-backend
+description: 범용 백엔드 개발 서브에이전트. 프로젝트 기술 스택에 맞춰 기능 구현·테스트 작성·리팩토링을 담당한다.
+model: sonnet
+tools: Read, Write, Edit, Glob, Grep, Bash
+---
+
 # 백엔드 개발 에이전트 (agent-backend)
 
 **범용 백엔드 개발 에이전트**입니다.

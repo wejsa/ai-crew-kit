@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "ai-crew-kit",
+  "displayName": "AI Crew Kit",
+  "version": "2.5.2",
+  "description": "도메인 선택 → 자동 셋업 → 에이전트 팀 즉시 가동. AI 에이전트 팀 기반 소프트웨어 개발 프로세스 관리 프레임워크 (23개 스킬 + 12개 에이전트 + 품질 게이트 훅).",
+  "author": {
+    "name": "wejsa"
+  },
+  "homepage": "https://github.com/wejsa/ai-crew-kit",
+  "repository": "https://github.com/wejsa/ai-crew-kit",
+  "license": "MIT",
+  "keywords": [
+    "workflow",
+    "agent-orchestration",
+    "process-management",
+    "fintech",
+    "ecommerce",
+    "saas",
+    "healthcare",
+    "code-review",
+    "quality-gate"
+  ],
+  "skills": "./.claude/skills/",
+  "agents": [
+    "./.claude/agents/agent-backend.md",
+    "./.claude/agents/agent-code-reviewer.md",
+    "./.claude/agents/agent-db-designer.md",
+    "./.claude/agents/agent-docs.md",
+    "./.claude/agents/agent-frontend.md",
+    "./.claude/agents/agent-planner.md",
+    "./.claude/agents/agent-pm.md",
+    "./.claude/agents/agent-qa.md",
+    "./.claude/agents/docs-impact-analyzer.md",
+    "./.claude/agents/pr-reviewer-domain.md",
+    "./.claude/agents/pr-reviewer-security.md",
+    "./.claude/agents/pr-reviewer-test.md"
+  ],
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/session-start.sh\"",
+            "timeout": 30,
+            "statusMessage": "git sync + 상태 로드"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/.claude/hooks/pre-tool-use.sh\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/.claude/hooks/post-tool-use.sh\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/.claude/hooks/stop.sh\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

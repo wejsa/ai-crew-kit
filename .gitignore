@@ -82,6 +82,7 @@ docs/*
 !docs/upgrade-guide.md
 !docs/eject-guide.md
 !docs/token-optimization.md
+!docs/cowork-plugin.md
 !docs/v2/
 !docs/v2/**
 !docs/archive/
