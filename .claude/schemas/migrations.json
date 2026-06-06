@@ -72,6 +72,22 @@
           "required": false
         }
       ]
+    },
+    {
+      "from": "*",
+      "to": "3.0.0",
+      "changes": [
+        {
+          "type": "preserve_field",
+          "path": "domain",
+          "comment": "v3.0.0: 도메인 무관 범용 전환. project.json의 domain은 미사용으로 강등되었으나 strip하지 않고 보존 — additionalProperties:false 검증 실패 회피 + 하위호환. 프레임워크는 더 이상 이 필드를 읽지 않음."
+        },
+        {
+          "type": "preserve_field",
+          "path": "customDomain",
+          "comment": "v3.0.0: domain과 동일하게 no-op 보존. strip은 안전상 수행하지 않음 (사용자가 원하면 수동 제거 가능)."
+        }
+      ]
     }
   ],
   "features": [
@@ -100,6 +116,17 @@
           "description": "23개 SKILL.md에 complexity-hint (heavy/medium/light) 필드가 추가되어 토큰 예산 계획에 활용할 수 있습니다.",
           "action": "optional",
           "detail": "project.json의 tokenHints로 프로젝트별 오버라이드 가능. docs/token-optimization.md 참조. complexity-hint는 문서 안내용이며 모델 자동 전환은 하지 않습니다."
+        }
+      ]
+    },
+    {
+      "version": "3.0.0",
+      "items": [
+        {
+          "title": "도메인 무관 범용 프레임워크 전환 (breaking)",
+          "description": "fintech/ecommerce/saas/healthcare 도메인 자산과 skill-domain이 제거되었습니다. 프레임워크는 에이전트 팀 오케스트레이션·품질 게이트·스택 인지에 집중하는 범용 모드로 동작합니다.",
+          "action": "recommend",
+          "detail": "기존 시드의 project.json domain/customDomain 필드는 보존되나 더 이상 읽히지 않습니다(no-op). 기존 .claude/domains/{fintech,ecommerce,saas,healthcare}/ 와 .claude/rules/ 잔여 디렉토리는 skill-upgrade가 강제 삭제하지 않으며, 원하면 백업 후 opt-in 1회성 정리로 제거할 수 있습니다."
         }
       ]
     }

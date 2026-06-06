@@ -1,0 +1,101 @@
+{
+  "metadata": {
+    "lastTaskNumber": 6,
+    "version": 1,
+    "projectPrefix": "GEN",
+    "createdAt": "2026-05-11T00:00:00+00:00",
+    "updatedAt": "2026-05-11T00:00:00+00:00"
+  },
+  "summary": {
+    "total": 6,
+    "done": 0,
+    "inProgress": 0,
+    "review": 0,
+    "todo": 6
+  },
+  "phases": {
+    "1": {
+      "name": "기반/인프라",
+      "description": "환경 + 인증",
+      "status": "todo"
+    },
+    "2": {
+      "name": "핵심 기능",
+      "description": "핵심 비즈니스 흐름",
+      "status": "todo"
+    },
+    "4": {
+      "name": "운영/품질",
+      "description": "감사 로그/모니터링",
+      "status": "todo"
+    }
+  },
+  "tasks": {
+    "GEN-001": {
+      "id": "GEN-001",
+      "title": "환경 격리",
+      "description": "민감 데이터 처리 영역 네트워크 분리",
+      "status": "todo",
+      "type": "feature",
+      "priority": "critical",
+      "phase": 1,
+      "dependencies": [],
+      "createdAt": "2026-05-11T00:00:00+00:00"
+    },
+    "GEN-002": {
+      "id": "GEN-002",
+      "title": "JWT 인증",
+      "description": "JWT 발급/검증 + MFA",
+      "status": "todo",
+      "type": "feature",
+      "priority": "high",
+      "phase": 1,
+      "dependencies": [],
+      "createdAt": "2026-05-11T00:00:00+00:00"
+    },
+    "GEN-003": {
+      "id": "GEN-003",
+      "title": "핵심 API",
+      "description": "핵심 리소스 생성/수정/취소",
+      "status": "todo",
+      "type": "feature",
+      "priority": "critical",
+      "phase": 2,
+      "dependencies": ["GEN-001", "GEN-002"],
+      "createdAt": "2026-05-11T00:00:00+00:00"
+    },
+    "GEN-004": {
+      "id": "GEN-004",
+      "title": "조회 UI",
+      "description": "사용자별 이력 조회 페이지",
+      "status": "todo",
+      "type": "feature",
+      "priority": "high",
+      "phase": 2,
+      "dependencies": ["GEN-003"],
+      "createdAt": "2026-05-11T00:00:00+00:00"
+    },
+    "GEN-005": {
+      "id": "GEN-005",
+      "title": "감사 로그",
+      "description": "모든 상태 변경 영구 기록",
+      "status": "todo",
+      "type": "feature",
+      "priority": "critical",
+      "phase": 4,
+      "dependencies": ["GEN-003"],
+      "createdAt": "2026-05-11T00:00:00+00:00"
+    },
+    "GEN-006": {
+      "id": "GEN-006",
+      "title": "이상 동작 모니터링",
+      "description": "룰 기반 알람 + 자동 차단",
+      "status": "todo",
+      "type": "feature",
+      "priority": "low",
+      "phase": 4,
+      "dependencies": ["GEN-005"],
+      "createdAt": "2026-05-11T00:00:00+00:00"
+    }
+  }
+}

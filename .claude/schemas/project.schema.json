@@ -4,7 +4,7 @@
   "title": "AI Crew Kit Project Configuration",
   "description": "프로젝트 설정 스키마 - skill-init이 생성하고 각 스킬이 참조",
   "type": "object",
-  "required": ["name", "domain", "version"],
+  "required": ["name", "version"],
   "properties": {
     "name": {
       "type": "string",
@@ -19,8 +19,7 @@
     },
     "domain": {
       "type": "string",
-      "enum": ["fintech", "ecommerce", "saas", "healthcare", "general", "custom"],
-      "description": "도메인 유형"
+      "description": "(deprecated v3.0.0: 미사용, 하위호환 위해 허용) 도메인 유형. v3.0.0부터 프레임워크는 도메인 무관 범용 모드로 동작하며 이 필드를 읽지 않습니다. 기존 시드 project.json 검증 통과를 위해 free-string으로 보존."
     },
     "techStack": {
       "type": "object",
@@ -155,8 +154,7 @@
         "overridePriority": {
           "type": "string",
           "enum": ["domain-first", "merge"],
-          "default": "domain-first",
-          "description": "도메인 vs 언어 규칙 충돌 시 우선순위. domain-first: 도메인 룰이 언어 룰을 덮어씀. merge: 양쪽 모두 적용. v2.0 MVP는 분기 로직 미구현 — 단일 디렉토리 구조(.claude/rules/{domain}/{language}/)에서는 충돌이 구조적으로 발생하지 않음. 향후 단독 도메인/언어 룰이 도입될 때 활성화. 자세한 내용은 .claude/rules/README.md 참조."
+          "description": "(deprecated v3.0.0: 도메인 개념 제거로 미사용. v1→v2 마이그레이션 결과 및 기존 project.json 하위호환을 위해 허용)"
         }
       },
       "additionalProperties": false
@@ -204,7 +202,7 @@
     },
     "customDomain": {
       "type": "object",
-      "description": "커스텀 도메인 설정 (domain이 'custom'일 때 사용)",
+      "description": "(deprecated v3.0.0: 미사용, 하위호환 위해 허용) 커스텀 도메인 설정. v3.0.0부터 프레임워크가 읽지 않으며, 기존 시드 project.json 검증 통과를 위해 optional로 보존.",
       "properties": {
         "name": {
           "type": "string",
