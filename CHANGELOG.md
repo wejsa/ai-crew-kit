@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed (BREAKING)
 
-- **`project.schema.json` domain 강등**: `required`에서 `domain` 제거. `domain`/`customDomain` 필드는 enum 제거 + optional·free-string·`deprecated`로 강등(기존 시드 project.json의 `additionalProperties:false` 검증 실패 방지 — 로직은 일절 읽지 않음). `conventions.overridePriority` 제거.
+- **`project.schema.json` domain 강등**: `required`에서 `domain` 제거. `domain`/`customDomain`/`conventions.overridePriority` 필드는 enum 제거 + optional·`deprecated`로 강등(기존 시드 project.json의 `additionalProperties:false` 검증 실패 + v1→v2 마이그레이션 결과 호환 — 로직은 일절 읽지 않음).
 - **`pr-reviewer-domain` 재목적화**: 도메인 컴플라이언스 리뷰어 → **아키텍처·비즈니스 로직 일관성 리뷰어**로 재서술(이름은 enum/참조 파급 회피 위해 유지, description·헤더만 변경). 3관점(로직/security/test) 유지.
 - **레지스트리 소비 로직 제거**: skill-init 도메인 추천·컴플라이언스 priority 격상, skill-onboard 도메인 감지, skill-review-pr rules 로딩·도메인 체크리스트 로드, skill-health-check 도메인 시크릿/registry 검사, skill-validate 레지스트리 정합성 카테고리 제거. **_base/common 체크리스트 로드·SEC-01/05/06·빌드/테스트 게이트는 유지.**
 

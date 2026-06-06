@@ -14,7 +14,7 @@
     "todo": 2
   },
   "phases": {
-    "PHASE-1": {
+    "1": {
       "name": "핵심 기능",
       "description": "리소스 CRUD + 처리 흐름",
       "status": "todo"

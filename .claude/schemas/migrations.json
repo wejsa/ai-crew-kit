@@ -74,20 +74,10 @@
       ]
     },
     {
-      "from": "*",
+      "from": "2.5.3",
       "to": "3.0.0",
-      "changes": [
-        {
-          "type": "preserve_field",
-          "path": "domain",
-          "comment": "v3.0.0: 도메인 무관 범용 전환. project.json의 domain은 미사용으로 강등되었으나 strip하지 않고 보존 — additionalProperties:false 검증 실패 회피 + 하위호환. 프레임워크는 더 이상 이 필드를 읽지 않음."
-        },
-        {
-          "type": "preserve_field",
-          "path": "customDomain",
-          "comment": "v3.0.0: domain과 동일하게 no-op 보존. strip은 안전상 수행하지 않음 (사용자가 원하면 수동 제거 가능)."
-        }
-      ]
+      "changes": [],
+      "comment": "v3.0.0 도메인 무관 범용 전환. project.json의 domain/customDomain은 미사용으로 강등되나 strip하지 않고 보존(additionalProperties:false 검증 실패 회피 + 하위호환). 보존은 skill-upgrade의 state 파일 무변환 복사로 자연 달성되므로 add_field 변경 없음. 사용자 안내는 features[].version=3.0.0 참조."
     }
   ],
   "features": [

@@ -167,5 +167,3 @@ from.*repository.*import       # api/ 내 파일에서 repository import
 ### 요약
 - 로직: CRITICAL {N}개, MAJOR {N}개, MINOR {N}개
 - 아키텍처: CRITICAL {N}개, MAJOR {N}개, MINOR {N}개
-</content>
-</invoke>

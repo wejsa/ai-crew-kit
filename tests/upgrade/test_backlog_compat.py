@@ -37,6 +37,6 @@ def test_v1_backlog_preserves_step_description_and_estimated_lines(v1_backlog: d
                 if "estimatedLines" in step:
                     assert isinstance(step["estimatedLines"], int)
                     assert step["estimatedLines"] >= 1, "step.estimatedLines >= 1 위반"
-    # ecommerce fixture는 has_rich_step=True여야 하지만, parametrize 양쪽 fixture에서
-    # 공통 통과해야 하므로 가벼운 단언만 수행 (값 정합성).
-    _ = has_rich_step
+    # 제너릭 fixture(v1-general-backlog)는 rich step(description+estimatedLines)을
+    # 반드시 보유해야 회귀 보호가 유효하다. fixture가 step을 잃으면 실패.
+    assert has_rich_step, "v1 backlog fixture에 rich step(description+estimatedLines)이 없음 — 회귀 보호 무력화"
