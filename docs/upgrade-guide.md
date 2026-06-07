@@ -34,7 +34,30 @@ v1.x 사용자는 `/crew-upgrade --version v2.0.0` 한 번이면 충분합니다
 
 **점수 영향 ≤1점, 수동 작업 0건.** 상세 변경 사항·FAQ·롤백 매뉴얼은 [v1.x → v2.0.0 마이그레이션 가이드](./v2/migration-guide.md)를 참조하세요.
 
-## 최초 업그레이드 (crew-upgrade가 없는 프로젝트)
+## v3.x → v4.0.0 마이그레이션 (스킬 프리픽스 skill-* → crew-*)
+
+v4.0.0에서 22개 빌트인 스킬의 호출 명령어가 `/skill-*` → `/crew-*`로 바뀌었습니다 (예: `/skill-impl` → `/crew-impl`). **기존 v3.x 시드 프로젝트에는 아직 구 `skill-upgrade` 스킬만 있으므로, 첫 업그레이드는 본인 프로젝트에 있는 구 명령으로 실행합니다:**
+
+```bash
+# 1. 기존 프로젝트에 있는 구 명령으로 v4.0.0 업그레이드 (이 명령이 스스로를 crew-upgrade로 교체)
+/skill-upgrade --version v4.0.0
+
+# 2. 이후부터는 새 명령 사용
+/crew-upgrade
+```
+
+업그레이드가 자동 처리하는 것:
+
+| 항목 | 자동 처리 |
+|------|----------|
+| 빌트인 스킬 디렉토리 교체 | ✅ `.claude/skills/` 통째 교체 — 구 `skill-*` 22개 디렉토리(구 `skill-upgrade` 포함) 자연 제거, 새 `crew-*` 설치 |
+| 커스텀 스킬 보존 | ✅ `.claude/skills/custom/`은 별도 백업·복원 (이름 변경 없음 — skill- 접두사 커스텀 스킬도 그대로 유지) |
+| CLAUDE.md 스킬 레지스트리 | ✅ 결정적 재생성으로 `/crew-*` 반영 + `CUSTOM_SECTION` 보존 |
+| customSkills 검증 | ✅ 스키마가 `crew-`/`skill-` 둘 다 허용 — 기존 커스텀 스킬 검증 실패 없음 |
+
+> ⚠️ **수동 정리 필요**: 본인이 작성한 스크립트·alias·문서·`CLAUDE.md`의 `CUSTOM_SECTION` 안에 `/skill-impl` 같은 구 명령이 박혀 있으면 `/crew-*`로 직접 바꿔야 합니다 (프레임워크는 사용자 콘텐츠를 건드리지 않습니다).
+
+## 최초 업그레이드 (crew-upgrade도 skill-upgrade도 없는 프로젝트)
 
 v1.6.0 이전에 초기화된 프로젝트에는 crew-upgrade 스킬이 없습니다.
 아래 명령으로 1회성 부트스트랩 후 사용하세요:

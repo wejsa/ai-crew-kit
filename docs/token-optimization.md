@@ -38,7 +38,7 @@ AI Crew Kit v2.0.0에서는 각 스킬에 **복잡도 힌트(`complexity-hint`)*
 | `crew-review` | 경로 기반 5관점 코드 리뷰 |
 | `crew-hotfix` | main 긴급 수정 + 보안 리뷰 |
 
-### 🟢 Light (11개 — Haiku 가능)
+### 🟢 Light (10개 — Haiku 가능)
 
 상태 조회, 템플릿 기반, 정형화된 작업.
 

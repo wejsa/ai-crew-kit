@@ -38,7 +38,7 @@ AI Crew Kit는 리포 clone 방식 외에 **Claude Code · Cowork 플러그인**
 
 | 컴포넌트 | 로드 경로 | 동작 |
 |----------|----------|------|
-| 스킬 (23) | `skills` 필드 → `./.claude/skills/` (디렉토리 문자열) | 기본 `skills/`에 **추가** — `<name>/SKILL.md` 자동탐색 |
+| 스킬 (22) | `skills` 필드 → `./.claude/skills/` (디렉토리 문자열) | 기본 `skills/`에 **추가** — `<name>/SKILL.md` 자동탐색 |
 | 에이전트 (12) | 루트 `agents/` 디렉토리 (자동탐색, **manifest 필드 없음**) | 플러그인 루트 `agents/*.md`를 서브에이전트로 자동탐색 |
 | 훅 (4) | `hooks` 필드 (plugin.json 인라인) | SessionStart / PreToolUse / PostToolUse / Stop |
 
@@ -71,16 +71,16 @@ git commit -m "chore: sync plugin agents mirror"
 ```
 
 덕분에 같은 리포가 **(A) clone해서 쓰는 kit** 이면서 동시에 **(B) 설치형 플러그인** 으로 동작합니다.
-검증·실측 결과: `claude plugin validate ./ --strict` 통과 + `claude plugin details ai-crew-kit` 에서 **Skills(23) · Agents(12) · Hooks(4)** 로드 확인.
+검증·실측 결과: `claude plugin validate ./ --strict` 통과 + `claude plugin details ai-crew-kit` 에서 **Skills(22) · Agents(12) · Hooks(4)** 로드 확인.
 
 ---
 
-## 3. ⚠️ 훅(hooks) 관련 기술 제약 2가지
+## 3. ⚠️ 훅(hooks) 관련 기술 제약
 
 훅은 bash 스크립트(`.claude/hooks/*.sh`) 기반이라 환경에 따라 주의가 필요합니다.
 **스킬·에이전트는 순수 마크다운이라 OS·플랫폼과 무관하게 항상 동작합니다.** 아래 제약은 훅에만 해당됩니다.
 
-### 3-1. SessionStart의 `${CLAUDE_PLUGIN_ROOT}` 미해결 버그
+### SessionStart의 `${CLAUDE_PLUGIN_ROOT}` 미해결 버그
 
 Claude Code에는 **SessionStart 이벤트에서 `${CLAUDE_PLUGIN_ROOT}`가 빈 값으로 풀리는 알려진 버그**가 있습니다(CLI 포함). 즉 `bash "${CLAUDE_PLUGIN_ROOT}/.claude/hooks/session-start.sh"` 로 두면 경로가 깨집니다. PreToolUse / PostToolUse / Stop 에서는 정상 동작합니다.
 
@@ -99,4 +99,3 @@ Claude Code에는 **SessionStart 이벤트에서 `${CLAUDE_PLUGIN_ROOT}`가 빈 
 - **clone / `/crew-onboard` 로 `.claude/` 가 프로젝트에 존재하는 경우** → SessionStart 훅(git sync, continuation-plan 로드)이 정상 동작합니다. (이것이 AI Crew Kit의 표준 사용 방식)
 - **`.claude/` 없이 순수 플러그인만 설치한 프로젝트** → SessionStart 스크립트는 파일이 없어 조용히 no-op 합니다. 모든 훅은 비블로킹(exit 0) 설계라 세션을 막지 않습니다. git sync가 필요하면 `/crew-onboard` 로 `.claude/` 를 프로젝트에 배치하세요.
 
-### 3-2. W

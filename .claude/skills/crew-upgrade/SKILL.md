@@ -119,7 +119,9 @@ complexity-hint: light
 - 커스텀 스킬 복원
 - **실패 시 자동 롤백**: `tar xzf "$BACKUP_DIR/backup.tar.gz"` + 잠금 파일 삭제
 
-> **v3.0.0 — 도메인 디렉토리 단위 복사 주의**: `.claude/domains/` 교체는 **디렉토리 통째 삭제 후 복사**가 아니라 `_base`·`general` 등 신규 소스에 존재하는 항목만 동기화한다. 신규 소스에는 `fintech`/`ecommerce`/`saas`/`healthcare` 도메인 디렉토리가 없으므로 **이들은 자연히 미복사**되며, 기존 시드의 잔여 도메인 디렉토리는 **강제로 삭제하지 않고 그대로 둔다**(아래 Step 11.5에서 opt-in 정리).
+> **v3.0.0 — 도메인 디렉토리 단위 복사 주의**: `.claude/domains/` 교체는 **디렉토리 통째 삭제 후 복사**가 아니라 `_base`·`general` 등 신규 소스에 존재하는 항목만 동기화한다. 신규 소스에는 `fintech`/`ecommerce`/`saas`/`healthcare` 도메인 디렉토리가 없으므로 **이들은 자연히 미복사**되며, 기존 시드의 잔여 도메인 디렉토리는 **강제로 삭제하지 않고 그대로 둔다**(아래 Step 11.5에서 opt-in 정리). 이 "미삭제" 예외는 **`.claude/domains/`에만** 적용된다 — 사용자 추가 체크리스트·컨벤션이 `_base`/`general`에 in-place로 섞여 살기 때문이다.
+
+> **v4.0.0 — `.claude/skills/`는 통째 교체(중요, 위 도메인 예외와 다름)**: `.claude/skills/`는 **`custom/`을 먼저 별도 백업**(line 116) → **디렉토리 통째 삭제 → 새 소스에서 복사** → **`custom/` 복원** 순으로 교체한다. 따라서 상류에서 **이름이 바뀌거나 제거된 빌트인 스킬**(v4.0.0의 `skill-*` → `crew-*` 22개 리네임, v3.0.0의 `skill-domain` 제거)은 통째 삭제 단계에서 자연 제거되어 **orphan(`skill-impl`과 `crew-impl` 동시 존재)으로 남지 않는다**. 도메인의 "미삭제" 예외를 `.claude/skills/`에 **일반화하지 말 것** — 빌트인 스킬은 in-place 사용자 자산이 아니므로 통째 교체가 맞다. 사용자 커스텀 스킬(`.claude/skills/custom/`)은 별도 백업·복원으로 보존되며, 이름은 변경하지 않는다(skill- 접두사 커스텀 스킬도 그대로 유지 — customSkills 스키마가 crew-/skill- 둘 다 허용).
 
 ### Step 11.5: 잔여 도메인 디렉토리 opt-in 정리 (v3.0.0+)
 
@@ -162,6 +164,7 @@ v3.0.0은 도메인 콘텐츠(`fintech`/`ecommerce`/`saas`/`healthcare`)와 `.cl
 1. 새 템플릿에서 비-마커 고유 문장 3개를 샘플 추출
 2. 재생성된 CLAUDE.md에서 해당 문장 존재 확인 (Grep)
 3. 구 템플릿에만 있던 삭제 대상 키워드가 잔존하는지 네거티브 체크 (`CUSTOM_SECTION` 내부 제외)
+   - ⚠️ 네거티브 키워드는 **구체적 명령 토큰**(예: `/skill-impl`, `/skill-plan`)으로 한정한다. **bare `skill-`을 키워드로 쓰지 말 것** — 보존 대상인 `skill-profiles.json` 파일명·일반 명사 "skill"/"스킬"·`skillProfile`/`customSkills` 필드명에 오탐해 재생성을 무한 재시도/중단시킨다.
 4. 불일치 시 → 13-1부터 재시도 (최대 1회)
 
 ### Step 14: 완료 처리
