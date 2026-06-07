@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.0.0] - 2026-06-07
 
 > **v3.0.0 — 순수 범용 프레임워크 전환 (BREAKING)** — fintech/ecommerce/saas/healthcare 도메인 자산을 전면 제거하고 도메인 무관 범용 AI 크루 개발 프레임워크로 전환한다. 하네스 제약(프로젝트 무복사·크로스플러그인 불가)으로 "코어 범용 + 도메인 팩 분리" 안이 폐기되어, 도메인 기능을 통째로 제거하는 경로를 택했다. 유지되는 가치 축은 에이전트 팀 오케스트레이션(plan→impl→review→merge)·품질 게이트(PreToolUse 머지 차단·리뷰·빌드/테스트)·스택 인지(techStack는 도메인과 직교 → 전면 유지)·도메인 무관 컨벤션/체크리스트/헬스체크(`_base`)다.
 
