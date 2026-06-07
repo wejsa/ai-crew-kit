@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.0.0] - 2026-06-07
+
+> **v4.0.0 — 스킬 프리픽스 skill-* → crew-* 리네임 (BREAKING)** — 22개 빌트인 스킬의 호출 명령어를 `/skill-*` 에서 `/crew-*` 로 전면 변경한다 (예: `/skill-impl` → `/crew-impl`). 'AI Crew Kit' 브랜드 일관성 + 다른 도구·스킬과의 이름 충돌 회피가 목적이다. 플러그인 네임스페이싱(`ai-crew-kit:skill`)이 충돌을 이미 막아주므로 기능적 필수는 아닌 브랜딩 변경이지만, 슬래시 명령·CLAUDE.md 레지스트리·체이닝 프로즈에 노출되는 식별자를 일관화한다. 식별자(identifier)만 변경하고 일반 용어 "skill"/"스킬", `.claude/skills/` 경로, `SKILL.md`, `Skill` 툴, `skillProfile`/`customSkills`/`currentSkill` 필드명, 이력 기록은 보존한다.
+
+### Changed (BREAKING)
+
+- **22개 스킬 디렉토리 리네임**: `.claude/skills/skill-*/` → `.claude/skills/crew-*/` (`git mv`) + 각 `SKILL.md` `name:` 프론트매터 동기화. 호출 명령이 `/skill-impl` → `/crew-impl` 등으로 변경됨.
+- **전 참조 일괄 치환**: 스킬 간 체이닝 프로즈, 에이전트 정의(`.claude/agents/` + 루트 `agents/` 미러), 스키마 설명, 템플릿(`CLAUDE.md.tmpl`·`TEMPLATE-ENGINE.md` 와일드카드 discovery `startswith("crew-")`), 훅, 워크플로 YAML, 문서, 테스트의 식별자를 `crew-` 로 변경.
+- **`customSkills` 스키마 패턴**: `^skill-` → `^(crew|skill)-[a-z][a-z0-9-]*$` — 신규는 `crew-`(crew-create 스캐폴딩 기본값), v4 이전 `skill-` 접두사 커스텀 스킬도 하위호환 허용(grandfather, deprecated).
+- **`.github/workflows` 경로 필터**: `skill-init-tests.yml`의 스킬 path 필터를 `crew-init/**`·`crew-onboard/**` 로 갱신(워크플로 파일명·`tests/skill_init/` 패키지 디렉토리는 내부 테스트 인프라로 보존).
+
+### Migration
+
+- **기존 v3.x 시드는 본인 프로젝트의 구 `/skill-upgrade` 로 1회 업그레이드**(`/skill-upgrade --version v4.0.0`) — `.claude/skills/` 통째 교체로 구 `skill-*` 22개 디렉토리(구 `skill-upgrade` 포함)가 자연 제거되고 `crew-*` 가 설치된다(v3.0.0 `skill-domain` 제거와 동일 메커니즘 — orphan 없음). `custom/` 커스텀 스킬은 별도 백업·복원으로 보존(이름 무변경). 이후부터 `/crew-upgrade` 사용.
+- **하위호환 안전장치**: `backlog.json`의 in-flight `workflowState.currentSkill` 구 `skill-*` 값도 enum에서 허용(업그레이드가 backlog를 무변환 보존하므로 — 다음 워크플로 진행 시 `crew-*` 자가 갱신). `customSkills` 패턴도 양쪽 허용.
+- **v3→v4 1회성 거친 모서리(정상)**: 이 hop은 구 `skill-upgrade` 가 실행하며 마지막 검증이 리네임된 `skill-validate`(현 `crew-validate`)를 호출해 경고/스킵될 수 있다 — 업그레이드 자체는 정상 완료, 후속으로 `/crew-validate` 1회 수동 실행 권장. `migrations.json` v4.0.0 항목(features)이 업그레이드 시 변경을 고지한다.
+- **수동 정리**: 사용자 스크립트·alias·문서·`CLAUDE.md` `CUSTOM_SECTION` 내 `/skill-*` 잔존 명령은 직접 `/crew-*` 로 교체(프레임워크는 사용자 콘텐츠 미변경).
+
+### Fixed
+
+- 문서 정합성(pre-existing v3 drift 정리): `token-optimization.md` Light 카운트 11→10(실측 3 heavy/9 medium/10 light=22), `cowork-plugin.md` 스킬 수 23→22 + 잘린 `### 3-2. W` 스텁 제거.
+
 ## [3.0.0] - 2026-06-07
 
 > **v3.0.0 — 순수 범용 프레임워크 전환 (BREAKING)** — fintech/ecommerce/saas/healthcare 도메인 자산을 전면 제거하고 도메인 무관 범용 AI 크루 개발 프레임워크로 전환한다. 하네스 제약(프로젝트 무복사·크로스플러그인 불가)으로 "코어 범용 + 도메인 팩 분리" 안이 폐기되어, 도메인 기능을 통째로 제거하는 경로를 택했다. 유지되는 가치 축은 에이전트 팀 오케스트레이션(plan→impl→review→merge)·품질 게이트(PreToolUse 머지 차단·리뷰·빌드/테스트)·스택 인지(techStack는 도메인과 직교 → 전면 유지)·도메인 무관 컨벤션/체크리스트/헬스체크(`_base`)다.

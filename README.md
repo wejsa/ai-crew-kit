@@ -1,6 +1,6 @@
 <div align="center">
 
-# AI Crew Kit v3.0.0
+# AI Crew Kit v4.0.0
 
 **범용 AI 크루 개발 프레임워크 — 오케스트레이션 · 품질 게이트 · 스택 인지**
 
