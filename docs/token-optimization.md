@@ -18,7 +18,7 @@ AI Crew Kit v2.0.0에서는 각 스킬에 **복잡도 힌트(`complexity-hint`)*
 
 | 스킬 | 역할 |
 |---|---|
-| `crew-review-pr` | 5관점 통합 PR 리뷰 |
+| `crew-review-pr` | 4관점 통합 PR 리뷰 |
 | `crew-plan` | Task 선택 + 설계 분석 + 스텝 분리 |
 | `crew-health-check` | 다중 카테고리 코드베이스 검진 |
 
@@ -35,7 +35,7 @@ AI Crew Kit v2.0.0에서는 각 스킬에 **복잡도 힌트(`complexity-hint`)*
 | `crew-estimate` | 작업 복잡도 5팩터 추정 |
 | `crew-fix` | CRITICAL 이슈 자동 수정 |
 | `crew-onboard` | 기존 프로젝트 스캔 + 온보딩 |
-| `crew-review` | 경로 기반 5관점 코드 리뷰 |
+| `crew-review` | 경로 기반 4관점 코드 리뷰 |
 | `crew-hotfix` | main 긴급 수정 + 보안 리뷰 |
 
 ### 🟢 Light (10개 — Haiku 가능)

@@ -96,7 +96,7 @@ steps:
     output: "리뷰 결과"
     gate: critical_zero
     description: |
-      5관점 통합 리뷰를 수행합니다.
+      4관점 통합 리뷰를 수행합니다.
       - 컴플라이언스
       - 도메인 로직
       - 아키텍처
