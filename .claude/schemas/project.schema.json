@@ -149,7 +149,7 @@
             "type": "string",
             "pattern": "^(crew|skill)-[a-z][a-z0-9-]*$"
           },
-          "description": "skillProfile이 'custom'일 때 사용할 스킬 이름 목록. 신규 스킬은 crew- 접두사(crew-create 스캐폴딩 기본값). v4.0.0 이전 skill- 접두사 커스텀 스킬도 하위호환으로 허용한다."
+          "description": "skillProfile이 'custom'일 때 사용할 스킬 이름 목록. 신규 스킬은 crew- 접두사(crew-create 스캐폴딩 기본값). (deprecated v4.0.0: skill- 분기는 v4 이전 커스텀 스킬 grandfather 전용 — 신규 스킬은 crew-만 사용. 향후 메이저에서 제거 후보.)"
         },
         "overridePriority": {
           "type": "string",

@@ -51,7 +51,7 @@ migrations.json → 유효 JSON + 필수 구조.
 필수 필드 `name`/`steps`, 각 step에 `name`/`skill`, 참조 스킬 존재
 
 **7. 커스텀 스킬 매니페스트**
-`.claude/skills/custom/crew-*/SKILL.md` 존재 + 프론트매터 유효성 + CLAUDE.md 등록 여부(WARNING) + 빌트인 이름 충돌(ERROR)
+`.claude/skills/custom/*/SKILL.md` 존재 + 프론트매터 유효성 + CLAUDE.md 등록 여부(WARNING) + 빌트인 이름 충돌(ERROR). 접두사 무관 검사 — 신규 `crew-` + v4 이전 `skill-` 접두사 커스텀 스킬 모두 커버(customSkills 스키마가 둘 다 허용하므로 검증 누락 방지).
 
 ## 출력
 
