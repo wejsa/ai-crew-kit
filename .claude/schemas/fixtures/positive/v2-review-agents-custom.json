@@ -3,6 +3,6 @@
   "domain": "healthcare",
   "version": "2.3.0",
   "review": {
-    "agents": ["domain", "security"]
+    "agents": ["architecture", "security"]
   }
 }

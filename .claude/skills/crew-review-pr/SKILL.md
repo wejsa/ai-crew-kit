@@ -4,7 +4,7 @@ description: PR 리뷰 - GitHub PR에 대한 다관점 통합 리뷰 수행. 사
 disable-model-invocation: false
 model: opus
 allowed-tools: Bash(git:*), Bash(gh:*), Read, Write, Glob, Grep, Task, AskUserQuestion
-argument-hint: "{PR번호} [--auto-fix] [--mode standard|full] | config [--mode standard|full] [--agents domain,security,test] [--reset]"
+argument-hint: "{PR번호} [--auto-fix] [--mode standard|full] | config [--mode standard|full] [--agents architecture,security,test] [--reset]"
 complexity-hint: heavy
 ---
 
@@ -24,10 +24,10 @@ complexity-hint: heavy
 | 명령어 | 동작 |
 |--------|------|
 | `config` | 현재 설정 표시 |
-| `config --mode standard` | 프리셋 변경 (standard: domain+security) |
+| `config --mode standard` | 프리셋 변경 (standard: architecture+security) |
 | `config --mode full` | 프리셋 변경 (full: 전체 3 에이전트) |
-| `config --agents domain,security` | 커스텀 에이전트 조합 설정 |
-| `config --agents domain,test` | 커스텀 에이전트 조합 설정 |
+| `config --agents architecture,security` | 커스텀 에이전트 조합 설정 |
+| `config --agents architecture,test` | 커스텀 에이전트 조합 설정 |
 | `config --reset` | `review` 섹션 삭제 (자동 Tier 분류 활성화) |
 
 ### 실행 로직
@@ -35,7 +35,7 @@ complexity-hint: heavy
 2. 인자 파싱:
    - 인자 없음 → 현재 설정 표시 후 종료
    - `--mode` → `project.json`의 `review.mode` 업데이트, `review.agents` 삭제
-   - `--agents` → 쉼표 구분 파싱, domain 필수 검증, `project.json`의 `review.agents` 업데이트, `review.mode` 삭제
+   - `--agents` → 쉼표 구분 파싱, architecture 필수 검증(레거시 `domain` 입력은 `architecture`로 정규화 후 저장), `project.json`의 `review.agents` 업데이트, `review.mode` 삭제
    - `--reset` → `project.json`에서 `review` 섹션 전체 삭제
 3. `project.json` 저장 (metadata.updatedAt 갱신)
 4. 변경 결과 표시
@@ -52,15 +52,15 @@ complexity-hint: heavy
 ```json
 {
   "review": {
-    "agents": ["domain", "security"]
+    "agents": ["architecture", "security"]
   }
 }
 ```
 
 ### 유효성 검증
-- 유효 에이전트: `domain`, `security`, `test`
-  > **`domain` = 아키텍처/비즈니스 로직 일관성 리뷰 관점** (`pr-reviewer-domain`). v3.0.0에서 제거된 비즈니스 도메인 팩과 무관한 동명이의 식별자.
-- **domain은 필수** — 누락 시 자동 추가 + "⚠️ domain은 필수 에이전트입니다. 자동 추가됨" 경고
+- 유효 에이전트: `architecture`, `security`, `test`
+  > **`architecture` = 아키텍처/비즈니스 로직 일관성 리뷰 관점** (`pr-reviewer-architecture`). v3.0.0에서 제거된 비즈니스 도메인 팩과 무관. **레거시 별칭**: 구 `domain` 값도 입력으로 허용되며 `architecture`로 정규화해 저장한다(v4.1.0 이전 시드 하위호환).
+- **architecture는 필수**(레거시 `domain` 포함) — 둘 다 누락 시 자동 추가 + "⚠️ architecture는 필수 에이전트입니다. 자동 추가됨" 경고
 - `--mode`와 `--agents` 동시 사용 불가 → 에러
 - 잘못된 에이전트명 → 에러 + 유효 목록 안내
 
@@ -76,7 +76,7 @@ complexity-hint: heavy
 에이전트: PR마다 0~3개 가변 (Tier 표 참조)
 
 명시 변경: /crew-review-pr config --mode standard
-커스텀:    /crew-review-pr config --agents domain,test
+커스텀:    /crew-review-pr config --agents architecture,test
 ```
 
 **(B) review.mode 또는 review.agents 명시** — 자동 분류 OFF:
@@ -84,11 +84,11 @@ complexity-hint: heavy
 📋 리뷰 모드 설정
 ─────────────────
 모드: standard (명시)
-에이전트: domain, security
+에이전트: architecture, security
 
 자동 분류 복원: /crew-review-pr config --reset
 변경:          /crew-review-pr config --mode full
-커스텀:        /crew-review-pr config --agents domain,test,security
+커스텀:        /crew-review-pr config --agents architecture,test,security
 ```
 
 ### config 서브커맨드 감지 후 STOP — 아래 리뷰 플로우 진행 금지.
@@ -106,8 +106,8 @@ complexity-hint: heavy
 **프리셋 → 에이전트 매핑**:
 | 모드 | 에이전트 |
 |------|---------|
-| `full` | domain, security, test |
-| `standard` | domain, security |
+| `full` | architecture, security, test |
+| `standard` | architecture, security |
 
 > 4단계 자동 Tier 분류는 사용자가 `project.json`에 `review` 섹션을 명시하지 않은 경우에만 적용된다. `review.mode` 또는 `review.agents`가 설정되어 있으면 자동 분류는 비활성화된다 (사용자 의도 우선).
 
@@ -143,8 +143,8 @@ PR 정보 수집(Step 1) 후 PR 특성을 기반으로 sub-agent 호출 수를 �
 | **T1a** | 변경 파일 1건 이상 · 100% 테스트 파일 변경 · ≤200줄 · 보안 키워드 0 | 1 (`pr-reviewer-test`) | Test-only |
 | **T1b** | 변경 파일 1건 이상 · 100% 의존성 매니페스트 변경 · src/ 변경 0건 · 보안 키워드 0 | 1 (`pr-reviewer-security`) | Deps-only |
 | **T0** | 변경 파일 1건 이상 · ≤50줄 · src/ 변경 0건 · 보안 키워드 0 | 0 (직접 리뷰) | Trivial |
-| **T3** | >200줄 **OR** 보안 키워드 hit | 3 (domain+security+test) | Full |
-| **T2** | 그 외 (catch-all 기본값) | 2 (domain+security) | Standard |
+| **T3** | >200줄 **OR** 보안 키워드 hit | 3 (architecture+security+test) | Full |
+| **T2** | 그 외 (catch-all 기본값) | 2 (architecture+security) | Standard |
 
 > **순서 의도**: 작은 특수 케이스(T1a/T1b)를 T0보다 먼저 평가해야 30줄 test/deps PR이 0-agent로 흡수되지 않음. T3가 T2 위인 이유는 T3가 양성 조건(OR), T2는 음성 catch-all이라서. 변경 파일 0건(rebase-only, mode-change-only 등) PR은 T1a/T1b/T0 모두 "1건 이상" 조건으로 자연 탈락 → T3 미매치 → T2 catch-all에서 사람 검토 흐름으로 진입.
 
@@ -205,7 +205,7 @@ diff는 임시 파일에 저장하여 에이전트가 Read로 참조하도록 �
 
 | sub-agent | 파일 | 관점 | 호출 조건 (모드 / Tier) |
 |-----------|------|------|------|
-| pr-reviewer-domain | `.claude/agents/pr-reviewer-domain.md` | 아키텍처 + 로직 일관성 | 모드: full, standard / Tier: T2, T3 |
+| pr-reviewer-architecture | `.claude/agents/pr-reviewer-architecture.md` | 아키텍처 + 로직 일관성 | 모드: full, standard / Tier: T2, T3 |
 | pr-reviewer-security | `.claude/agents/pr-reviewer-security.md` | 보안 | 모드: full, standard / Tier: T1b, T2, T3 |
 | pr-reviewer-test | `.claude/agents/pr-reviewer-test.md` | 테스트 품질 | 모드: full / Tier: T1a, T3 |
 
@@ -259,7 +259,7 @@ Step 3 sub-agent들이 반환한 markdown 표 + prose를 다음 정규식 규약
   "file": "src/path/file.ts",
   "line": 42,
   "description": "...(multi-line OK)",
-  "source_agent": "domain|security|test"   // 정규화 — 항상 이 3개 enum 중 하나
+  "source_agent": "architecture|security|test"   // 정규화 — 항상 이 3개 enum 중 하나 (구 'domain'은 'architecture'로 정규화)
 }
 ```
 - 파싱 실패 row는 로그하고 다음 row로 진행 (전체 실패 X).
@@ -432,13 +432,13 @@ Step 7은 별도 분기를 정의하지 않는다. **Step 6 결정 분기 표의
 **(A) 리뷰 모드 헤더** — `project.json`에 `review` 설정이 명시된 경우:
 ```
 🔍 리뷰 모드: standard (2/3 에이전트)
-   실행: domain, security | 미실행: test
+   실행: architecture, security | 미실행: test
    설정 변경: /crew-review-pr config --mode full
 ```
 
 **(B) Tier 헤더** — 자동 분류가 적용된 경우 (`review` 미설정):
 ```
-🎯 자동 분류: T2 Standard (2 에이전트) — domain, security
+🎯 자동 분류: T2 Standard (2 에이전트) — architecture, security
    강제 변경: /crew-review-pr config --mode full
 ```
 

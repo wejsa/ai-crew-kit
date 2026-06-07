@@ -138,7 +138,7 @@
 > _base 공통 체크리스트가 자동 적용됩니다.
 >
 > 3개 병렬 subagent로 분할 실행됩니다:
-> pr-reviewer-security (보안) / pr-reviewer-domain (아키텍처·로직) / pr-reviewer-test (테스트 품질)
+> pr-reviewer-security (보안) / pr-reviewer-architecture (아키텍처·로직) / pr-reviewer-test (테스트 품질)
 
 ## Git 브랜치 전략
 

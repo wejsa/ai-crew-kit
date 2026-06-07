@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.1.0] - 2026-06-07
+
+> **v4.1.0 — 리뷰 관점 `domain` → `architecture` 리네임 (dual-accept, NON-BREAKING)** — PR 리뷰의 '아키텍처 + 비즈니스 로직 일관성' 관점 이름을 `domain` → `architecture`로 바꾼다 (에이전트 `pr-reviewer-domain` → `pr-reviewer-architecture`). v3.0.0에서 비즈니스 도메인 팩(fintech/healthcare/saas/ecommerce)이 제거된 뒤에도 이 리뷰 관점이 `domain`이라는 이름을 써서 "삭제된 도메인 기능"과 혼동을 일으켜 왔다(특히 플러그인 실행 시 `ai-crew-kit:pr-reviewer-domain` UI 라벨). v4.0.0 `crew-` 프리픽스 dual-accept과 동일한 정신으로, 신규는 `architecture`를 정규로 쓰되 기존 `domain` 설정은 레거시 별칭으로 계속 허용해 **검증 실패·마이그레이션 없이** 전환한다.
+
+### Changed
+
+- **에이전트 리네임**: `.claude/agents/pr-reviewer-domain.md` → `pr-reviewer-architecture.md` (`git mv`) + `name:` 프론트매터 동기화. 플러그인 환경에서 실행 중 에이전트가 `ai-crew-kit:pr-reviewer-architecture`로 표시됨.
+- **`review.agents` enum dual-accept**: `["domain", "security", "test"]` → `["architecture", "domain", "security", "test"]`. `contains` 필수 제약을 `{const: "domain"}` → `{enum: ["architecture", "domain"]}`로 완화 — 기존 시드의 `review.agents=["domain", ...]`가 검증 실패 없이 그대로 통과한다.
+- **`crew-review-pr`**: config 검증·프리셋 매핑·Tier 표·분류 헤더·`source_agent` 정규화 토큰을 `architecture` 기준으로 갱신. 레거시 `domain` 입력은 `architecture`로 정규화 후 저장.
+- **참조 정렬**: `agent-code-reviewer`(흐름도·관점 표), `agent-pm`(산출물 레이아웃 주석), 그리고 사용자 문서(`docs/concepts.md`·`docs/workflow-guide.md`·`docs/token-optimization.md`·`docs/skill-reference.md`)의 `pr-reviewer-domain`/레거시 `domain` 예시를 `pr-reviewer-architecture`/`architecture`로 갱신.
+
+### Added
+
+- **회귀 박제 fixture**: `fixtures/positive/v2-review-agents-domain-legacy.json` — 레거시 `domain` 값이 dual-accept으로 계속 통과함을 검증(validate-schema.sh 22/22 PASS).
+
+### Migration
+
+- **별도 조치 불필요 (non-breaking)**. `crew-upgrade`가 `.claude/agents/`를 통째 교체해 `pr-reviewer-architecture.md`로 자동 갱신한다. 기존 `project.json`의 `review.agents=["domain", ...]`는 레거시 별칭으로 계속 유효하며 `architecture`와 동일 리뷰어로 동작한다. 신규/재설정 시 `/crew-review-pr config --agents architecture,security`처럼 `architecture`를 사용하면 정규 값으로 저장된다. `migrations.json` v4.1.0 항목(features)이 업그레이드 시 변경을 고지한다.
+
 ## [4.0.0] - 2026-06-07
 
 > **v4.0.0 — 스킬 프리픽스 skill-* → crew-* 리네임 (BREAKING)** — 22개 빌트인 스킬의 호출 명령어를 `/skill-*` 에서 `/crew-*` 로 전면 변경한다 (예: `/skill-impl` → `/crew-impl`). 'AI Crew Kit' 브랜드 일관성 + 다른 도구·스킬과의 이름 충돌 회피가 목적이다. 플러그인 네임스페이싱(`ai-crew-kit:skill`)이 충돌을 이미 막아주므로 기능적 필수는 아닌 브랜딩 변경이지만, 슬래시 명령·CLAUDE.md 레지스트리·체이닝 프로즈에 노출되는 식별자를 일관화한다. 식별자(identifier)만 변경하고 일반 용어 "skill"/"스킬", `.claude/skills/` 경로, `SKILL.md`, `Skill` 툴, `skillProfile`/`customSkills`/`currentSkill` 필드명, 이력 기록은 보존한다.

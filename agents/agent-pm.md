@@ -162,7 +162,7 @@ const executionChain = requiredAgents.filter(a => enabledAgents.includes(a));
 ├── docs-impact.md          # docs-impact-analyzer 문서 영향도
 ├── pr-info.json            # crew-impl PR 정보 (number, url, branch)
 ├── review-security.md      # pr-reviewer-security 결과
-├── review-domain.md        # pr-reviewer-domain 결과
+├── review-architecture.md  # pr-reviewer-architecture 결과
 ├── review-test.md          # pr-reviewer-test 결과
 ├── review-summary.md       # crew-review-pr 통합 리뷰 결과
 └── test-report.md          # 테스트 실행 리포트

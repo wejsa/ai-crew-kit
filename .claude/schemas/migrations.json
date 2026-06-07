@@ -84,6 +84,12 @@
       "to": "4.0.0",
       "changes": [],
       "comment": "v4.0.0 스킬 프리픽스 리네임 skill-* → crew-* (BREAKING). project.json 필드 변경 없음(skillProfile/customSkills/currentSkill 필드명 보존). 구 skill-* 빌트인 스킬 디렉토리는 crew-upgrade Step 11의 .claude/skills/ 통째 교체로 자연 제거(custom/은 별도 백업·복원으로 보존) — v3.0.0 skill-domain 제거와 동일 메커니즘. 사용자 커스텀 스킬이 skill- 접두사를 쓰던 경우를 위해 customSkills 패턴은 ^(crew|skill)- 둘 다 허용(검증 실패 회피). 사용자 안내는 features[].version=4.0.0 참조."
+    },
+    {
+      "from": "4.0.0",
+      "to": "4.1.0",
+      "changes": [],
+      "comment": "리뷰 관점 'domain' → 'architecture' 리네임 (NON-BREAKING dual-accept). pr-reviewer-domain 에이전트 → pr-reviewer-architecture, review.agents enum은 architecture(canonical)+domain(레거시 별칭) 둘 다 허용, contains 필수는 {enum:[architecture,domain]}로 완화 — 기존 시드의 review.agents=['domain',...]는 검증 실패 없이 그대로 통과. v3.0.0에서 제거된 비즈니스 도메인 팩과의 명칭 혼동 해소가 목적. v4.0.0 crew- 프리픽스 dual-accept(customSkills ^(crew|skill)-)와 동일 정신. project.json 자동 변환 불필요(레거시 값 계속 동작) — crew-review-pr config로 재설정 시 architecture로 정규화. 빌트인 에이전트 파일은 crew-upgrade Step 11의 .claude/agents/ 통째 교체로 pr-reviewer-architecture.md로 자연 갱신. 사용자 안내는 features[].version=4.1.0 참조."
     }
   ],
   "features": [
@@ -134,6 +140,17 @@
           "description": "22개 빌트인 스킬의 호출 명령어가 /skill-* 에서 /crew-* 로 바뀌었습니다 (예: /skill-impl → /crew-impl, /skill-review-pr → /crew-review-pr). 'AI Crew Kit' 브랜드 일관성 + 다른 스킬과의 이름 충돌 방지가 목적입니다.",
           "action": "none",
           "detail": "별도 설정은 불필요합니다. 업그레이드가 .claude/skills/를 통째 교체하므로 구 skill-* 빌트인 디렉토리는 자동 제거되고(커스텀 스킬 .claude/skills/custom/은 보존), CLAUDE.md 스킬 레지스트리도 /crew-*로 재생성됩니다. 이제부터 /crew-* 명령을 사용하세요. 스크립트·문서·alias에 /skill-* 가 박혀 있으면 /crew-* 로 바꿔야 합니다. 커스텀 스킬을 skill- 접두사로 만들었던 경우 customSkills 검증은 계속 통과합니다(패턴이 crew-/skill- 둘 다 허용)."
+        }
+      ]
+    },
+    {
+      "version": "4.1.0",
+      "items": [
+        {
+          "title": "리뷰 관점 'domain' → 'architecture' 리네임 (dual-accept, non-breaking)",
+          "description": "PR 리뷰의 '아키텍처+비즈니스 로직 일관성' 관점 이름이 domain → architecture로 바뀌었습니다 (에이전트 pr-reviewer-domain → pr-reviewer-architecture). v3.0.0에서 제거된 비즈니스 도메인 팩과의 명칭 혼동을 없애기 위함입니다.",
+          "action": "none",
+          "detail": "별도 설정 불필요. 업그레이드가 .claude/agents/를 통째 교체해 pr-reviewer-architecture.md로 자동 갱신됩니다. 기존 project.json의 review.agents=['domain', ...] 설정은 레거시 별칭으로 계속 유효하며 architecture와 동일 리뷰어로 동작합니다(검증 실패 없음). 신규 설정 시 /crew-review-pr config --agents architecture,security 처럼 architecture를 쓰면 됩니다. 플러그인 설치 환경에서는 실행 중 에이전트가 ai-crew-kit:pr-reviewer-architecture로 표시됩니다."
         }
       ]
     }

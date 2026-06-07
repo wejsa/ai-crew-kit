@@ -70,7 +70,7 @@ AI Crew Kit은 특정 도메인에 종속되지 않는 **범용 AI 크루 개발
 | | 에이전트 | 호출 스킬 | 역할 |
 |---|---------|----------|------|
 | 🔴 | **pr-reviewer-security** | crew-review-pr | 보안 리뷰 |
-| 🟣 | **pr-reviewer-domain** | crew-review-pr | 아키텍처 + 비즈니스 로직 일관성 리뷰 |
+| 🟣 | **pr-reviewer-architecture** | crew-review-pr | 아키텍처 + 비즈니스 로직 일관성 리뷰 |
 | 🔵 | **pr-reviewer-test** | crew-review-pr | 테스트 품질 리뷰 |
 | 📝 | **docs-impact-analyzer** | crew-impl | 문서 영향도 분석 + 초안 제안 |
 | 🟠 | **agent-db-designer** | crew-plan | DB 설계 분석 (병렬) |

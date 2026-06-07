@@ -12,7 +12,8 @@ fixtures/
 │   ├── v2-full-hooks.json              v2.0.0-alpha.2 Step 2~3 전체 훅 등록
 │   ├── v2-future-events.json           v2.1+ PreToolUse/UserPromptSubmit 확장 경로
 │   ├── v2-review-mode-full.json        v2.3+ review.mode='full' 명시
-│   ├── v2-review-agents-custom.json    v2.3+ review.agents 커스텀 조합
+│   ├── v2-review-agents-custom.json    v2.3+ review.agents 커스텀 조합 (architecture canonical)
+│   ├── v2-review-agents-domain-legacy.json v4.1.0 dual-accept — 레거시 'domain' 값이 계속 통과 (하위호환 회귀 박제)
 │   ├── v2-review-thresholds-full.json  v2.3+ review.thresholds 3키 모두 명시
 │   └── v2-review-thresholds-partial.json v2.3+ review.thresholds 부분(critical만) — 나머지는 독립 fallback
 │
@@ -25,8 +26,8 @@ fixtures/
     ├── excludepaths-legacy.json        TFT R1에서 제거된 excludePaths 커스텀 키
     ├── review-mode-and-agents-both.json review.mode + review.agents 동시 설정 (not 제약 위반)
     ├── review-critical-below-minimum.json review.thresholds.critical < 50 (minimum 위반 — false-positive 게이트 무력화 차단)
-    ├── review-agents-unknown.json      review.agents에 enum 외 값 (domain/security/test 외 'perf' 등)
-    ├── review-agents-missing-domain.json review.agents에 domain 누락 (contains 제약 위반)
+    ├── review-agents-unknown.json      review.agents에 enum 외 값 (architecture/domain/security/test 외 'perf' 등)
+    ├── review-agents-missing-domain.json review.agents에 architecture·domain 모두 누락 (contains 제약 위반)
     └── review-thresholds-ordering-violation.json review.thresholds 순서 위반 (critical=60 < major=90).
                                           JSON Schema cross-field 비교 불가하므로 validate-schema.sh의 별도 ordering 검증 블록에서 처리.
 ```

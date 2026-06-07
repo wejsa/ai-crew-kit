@@ -188,7 +188,7 @@ ACK는 이 필드를 **문서 안내용**으로 사용합니다. Claude Code가 
 
 ### Q. 리뷰 서브에이전트가 `Usage credits required for 1M context`로 전부 실패하면?
 
-**증상**: `/crew-review-pr` 실행 시 `pr-reviewer-domain/security/test`가 **0 tool use로 동시에** `Usage credits required for 1M context` (또는 `Extra usage is required for 1M context · run /extra-usage to enable`)로 실패.
+**증상**: `/crew-review-pr` 실행 시 `pr-reviewer-architecture/security/test`가 **0 tool use로 동시에** `Usage credits required for 1M context` (또는 `Extra usage is required for 1M context · run /extra-usage to enable`)로 실패.
 
 **원인**: PR 코드 문제가 **아닙니다**. 부모 세션이 **1M 컨텍스트 모델**(예: `claude-opus-4-8[1m]`)로 돌고 있을 때, `model: opus`로 핀된 리뷰 서브에이전트가 부모의 1M 컨텍스트 권한/Extra Usage를 **상속받지 못하는 Claude Code 하네스 제약**입니다(서브에이전트 스폰 단계에서 차단 — 관련 이슈 #51060/#45169). Max/Team/Enterprise 구독은 1M Opus가 **포함**이므로 "크레딧 구매"가 필요한 게 아니라, *서브에이전트가 그 권한을 못 물려받는 것*입니다.
 
