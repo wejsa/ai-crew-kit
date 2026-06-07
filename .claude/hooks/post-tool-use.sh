@@ -173,9 +173,12 @@ if [ -f "$BACKLOG" ]; then
 
   NOW_ISO="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 
-  # 세션이 소유한 in_progress Task 존재 여부 확인 (불필요한 쓰기 방지)
-  HAS_OWNED="$(jq --arg sid "$SESSION_ID" '
-    [.tasks[]? | select(.status == "in_progress" and (.lockedBy // "") == $sid)] | length > 0
+  # 편집 파일을 lockedFiles로 잠근 in_progress Task 존재 여부 (file-membership — 불필요한 쓰기 방지)
+  # v4.5.0: 스킬은 Claude Code session_id를 얻을 수 없어 lockedBy=session_id 매칭이 불가하다.
+  # 따라서 "이 세션이 작업 중"의 신호로 편집 파일이 Task.lockedFiles에 속하는지를 사용한다.
+  # lockedFiles는 Task 전용이라 사실상 소유 세션만 그 파일을 편집 → 세션 스코핑을 대체.
+  HAS_OWNED="$(jq --arg f "$FILE_PATH_NORM" '
+    [.tasks[]? | select(.status == "in_progress" and ($f != "") and ((.lockedFiles // []) | index($f)))] | length > 0
   ' "$BACKLOG" 2>/dev/null || echo false)"
 
   if [ "$HAS_OWNED" = "true" ] && command -v atomic_write >/dev/null 2>&1; then
@@ -183,11 +186,11 @@ if [ -f "$BACKLOG" ]; then
     # dict에 적용하면 [{...},{...}]로 평탄화되어 키가 영구 손실됨. `with_entries(.value |= ...)`로
     # dict 의미를 유지하면서 값만 in-place 갱신. v1 array fixture에는 무동작(early skip)으로 안전.
     atomic_write "$BACKLOG" jq \
-      --arg sid "$SESSION_ID" \
+      --arg f "$FILE_PATH_NORM" \
       --arg now "$NOW_ISO" \
       '.tasks |= with_entries(
         .value |= (
-          if .status == "in_progress" and (.lockedBy // "") == $sid
+          if .status == "in_progress" and ($f != "") and ((.lockedFiles // []) | index($f))
           then . + {lockedAt: $now}
           else . end
         )

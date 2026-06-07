@@ -172,9 +172,9 @@ complexity-hint: heavy
 
 #### SI-03. 잠금 만료 탐지 (MINOR)
 - 사전 조건: .claude/state/backlog.json 존재
-- 검사: `lockedBy` 필드가 있는 Task 중 `lockedAt`이 1시간 이상 경과한 것 (둘 다 v2.2.0+ `backlog.schema.json` 정식 필드 — 가변 잠금 의미, `assignee`/`assignedAt`(불변 할당)와 구분)
-- 비교: `stop.sh`의 10분(EXPIRY_SECONDS) TTL은 응답 단위 heartbeat 만료. 본 검사는 보다 보수적인 1시간(헬스체크 단위) — 일과성 만료가 아닌 진짜 좀비 잠금만 탐지
-- autoFix: 자동 잠금 해제 (`lockedBy`/`lockedAt`을 null로 — confirm: false. TTL 초과는 명백한 비정상)
+- 검사 (v4.5.0): `in_progress`이고 `lockedBy`가 있으며 `(lockedAt // assignedAt) + lockTTL < 현재 시각`인 좀비 잠금. `lockedAt`은 활동 하트비트(PostToolUse가 편집 파일∈lockedFiles일 때 갱신, session_id 불요), `assignee`/`assignedAt`은 불변 할당 기록.
+- 비교: `stop.sh`도 매 응답 Stop마다 **동일 기준**(`(lockedAt // assignedAt)+lockTTL`)으로 만료 잠금의 `lockedBy`/`lockedAt`을 null로 정리한다. 본 검사는 Stop 이벤트가 발생하지 않은 프로젝트(예: 다른 머신·세션에서 중단)에 잔존하는 좀비를 헬스체크 단위로 포착.
+- autoFix: 자동 잠금 해제 (`lockedBy`/`lockedAt`을 null로 — confirm: false. lockTTL 초과는 명백한 비정상)
 
 #### SI-04. backlog 내부 논리 검증 (MAJOR)
 - 사전 조건: .claude/state/backlog.json 존재

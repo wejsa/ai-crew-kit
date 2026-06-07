@@ -30,8 +30,8 @@ complexity-hint: medium
 
 ## 잠금 자동 정리 (Lock Auto-cleanup)
 사전 조건 검사 중, 현재 작업 Task **외**의 `in_progress` Task를 스캔:
-1. `assignedAt` + (`lockTTL` ?? 3600) < 현재 시각 → 만료 감지
-2. 만료된 Task: `status` → `"todo"`, `assignee`/`assignedAt`/`lockedFiles` 초기화
+1. `(lockedAt // assignedAt)` + (`lockTTL` ?? 3600) < 현재 시각 → 만료 감지 (v4.5.0: 활동 하트비트 `lockedAt` 우선)
+2. 만료된 Task: `status` → `"todo"`, `assignee`/`assignedAt`/`lockedBy`/`lockedAt`/`lockedFiles` 초기화
 3. 로그: `🔓 잠금 만료 자동 해제: {TASK-ID}`
 4. 현재 작업 Task는 제외 (자기 자신의 lock은 정리하지 않음)
 
@@ -117,7 +117,7 @@ CLAUDE.md 워크트리 프로토콜 참조. push 전 develop 동기화 필수.
 
 ### 8. 상태 업데이트
 `crew-backlog` 쓰기 프로토콜 준수 (metadata.version +1, JSON 검증 필수).
-step status → "pr_created", prNumber 기록. assignedAt 갱신 (lock heartbeat).
+step status → "pr_created", prNumber 기록. `lockedAt` 갱신 (활동 하트비트 — `assignedAt`는 불변, v4.5.0).
 
 ### 8.5 실행 로그
 `.claude/state/execution-log.json`에 추가: action="pr_created", prNumber, stepNumber
@@ -193,10 +193,10 @@ step status → "pr_created", prNumber 기록. assignedAt 갱신 (lock heartbeat
 중단 조건: CRITICAL auto-fix 실패, 빌드 3회 실패, 라인 수 초과
 
 ## lockedFiles 관리
-- 스텝 시작: 계획 파일의 files → lockedFiles 추가 + assignedAt 갱신
-- 파일 수정: 실제 수정 파일 감지 → lockedFiles/files 갱신
+- 스텝 시작: 계획 파일의 files → lockedFiles 추가 + `lockedBy`(=assignee)·`lockedAt`(=now) 설정 (활성 잠금 개시 — 이후 PostToolUse 훅이 편집 파일∈lockedFiles일 때 lockedAt 자동 하트비트)
+- 파일 수정: 실제 수정 파일 감지 → lockedFiles/files 갱신 (lockedFiles에 든 파일 편집 시 훅이 lockedAt 갱신)
 - 스텝 완료: lockedFiles 유지 (머지 전까지 보호)
-- 장시간 작업: 코드 수정/커밋 시 assignedAt 자동 갱신. 동적 TTL은 crew-backlog 참조.
+- 장시간 작업: **하트비트는 `lockedAt`** — 훅이 편집마다 자동 갱신하므로 `assignedAt`는 **불변**(할당 기록)으로 둔다(v4.5.0, schema 정합). 동적 TTL은 crew-backlog 참조.
 
 ## 출력
 필수 포함: Task ID, Step N/M, 변경 파일 수(생성/수정/삭제), 빌드/테스트/린트 결과, PR 링크, 백그라운드 분석 결과, 다음 자동 스킬, 남은 스텝 수

@@ -38,9 +38,9 @@ CLAUDE.md 상태 추적 패턴. currentSkill="crew-plan"
 
 Task 선택 전에 모든 `in_progress` Task를 스캔:
 
-1. 각 Task의 `assignedAt` + (`lockTTL` ?? 3600) < 현재 시각인지 검사
+1. 각 Task의 `(lockedAt // assignedAt)` + (`lockTTL` ?? 3600) < 현재 시각인지 검사 (v4.5.0: 활동 하트비트 `lockedAt` 우선, 없으면 `assignedAt` 폴백)
 2. 만료된 Task 발견 시:
-   - `status` → `"todo"`, `assignee` → `null`, `assignedAt` → `null`, `lockedFiles` → `[]`
+   - `status` → `"todo"`, `assignee` → `null`, `assignedAt` → `null`, `lockedBy` → `null`, `lockedAt` → `null`, `lockedFiles` → `[]`
    - `workflowState` → `null`
    - `metadata.version` 1 증가
    - 로그: `🔓 잠금 만료 자동 해제: {TASK-ID} "{제목}" (만료: {N}분 전)`
@@ -59,8 +59,9 @@ Task 선택 전에 모든 `in_progress` Task를 스캔:
 
 ### 1.5 조기 잠금 (중복 선택 방지)
 Task 선택 직후 **즉시** backlog.json 업데이트 + push:
-- `status: "in_progress"`, `assignee: "{user}@{hostname}-{YYYYMMDD-HHmmss}"`, `lockTTL: 3600`, `lockedFiles: []`
+- `status: "in_progress"`, `assignee: "{user}@{hostname}-{YYYYMMDD-HHmmss}"`, `assignedAt: <now ISO8601>`, `lockedBy: <assignee와 동일 값>`, `lockedAt: <now ISO8601>`, `lockTTL: 3600`, `lockedFiles: []`
   - 조기 잠금 단계는 lockedFiles 미확정이라 최소 TTL을 사용한다. `backlog.schema.json` `lockTTL.minimum`(=3600)을 준수해야 하므로 **3600 이상**이어야 한다. (Step 1.5에서 임시 1시간 → 스텝 분해 후 동적 TTL로 재산정.)
+  - **잠금 필드 의미(v4.5.0)**: `assignee`/`assignedAt`은 **불변** 할당 기록. `lockedBy`(=assignee)/`lockedAt`은 **가변** 잠금 — `lockedAt`은 활동 하트비트로, PostToolUse 훅이 편집 파일이 `lockedFiles`에 속할 때 자동 갱신한다(스킬은 session_id를 못 얻으므로 file-membership 사용). 만료 판정은 `(lockedAt // assignedAt) + lockTTL < now`.
 - `metadata.version` 1 증가, 커밋: `chore: claim {TASK-ID}`
 - CLAUDE.md 워크트리 프로토콜에 따라 push
 
@@ -125,7 +126,7 @@ Step N: {제목}
 ### 7. 상태 업데이트 (승인 후)
 > status/assignee는 1.5에서 설정됨. 여기서는 파일 잠금 + 스텝 정보만 갱신.
 
-backlog.json 업데이트: assignedAt 리셋, lockedFiles, steps 배열 (prLineLimit 포함, 설정 시만), currentStep=1
+backlog.json 업데이트: `lockedAt` 갱신(활동 하트비트 — `assignedAt`는 불변, v4.5.0), lockedFiles, steps 배열 (prLineLimit 포함, 설정 시만), currentStep=1
 - `metadata.version` 1 증가, `crew-backlog` 쓰기 프로토콜 준수
 - **lockTTL 산정** (crew-backlog "동적 TTL"): ≤3파일→3600, 4-8→7200, ≥9→10800
 - CLAUDE.md 워크트리 프로토콜에 따라 push. **push 성공 확인 후에만** crew-impl 호출
