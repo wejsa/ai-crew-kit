@@ -74,12 +74,12 @@ exec 0</dev/null                  # stdin을 /dev/null로 — 자식 프로세�
 **발동 시점**: 모든 `Bash` 도구 호출 직전
 **timeout**: 10초
 **매처**: `Bash`
-**목적**: `gh pr merge` 직전, 미해결 CRITICAL이 있는 PR의 머지를 **결정적으로 차단**한다. 기존엔 "CRITICAL은 머지 차단"이 prose 지시(skill-merge-pr/CLAUDE.md)였으나, LLM이 review 분기를 한 번만 잘못 따라도 나쁜 PR이 auto-merge되는 구멍이 있었다. 이 게이트가 그 구멍을 닫는다.
+**목적**: `gh pr merge` 직전, 미해결 CRITICAL이 있는 PR의 머지를 **결정적으로 차단**한다. 기존엔 "CRITICAL은 머지 차단"이 prose 지시(crew-merge-pr/CLAUDE.md)였으나, LLM이 review 분기를 한 번만 잘못 따라도 나쁜 PR이 auto-merge되는 구멍이 있었다. 이 게이트가 그 구멍을 닫는다.
 
 **동작**:
 1. `gh pr merge`가 아닌 모든 Bash 명령 → 즉시 `exit 0` (의견 없음, 오버헤드 최소).
 2. PR 번호 추출 후 **차단 신호** 검사 (둘 중 하나라도 차단이면 deny):
-   - **신호 A (state, 오프라인 결정적)**: PR N을 소유한 Task(`step.prNumber == N` **또는** `workflowState.prNumber == N`)의 `workflowState.lastReviewDecision == "REQUEST_CHANGES"` → 미해결 CRITICAL 게시됨. PR 번호의 결정적 SSOT는 `step.prNumber`(skill-impl Step 8)이므로 거기서도 join한다 — `workflowState.prNumber`만 보면 실제 backlog에서 발동하지 못한다.
+   - **신호 A (state, 오프라인 결정적)**: PR N을 소유한 Task(`step.prNumber == N` **또는** `workflowState.prNumber == N`)의 `workflowState.lastReviewDecision == "REQUEST_CHANGES"` → 미해결 CRITICAL 게시됨. PR 번호의 결정적 SSOT는 `step.prNumber`(crew-impl Step 8)이므로 거기서도 join한다 — `workflowState.prNumber`만 보면 실제 backlog에서 발동하지 못한다.
    - **신호 B (GitHub, best-effort)**: `gh pr view N --json reviewDecision == CHANGES_REQUESTED` (타인 PR에서 GitHub가 기록한 request-changes). 네트워크/인증/`gh` 부재 시 fail-open.
 3. 차단 시 `exit 2` + stderr에 사유·복구 안내(재리뷰 / 우회) 출력.
 
@@ -93,9 +93,9 @@ exec 0</dev/null                  # stdin을 /dev/null로 — 자식 프로세�
 
 **fail-open 시나리오** (게이트 장애가 정상 머지를 막지 않도록 → `exit 0`): `jq` 부재, stdin 부재, backlog 부재, PR 번호 추출 불가, 매칭 `workflowState` 없음, GitHub 조회 실패.
 
-> 신호 A는 `backlog.schema.json`의 `workflowState.lastReviewDecision`(v2.4.0 정식 등록)에 의존한다. 이 필드는 skill-review-pr Step 6.5가 매 리뷰마다 갱신한다. 이전에는 스킬이 참조했으나 schema 미등록(`additionalProperties:false`)으로 거부되던 sleeper였다 — 본 게이트와 함께 정식화되어 skill-fix 모드 판정도 같이 복구됨.
+> 신호 A는 `backlog.schema.json`의 `workflowState.lastReviewDecision`(v2.4.0 정식 등록)에 의존한다. 이 필드는 crew-review-pr Step 6.5가 매 리뷰마다 갱신한다. 이전에는 스킬이 참조했으나 schema 미등록(`additionalProperties:false`)으로 거부되던 sleeper였다 — 본 게이트와 함께 정식화되어 crew-fix 모드 판정도 같이 복구됨.
 >
-> **한계**: kit 개발 리포 자체는 backlog state가 없어 신호 A가 no-op(claim 감지와 동일) — 실효는 사용자 프로젝트에서 발현. 기존 사용자가 업그레이드 시 PreToolUse 등록을 받으려면 `settings.json` 병합이 필요(skill-upgrade 후속 과제).
+> **한계**: kit 개발 리포 자체는 backlog state가 없어 신호 A가 no-op(claim 감지와 동일) — 실효는 사용자 프로젝트에서 발현. 기존 사용자가 업그레이드 시 PreToolUse 등록을 받으려면 `settings.json` 병합이 필요(crew-upgrade 후속 과제).
 
 ### SessionStart (`session-start.sh`)
 
@@ -137,7 +137,7 @@ exec 0</dev/null                  # stdin을 /dev/null로 — 자식 프로세�
 | 단계 | 트리거 | 동작 |
 |------|--------|------|
 | 0 | `hook-disabled.flag` 존재 | 즉시 exit 0 |
-| 0-A | `init-in-progress.flag` 존재 (mtime ≤ 1h) | 즉시 exit 0. skill-init/onboard 트랜잭션 동안 카운터 진입 자체 차단 (v2.2.0). TTL 초과 마커는 자동 회수. |
+| 0-A | `init-in-progress.flag` 존재 (mtime ≤ 1h) | 즉시 exit 0. crew-init/onboard 트랜잭션 동안 카운터 진입 자체 차단 (v2.2.0). TTL 초과 마커는 자동 회수. |
 | 1 | `file_path`가 `.claude/state/*` 또는 `.claude/temp/*` | 즉시 exit 0 (네이티브 path 필터 부재 — 스크립트 레벨) |
 | 2 | 세션별 락(`$TMPDIR/ack-hook-<sid>.lock`) 존재 | 재진입으로 판단, 즉시 exit 0. 정상 경로는 `trap EXIT`로 정리 |
 | 3 | `CCK_HOOK_WINDOW_SEC` 윈도우 내 `CCK_HOOK_THRESHOLD` 초과 (기본 10초/3회) | `hook-disabled.flag` 생성 + stderr 경고 로그 |

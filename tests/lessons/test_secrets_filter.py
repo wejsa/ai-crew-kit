@@ -1,13 +1,13 @@
-"""Secrets filter regression tests for skill-retro §5.3 (Phase 7 Step 2).
+"""Secrets filter regression tests for crew-retro §5.3 (Phase 7 Step 2).
 
-skill-retro stores lesson description after matching against
+crew-retro stores lesson description after matching against
 _base/health/secrets-patterns.json common.hardcoded (SEC-S01~S05).
 Match → AskUserQuestion (거부 / 마스킹 / 강행). Tests cover the regex layer
-only — UX layer is verified via skill-retro SKILL.md spec, not pytest.
+only — UX layer is verified via crew-retro SKILL.md spec, not pytest.
 
 These tests pin the regex contract: positive samples must match,
 clean text must not. Excludeable contexts (comment/type_declaration)
-are handled at the AskUserQuestion layer in skill-retro, not here.
+are handled at the AskUserQuestion layer in crew-retro, not here.
 """
 from __future__ import annotations
 
@@ -50,7 +50,7 @@ def test_secret_pattern_matches(pattern_id, sample, hardcoded_patterns):
 
 
 def test_all_hardcoded_have_comment_excludecontext(hardcoded_patterns):
-    """SEC-S01~S05 모두 excludeContexts에 'comment' 포함 — skill-retro가
+    """SEC-S01~S05 모두 excludeContexts에 'comment' 포함 — crew-retro가
     description(코멘트성 텍스트)에 대해 AskUserQuestion으로 사용자 판단을
     위임하는 결정(D2 개정)의 근거. 이 invariant이 깨지면 정적 매칭 정책
     재검토 필요."""

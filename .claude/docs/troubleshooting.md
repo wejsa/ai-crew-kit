@@ -8,11 +8,11 @@ AI Crew Kit 사용 중 발생할 수 있는 문제와 해결 방법.
 
 ### 증상
 - 자동 체이닝(`impl → review → merge`) 중 세션 종료
-- `/skill-status`에서 Task가 `in_progress`이나 진행이 안 됨
+- `/crew-status`에서 Task가 `in_progress`이나 진행이 안 됨
 
 ### 진단
 ```
-/skill-status
+/crew-status
 ```
 - `워크플로우 상태` 섹션에서 Stale(30분+ 미갱신) 확인
 - `workflowState.currentSkill`로 중단 지점 파악
@@ -23,14 +23,14 @@ AI Crew Kit 사용 중 발생할 수 있는 문제와 해결 방법.
 
 | 중단 지점 | 복구 명령 | 설명 |
 |----------|----------|------|
-| skill-impl | `/skill-impl` | 현재 스텝 구현 재개 |
-| skill-review-pr | `/skill-review-pr {prNumber}` | PR 리뷰 재실행 |
-| skill-fix | `/skill-fix {prNumber}` | PR 수정 재실행 |
-| skill-merge-pr | `/skill-merge-pr {prNumber}` | PR 머지 재실행 |
+| crew-impl | `/crew-impl` | 현재 스텝 구현 재개 |
+| crew-review-pr | `/crew-review-pr {prNumber}` | PR 리뷰 재실행 |
+| crew-fix | `/crew-fix {prNumber}` | PR 수정 재실행 |
+| crew-merge-pr | `/crew-merge-pr {prNumber}` | PR 머지 재실행 |
 
 **Task 완전 초기화:**
 ```
-/skill-backlog update {taskId} --status=todo
+/crew-backlog update {taskId} --status=todo
 ```
 
 ---
@@ -67,7 +67,7 @@ python3 -c "import json; json.load(open('/tmp/backlog-check.json'))" && echo "OK
 
 ### 예방
 - `metadata.version` 카운터로 동시 쓰기 감지
-- 모든 쓰기 후 JSON 유효성 자동 검증 (skill-backlog 프로토콜)
+- 모든 쓰기 후 JSON 유효성 자동 검증 (crew-backlog 프로토콜)
 
 ---
 
@@ -82,13 +82,13 @@ python3 -c "import json; json.load(open('/tmp/backlog-check.json'))" && echo "OK
 
 **미승인:**
 ```
-/skill-review-pr {prNumber}
+/crew-review-pr {prNumber}
 ```
 
 **CI 실패:**
 1. `gh pr checks {prNumber}`로 실패 항목 확인
 2. 코드 수정 후 push
-3. `/skill-merge-pr {prNumber}` 재시도
+3. `/crew-merge-pr {prNumber}` 재시도
 
 **충돌:**
 ```bash
@@ -104,7 +104,7 @@ git commit -m "fix: merge conflict 해결"
 git push
 
 # 재시도
-/skill-merge-pr {prNumber}
+/crew-merge-pr {prNumber}
 ```
 
 ---
@@ -112,7 +112,7 @@ git push
 ## 4. 잠금 만료 (Lock Expired)
 
 ### 증상
-- `/skill-status --locks`에서 `🔴 만료` 표시
+- `/crew-status --locks`에서 `🔴 만료` 표시
 - 다른 세션에서 같은 Task 접근 불가
 
 ### 해결
@@ -122,7 +122,7 @@ git push
 
 **강제 해제:**
 ```
-/skill-backlog unlock {taskId} --force
+/crew-backlog unlock {taskId} --force
 ```
 - "I understand the risks" 입력 필요
 - 원래 담당자가 작업 중일 수 있으므로 주의
@@ -133,7 +133,7 @@ git push
 
 ### 증상
 ```
-❌ 계획 파일이 없습니다. /skill-plan을 먼저 실행하세요.
+❌ 계획 파일이 없습니다. /crew-plan을 먼저 실행하세요.
 ```
 
 ### 원인
@@ -142,24 +142,24 @@ git push
 
 ### 해결
 ```
-/skill-plan {taskId}
+/crew-plan {taskId}
 ```
 - 기존 backlog.json의 steps 정보를 참조하여 계획 재수립
-- 승인 후 `/skill-impl`로 재개
+- 승인 후 `/crew-impl`로 재개
 
 ---
 
 ## 6. 업그레이드 실패
 
 ### 증상
-- `/skill-upgrade` 중 오류 발생
+- `/crew-upgrade` 중 오류 발생
 - `.claude/temp/.upgrade.lock` 잔존
 
 ### 해결
 
 **롤백:**
 ```
-/skill-upgrade --rollback
+/crew-upgrade --rollback
 ```
 
 **잠금 파일 수동 제거 (롤백 불가 시):**
@@ -170,7 +170,7 @@ rm .claude/temp/upgrade-state.json
 
 **검증:**
 ```
-/skill-validate
+/crew-validate
 ```
 
 ---
@@ -179,14 +179,14 @@ rm .claude/temp/upgrade-state.json
 
 ### 진단
 ```
-/skill-validate
+/crew-validate
 ```
 
 ### 해결
 - FAIL 항목 확인 후 수동 수정
 - `--fix` 옵션으로 자동 복구 가능 항목 처리:
   ```
-  /skill-validate --fix
+  /crew-validate --fix
   ```
 
 ---
@@ -214,7 +214,7 @@ git push origin develop
 
 ---
 
-## skill-fix 루프 (2회 초과)
+## crew-fix 루프 (2회 초과)
 
 **증상**: CRITICAL 이슈가 auto-fix 후에도 반복 발견되어 워크플로우가 중단됨
 
@@ -224,9 +224,9 @@ git push origin develop
 1. REQUEST_CHANGES 출력 내용 확인
 2. CRITICAL 이슈 목록에서 수동 수정 필요 항목 파악
 3. 코드 수정 후 커밋 → push
-4. `/skill-review-pr {번호}` 재실행
+4. `/crew-review-pr {번호}` 재실행
 
-> 루프 가드: 같은 PR에 대해 skill-fix는 **최대 2회**만 실행됩니다. 3회째 CRITICAL 발견 시 REQUEST_CHANGES 후 즉시 중단합니다.
+> 루프 가드: 같은 PR에 대해 crew-fix는 **최대 2회**만 실행됩니다. 3회째 CRITICAL 발견 시 REQUEST_CHANGES 후 즉시 중단합니다.
 
 ---
 
@@ -252,8 +252,8 @@ git push origin develop
 
 | 명령 | 용도 |
 |------|------|
-| `/skill-status` | 전체 상태 확인 |
-| `/skill-status --health` | 시스템 건강 점검 |
-| `/skill-status --locks` | 잠금 현황 확인 |
-| `/skill-validate` | 프레임워크 무결성 검증 |
-| `/skill-backlog list` | 백로그 상태 확인 |
+| `/crew-status` | 전체 상태 확인 |
+| `/crew-status --health` | 시스템 건강 점검 |
+| `/crew-status --locks` | 잠금 현황 확인 |
+| `/crew-validate` | 프레임워크 무결성 검증 |
+| `/crew-backlog list` | 백로그 상태 확인 |

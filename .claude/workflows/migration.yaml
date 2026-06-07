@@ -32,7 +32,7 @@ steps:
   - id: plan
     name: "마이그레이션 계획"
     agent: agent-planner
-    skill: skill-plan
+    skill: crew-plan
     input: "{{steps.analyze.output}}"
     output: ".claude/temp/{{taskId}}-migration-plan.md"
     gate: user_approval
@@ -58,7 +58,7 @@ steps:
   - id: implement
     name: "코드 마이그레이션"
     agent: agent-backend
-    skill: skill-impl
+    skill: crew-impl
     input: "{{steps.plan.output}}"
     output: "PR"
     gate: build_success
@@ -72,7 +72,7 @@ steps:
   - id: review
     name: "코드 리뷰"
     agent: agent-code-reviewer
-    skill: skill-review-pr
+    skill: crew-review-pr
     input: "{{steps.implement.output}}"
     output: "리뷰 결과"
     gate: critical_zero
@@ -84,7 +84,7 @@ steps:
 
   - id: merge
     name: "PR 머지"
-    skill: skill-merge-pr
+    skill: crew-merge-pr
     input: "{{steps.review.output}}"
     gate: review_approved
 

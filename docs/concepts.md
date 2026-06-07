@@ -69,12 +69,12 @@ AI Crew Kit은 특정 도메인에 종속되지 않는 **범용 AI 크루 개발
 
 | | 에이전트 | 호출 스킬 | 역할 |
 |---|---------|----------|------|
-| 🔴 | **pr-reviewer-security** | skill-review-pr | 보안 리뷰 |
-| 🟣 | **pr-reviewer-domain** | skill-review-pr | 아키텍처 + 비즈니스 로직 일관성 리뷰 |
-| 🔵 | **pr-reviewer-test** | skill-review-pr | 테스트 품질 리뷰 |
-| 📝 | **docs-impact-analyzer** | skill-impl | 문서 영향도 분석 + 초안 제안 |
-| 🟠 | **agent-db-designer** | skill-plan | DB 설계 분석 (병렬) |
-| 🟢 | **agent-qa** | skill-impl | 테스트 품질 분석 (백그라운드) |
+| 🔴 | **pr-reviewer-security** | crew-review-pr | 보안 리뷰 |
+| 🟣 | **pr-reviewer-domain** | crew-review-pr | 아키텍처 + 비즈니스 로직 일관성 리뷰 |
+| 🔵 | **pr-reviewer-test** | crew-review-pr | 테스트 품질 리뷰 |
+| 📝 | **docs-impact-analyzer** | crew-impl | 문서 영향도 분석 + 초안 제안 |
+| 🟠 | **agent-db-designer** | crew-plan | DB 설계 분석 (병렬) |
+| 🟢 | **agent-qa** | crew-impl | 테스트 품질 분석 (백그라운드) |
 
 > Sub-agent는 읽기 전용(Read/Glob/Grep)으로 동작하며, 스킬을 통해서만 호출됩니다.
 > agent-db-designer, agent-qa는 `project.json`의 `agents.enabled`에 포함된 경우에만 실행됩니다.
@@ -101,20 +101,20 @@ AI Crew Kit은 특정 도메인에 종속되지 않는 **범용 AI 크루 개발
 │   └── completed.json  # 완료 이력
 └── temp/             # 임시 파일 (.gitignore)
 
-# 프로젝트 루트 (skill-init 시 자동 생성)
+# 프로젝트 루트 (crew-init 시 자동 생성)
 CLAUDE.md               # AI 에이전트 지시문
 README.md               # 프로젝트 README (템플릿 기반)
 VERSION                 # 프로젝트 버전 (0.1.0부터 시작)
 
-# ai-crew-kit clone에서 시작한 경우 skill-init/skill-onboard가 다음 14종을 자동 삭제
+# ai-crew-kit clone에서 시작한 경우 crew-init/crew-onboard가 다음 14종을 자동 삭제
 # (kit dev 잡티 — 사용자 프로젝트에 불필요):
 #   CHANGELOG.md, docs/, examples/, tests/, scripts/, .github/, memory/, LICENSE,
 #   README.md, CLAUDE.md, VERSION (Step 6에서 사용자용 새로 생성),
 #   .claude/temp/, .claude/hooks/tests/, .claude/state/, .claude/settings.local.json
 
 docs/
-├── retro/              # 회고 리포트 (skill-retro)
-└── reports/            # 메트릭 리포트 (skill-report)
+├── retro/              # 회고 리포트 (crew-retro)
+└── reports/            # 메트릭 리포트 (crew-report)
 ```
 
 ## 실행 모델
@@ -140,7 +140,7 @@ AI Crew Kit은 **프롬프트 기반 시스템**입니다.
 
 ```bash
 # 상태 확인 (권장)
-/skill-status
+/crew-status
 
 # 자동으로 진행 중인 Task 찾아서 재개
 "이어서 진행해줘"
@@ -166,8 +166,8 @@ AI Crew Kit은 **프롬프트 기반 시스템**입니다.
 **잠금 관리:**
 - 기본 TTL: 1시간
 - 만료 시 다른 세션에서 인계 가능
-- `/skill-status --locks`로 상태 확인
-- `/skill-backlog unlock {taskId} --force`로 긴급 해제
+- `/crew-status --locks`로 상태 확인
+- `/crew-backlog unlock {taskId} --force`로 긴급 해제
 
 ## 핵심 원칙
 
@@ -176,7 +176,7 @@ AI Crew Kit은 **프롬프트 기반 시스템**입니다.
 | **Stack-Aware Kit** | 스택 인지로 빌드·리뷰·추천 자동 조정 |
 | **Layered Override** | `domains/_base/`(공통 기본값) → `project.json`(프로젝트 설정) → `CLAUDE.md` `CUSTOM_SECTION`(프로젝트 커스텀) 순서로 설정 적용 |
 | **Agent Orchestration** | PM이 워크플로우에 따라 에이전트 자동 분배 |
-| **Zero-Config Start** | `/skill-init` 한 번으로 즉시 가동 |
+| **Zero-Config Start** | `/crew-init` 한 번으로 즉시 가동 |
 
 ## Layered Override
 

@@ -140,5 +140,5 @@ class PaymentSaga {
 
 ## 사용 방법
 
-이 체크리스트는 `skill-review`, `skill-review-pr` 실행 시 자동으로 로드됩니다.
+이 체크리스트는 `crew-review`, `crew-review-pr` 실행 시 자동으로 로드됩니다.
 도메인별 체크리스트와 병합되며, 도메인 설정이 우선합니다.

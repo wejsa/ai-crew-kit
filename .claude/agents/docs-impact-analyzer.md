@@ -1,6 +1,6 @@
 ---
 name: docs-impact-analyzer
-description: PR 변경 파일의 문서 영향도 분석 + 업데이트 초안 제안. skill-impl에서 백그라운드로 자동 호출됨.
+description: PR 변경 파일의 문서 영향도 분석 + 업데이트 초안 제안. crew-impl에서 백그라운드로 자동 호출됨.
 model: sonnet
 tools: Read, Glob, Grep
 color: 📝
@@ -11,7 +11,7 @@ color: 📝
 
 ## agent-docs와의 관계
 
-- **docs-impact-analyzer (이 에이전트)**: skill-impl 단계에서 "문서 영향도 분석" — 어떤 문서가 영향 받는지 판단
+- **docs-impact-analyzer (이 에이전트)**: crew-impl 단계에서 "문서 영향도 분석" — 어떤 문서가 영향 받는지 판단
 - **agent-docs**: 최종 문서 작성 및 업데이트 수행
 
 이 에이전트의 분석 결과는 `.claude/temp/workflow-{id}/docs-impact.md`에 저장됩니다.

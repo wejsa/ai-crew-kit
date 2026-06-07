@@ -58,7 +58,7 @@ if [ -f "$DISABLE_FLAG" ]; then
 fi
 
 # ── 0-A단계: init/onboard 트리거 보호 마커 (v2.2.0) ─────
-# skill-init/onboard 트랜잭션 동안은 초기 셋업 폭주(다수 Write)가 정상이므로
+# crew-init/onboard 트랜잭션 동안은 초기 셋업 폭주(다수 Write)가 정상이므로
 # 카운터 진입 자체를 차단하여 false-positive 자동 비활성화 방지.
 # 마커는 SKILL이 시작 시 생성·종료 시 제거하지만, 비정상 종료 대비 TTL 자동 회수.
 if [ -f "$INIT_FLAG" ]; then

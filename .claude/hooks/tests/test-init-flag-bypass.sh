@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # test-init-flag-bypass.sh — 0-A단계 init/onboard 트리거 보호 마커 (v2.2.0)
 #
-# skill-init/onboard 트랜잭션 동안은 초기 셋업 다수 Write가 정상이므로
+# crew-init/onboard 트랜잭션 동안은 초기 셋업 다수 Write가 정상이므로
 # init-in-progress.flag 존재 시 카운터 진입 자체를 차단해야 한다.
 #
 # 시나리오:

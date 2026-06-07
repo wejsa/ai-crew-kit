@@ -9,21 +9,21 @@ AI Crew Kit이 업데이트되면, 기존 프로젝트에서 프레임워크 파
 
 ```bash
 # 변경 사항 미리보기 (실제 변경 없음 — 권장 첫 단계)
-/skill-upgrade --dry-run
+/crew-upgrade --dry-run
 
 # 최신 버전으로 업그레이드
-/skill-upgrade
+/crew-upgrade
 
 # 특정 버전으로 업그레이드 (예: v2.0.0 GA)
-/skill-upgrade --version v2.0.0
+/crew-upgrade --version v2.0.0
 
 # 소스 지정 (기본값은 project.json의 kitSource)
-/skill-upgrade --source https://github.com/wejsa/ai-crew-kit.git
+/crew-upgrade --source https://github.com/wejsa/ai-crew-kit.git
 ```
 
 ## v1.x → v2.0 마이그레이션
 
-v1.x 사용자는 `/skill-upgrade --version v2.0.0` 한 번이면 충분합니다 — `migrations.json` v2.0.0의 4 add_field(`hooks` / `conventions.skillProfile` / `conventions.overridePriority` / `tokenHints`)가 자동 적용됩니다.
+v1.x 사용자는 `/crew-upgrade --version v2.0.0` 한 번이면 충분합니다 — `migrations.json` v2.0.0의 4 add_field(`hooks` / `conventions.skillProfile` / `conventions.overridePriority` / `tokenHints`)가 자동 적용됩니다.
 
 | 항목 | 자동 처리 |
 |------|----------|
@@ -34,23 +34,23 @@ v1.x 사용자는 `/skill-upgrade --version v2.0.0` 한 번이면 충분합니�
 
 **점수 영향 ≤1점, 수동 작업 0건.** 상세 변경 사항·FAQ·롤백 매뉴얼은 [v1.x → v2.0.0 마이그레이션 가이드](./v2/migration-guide.md)를 참조하세요.
 
-## 최초 업그레이드 (skill-upgrade가 없는 프로젝트)
+## 최초 업그레이드 (crew-upgrade가 없는 프로젝트)
 
-v1.6.0 이전에 초기화된 프로젝트에는 skill-upgrade 스킬이 없습니다.
+v1.6.0 이전에 초기화된 프로젝트에는 crew-upgrade 스킬이 없습니다.
 아래 명령으로 1회성 부트스트랩 후 사용하세요:
 
 ```bash
 # 1. ai-crew-kit 최신 버전 클론
 git clone --depth 1 https://github.com/wejsa/ai-crew-kit.git /tmp/ai-crew-kit-latest
 
-# 2. skill-upgrade 스킬만 복사
-cp -r /tmp/ai-crew-kit-latest/.claude/skills/skill-upgrade .claude/skills/
+# 2. crew-upgrade 스킬만 복사
+cp -r /tmp/ai-crew-kit-latest/.claude/skills/crew-upgrade .claude/skills/
 
 # 3. 임시 파일 정리
 rm -rf /tmp/ai-crew-kit-latest
 
-# 4. 이후 skill-upgrade 사용 가능
-/skill-upgrade
+# 4. 이후 crew-upgrade 사용 가능
+/crew-upgrade
 ```
 
 ## 업그레이드 시 보존되는 항목
@@ -70,10 +70,10 @@ rm -rf /tmp/ai-crew-kit-latest
 
 ```bash
 # 가장 최근 백업에서 롤백
-/skill-upgrade --rollback
+/crew-upgrade --rollback
 
 # 특정 백업 지정 — 실제 timestamp는 `ls .claude/temp/`로 확인 후 치환
-/skill-upgrade --rollback .claude/temp/upgrade-backup-<YYYYMMDD-HHmmss>/
+/crew-upgrade --rollback .claude/temp/upgrade-backup-<YYYYMMDD-HHmmss>/
 ```
 
 > **v2.0.0 사용자 안내** — `--rollback`은 R6 1차 자동 방어선([test_rollback.py](../tests/upgrade/test_rollback.py))으로 라운드트립·비-trivial 멱등성·사용자 보존이 회귀 보호됩니다. 매뉴얼 사전·사후 검증 체크리스트는 [migration-guide.md §4](./v2/migration-guide.md)를 참조하세요.

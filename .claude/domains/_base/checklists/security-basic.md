@@ -62,5 +62,5 @@
 
 ## 사용 방법
 
-이 체크리스트는 `skill-review`, `skill-review-pr` 실행 시 자동으로 로드됩니다.
+이 체크리스트는 `crew-review`, `crew-review-pr` 실행 시 자동으로 로드됩니다.
 도메인별 보안 요구사항(PCI-DSS, HIPAA 등)은 해당 도메인 체크리스트에서 추가됩니다.

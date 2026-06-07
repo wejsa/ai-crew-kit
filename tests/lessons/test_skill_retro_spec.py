@@ -1,4 +1,4 @@
-"""skill-retro §5.3 secrets 필터 UX 레이어 회귀 가드 (Phase 7 Step 2).
+"""crew-retro §5.3 secrets 필터 UX 레이어 회귀 가드 (Phase 7 Step 2).
 
 PR #44 리뷰 MAJOR #1 대응:
 D2 개정으로 secrets 필터의 핵심 동작은 SKILL.md spec(markdown)에 위치한다
@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SKILL_PATH = REPO_ROOT / ".claude/skills/skill-retro/SKILL.md"
+SKILL_PATH = REPO_ROOT / ".claude/skills/crew-retro/SKILL.md"
 
 
 @pytest.fixture(scope="session")
@@ -43,7 +43,7 @@ SECRETS_FILTER_KEYWORDS = [
 @pytest.mark.parametrize("keyword", SECRETS_FILTER_KEYWORDS)
 def test_secrets_filter_keyword_present(keyword, skill_md_text):
     assert keyword in skill_md_text, (
-        f"skill-retro/SKILL.md에서 '{keyword}' 부재 — "
+        f"crew-retro/SKILL.md에서 '{keyword}' 부재 — "
         "Phase 7 D2 개정 secrets 필터 spec이 침식됐는지 확인 필요."
     )
 

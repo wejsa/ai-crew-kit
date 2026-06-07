@@ -4,10 +4,10 @@ AI Crew Kit을 사용한 프로젝트 개발 시작 가이드입니다.
 
 ## 1. 프로젝트 초기화
 
-### skill-init 실행
+### crew-init 실행
 
 ```bash
-/skill-init
+/crew-init
 ```
 
 대화형으로 다음을 설정합니다:
@@ -33,7 +33,7 @@ your-project/
 ### 새 기능 추가
 
 ```bash
-/skill-feature "사용자 인증 기능"
+/crew-feature "사용자 인증 기능"
 ```
 
 또는 자연어로:
@@ -49,10 +49,10 @@ your-project/
 
 ## 3. 설계 및 계획
 
-### skill-plan 실행
+### crew-plan 실행
 
 ```bash
-/skill-plan
+/crew-plan
 ```
 
 또는:
@@ -72,9 +72,9 @@ your-project/
 ### 스텝별 개발
 
 ```bash
-/skill-impl              # Step 1 시작
-/skill-impl --next       # 다음 스텝
-/skill-impl --all        # 전체 스텝 연속
+/crew-impl              # Step 1 시작
+/crew-impl --next       # 다음 스텝
+/crew-impl --all        # 전체 스텝 연속
 ```
 
 또는:
@@ -95,7 +95,7 @@ your-project/
 ### PR 리뷰
 
 ```bash
-/skill-review-pr 123
+/crew-review-pr 123
 ```
 
 또는:
@@ -119,7 +119,7 @@ your-project/
 ### PR 머지
 
 ```bash
-/skill-merge-pr 123
+/crew-merge-pr 123
 ```
 
 또는:
@@ -138,43 +138,43 @@ your-project/
 ## 워크플로우 요약
 
 ```
-/skill-feature "기능명"     # 1. 기획
+/crew-feature "기능명"     # 1. 기획
     ↓
-/skill-plan                 # 2. 설계 + 계획
+/crew-plan                 # 2. 설계 + 계획
     ↓
-/skill-impl                 # 3. 구현 (Step 1)
+/crew-impl                 # 3. 구현 (Step 1)
     ↓
-/skill-review-pr N          # 4. 리뷰
+/crew-review-pr N          # 4. 리뷰
     ↓
-/skill-merge-pr N           # 5. 머지
+/crew-merge-pr N           # 5. 머지
     ↓
-/skill-impl --next          # 6. 다음 스텝 (반복)
+/crew-impl --next          # 6. 다음 스텝 (반복)
 ```
 
 ## 자주 사용하는 명령어
 
 | 명령어 | 설명 |
 |--------|------|
-| `/skill-status` | 현재 상태 확인 |
-| `/skill-backlog` | 백로그 조회 |
-| `/skill-docs` | 참고자료 조회 |
-| `/skill-review {경로}` | 코드 리뷰 (PR 외) |
+| `/crew-status` | 현재 상태 확인 |
+| `/crew-backlog` | 백로그 조회 |
+| `/crew-docs` | 참고자료 조회 |
+| `/crew-review {경로}` | 코드 리뷰 (PR 외) |
 
 ## 자연어 명령어
 
 | 말하기 | 동작 |
 |--------|------|
-| "상태 확인해줘" | `/skill-status` |
-| "새 기능 기획해줘: 로그인" | `/skill-feature 로그인` |
-| "다음 작업 가져와줘" | `/skill-plan` |
-| "개발 진행해줘" | `/skill-impl` |
-| "PR 리뷰해줘" | `/skill-review-pr` |
+| "상태 확인해줘" | `/crew-status` |
+| "새 기능 기획해줘: 로그인" | `/crew-feature 로그인` |
+| "다음 작업 가져와줘" | `/crew-plan` |
+| "개발 진행해줘" | `/crew-impl` |
+| "PR 리뷰해줘" | `/crew-review-pr` |
 
 ## 도움말
 
 더 많은 정보는 다음을 참조하세요:
 
 ```bash
-/skill-status    # 현재 상태 및 다음 단계 안내
-/skill-docs      # 참고자료 목록
+/crew-status    # 현재 상태 및 다음 단계 안내
+/crew-docs      # 참고자료 목록
 ```
