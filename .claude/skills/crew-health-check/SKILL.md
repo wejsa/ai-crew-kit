@@ -178,13 +178,17 @@ complexity-hint: heavy
 
 #### SI-04. backlog 내부 논리 검증 (MAJOR)
 - 사전 조건: .claude/state/backlog.json 존재
-- 검사:
+- **SSOT 주의**: 아래 enum/허용키/범위는 편의 캐시이며 **단일 진실 소스는 `.claude/schemas/backlog.schema.json`의 `definitions.task`/`definitions.step`**이다. 스키마와 다르면 **스키마를 우선**하고, 본 목록이 스키마와 드리프트했으면 그 자체를 INFO로 보고한다. (손복사 드리프트 방지 — v4.4.0)
+- **전체 스키마 검증 (권장, 우선 시도)**: `check-jsonschema`(권장) 또는 python `jsonschema`가 설치된 환경이면 `backlog.json` 인스턴스를 `backlog.schema.json`으로 직접 검증한다 — 예: `check-jsonschema --schemafile .claude/schemas/backlog.schema.json .claude/state/backlog.json`. 이 한 번의 검증이 아래 enum·미지필드·숫자범위·required를 모두 포괄한다. validator 미설치 시 아래 하드코딩 검사로 graceful 폴백. (런타임 인스턴스 검증 부재 해소 — v4.4.0)
+- 검사 (validator 미설치 시 폴백):
   - 중복 Task ID 존재 여부
-  - 의존성(dependsOn) 참조가 실제 존재하는 Task ID인지
+  - 의존성(`dependencies`) 참조가 실제 존재하는 Task ID인지
   - 순환 의존성 여부
-  - task.status 값이 허용된 enum인지 (todo, in_progress, done, blocked, archived)
+  - task.status 값이 허용된 enum인지 (todo, in_progress, done, blocked, paused, archived)
   - step.status 값이 허용된 enum인지 (pending, in_progress, pr_created, merged, done, skipped)
   - task.type 값이 허용된 enum인지 (feature, bug, chore, spike) — 미설정 시 유효
+  - **미지(unknown) 필드 검사** (`additionalProperties:false`): task/step 객체에 스키마 `properties`에 없는 키가 있는지. 스키마 정의 키 목록을 SSOT로 대조하여 외부·수기 편집으로 유입된 비표준 필드(예: source·planPath·acceptanceCriteria·note·task-level metadata)를 탐지.
+  - **숫자 범위 검사**: 스키마 `minimum`/`maximum` 위반 여부 (예: lockTTL은 3600~14400). kit producer가 범위를 벗어난 값을 써넣은 경우도 포함.
   - **archived Task 제외**: status="archived"인 Task는 건강 검진 대상에서 제외 (카운트만 표시)
 - FAIL 시: backlog 자동 등록
 - autoFix: 불가 (수동 수정 안내)
@@ -197,6 +201,15 @@ complexity-hint: heavy
   - 파일 있으나 enabled에 없음 → MINOR (정보 제공)
 - FAIL 시: backlog 자동 등록
 - autoFix: 불가
+
+#### SI-06. kitVersion 드리프트 탐지 (MINOR / INFO) — v4.4.0
+- 사전 조건: .claude/state/project.json 존재
+- 배경: 플러그인 설치 프로젝트는 `/plugin update`가 플러그인 파일만 교체하고 `project.json`을 건드리지 않으며, `crew-upgrade`는 플러그인 모드 EXEMPT다. 따라서 `kitVersion`이 설치 시점 값에 고정되어 실제 사용 중인 kit 버전과 어긋날 수 있다(동작 게이트는 아님 — 메타데이터 정합성/진단 목적).
+- 검사:
+  - `project.json.kitVersion` **부재 또는 빈 값** → MINOR (init이 값 출처 규칙대로 기입했어야 함 — crew-init `kitVersion 결정 규칙` 참조)
+  - 플러그인 모드(`${CLAUDE_PLUGIN_ROOT}` 존재)에서 `kitVersion` ≠ `${CLAUDE_PLUGIN_ROOT}/VERSION` 값 → **INFO** (드리프트 안내). 비교 불가(VERSION 미확인) 시 SKIP.
+- FAIL 시: backlog 자동 등록(MINOR만; INFO는 보고만)
+- autoFix: `project.json.kitVersion`을 현재 플러그인 `VERSION` 값으로 갱신 + `metadata.version` 1 증가 (confirm: true. 1줄 메타데이터라 무위험)
 
 ### 카테고리: security (기본 보안)
 

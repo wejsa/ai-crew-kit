@@ -60,6 +60,7 @@ CLAUDE.md 워크트리 프로토콜 참조.
 로드 순서: 공통 컨벤션 → 계획 파일. 현재 스텝의 파일/구현/테스트 확인.
 
 ### 3. 코드 구현
+**대량 쓰기 보호** (v4.4.0): 구현 시작 직전 `touch .claude/state/bulk-edit-in-progress.flag 2>/dev/null || true` — 한 스텝의 다중 파일 생성·수정(source+test+docs)이 `post-tool-use.sh` 서킷브레이커(기본 10초 3회)를 오발동시키지 않도록 카운터를 면제한다. **Step 5(빌드 & 테스트) 통과 후** `rm -f .claude/state/bulk-edit-in-progress.flag 2>/dev/null || true`로 회수한다(빌드 실패 수정 편집도 보호 구간에 포함되도록 회수를 Step 5 뒤로 둔다). (정리 누락 시 1시간 TTL 자동 회수 — 안전.)
 계획에 따라 파일 생성/수정, 테스트 작성, 문서 업데이트(필요 시)
 
 ### 4. 라인 수 검증

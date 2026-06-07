@@ -31,6 +31,7 @@ complexity-hint: light
 **2. 모든 JSON 파일 유효성**
 `.claude/` 하위 모든 `.json` 파싱 검증:
 - schemas, migrations.json, state/*.json
+- **인스턴스 스키마 검증 (권장, v4.4.0)**: `check-jsonschema`/python `jsonschema` 설치 시 `state/backlog.json`을 `schemas/backlog.schema.json`으로, `state/project.json`을 `project.schema.json`으로 직접 검증한다. 파싱 통과만으로는 `additionalProperties:false`·enum·숫자범위 위반을 못 잡으므로(런타임 sleeper 클래스), validator가 있으면 인스턴스 검증까지 수행. 미설치 시 파싱 검증으로 폴백하고 그 사실을 INFO로 안내. 상세 항목별 진단은 `/crew-health-check` SI-04 참조.
 
 **3. 템플릿 마커 완결성**
 `${CLAUDE_PLUGIN_ROOT}/.claude/templates/*.tmpl` (clone/seed면 `.claude/templates/*.tmpl`) 마커가 TEMPLATE-ENGINE.md에 정의돼 있는지:

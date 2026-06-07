@@ -59,7 +59,8 @@ Task 선택 전에 모든 `in_progress` Task를 스캔:
 
 ### 1.5 조기 잠금 (중복 선택 방지)
 Task 선택 직후 **즉시** backlog.json 업데이트 + push:
-- `status: "in_progress"`, `assignee: "{user}@{hostname}-{YYYYMMDD-HHmmss}"`, `lockTTL: 1800`, `lockedFiles: []`
+- `status: "in_progress"`, `assignee: "{user}@{hostname}-{YYYYMMDD-HHmmss}"`, `lockTTL: 3600`, `lockedFiles: []`
+  - 조기 잠금 단계는 lockedFiles 미확정이라 최소 TTL을 사용한다. `backlog.schema.json` `lockTTL.minimum`(=3600)을 준수해야 하므로 **3600 이상**이어야 한다. (Step 1.5에서 임시 1시간 → 스텝 분해 후 동적 TTL로 재산정.)
 - `metadata.version` 1 증가, 커밋: `chore: claim {TASK-ID}`
 - CLAUDE.md 워크트리 프로토콜에 따라 push
 

@@ -62,6 +62,7 @@ PR 리뷰 코멘트에서 직접 파싱 (`gh api repos/{owner}/{repo}/pulls/{num
 **모드 무관 공통 추출**: path, line, body 필드
 
 ### 3. 이슈별 코드 수정
+**대량 쓰기 보호** (v4.4.0): 수정 시작 직전 `touch .claude/state/bulk-edit-in-progress.flag 2>/dev/null || true`, Step 5(테스트 검증) 완료 후 `rm -f .claude/state/bulk-edit-in-progress.flag 2>/dev/null || true` — 다중 파일 Edit이 `post-tool-use.sh` 서킷브레이커를 오발동시키지 않도록 면제. (정리 누락 시 1시간 TTL 자동 회수.)
 각 CRITICAL 이슈: 파일 읽기 → 문제 분석 → 수정 작성 → Edit 적용
 
 ### 4. 빌드 검증
