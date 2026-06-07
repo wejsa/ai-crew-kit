@@ -10,7 +10,9 @@
 #   1. 경로 제외: file_path가 .claude/state/* 또는 .claude/temp/* → exit 0
 #      (네이티브 path 필터 부재 — 스크립트 레벨에서 처리)
 #   2. 파일 락: 세션별 락 파일이 존재하면 재진입 판단, exit 0
-#   3. 트리거 카운터: 10초 윈도우 내 3회 초과 → hook-disabled.flag 생성 + 경고
+#   3. 트리거 카운터: CCK_HOOK_WINDOW_SEC 윈도우 내 CCK_HOOK_THRESHOLD 초과
+#      (기본 10초/3회) → hook-disabled.flag 생성 + 경고. 대량 쓰기 보호 마커
+#      (init-in-progress.flag / bulk-edit-in-progress.flag) 존재 시 카운터 면제.
 #
 # 작성 규칙 (R4):
 #   - set -e 금지. exit 2 금지. 모든 실패 경로 exit 0 (비블로킹).
@@ -33,6 +35,7 @@ BACKLOG="$STATE_DIR/backlog.json"
 DISABLE_FLAG="$STATE_DIR/hook-disabled.flag"
 COUNTER_FILE="$STATE_DIR/hook-trigger-count"
 INIT_FLAG="$STATE_DIR/init-in-progress.flag"
+BULK_FLAG="$STATE_DIR/bulk-edit-in-progress.flag"  # v4.4.0: crew-impl/fix 등 스텝 다중 파일 작업 보호
 INIT_FLAG_TTL_SECONDS=3600  # 마커 미회수(SKILL 비정상 종료) 대비 1시간 후 stale로 간주
 
 # 임계값/윈도우 외부화 (v2.1.3): 멀티파일 Edit이 잦은 단독 작업자가 자체적으로 완화 가능.
@@ -57,20 +60,22 @@ if [ -f "$DISABLE_FLAG" ]; then
   exit 0
 fi
 
-# ── 0-A단계: init/onboard 트리거 보호 마커 (v2.2.0) ─────
-# crew-init/onboard 트랜잭션 동안은 초기 셋업 폭주(다수 Write)가 정상이므로
-# 카운터 진입 자체를 차단하여 false-positive 자동 비활성화 방지.
+# ── 0-A단계: 대량 쓰기(bulk-write) 트랜잭션 보호 마커 (v2.2.0, v4.4.0 일반화) ─────
+# crew-init/onboard(초기 셋업)·crew-impl/fix(스텝 다중 파일 생성·수정) 등은
+# 짧은 시간에 다수 Write가 정상이므로 카운터 진입 자체를 차단하여
+# false-positive 자동 비활성화를 방지한다.
 # 마커는 SKILL이 시작 시 생성·종료 시 제거하지만, 비정상 종료 대비 TTL 자동 회수.
-if [ -f "$INIT_FLAG" ]; then
-  flag_mtime="$(stat -c %Y "$INIT_FLAG" 2>/dev/null || stat -f %m "$INIT_FLAG" 2>/dev/null || echo 0)"
+for _flag in "$INIT_FLAG" "$BULK_FLAG"; do
+  [ -f "$_flag" ] || continue
+  flag_mtime="$(stat -c %Y "$_flag" 2>/dev/null || stat -f %m "$_flag" 2>/dev/null || echo 0)"
   flag_age=$(( $(date -u +%s) - flag_mtime ))
   if [ "$flag_age" -lt "$INIT_FLAG_TTL_SECONDS" ] 2>/dev/null; then
     exit 0
   fi
   # stale 마커 (TTL 초과) — SKILL이 정리 못 하고 종료된 케이스. 자동 회수.
-  rm -f "$INIT_FLAG" 2>/dev/null
-  log_err "init-in-progress.flag stale 회수 (age=${flag_age}s > ${INIT_FLAG_TTL_SECONDS}s)"
-fi
+  rm -f "$_flag" 2>/dev/null
+  log_err "$(basename "$_flag") stale 회수 (age=${flag_age}s > ${INIT_FLAG_TTL_SECONDS}s)"
+done
 
 # jq 미설치 graceful skip
 if ! command -v jq >/dev/null 2>&1; then
@@ -138,8 +143,8 @@ printf '%s %s\n' "$WINDOW_START" "$COUNT" > "$COUNTER_FILE" 2>/dev/null || true
 
 if [ "$COUNT" -gt "$TRIGGER_MAX" ]; then
   touch "$DISABLE_FLAG" 2>/dev/null
-  printf '⚠️  [%s] 10초 내 %s회 트리거 — 자동 비활성화됨. 확인 후 %s 삭제 후 재개하세요.\n' \
-    "$HOOK_NAME" "$COUNT" "$DISABLE_FLAG" >&2
+  printf '⚠️  [%s] %ss 내 %s회 트리거 — 자동 비활성화됨. 재개: %s 삭제. 정상 작업인데 반복되면 임계값 완화 → CCK_HOOK_THRESHOLD(기본 %s)/CCK_HOOK_WINDOW_SEC(기본 %s) 환경변수(.claude/settings.json env). 진단·가이드: .claude/hooks/README.md\n' \
+    "$HOOK_NAME" "$TRIGGER_WINDOW_SECONDS" "$COUNT" "$DISABLE_FLAG" "$TRIGGER_MAX" "$TRIGGER_WINDOW_SECONDS" >&2
   log_err "자동 비활성화 발동 (count=$COUNT, window_start=$WINDOW_START)"
   exit 0
 fi

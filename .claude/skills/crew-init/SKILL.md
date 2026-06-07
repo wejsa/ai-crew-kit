@@ -139,6 +139,7 @@ touch .claude/state/init-in-progress.flag 2>/dev/null || true
 
 본 Step 1에서 추가로 적용:
 - M1 통과 시점에 `KIT_SOURCE_URL=$(git remote get-url origin)` 캡처 → Step 10에서 `kitSource` 기록
+- 같은 시점에 `KIT_VERSION=$(cat VERSION 2>/dev/null)` 캡처(정리로 kit `VERSION` 삭제되기 **전**) → Step 10에서 `kitVersion` 기록. 플러그인 모드(clone 미발동)에서는 캡처 불가하므로 Step 10이 `${CLAUDE_PLUGIN_ROOT}/VERSION`에서 직접 읽는다.
 - 자동 정리 *실행* 후에는 기존 코드 감지 가드(평가 순서 3단계) SKIP — 이미 깨끗한 상태
 - Claude는 추가 확인 질문 없이 즉시 실행 (protocol에서 destructive 아닌 표준 동작으로 명시)
 
@@ -520,6 +521,10 @@ chmod 444 "$BACKUP_DIR/MANIFEST.txt" "$BACKUP_DIR/MANIFEST.sha256" 2>/dev/null |
    - **`kitSource` 결정 규칙**:
      - Step 1 ai-crew-kit 자동 정리를 거친 경우: `KIT_SOURCE_URL` 값 사용
      - 자동 정리 미발동(사용자 자기 리포로 시작 또는 git remote 미설정)인 경우: `"https://github.com/wejsa/ai-crew-kit"` 기본값 (kit 시드 출처 문서화 목적)
+   - **`kitVersion` 결정 규칙 (v4.4.0 — 값 출처 명시)**: kit/플러그인의 `VERSION` 파일에서 읽어 기록한다. **빈 값·누락 금지** (헬스체크 SI-06 드리프트 감지 전제).
+     - 플러그인 모드: `cat "${CLAUDE_PLUGIN_ROOT}/VERSION"` (예: `4.4.0`)
+     - clone/seed 모드: Step 1에서 캡처한 `KIT_VERSION` 값
+     - 둘 다 불가(VERSION 부재)하면 init 실행 kit 버전을 직접 기입. semver(`^\d+\.\d+\.\d+$`).
 2. **backlog.json** (경로: `.claude/state/backlog.json`):
    - **공통**: `metadata`는 `{ "lastTaskNumber": <N>, "version": 1, "projectPrefix": "<PREFIX>", "createdAt": "<ISO8601>", "updatedAt": "<ISO8601>" }`
    - Step 9를 **N/C**로 종료한 경우: `lastTaskNumber: 0`, `summary: { total:0, done:0, inProgress:0, review:0, todo:0 }`, `phases: {}`, `tasks: {}`

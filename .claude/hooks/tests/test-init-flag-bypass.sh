@@ -23,6 +23,7 @@ trap 'rm -rf "$SANDBOX" "$TMP_ISO"' EXIT
 
 BACKLOG="$SANDBOX/.claude/state/backlog.json"
 INIT_FLAG="$SANDBOX/.claude/state/init-in-progress.flag"
+BULK_FLAG="$SANDBOX/.claude/state/bulk-edit-in-progress.flag"
 DISABLE_FLAG="$SANDBOX/.claude/state/hook-disabled.flag"
 COUNTER="$SANDBOX/.claude/state/hook-trigger-count"
 SID="init-protected-session"
@@ -75,6 +76,27 @@ for i in s1 s2 s3 s4; do
 done
 assert_file_not_exists "$INIT_FLAG" "stale 마커 (TTL 초과) 자동 회수됨" || fail=$((fail + 1))
 assert_file_exists "$DISABLE_FLAG" "stale 마커 회수 후 정상 카운터 동작 → 4회째 비활성화" || fail=$((fail + 1))
+
+# ── 시나리오 4: bulk-edit-in-progress.flag 존재 → 동일 우회 (v4.4.0 crew-impl/fix 보호) ──
+rm -f "$INIT_FLAG" "$BULK_FLAG" "$DISABLE_FLAG" "$COUNTER"
+rm -f "$TMP_ISO"/*.lock 2>/dev/null
+touch "$BULK_FLAG"
+for i in b1 b2 b3 b4 b5; do
+  run_hook "$i"
+done
+assert_file_not_exists "$DISABLE_FLAG" "bulk-edit 마커 존재 시 5회 호출에도 hook-disabled.flag 미생성" || fail=$((fail + 1))
+assert_file_not_exists "$COUNTER" "bulk-edit 마커 존재 시 카운터 진입 자체 차단" || fail=$((fail + 1))
+
+# ── 시나리오 5: stale bulk-edit 마커 (TTL 초과) → 자동 회수 + 정상 비활성화 ──
+rm -f "$INIT_FLAG" "$BULK_FLAG" "$DISABLE_FLAG" "$COUNTER"
+rm -f "$TMP_ISO"/*.lock 2>/dev/null
+touch "$BULK_FLAG"
+touch -d "$past_iso" "$BULK_FLAG" 2>/dev/null || touch -t "$(date -u -d "$past_iso" '+%Y%m%d%H%M' 2>/dev/null)" "$BULK_FLAG" 2>/dev/null || true
+for i in t1 t2 t3 t4; do
+  run_hook "$i"
+done
+assert_file_not_exists "$BULK_FLAG" "stale bulk-edit 마커 (TTL 초과) 자동 회수됨" || fail=$((fail + 1))
+assert_file_exists "$DISABLE_FLAG" "stale bulk-edit 마커 회수 후 정상 카운터 동작 → 4회째 비활성화" || fail=$((fail + 1))
 
 if [ "$fail" -gt 0 ]; then
   printf '\n💥 %d assertion(s) failed\n' "$fail" >&2

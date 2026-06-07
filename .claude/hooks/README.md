@@ -132,15 +132,24 @@ exec 0</dev/null                  # stdin을 /dev/null로 — 자식 프로세�
 **매처**: `Edit|Write`
 **동작**: 현재 세션이 `lockedBy`로 소유한 `in_progress` Task의 `lockedAt`을 현재 시각으로 갱신(heartbeat). stop.sh 만료 감지(10분 TTL)와 연동. `lockedBy`/`lockedAt`은 v2.2.0부터 `backlog.schema.json`에 정식 필드로 정의(가변 잠금 의미, `assignee`/`assignedAt`(불변 할당)와 구분).
 
-**3단계 무한 루프 방어 + init 보호 마커** (TFT R1/R2 + v2.2.0):
+**3단계 무한 루프 방어 + 대량 쓰기 보호 마커** (TFT R1/R2 + v2.2.0, v4.4.0 일반화):
 
 | 단계 | 트리거 | 동작 |
 |------|--------|------|
 | 0 | `hook-disabled.flag` 존재 | 즉시 exit 0 |
-| 0-A | `init-in-progress.flag` 존재 (mtime ≤ 1h) | 즉시 exit 0. crew-init/onboard 트랜잭션 동안 카운터 진입 자체 차단 (v2.2.0). TTL 초과 마커는 자동 회수. |
+| 0-A | `init-in-progress.flag` **또는** `bulk-edit-in-progress.flag` 존재 (mtime ≤ 1h) | 즉시 exit 0. 대량 쓰기 트랜잭션 동안 카운터 진입 자체 차단. TTL 초과 마커는 자동 회수. |
 | 1 | `file_path`가 `.claude/state/*` 또는 `.claude/temp/*` | 즉시 exit 0 (네이티브 path 필터 부재 — 스크립트 레벨) |
 | 2 | 세션별 락(`$TMPDIR/ack-hook-<sid>.lock`) 존재 | 재진입으로 판단, 즉시 exit 0. 정상 경로는 `trap EXIT`로 정리 |
 | 3 | `CCK_HOOK_WINDOW_SEC` 윈도우 내 `CCK_HOOK_THRESHOLD` 초과 (기본 10초/3회) | `hook-disabled.flag` 생성 + stderr 경고 로그 |
+
+**대량 쓰기 보호 마커 (SSOT, v4.4.0)**: 한 작업에 source+test+docs 등 다수 파일을 짧은 시간에 쓰는 것이 정상인 스킬은 작업 구간 동안 보호 마커를 두어 false-positive 자동 비활성화를 막는다. 두 마커 모두 0-A에서 동일하게 처리(존재 시 면제, mtime > 1h(`INIT_FLAG_TTL_SECONDS`)면 자동 회수)된다.
+
+| 마커 | 생성·회수 주체 | 용도 |
+|------|---------------|------|
+| `init-in-progress.flag` | `crew-init`/`crew-onboard` | 초기 셋업 다수 Write (v2.2.0) |
+| `bulk-edit-in-progress.flag` | `crew-impl`/`crew-fix`/`crew-hotfix` (코드 수정 구간 set→빌드·테스트 후 rm) | 스텝 다중 파일 생성·수정 (v4.4.0) |
+
+> **트레이드오프(설계 의도)**: 두 마커는 프로젝트 공유 경로(`.claude/state/`)에 있어 세션 스코프가 아니다. 한 세션이 마커를 둔 동안에는 **동일 프로젝트의 다른 동시 세션도 카운터가 면제**된다(서킷브레이커는 안전망일 뿐 핵심 게이트가 아니므로 허용). 스킬은 작업 구간 종료 시 즉시 회수하며, 크래시로 미회수돼도 1시간 TTL이 상한을 보장한다. 새 스킬이 같은 패턴을 도입할 때는 이 SSOT를 따른다(스킬마다 독자 마커명을 만들지 말 것).
 
 **graceful skip**: jq 미설치, stdin 비어있음, 소유 Task 없음 → 쓰기 없이 exit 0.
 

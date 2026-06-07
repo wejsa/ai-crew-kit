@@ -35,6 +35,7 @@ git checkout -b "hotfix/${HOTFIX_ID}-${DESCRIPTION_SLUG}"
 ```
 
 ### 3. 코드 수정
+**대량 쓰기 보호** (v4.4.0): 수정 시작 직전 `touch .claude/state/bulk-edit-in-progress.flag 2>/dev/null || true`, Step 4(빌드/테스트 검증) 통과 후 `rm -f .claude/state/bulk-edit-in-progress.flag 2>/dev/null || true` — 다중 파일 Edit이 `post-tool-use.sh` 서킷브레이커를 오발동시키지 않도록 면제. (정리 누락 시 1시간 TTL 자동 회수.)
 수정 설명 분석 → 관련 코드 탐색 (Glob, Grep, Read) → 수정 (Edit, Write)
 원칙: 최소한의 변경만 수행
 

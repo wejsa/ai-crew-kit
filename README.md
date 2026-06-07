@@ -1,12 +1,12 @@
 <div align="center">
 
-# AI Crew Kit v4.3.0
+# AI Crew Kit v4.4.0
 
 **범용 AI 크루 개발 프레임워크 — 오케스트레이션 · 품질 게이트 · 스택 인지**
 
 AI 에이전트 팀 기반 소프트웨어 개발 프로세스 관리 프레임워크
 
-[![Version](https://img.shields.io/badge/version-v4.3.0-blue?style=flat-square)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v4.4.0-blue?style=flat-square)](./CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](./LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/wejsa/ai-crew-kit?style=flat-square)](https://github.com/wejsa/ai-crew-kit)
 [![Built with Claude Code](https://img.shields.io/badge/built_with-Claude_Code-blueviolet?style=flat-square)](https://claude.ai/download)
@@ -137,6 +137,22 @@ AI Crew Kit은 **Claude Code 플러그인 마켓플레이스**로 설치합니�
 | **B (GitHub)** | `reviewDecision == CHANGES_REQUESTED` | best-effort 차단 |
 
 > 인프라 실패(jq/git/gh 부재·네트워크 등)는 **fail-open** — 게이트 자체 장애가 정상 머지를 막지 않습니다. 제어 env: `CCK_MERGE_GATE=off`(전면 비활성) · `CCK_GATE_BYPASS=1`(1회 우회) · `CCK_GATE_NO_GH=1`(신호 B 스킵).
+
+---
+
+## 🔁 훅 자동 비활성화 복구
+
+`post-tool-use.sh`는 무한 루프 방어를 위해 **짧은 시간(기본 10초)에 너무 많은 Edit/Write(기본 3회 초과)**가 발생하면 스스로를 비활성화합니다(`.claude/state/hook-disabled.flag` 생성). 다음과 같이 복구·완화합니다:
+
+```
+# 1) 재개 — 비활성화 플래그 삭제
+rm -f .claude/state/hook-disabled.flag
+
+# 2) 정상 작업인데 반복되면 임계값 완화 — .claude/settings.json 의 env 에 추가
+#    { "env": { "CCK_HOOK_THRESHOLD": "10", "CCK_HOOK_WINDOW_SEC": "10" } }
+```
+
+> `crew-impl`·`crew-fix`는 스텝 다중 파일 작업 동안 `bulk-edit-in-progress.flag`로 카운터를 자동 면제하므로(v4.4.0+) 정상 워크플로우에서는 거의 발동하지 않습니다. 수동 다중 편집이 잦은 경우에만 위 env로 완화하세요. 진단 도구·패턴별 권장값은 [`.claude/hooks/README.md`](./.claude/hooks/README.md)를 참조하세요.
 
 ---
 

@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.4.0] - 2026-06-07
+
+> **v4.4.0 — TFT 독립 결함 일괄 수정** — 한 사용자 프로젝트(2.x→플러그인 전환)에서 발견된 증상을 TFT(5관점 병렬 + adversarial 검증, 24 에이전트)로 역추적해 도출한 **kit 자체의 독립 결함 10건**을 수정한다. 사용자가 본 "나쁜 데이터"(enum 밖 task.type, 비표준 task 필드) 자체는 외부/수기 유입으로 kit 생산물이 아님이 확인됐고, 진짜 결함은 **①정상 작업을 오발동시키는 서킷브레이커 ②kit producer가 자기 스키마를 위반 ③손복사 검사 드리프트 ④런타임 스키마 검증 부재 ⑤플러그인 kitVersion 드리프트**였다.
+
+### Fixed
+
+- **서킷브레이커 false-positive (A)** — `post-tool-use.sh`의 대량 쓰기 보호 면제 마커가 `crew-init`/`crew-onboard`에만 적용되어, 한 스텝에 source+test+docs를 쓰는 **`crew-impl`(주력 플로우)이 무방비**였다. 면제 마커를 일반화(`bulk-edit-in-progress.flag` 추가)하고 `crew-impl`·`crew-fix`·`crew-hotfix`가 코드 수정 구간(빌드·테스트 통과까지) 동안 set/clear하도록 했다. 마커 메커니즘은 `.claude/hooks/README.md`에 SSOT로 문서화(공유 경로·TTL 트레이드오프 포함). 발동 메시지에 완화 env(`CCK_HOOK_THRESHOLD`/`CCK_HOOK_WINDOW_SEC`)를 노출하고(기존엔 "플래그 삭제"만 안내), 윈도우 하드코딩(`10초`)을 실제 설정값으로 교정. 메인 README에 "훅 자동 비활성화 복구" 절 신설.
+- **kit producer 스키마 위반 (C1)** — `crew-plan` 조기 잠금이 `lockTTL: 1800`을 backlog에 써넣었으나 `backlog.schema.json`의 `lockTTL.minimum`은 3600 → kit이 자기 스키마가 거부하는 값을 생산. `3600`으로 정합.
+- **SI-04 손복사 드리프트 (C2·C3)** — `crew-health-check` SI-04가 ①task.status enum에서 `paused` 누락(kit `--pause` 기능 산출물이 false-positive MAJOR) ②의존성 필드를 `dependsOn`으로 오기(실제 스키마·producer는 `dependencies` → 의존성/순환 검사가 phantom 키로 공허 통과)했다. 둘 다 수정하고, enum/허용키/범위의 **SSOT를 `backlog.schema.json`으로 명시**(손복사 드리프트 재발 방지).
+
+### Added
+
+- **런타임 스키마 인스턴스 검증 (B1·B2)** — 살아있는 `backlog.json`을 스키마로 검증하는 경로가 어디에도 없어 `additionalProperties:false`·숫자범위·enum 위반이 런타임 sleeper로 잠복(강제는 CI fixture에만 존재)했다. SI-04와 `crew-validate`에 **`check-jsonschema`/python `jsonschema` 존재 시 인스턴스 검증**(미설치 시 graceful 폴백)을 추가하고, SI-04 폴백 검사에 **미지(unknown) 필드 검사**(비표준 task 필드 탐지)와 **숫자 범위 검사**를 추가.
+- **SI-06. kitVersion 드리프트 탐지 (D1)** — 플러그인 모드는 `/plugin update`가 `project.json`을 안 건드리고 `crew-upgrade`가 EXEMPT라 `kitVersion`이 설치 시점에 영구 고정된다. `${CLAUDE_PLUGIN_ROOT}/VERSION`과 대조해 드리프트를 INFO로, 부재/빈 값을 MINOR로 보고하고 autoFix(1줄 메타데이터 갱신) 제공.
+- **`kitVersion` 값 출처 규칙 (D2)** — `crew-init`이 `kitVersion`을 값 출처 규칙 없이 시드해 첫날부터 틀릴 수 있었다. 플러그인 모드는 `${CLAUDE_PLUGIN_ROOT}/VERSION`, clone/seed 모드는 Step 1 캡처(`KIT_VERSION`)에서 읽도록 `kitSource` 규칙과 동형으로 명시(빈 값·누락 금지).
+
+### Notes
+
+- **사용자 영향**: 기존 시드 프로젝트는 `crew-upgrade`(clone) 또는 `/plugin update`로 전파. `crew-impl`/`crew-fix`/`crew-hotfix`/`crew-plan`/`crew-health-check`/`crew-init`/`crew-validate` SKILL과 `post-tool-use.sh` 훅·`hooks/README.md`가 변경 대상 — 훅은 `crew-upgrade`의 hooks 전파(v2.5.1)로 도달, 플러그인 사용자는 플러그인 업데이트로 도달. **데이터 마이그레이션 불필요**(검출/UX/producer 정합 개선이며 기존 state 파괴 변경 없음).
+- **검출 vs 생산 구분**: 사용자 프로젝트의 `enhancement/test/refactor` 타입과 비표준 필드는 kit이 생산하지 않음(TFT 확인) — kit의 결함은 그것을 **탐지·금지하지 못한 것**이지 생산이 아니다. 본 릴리스는 검출 레이어(SI-04/crew-validate)를 보강해 그런 외부 유입을 런타임에 드러나게 한다.
+
 ## [4.3.0] - 2026-06-07
 
 > **v4.3.0 — 플러그인 자기완결형 경로 (Phase 2: 전체 전환)** — Phase 1(v4.2.0)에서 검증된 `${CLAUDE_PLUGIN_ROOT}` 이중 모드 경로 해석을, 나머지 프레임워크 읽기전용 리소스 참조(리뷰어·에이전트 체크리스트/컨벤션, health-check 데이터, crew-init/onboard 템플릿·프로토콜 등) **전반으로 확대**한다. 이로써 순수 플러그인 설치 프로젝트에서도 스킬·에이전트가 번들 리소스를 정상 읽는다.
