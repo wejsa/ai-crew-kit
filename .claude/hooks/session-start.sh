@@ -98,7 +98,7 @@ if [ -f "$BACKLOG" ] && command -v jq >/dev/null 2>&1; then
   IN_PROGRESS="$(jq -r '[.tasks[]? | select(.status == "in_progress")] | length' "$BACKLOG" 2>/dev/null || echo 0)"
   if [ "$IN_PROGRESS" != "0" ] && [ "$IN_PROGRESS" != "" ]; then
     printf '\n🔵 진행 중 Task (%s건):\n' "$IN_PROGRESS"
-    jq -r '.tasks[]? | select(.status == "in_progress") | "  - \(.id): \(.title // .subject // "(제목 없음)")"' "$BACKLOG" 2>/dev/null || true
+    jq -r '.tasks[]? | select(.status == "in_progress") | "  - \(.id): \(.title // "(제목 없음)")"' "$BACKLOG" 2>/dev/null || true
   fi
 elif [ -f "$BACKLOG" ]; then
   # jq 미설치 graceful skip

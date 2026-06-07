@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.4.1] - 2026-06-07
+
+> **v4.4.1 — 프레임워크 자체 정합성 일괄 수정** — 사용자 프로젝트와 무관하게 kit이 *자기 자신과 모순*되는 내부 정합성 결함을 TFT(6관점 자체정합성 분석, 32 에이전트)로 발굴해 수정한다. producer↔schema, validator↔schema SSOT, 교차참조, 훅↔state, 템플릿 마커, 버전/마이그레이션 6축. 구조적 lock 서브시스템(lockedBy 미배선)은 session_id 배선 설계가 필요해 후속으로 분리.
+
+### Fixed
+
+- **플러그인 `agents/` 미러 stale (CRITICAL)** — v4.3.0 `${CLAUDE_PLUGIN_ROOT}` 이중모드 변환이 SSOT `.claude/agents/`에만 반영되고 플러그인이 실제 로드하는 루트 `agents/` 미러(`sync-plugin-agents.sh` 산출물)에 미반영(7/12 에이전트). 미러 재생성 → 플러그인 전용 설치에서 backend·db-designer·planner·qa·pr-reviewer 3종의 도메인 체크리스트 read 복구.
+- **`plugin.json` 버전 불일치** — 매니페스트가 4.3.0에 고정(VERSION/README/CHANGELOG=4.4.0). 4.4.1로 정합 + 릴리스 시 동시 범프 대상에 포함.
+- **producer 스키마 위반** — `crew-feature`가 `currentStep=0`을 써 schema `minimum:1` 위반(+crew-init의 "생략" 규칙과 모순) → 생략으로 수정.
+- **validator↔schema SSOT 드리프트** — `crew-health-check` SI-02 autoFix가 비-enum값 `'ready'`로 리셋(→`'todo'`), DS-03이 backend `"nodejs"` 참조(→`"nodejs-typescript"`); `crew-status`/`crew-report` 상태 카운트에 `paused` 누락 추가. SI-05가 v1.40.0(ADR-009)에서 제거된 `devops`를 레거시로 인지하도록 보완(enabled 시 만족불가 CRITICAL 대신 MINOR — enum은 구 시드 backward-compat 위해 보존).
+- **훅↔state dead code** — `stop.sh`가 top-level `.workflowState`(항상 부재→"idle")로 게이트해 continuation-plan 생성이 영구 스킵되던 것을 in_progress 수 기준으로 교정(기능 복구). `session-start.sh`/`stop.sh`의 없는 `.subject` 필드 폴백 제거. 부활한 continuation-plan의 kit 내부 하드코딩 경로(`docs/v2/phase-1-plan.md`) 범용화.
+- **`validate-lessons-learned.py` backlog 순회 버그** — `tasks`(object map)를 list로 순회 + 없는 top-level `archived` 배열 읽음 → backlog ID 0건 수집. dict 순회로 수정(v1 array 호환 유지).
+- **교차참조/모순** — `CLAUDE.md.tmpl`이 todo Task만 생성하는 `feature`를 workflowState-갱신 체이닝 스킬로 잘못 명시 → 목록에서 제거. `crew-feature`/`crew-status`의 `disable-model-invocation:true`가 자연어 트리거 description과 모순 → `false`로 정합. lessons-learned 임계값 SSOT 순환 포인터 해소(schema description을 SSOT로 확정).
+
+### Added
+
+- **`README.md.tmpl` 마커 정의** — `{{AGENTS_TABLE}}`/`{{INFRASTRUCTURE}}`/`{{TECH_STACK_SUMMARY}}`를 `TEMPLATE-ENGINE.md`에 등록(crew-validate 마커 완결성 검증 통과).
+
+### Notes
+
+- **후속(구조적, 미수정)**: `lockedBy`를 쓰는 producer가 없어 v2.2.0 lockedAt 하트비트 서브시스템(post-tool-use 갱신/stop 만료/SI-03)이 무동작이다. 순진하게 producer가 `lockedBy`를 쓰면 heartbeat가 session_id와 매칭 못 해 **10분마다 lock 거짓 만료**가 발생하므로, session_id를 훅→state로 배선하는 설계가 선행돼야 한다(별도 작업). 현재 잠금 만료는 `assignedAt`+`lockTTL`(crew-impl) 경로로 동작 중.
+- 기존 시드는 `crew-upgrade`(clone)/`/plugin update`(plugin)로 전파. 데이터 마이그레이션 불필요.
+
 ## [4.4.0] - 2026-06-07
 
 > **v4.4.0 — TFT 독립 결함 일괄 수정** — 한 사용자 프로젝트(2.x→플러그인 전환)에서 발견된 증상을 TFT(5관점 병렬 + adversarial 검증, 24 에이전트)로 역추적해 도출한 **kit 자체의 독립 결함 10건**을 수정한다. 사용자가 본 "나쁜 데이터"(enum 밖 task.type, 비표준 task 필드) 자체는 외부/수기 유입으로 kit 생산물이 아님이 확인됐고, 진짜 결함은 **①정상 작업을 오발동시키는 서킷브레이커 ②kit producer가 자기 스키마를 위반 ③손복사 검사 드리프트 ④런타임 스키마 검증 부재 ⑤플러그인 kitVersion 드리프트**였다.

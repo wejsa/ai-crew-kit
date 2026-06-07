@@ -6,7 +6,7 @@
 #   2. 만료된 Task 잠금 해제 (매 턴 수행 OK)
 #   3. continuation-plan.md 조건부 갱신:
 #      - 60초 이내 갱신됐으면 스킵 (디바운스)
-#      - workflowState=idle 또는 활성 Task 없으면 스킵
+#      - 활성 Task(in_progress) 0건이면 스킵
 #      - 그 외: 원자적 temp write + rename
 #
 # 작성 규칙 (R4):
@@ -105,16 +105,18 @@ if [ -f "$CONT_PLAN" ]; then
   fi
 fi
 
-# 2-2. 활성 Task 없으면 스킵 (workflowState=idle 또는 in_progress 0건)
+# 2-2. 활성 Task 없으면 스킵 (in_progress 0건)
+# 구 top-level `.workflowState` 게이트 제거 (v4.4.1): workflowState는 per-task 필드라
+# top-level은 항상 부재→"idle"→continuation-plan을 영구 스킵하던 dead code였다.
+# 활성 신호는 in_progress Task 수로 충분히 판정한다.
 if [ -f "$BACKLOG" ]; then
-  WORKFLOW_STATE="$(jq -r '.workflowState // "idle"' "$BACKLOG" 2>/dev/null || echo idle)"
   IN_PROGRESS_COUNT="$(jq -r '[.tasks[]? | select(.status == "in_progress")] | length' "$BACKLOG" 2>/dev/null || echo 0)"
-  if [ "$WORKFLOW_STATE" = "idle" ] || [ "$IN_PROGRESS_COUNT" = "0" ]; then
+  if [ "$IN_PROGRESS_COUNT" = "0" ]; then
     exit 0
   fi
 
   # 2-3. 원자적 continuation-plan 생성
-  ACTIVE_TASKS="$(jq -r '.tasks[]? | select(.status == "in_progress") | "- \(.id): \(.title // .subject // "(제목 없음)")"' "$BACKLOG" 2>/dev/null || true)"
+  ACTIVE_TASKS="$(jq -r '.tasks[]? | select(.status == "in_progress") | "- \(.id): \(.title // "(제목 없음)")"' "$BACKLOG" 2>/dev/null || true)"
   TS="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
   TMP_PLAN="${CONT_PLAN}.tmp.$$"
   {
@@ -124,7 +126,7 @@ if [ -f "$BACKLOG" ]; then
     printf '%s\n' "$ACTIVE_TASKS"
     printf '\n## 재개 방법\n\n'
     # printf: '-' 로 시작하는 포맷은 옵션으로 해석되므로 %s 포맷 필수
-    printf '%s\n' '- `docs/v2/phase-1-plan.md` 혹은 해당 계획서 확인'
+    printf '%s\n' '- 진행 중 Task의 계획 파일 `.claude/temp/{taskId}-plan.md` 확인'
     printf '%s\n' '- `/crew-impl` 또는 `/crew-plan`으로 복귀'
   } > "$TMP_PLAN" 2>/dev/null && mv -f "$TMP_PLAN" "$CONT_PLAN" 2>/dev/null || {
     log_err "continuation-plan 쓰기 실패"
