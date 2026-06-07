@@ -126,6 +126,8 @@ step status → "pr_created", prNumber 기록. assignedAt 갱신 (lock heartbeat
 - **fast**: `Skill tool: skill="crew-merge-pr", args="{prNumber}"` (review 생략)
 - 직접 리뷰/머지 금지. 반드시 Skill tool 사용.
 
+> **플러그인 설치 시**: 스킬 이름은 `crew-*` bare 이름으로 표기하나, 플러그인으로 설치된 환경에서는 `ai-crew-kit:crew-review-pr`처럼 네임스페이스가 붙어 노출됩니다. 사용 가능한 스킬 목록의 네임스페이스된 이름으로 호출하세요. (clone/seed 설치는 bare 이름 그대로 동작 — 두 방식 모두 동일한 체이닝 의도.)
+
 ### 10. 백그라운드 분석 (PR 생성 후 병렬)
 | 분석 | 조건 | 서브에이전트 | timeout |
 |------|------|-------------|---------|

@@ -59,6 +59,7 @@ complexity-hint: heavy
 
 ### 유효성 검증
 - 유효 에이전트: `domain`, `security`, `test`
+  > **`domain` = 아키텍처/비즈니스 로직 일관성 리뷰 관점** (`pr-reviewer-domain`). v3.0.0에서 제거된 비즈니스 도메인 팩과 무관한 동명이의 식별자.
 - **domain은 필수** — 누락 시 자동 추가 + "⚠️ domain은 필수 에이전트입니다. 자동 추가됨" 경고
 - `--mode`와 `--agents` 동시 사용 불가 → 에러
 - 잘못된 에이전트명 → 에러 + 유효 목록 안내
