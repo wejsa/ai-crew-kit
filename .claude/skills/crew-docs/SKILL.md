@@ -39,7 +39,7 @@ complexity-hint: light
 
 ## 키워드 매핑
 
-### 공통 컨벤션 키워드 (`.claude/domains/_base/conventions/`)
+### 공통 컨벤션 키워드 (`${CLAUDE_PLUGIN_ROOT}/.claude/domains/_base/conventions/`, clone/seed면 `.claude/domains/_base/conventions/`)
 
 | 키워드 | 문서 |
 |--------|------|

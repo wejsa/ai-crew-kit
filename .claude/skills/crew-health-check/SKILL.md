@@ -32,7 +32,7 @@ complexity-hint: heavy
 ### Phase A: 설정 로딩
 1. .claude/state/project.json에서 techStack 확인
    - project.json이 없으면 techStack 미설정으로 간주
-2. .claude/domains/_base/health/_category.json 로딩 (카테고리·가중치 SSOT — 합이 100)
+2. ${CLAUDE_PLUGIN_ROOT}/.claude/domains/_base/health/_category.json 로딩 (clone/seed면 .claude/domains/_base/health/_category.json) (카테고리·가중치 SSOT — 합이 100)
 3. project.json의 healthCheck.exclude에 있는 항목 ID 제외
 4. --scope 옵션이 있으면 해당 카테고리만 필터
 5. --quick 옵션이 있으면 severity: CRITICAL만 필터
@@ -213,8 +213,8 @@ SEC-01 / SEC-05는 `secrets-patterns.json` 외부 파일을 동적 로드한다.
 
 | 경로 | 섹션 | 매핑 | 부재 시 |
 |------|------|------|---------|
-| `.claude/domains/_base/health/secrets-patterns.json` | `common.runtime` | SEC-01 | SEC-01 SKIP + WARN ("외부 패턴 파일 부재") |
-| `.claude/domains/_base/health/secrets-patterns.json` | `common.hardcoded` | SEC-05 | SEC-05 SKIP + WARN |
+| `${CLAUDE_PLUGIN_ROOT}/.claude/domains/_base/health/secrets-patterns.json` (clone/seed면 `.claude/domains/_base/health/secrets-patterns.json`) | `common.runtime` | SEC-01 | SEC-01 SKIP + WARN ("외부 패턴 파일 부재") |
+| `${CLAUDE_PLUGIN_ROOT}/.claude/domains/_base/health/secrets-patterns.json` (clone/seed면 `.claude/domains/_base/health/secrets-patterns.json`) | `common.hardcoded` | SEC-05 | SEC-05 SKIP + WARN |
 
 오류 처리:
 - JSON 파싱 실패 → 해당 SEC-* ERROR 보고 + 카테고리 부분 SKIP. 다른 SEC-* 정상 실행
@@ -373,7 +373,7 @@ Claude Code 네이티브 훅은 clone 즉시 모든 contributor 세션에서 자
 - 사전 조건: `.claude/settings.json` 존재
 - 검사:
   - JSON 파싱 성공 확인
-  - `.claude/schemas/project.schema.json`의 `definitions.hookMatcher` 구조와 대조
+  - `${CLAUDE_PLUGIN_ROOT}/.claude/schemas/project.schema.json` (clone/seed면 `.claude/schemas/project.schema.json`)의 `definitions.hookMatcher` 구조와 대조
     (SessionStart/PostToolUse/Stop 등 각 이벤트 배열이 `{matcher?, hooks: [{type, command, timeout?}]}` 형태)
   - `hooks[].hooks[].type`이 `"command"`로 설정되어 있는지
   - `timeout` 값이 양의 정수이고 **60초 이내** (Claude Code SessionStart 기본값 30초 × 2배 여유)

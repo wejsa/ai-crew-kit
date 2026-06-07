@@ -69,9 +69,11 @@ graph TD
 
 ### 2단계: 참고자료 로드
 
+> 경로의 `${CLAUDE_PLUGIN_ROOT}`는 플러그인 설치 시 절대경로로 치환된다. clone/seed 설치라 리터럴로 남아 있으면 접두를 제거하고 프로젝트 로컬 `.claude/...`로 읽는다.
+
 ```javascript
 // 공통 체크리스트 로드 (_base)
-const checklists = glob(".claude/domains/_base/checklists/*.md");
+const checklists = glob("${CLAUDE_PLUGIN_ROOT}/.claude/domains/_base/checklists/*.md");
 // → common.md, security-basic.md, architecture.md
 ```
 
