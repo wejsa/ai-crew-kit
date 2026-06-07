@@ -67,7 +67,7 @@
 | `/crew-review-pr config` | 리뷰 모드 설정 확인 (review 섹션 유무에 따라 자동 분류/명시 설정 표시) |
 | `/crew-review-pr config --mode standard` | 프리셋 변경 (아키텍처·로직+보안, 에이전트 슬롯: domain+security) |
 | `/crew-review-pr config --mode full` | 프리셋 변경 (전체 3 에이전트) |
-| `/crew-review-pr config --agents domain,test` | 커스텀 에이전트 조합 (domain 슬롯 = 아키텍처·로직 리뷰어) |
+| `/crew-review-pr config --agents architecture,test` | 커스텀 에이전트 조합 (architecture 슬롯 = 아키텍처·로직 리뷰어, 레거시 `domain` 별칭도 허용) |
 | `/crew-review-pr config --reset` | `review` 섹션 삭제 (자동 Tier 분류 활성화) |
 | `/crew-fix {번호}` | CRITICAL 이슈 수정 |
 | `/crew-merge-pr {번호}` | PR 머지 |

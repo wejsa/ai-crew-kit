@@ -372,20 +372,20 @@
         "mode": {
           "type": "string",
           "enum": ["full", "standard"],
-          "description": "프리셋 모드 (full: 3-agent, standard: domain+security 2-agent). 명시 시 자동 Tier 분류 비활성화"
+          "description": "프리셋 모드 (full: 3-agent, standard: architecture+security 2-agent). 명시 시 자동 Tier 분류 비활성화"
         },
         "agents": {
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["domain", "security", "test"]
+            "enum": ["architecture", "domain", "security", "test"]
           },
           "minItems": 1,
           "uniqueItems": true,
           "contains": {
-            "const": "domain"
+            "enum": ["architecture", "domain"]
           },
-          "description": "커스텀 에이전트 조합. domain은 schema-level 필수(contains 강제). config 서브커맨드 외 수동 편집 경로에서도 우회 불가."
+          "description": "커스텀 에이전트 조합. architecture(아키텍처+비즈니스 로직 일관성 리뷰 관점, pr-reviewer-architecture)는 schema-level 필수(contains 강제). `domain`은 v4.1.0 이전 시드 하위호환용 레거시 별칭으로 계속 허용되며 architecture와 동일 리뷰어로 정규화됨 — 신규 설정은 architecture 사용. config 서브커맨드 외 수동 편집 경로에서도 필수 우회 불가."
         },
         "thresholds": {
           "type": "object",

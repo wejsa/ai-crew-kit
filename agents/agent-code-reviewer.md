@@ -159,7 +159,7 @@ graph TD
     B --> C[techStack 확인]
     C --> D[체크리스트 로딩]
     D --> E[pr-reviewer-security]
-    D --> F[pr-reviewer-domain]
+    D --> F[pr-reviewer-architecture]
     D --> G[pr-reviewer-test]
     E --> H[결과 병합]
     F --> H
@@ -245,7 +245,7 @@ crew-review-pr에서 4관점 리뷰 실행 시, 아래 3개 전용 subagent가 �
 | subagent 파일 | 담당 관점 |
 |--------------|----------|
 | `.claude/agents/pr-reviewer-security.md` | 3️⃣ 보안 |
-| `.claude/agents/pr-reviewer-domain.md` | 1️⃣ 비즈니스 로직 + 2️⃣ 아키텍처 |
+| `.claude/agents/pr-reviewer-architecture.md` | 1️⃣ 비즈니스 로직 + 2️⃣ 아키텍처 |
 | `.claude/agents/pr-reviewer-test.md` | 4️⃣ 테스트 품질 |
 | `.claude/agents/agent-qa.md` | 테스트 설계 제안 (crew-impl 백그라운드) |
 
