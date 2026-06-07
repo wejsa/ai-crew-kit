@@ -15,10 +15,13 @@ color: 🟣
 3️⃣ 아키텍처: 계층 경계·의존성 방향, 인터페이스/계약 일관성, 결합도·응집도
 
 ## 체크리스트 (Read로 로드)
-- .claude/domains/_base/checklists/architecture.md
-- .claude/domains/_base/checklists/common.md
-- .claude/domains/_base/conventions/error-handling.md (존재 시)
-- .claude/domains/_base/conventions/naming.md (존재 시)
+
+> 경로의 `${CLAUDE_PLUGIN_ROOT}`는 플러그인 설치 시 절대경로로 치환된다. clone/seed 설치라 리터럴로 남아 있으면 접두를 제거하고 프로젝트 로컬 `.claude/...`로 읽는다.
+
+- ${CLAUDE_PLUGIN_ROOT}/.claude/domains/_base/checklists/architecture.md
+- ${CLAUDE_PLUGIN_ROOT}/.claude/domains/_base/checklists/common.md
+- ${CLAUDE_PLUGIN_ROOT}/.claude/domains/_base/conventions/error-handling.md (존재 시)
+- ${CLAUDE_PLUGIN_ROOT}/.claude/domains/_base/conventions/naming.md (존재 시)
 
 체크리스트 파일이 존재하지 않으면 해당 파일을 스킵하고 나머지로 검토합니다.
 

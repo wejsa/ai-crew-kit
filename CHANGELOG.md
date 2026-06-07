@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.3.0] - 2026-06-07
+
+> **v4.3.0 — 플러그인 자기완결형 경로 (Phase 2: 전체 전환)** — Phase 1(v4.2.0)에서 검증된 `${CLAUDE_PLUGIN_ROOT}` 이중 모드 경로 해석을, 나머지 프레임워크 읽기전용 리소스 참조(리뷰어·에이전트 체크리스트/컨벤션, health-check 데이터, crew-init/onboard 템플릿·프로토콜 등) **전반으로 확대**한다. 이로써 순수 플러그인 설치 프로젝트에서도 스킬·에이전트가 번들 리소스를 정상 읽는다.
+
+### Changed (13 files)
+
+- **에이전트 7종 — 인라인 자급자족 규칙 + 경로 prefix**: `pr-reviewer-{architecture,security,test}`, `agent-{backend,db-designer,qa,planner}`의 체크리스트/컨벤션 read 경로를 `${CLAUDE_PLUGIN_ROOT}/.claude/...`로 전환. **서브에이전트는 CLAUDE.md를 받지 못하므로**(Task 스폰 시 자기 정의만 시스템 프롬프트로 수신), 각 에이전트 정의에 "리터럴로 남으면 접두 제거 후 로컬 read" 해석 규칙을 **인라인으로 1회씩 자급자족** 추가.
+- **스킬 6종 — 경로 prefix + CLAUDE.md 규칙 포인터**: `crew-health-check`(_category.json·secrets-patterns·project.schema), `crew-plan`(_base/templates), `crew-init`(cleanup 프로토콜·CLAUDE.md.tmpl·README.md.tmpl), `crew-onboard`(cleanup 프로토콜), `crew-validate`(*.tmpl), `crew-docs`(conventions). 메인 루프 스킬은 CLAUDE.md 규칙을 보므로 짧은 포인터만.
+
+### Notes
+
+- **EXEMPT(미변경)**: `crew-upgrade` 전체(임시 클론-소스 기반 업그레이더 — 번들/프로젝트 아닌 클론 경로 read), 디렉토리 트리 다이어그램, 예시 주석, 문서-추가(write) 위치, 프로젝트 상태(`.claude/state|temp|plans`, project.json, CLAUDE.md, settings.json — 항상 로컬).
+- **알려진 잔여(minor)**: `agent-pm`의 워크플로 YAML 참조(`.claude/workflows/`)는 ASCII 플로우 다이어그램이라 미변환. agent-pm이 워크플로를 런타임 read하는 경로가 실제로 쓰이면 후속 보완.
+- **검증**: clone/seed 모드는 해석 규칙으로 기존과 동일(회귀 없음), validate-schema 22/22. 플러그인 모드는 Phase 1(v4.2.0)에서 `${CLAUDE_PLUGIN_ROOT}` 치환·번들 read를 실증함(crew-impl pr-body). 이번 확장도 동일 메커니즘.
+
 ## [4.2.0] - 2026-06-07
 
 > **v4.2.0 — 플러그인 자기완결형 경로 (Phase 1: 증명)** — 플러그인 설치 시 스킬이 번들 리소스를 올바르게 읽도록 `${CLAUDE_PLUGIN_ROOT}` 기반 이중 모드(plugin/clone) 경로 해석 규칙을 도입한다. 이번 릴리스는 **증명 단계**로, 규칙 + 실사용 읽기 경로 1건(crew-impl의 PR body 템플릿 read) + 스키마 SSOT 포인터 2곳에만 적용한다. 검증 후 전체 참조(스키마·템플릿·체크리스트·컨벤션)로 확대(v4.3.0 예정)한다.

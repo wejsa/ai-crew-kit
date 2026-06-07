@@ -33,7 +33,7 @@ complexity-hint: light
 - schemas, migrations.json, state/*.json
 
 **3. 템플릿 마커 완결성**
-`.claude/templates/*.tmpl` 마커가 TEMPLATE-ENGINE.md에 정의돼 있는지:
+`${CLAUDE_PLUGIN_ROOT}/.claude/templates/*.tmpl` (clone/seed면 `.claude/templates/*.tmpl`) 마커가 TEMPLATE-ENGINE.md에 정의돼 있는지:
 - 사용됐으나 미정의 → WARNING, 정의됐으나 미사용 → INFO
 
 ### Category 2: [IMPORTANT] 참조 검증

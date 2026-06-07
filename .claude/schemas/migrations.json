@@ -164,6 +164,17 @@
           "detail": "별도 설정 불필요. CLAUDE.md '프레임워크 번들 경로 해석' 규칙이 업그레이드 시 재생성됩니다. clone/seed 프로젝트는 ${CLAUDE_PLUGIN_ROOT}가 리터럴로 남아 규칙에 따라 기존처럼 프로젝트 로컬 .claude/를 읽으므로 동작 변화가 없습니다. 플러그인 설치 프로젝트는 번들에서 읽습니다. ${CLAUDE_PLUGIN_ROOT} 인라인 치환은 실제 플러그인 설치 환경에서만 발현되므로 플러그인 모드 동작은 검증이 필요합니다(가장 쉬운 검증: 플러그인 설치 프로젝트에서 /crew-impl로 PR 생성 시 PR body가 템플릿 구조를 따르는지 확인)."
         }
       ]
+    },
+    {
+      "version": "4.3.0",
+      "items": [
+        {
+          "title": "플러그인 자기완결형 경로 — 전체 전환 (Phase 2)",
+          "description": "Phase 1에서 검증된 ${CLAUDE_PLUGIN_ROOT} 이중 모드 경로 해석을 나머지 프레임워크 리소스 참조(리뷰어·에이전트 체크리스트/컨벤션, health-check 데이터, crew-init/onboard 템플릿·프로토콜) 전반으로 확대했습니다. 순수 플러그인 설치 프로젝트에서도 스킬·에이전트가 번들 리소스를 정상 읽습니다.",
+          "action": "none",
+          "detail": "별도 설정 불필요. 에이전트는 CLAUDE.md를 못 받으므로 해석 규칙을 각 정의에 인라인 자급자족 추가했고, 스킬은 CLAUDE.md 규칙을 참조합니다. clone/seed 프로젝트는 규칙에 따라 기존처럼 프로젝트 로컬 .claude/를 읽으므로 동작 변화 없음. crew-upgrade는 클론-소스 기반이라 EXEMPT."
+        }
+      ]
     }
   ]
 }

@@ -33,7 +33,7 @@ complexity-hint: medium
 
 ## 사전 조건 (MUST-EXECUTE-FIRST — 하나라도 실패 시 STOP)
 1. Git 저장소 확인 → 없으면 "git init 먼저 실행" 안내
-2. **ai-crew-kit clone 자동 정리**: 표준 진입 플로우는 **`.claude/templates/protocols/ai-crew-kit-cleanup.md`** 의 M1 검출 + M2 가드 + 14종 삭제 표를 그대로 따른다 (SSOT — 본 SKILL.md에 복제 금지).
+2. **ai-crew-kit clone 자동 정리**: 표준 진입 플로우는 **`${CLAUDE_PLUGIN_ROOT}/.claude/templates/protocols/ai-crew-kit-cleanup.md`** (clone/seed면 `.claude/templates/protocols/ai-crew-kit-cleanup.md`) 의 M1 검출 + M2 가드 + 14종 삭제 표를 그대로 따른다 (SSOT — 본 SKILL.md에 복제 금지).
 
    본 crew-onboard에서 추가로 적용:
    - M1 통과 시점에 `KIT_SOURCE_URL` 캡처 → Step 5에서 `kitSource` 기록

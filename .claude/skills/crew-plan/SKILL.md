@@ -83,7 +83,7 @@ Task tool (`run_in_background: true`)로 agent-db-designer 실행, 섹션 3 완�
 | fallback | "⚠️ DB 설계 분석 불가" + 메인에서 직접 작성 |
 
 ### 3. 설계 분석
-공통 템플릿 참조 (`.claude/domains/_base/templates/`):
+공통 템플릿 참조 (`${CLAUDE_PLUGIN_ROOT}/.claude/domains/_base/templates/`, clone/seed면 `.claude/domains/_base/templates/`):
 - 3.1 컴포넌트 설계: 파일 목록, 역할, 패키지 구조
 - 3.2 시퀀스 다이어그램
 - 3.3 API 설계 (해당 시): 엔드포인트, 스키마, 에러 코드

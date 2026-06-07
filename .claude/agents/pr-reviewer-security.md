@@ -12,7 +12,10 @@ color: 🔴
 3️⃣ 보안: 인증/인가, 입력 검증, 민감정보 노출, 감사 로그, 민감정보 암호화
 
 ## 체크리스트 (Read로 로드)
-- .claude/domains/_base/checklists/security-basic.md
+
+> 경로의 `${CLAUDE_PLUGIN_ROOT}`는 플러그인 설치 시 절대경로로 치환된다. clone/seed 설치라 리터럴로 남아 있으면 접두를 제거하고 프로젝트 로컬 `.claude/...`로 읽는다.
+
+- ${CLAUDE_PLUGIN_ROOT}/.claude/domains/_base/checklists/security-basic.md
 
 체크리스트 파일이 존재하지 않으면 해당 파일을 스킵하고 나머지로 검토합니다.
 

@@ -135,7 +135,7 @@ touch .claude/state/init-in-progress.flag 2>/dev/null || true
 
 #### ai-crew-kit clone 자동 정리 (표준 진입 플로우)
 
-표준 진입 플로우는 **`.claude/templates/protocols/ai-crew-kit-cleanup.md`** 의 M1 검출 + M2 가드 + 14종 삭제 표를 그대로 따른다 (SSOT — 본 SKILL.md에 복제 금지).
+표준 진입 플로우는 **`${CLAUDE_PLUGIN_ROOT}/.claude/templates/protocols/ai-crew-kit-cleanup.md`** (clone/seed면 `.claude/templates/protocols/ai-crew-kit-cleanup.md`) 의 M1 검출 + M2 가드 + 14종 삭제 표를 그대로 따른다 (SSOT — 본 SKILL.md에 복제 금지).
 
 본 Step 1에서 추가로 적용:
 - M1 통과 시점에 `KIT_SOURCE_URL=$(git remote get-url origin)` 캡처 → Step 10에서 `kitSource` 기록
@@ -528,9 +528,9 @@ chmod 444 "$BACKUP_DIR/MANIFEST.txt" "$BACKUP_DIR/MANIFEST.sha256" 2>/dev/null |
      - `summary.todo` = 생성 task 수, `summary.total` = 생성 task 수, 나머지 0
      - `phases` = Step 9 분해 결과의 phase 객체 (위 Step 9의 phase JSON 형식 그대로)
      - `tasks` = task ID(`{PREFIX}-001` …)를 key로, Step 9 task 객체를 value로
-3. **CLAUDE.md**: `.claude/templates/CLAUDE.md.tmpl` 마커 치환
+3. **CLAUDE.md**: `${CLAUDE_PLUGIN_ROOT}/.claude/templates/CLAUDE.md.tmpl` (clone/seed면 `.claude/templates/CLAUDE.md.tmpl`) 마커 치환
 4. **VERSION**: `echo "0.1.0" > VERSION`
-5. **README.md**: `.claude/templates/README.md.tmpl` 마커 치환
+5. **README.md**: `${CLAUDE_PLUGIN_ROOT}/.claude/templates/README.md.tmpl` (clone/seed면 `.claude/templates/README.md.tmpl`) 마커 치환
 6. **docs/api-specs/**: `mkdir -p`
 7. **.gitignore** 업데이트
 8. **Git 초기 커밋** (선택): `git add` → `git commit` → `git checkout -b develop`

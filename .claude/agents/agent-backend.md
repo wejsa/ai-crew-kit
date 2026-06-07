@@ -327,16 +327,18 @@ def create_user(data: dict) -> User:
 
 ## 컨벤션 참조
 
+> 경로의 `${CLAUDE_PLUGIN_ROOT}`는 플러그인 설치 시 절대경로로 치환된다. clone/seed 설치라 리터럴로 남아 있으면 접두를 제거하고 프로젝트 로컬 `.claude/...`로 읽는다.
+
 ### 참조 방식
 
 ```
 구현 시:
-1. 관련 컨벤션 확인 (.claude/domains/_base/conventions/)
+1. 관련 컨벤션 확인 (${CLAUDE_PLUGIN_ROOT}/.claude/domains/_base/conventions/)
 2. 컨벤션 기반 구현
 3. 스택별 패턴/구조 준수
 ```
 
-공통 코드 품질·보안·아키텍처 기준은 `.claude/domains/_base/conventions/`와 `.claude/domains/_base/checklists/`를 따릅니다.
+공통 코드 품질·보안·아키텍처 기준은 `${CLAUDE_PLUGIN_ROOT}/.claude/domains/_base/conventions/`와 `${CLAUDE_PLUGIN_ROOT}/.claude/domains/_base/checklists/`를 따릅니다.
 
 ---
 
