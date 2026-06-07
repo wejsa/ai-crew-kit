@@ -97,7 +97,7 @@
         },
         "domain": {
           "type": "string",
-          "description": "선택 — 도메인 식별자. 미설정 시 tags 기반 추론"
+          "description": "(deprecated v3.0.0: 미사용, 하위호환 위해 허용) 선택 — 도메인 식별자. 미설정 시 tags 기반 추론. v3.0.0 범용 전환 후 프레임워크가 읽지 않으나 기존 누적 항목 호환을 위해 보존."
         }
       }
     }

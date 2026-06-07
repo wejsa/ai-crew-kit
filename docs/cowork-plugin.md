@@ -3,7 +3,7 @@
 AI Crew Kit는 리포 clone 방식 외에 **Claude Code · Cowork 플러그인**으로도 설치할 수 있습니다.
 이 리포 자체가 곧 마켓플레이스이자 단일 플러그인입니다 (`.claude-plugin/marketplace.json` + `.claude-plugin/plugin.json`).
 
-플러그인으로 설치하면 clone 없이도 23개 스킬(`/skill-status`, `/skill-impl` 등)과 12개 서브에이전트, 품질 게이트 훅이 현재 작업 중인 프로젝트에서 바로 사용 가능해집니다.
+플러그인으로 설치하면 clone 없이도 22개 스킬(`/skill-status`, `/skill-impl` 등)과 12개 서브에이전트, 품질 게이트 훅이 현재 작업 중인 프로젝트에서 바로 사용 가능해집니다.
 
 ---
 

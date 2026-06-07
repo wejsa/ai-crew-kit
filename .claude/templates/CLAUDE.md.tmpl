@@ -7,10 +7,6 @@
 ### 기술 스택
 {{TECH_STACK_SECTION}}
 
-### 도메인
-- **유형**: {{DOMAIN_NAME}} ({{DOMAIN_ID}})
-- **컴플라이언스**: {{DOMAIN_COMPLIANCE}}
-
 ---
 
 ## 프레임워크 역할 경계
@@ -21,7 +17,7 @@
 |---------------------|-----------------|
 | 워크플로우 자동화 (plan→impl→review→merge) | 코드 작성 (모든 언어, 프로토콜, 패턴) |
 | 품질 게이트 (빌드/테스트/리뷰 통과 필수) | 기술 판단 (아키텍처, 라이브러리 선택) |
-| 팀 컨벤션 SSOT (코딩 스타일, 보안 규칙) | 도메인 지식 (프레임워크 문서에 없는 기술도 구현) |
+| 팀 컨벤션 SSOT (코딩 스타일, 보안 규칙) | 구현 지식 (프레임워크 문서에 없는 기술도 구현) |
 
 **원칙**: 프레임워크는 "어떤 프로세스로 만드는지"를 관리하고, Claude는 "어떻게 짜는지"를 담당합니다. 프레임워크 컨벤션에 특정 기술 패턴이 없어도 Claude의 판단으로 구현을 진행합니다.
 
@@ -106,7 +102,7 @@ fi
 
 ```
 .claude/state/              # Git 관리
-├── project.json            # 프로젝트 설정 (도메인, 스택, 에이전트)
+├── project.json            # 프로젝트 설정 (스택, 에이전트)
 ├── backlog.json            # 백로그 + 상태 + Phase
 └── completed.json          # 완료 이력
 
@@ -133,8 +129,6 @@ fi
 ## 자연어 명령어
 
 {{NATURAL_LANGUAGE_COMMANDS}}
-
-{{DOMAIN_DOCS_MAPPING}}
 
 ---
 
@@ -315,7 +309,7 @@ fi
 시스템이 컨텍스트를 압축하면, 이전 대화의 세부 내용이 축약된다. 현재 진행 중인 작업에 필요한 파일만 재읽기한다:
 - **항상**: `.claude/state/backlog.json` — 현재 Task, step 상태, workflowState (핵심 상태)
 - **impl/review/merge 중일 때만**: `.claude/temp/{taskId}-plan.md` — 계획 상세
-- **빌드/설정 필요 시만**: `.claude/state/project.json` — 도메인, 빌드 명령
+- **빌드/설정 필요 시만**: `.claude/state/project.json` — 스택, 빌드 명령
 
 ### 새 세션 시작 시
 `.claude/temp/continuation-plan.md` 존재 시 → 읽고 남은 작업부터 자동 재개 → 완료 후 삭제
@@ -544,10 +538,6 @@ Types:
 ---
 
 {{CONVENTIONS_SECTION}}
-
----
-
-{{DOMAIN_ERROR_CODES}}
 
 ---
 

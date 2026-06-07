@@ -16,7 +16,7 @@ tools: Read, Write, Edit, Glob, Grep, Bash
 - 단위 테스트 및 통합 테스트 작성
 - 코드 리팩토링 및 개선
 - 기술적 문제 해결
-- 도메인 참고자료 기반 구현
+- 컨벤션(`_base`) 기반 구현
 
 ## 핵심 원칙
 
@@ -125,7 +125,7 @@ app/
 ```
 config/               # 프로젝트 설정 (settings, urls, wsgi)
 apps/
-└── {domain}/
+└── {app}/
     ├── models.py     # Django ORM 모델
     ├── serializers.py  # DRF 시리얼라이저
     ├── views.py      # APIView / ViewSet
@@ -142,7 +142,7 @@ common/               # 공용 유틸 (exceptions, permissions)
 ```mermaid
 graph TD
     A[요구사항 분석] --> B[설계 검토]
-    B --> C[도메인 참고자료 확인]
+    B --> C[컨벤션 확인]
     C --> D[테스트 케이스 작성]
     D --> E[코드 구현]
     E --> F[단위 테스트 실행]
@@ -325,38 +325,18 @@ def create_user(data: dict) -> User:
 
 ---
 
-## 도메인 참고자료 연동
-
-### 자동 참조 트리거
-
-| 키워드 | 참조 문서 |
-|--------|----------|
-| 결제, 승인 | `payment-flow.md` |
-| 정산, D+N | `settlement.md` |
-| 취소, 환불 | `refund-cancel.md` |
-| JWT, 토큰, 인증 | `token-auth.md` |
-| PCI-DSS, 암호화 | `security-compliance.md` |
-| 멱등성, API | `api-design.md` |
+## 컨벤션 참조
 
 ### 참조 방식
 
 ```
 구현 시:
-1. 관련 키워드 감지
-2. 도메인 참고자료 로드 (.claude/domains/{domain}/docs/)
-3. 참고자료 기반 구현
-4. 출처 주석 추가
+1. 관련 컨벤션 확인 (.claude/domains/_base/conventions/)
+2. 컨벤션 기반 구현
+3. 스택별 패턴/구조 준수
 ```
 
-```kotlin
-/**
- * JWT 토큰 검증
- * @see .claude/domains/fintech/docs/token-auth.md
- */
-fun validateToken(token: String): TokenClaims? {
-    // 구현
-}
-```
+공통 코드 품질·보안·아키텍처 기준은 `.claude/domains/_base/conventions/`와 `.claude/domains/_base/checklists/`를 따릅니다.
 
 ---
 
@@ -459,7 +439,7 @@ class UserControllerIntegrationTest {
 - [ ] 불필요한 주석이 없는가?
 - [ ] 빌드가 성공하는가?
 - [ ] 린트 오류가 없는가?
-- [ ] 도메인 참고자료를 준수하는가?
+- [ ] 컨벤션을 준수하는가?
 
 ---
 
@@ -477,7 +457,7 @@ class UserControllerIntegrationTest {
 │ 1. project.json에서 스택 확인         │
 │ 2. 계획 파일 로드 (.claude/temp/)     │
 │ 3. 현재 스텝 확인                     │
-│ 4. 도메인 참고자료 로드               │
+│ 4. 컨벤션 로드                       │
 │ 5. 코드 구현                         │
 │ 6. 테스트 실행                       │
 │ 7. 린트 검사                         │

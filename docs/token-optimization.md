@@ -48,7 +48,6 @@ AI Crew Kit v2.0.0에서는 각 스킬에 **복잡도 힌트(`complexity-hint`)*
 | `skill-backlog` | Task CRUD |
 | `skill-docs` | 키워드 기반 문서 검색 |
 | `skill-create` | 스킬 스캐폴딩 |
-| `skill-domain` | 도메인 조회/전환 |
 | `skill-release` | 빌드 + 머지 + 태그 생성 |
 | `skill-upgrade` | 프레임워크 업그레이드 |
 | `skill-validate` | 구조 무결성 검증 |

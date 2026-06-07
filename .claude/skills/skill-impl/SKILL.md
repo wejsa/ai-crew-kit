@@ -57,7 +57,7 @@ CLAUDE.md 워크트리 프로토콜 참조.
 - merge 후 step 재검증: backlog.json 재읽기 → done/merged면 스킵, 다른 세션 in_progress면 경고
 
 ### 2. 계획 파일 참조
-로드 순서: 도메인 참고자료 → 공통 컨벤션 → 계획 파일. 현재 스텝의 파일/구현/테스트 확인.
+로드 순서: 공통 컨벤션 → 계획 파일. 현재 스텝의 파일/구현/테스트 확인.
 
 ### 3. 코드 구현
 계획에 따라 파일 생성/수정, 테스트 작성, 문서 업데이트(필요 시)
@@ -110,7 +110,7 @@ CLAUDE.md 워크트리 프로토콜 참조. push 전 develop 동기화 필수.
 - push 실패 시: pull --rebase → backlog.json 충돌은 서로 다른 Task 모두 유지, `metadata.version = max + 1` → 재시도 (최대 2회)
 
 ### 7. PR 생성
-1. PR body 템플릿: 도메인 `.claude/domains/{domain}/templates/pr-body.md.tmpl` 우선 → 기본 템플릿 폴백
+1. PR body 템플릿: `.claude/templates/pr-body.md.tmpl`
 2. 마커 치환: `{{TASK_TITLE}}`, `{{STEP_NUMBER}}`, `{{STEP_TOTAL}}`, `{{CHANGES_LIST}}`
 3. `gh pr create --base develop --title "feat: {taskId} Step {N} - {제목}" --body "{치환된 body}"`
 

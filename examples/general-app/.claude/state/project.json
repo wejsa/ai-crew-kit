@@ -1,0 +1,36 @@
+{
+  "name": "general-app",
+  "description": "범용 최소 예제 — 도메인 무관 워크플로우/설정 구조 시연",
+  "version": "1.0.0",
+  "kitVersion": "3.0.0",
+  "kitSource": "https://github.com/wejsa/ai-crew-kit",
+  "createdAt": "2026-06-06T00:00:00Z",
+  "metadata": {
+    "version": 1,
+    "createdAt": "2026-06-06T00:00:00Z",
+    "updatedAt": "2026-06-06T00:00:00Z"
+  },
+  "hooks": {},
+  "tokenHints": {},
+  "techStack": {
+    "backend": "spring-boot-kotlin",
+    "frontend": "none",
+    "database": "postgresql",
+    "cache": "redis",
+    "messageQueue": "none",
+    "infrastructure": "docker-compose"
+  },
+  "agents": {
+    "enabled": ["pm", "backend", "code-reviewer", "qa"],
+    "disabled": ["planner", "frontend", "db-designer", "docs"]
+  },
+  "conventions": {
+    "taskPrefix": "TASK",
+    "branchStrategy": "git-flow",
+    "commitFormat": "conventional",
+    "prLineLimit": 500,
+    "testCoverage": 80,
+    "workflowProfile": "standard",
+    "skillProfile": "default"
+  }
+}

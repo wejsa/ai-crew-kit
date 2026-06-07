@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+> **v3.0.0 — 순수 범용 프레임워크 전환 (BREAKING)** — fintech/ecommerce/saas/healthcare 도메인 자산을 전면 제거하고 도메인 무관 범용 AI 크루 개발 프레임워크로 전환한다. 하네스 제약(프로젝트 무복사·크로스플러그인 불가)으로 "코어 범용 + 도메인 팩 분리" 안이 폐기되어, 도메인 기능을 통째로 제거하는 경로를 택했다. 유지되는 가치 축은 에이전트 팀 오케스트레이션(plan→impl→review→merge)·품질 게이트(PreToolUse 머지 차단·리뷰·빌드/테스트)·스택 인지(techStack는 도메인과 직교 → 전면 유지)·도메인 무관 컨벤션/체크리스트/헬스체크(`_base`)다.
+
+### Removed (BREAKING)
+
+- **도메인 콘텐츠 전면 제거**: `.claude/domains/{fintech,ecommerce,saas,healthcare}/` 디렉토리, `.claude/domains/_registry.json`, `.claude/rules/`(도메인×언어 교차 제약 — 도메인 소멸로 존재 근거 상실), `skill-domain` 스킬을 삭제. 컴플라이언스 체크리스트(PCI-DSS/HIPAA/GDPR/SOC2 등)·도메인별 상태머신·도메인 시크릿 패턴(PAN/SSN/주민·사업자번호)도 함께 제거.
+- **도메인 예제 제거**: `examples/{fintech-gateway,ecommerce-shop}/` 삭제. 범용 최소 예제로 대체.
+- **도메인 관련 테스트/픽스처 제거**: 도메인 시크릿 테스트·도메인 업그레이드 픽스처·도메인 의존 schema 픽스처 정리.
+
+### Changed (BREAKING)
+
+- **`project.schema.json` domain 강등**: `required`에서 `domain` 제거. `domain`/`customDomain`/`conventions.overridePriority` 필드는 enum 제거 + optional·`deprecated`로 강등(기존 시드 project.json의 `additionalProperties:false` 검증 실패 + v1→v2 마이그레이션 결과 호환 — 로직은 일절 읽지 않음).
+- **`pr-reviewer-domain` 재목적화**: 도메인 컴플라이언스 리뷰어 → **아키텍처·비즈니스 로직 일관성 리뷰어**로 재서술(이름은 enum/참조 파급 회피 위해 유지, description·헤더만 변경). 3관점(로직/security/test) 유지.
+- **레지스트리 소비 로직 제거**: skill-init 도메인 추천·컴플라이언스 priority 격상, skill-onboard 도메인 감지, skill-review-pr rules 로딩·도메인 체크리스트 로드, skill-health-check 도메인 시크릿/registry 검사, skill-validate 레지스트리 정합성 카테고리 제거. **_base/common 체크리스트 로드·SEC-01/05/06·빌드/테스트 게이트는 유지.**
+
+### Migration
+
+- 기존 시드 project.json의 `domain`/`customDomain`은 **보존(no-op, deprecated)** — 강제 삭제하지 않아 검증이 깨지지 않는다. 잔여 도메인 디렉토리는 `/skill-upgrade`에서 **opt-in 1회성 정리**(백업 후 삭제)로 제공.
+- skill-domain 커스터마이즈 사용자만 영향 — 업그레이드 시 커스텀 스킬 보존 로직으로 안내.
+
 ## [2.5.3] - 2026-06-06
 
 > **마켓플레이스 플러그인 패키징** — ai-crew-kit을 Claude Code 플러그인 마켓플레이스로 배포할 수 있도록 `.claude-plugin/marketplace.json` + `plugin.json` 매니페스트를 추가. 기존엔 `git clone` 후 `/skill-init` 자동 정리(kit 잔여 14종 삭제)로만 진입할 수 있었으나, 이제 `/plugin marketplace add wejsa/ai-crew-kit` → `/plugin install ai-crew-kit@ai-crew-kit`로 **clone·정리 없이** 23개 스킬 + 12개 에이전트 + 품질 게이트 훅(SessionStart/PreToolUse/PostToolUse/Stop)을 한 번에 등록한다. 플러그인 설치 경로는 kit 잔여 파일이 사용자 프로젝트에 섞이지 않아 잡티 0으로 시작된다.

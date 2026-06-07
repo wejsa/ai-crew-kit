@@ -1,6 +1,6 @@
 ---
 name: skill-health-check
-description: 코드베이스 건강 검진 - 문서↔코드 동기화, 상태 정합성, 기본 보안, 에이전트 설정, 도메인 컴플라이언스 검증. 사용자가 "헬스체크 해줘", "정리해줘" 또는 /skill-health-check를 요청할 때 사용합니다.
+description: 코드베이스 건강 검진 - 문서↔코드 동기화, 상태 정합성, 기본 보안, 에이전트 설정, 훅 안전성 검증. 사용자가 "헬스체크 해줘", "정리해줘" 또는 /skill-health-check를 요청할 때 사용합니다.
 disable-model-invocation: false
 allowed-tools: Bash(git:*), Bash(grep:*), Bash(find:*), Bash(python3:*), Read, Glob, Grep, Write
 argument-hint: "[--quick|--scope <category>|--fix]"
@@ -30,22 +30,12 @@ complexity-hint: heavy
 ## 실행 절차
 
 ### Phase A: 설정 로딩
-1. .claude/state/project.json에서 현재 도메인과 techStack 확인
-   - project.json이 없으면 도메인 "general", techStack 미설정으로 간주
-2. .claude/domains/_base/health/_category.json 로딩
-3. .claude/domains/{domain}/health/_category.json 로딩 (있으면 병합 — 두 형태 모두 지원)
-   - **형태 A (legacy)**: `additionalCategories` + `weightOverrides` 키 사용 (예: fintech)
-     - additionalCategories → _base 카테고리 리스트에 추가
-     - weightOverrides → 기존 카테고리 가중치 조정
-   - **형태 B (dictionary)**: `categories: { id: {weight?, failCap?, description?} }` 키 사용 (예: ecommerce/healthcare/saas)
-     - 기존 _base 카테고리는 dictionary 항목으로 override (weight/failCap/description)
-     - dictionary에 새로운 id가 있고 _base에 없으면 추가 (additionalCategories와 동등)
-     - _base에만 있고 dictionary에 없는 카테고리는 _base 값 유지 (예: hook-safety 10은 도메인 override 부재 시 그대로 유지)
-   - 두 형태는 상호 배타적 — 한 파일에 섞지 말 것
-   - 최종 가중치 합이 100이 아니면 자동 정규화 (각 weight × (100 / Σweight))
-4. project.json의 healthCheck.exclude에 있는 항목 ID 제외
-5. --scope 옵션이 있으면 해당 카테고리만 필터
-6. --quick 옵션이 있으면 severity: CRITICAL만 필터
+1. .claude/state/project.json에서 techStack 확인
+   - project.json이 없으면 techStack 미설정으로 간주
+2. .claude/domains/_base/health/_category.json 로딩 (카테고리·가중치 SSOT — 합이 100)
+3. project.json의 healthCheck.exclude에 있는 항목 ID 제외
+4. --scope 옵션이 있으면 해당 카테고리만 필터
+5. --quick 옵션이 있으면 severity: CRITICAL만 필터
 
 ### Phase B: 검사 실행
 아래 "검사 항목" 섹션의 각 항목에 대해:
@@ -208,9 +198,8 @@ complexity-hint: heavy
 - FAIL 시: backlog 자동 등록
 - autoFix: 불가
 
-### 카테고리: security (기본 보안 — 전체 도메인 공통)
+### 카테고리: security (기본 보안)
 
-아래 항목들은 모든 도메인에서 실행된다.
 검사 대상 파일 패턴은 techStack에 따라 Claude가 맥락적으로 결정한다:
 - spring-boot-kotlin/java: src/**/*.{kt,java}
 - nodejs-typescript: src/**/*.{ts,js}
@@ -218,22 +207,20 @@ complexity-hint: heavy
 - go: **/*.go
 - 해당 패턴에 매칭되는 파일이 0건이면 SKIP
 
-#### 외부 패턴 로드 절차 (SEC-01 / SEC-05 / SEC-07 공유)
+#### 외부 패턴 로드 절차 (SEC-01 / SEC-05 공유)
 
-SEC-01 / SEC-05 / SEC-07은 `secrets-patterns.json` 외부 파일을 동적 로드한다.
+SEC-01 / SEC-05는 `secrets-patterns.json` 외부 파일을 동적 로드한다.
 
 | 경로 | 섹션 | 매핑 | 부재 시 |
 |------|------|------|---------|
 | `.claude/domains/_base/health/secrets-patterns.json` | `common.runtime` | SEC-01 | SEC-01 SKIP + WARN ("외부 패턴 파일 부재") |
 | `.claude/domains/_base/health/secrets-patterns.json` | `common.hardcoded` | SEC-05 | SEC-05 SKIP + WARN |
-| `.claude/domains/{domain}/health/secrets-patterns.json` | `domain.patterns` | SEC-07 | SEC-07 SKIP (정상 — 도메인 콘텐츠 부재 가능) |
 
 오류 처리:
 - JSON 파싱 실패 → 해당 SEC-* ERROR 보고 + 카테고리 부분 SKIP. 다른 SEC-* 정상 실행
 - 개별 패턴의 정규식 컴파일 실패 → 해당 패턴만 SKIP + WARN. 같은 파일 다른 패턴 정상 실행
-- 도메인 patterns 파일에 `common` 섹션이 있으면 무시 + WARN ("`common`은 `_base`만 보유 — `_base/health/README.md` 참조")
 
-#### excludeContexts 처리 SSOT (SEC-01 / SEC-05 / SEC-07 공통)
+#### excludeContexts 처리 SSOT (SEC-01 / SEC-05 공통)
 
 각 패턴 entry의 `excludeContexts` 배열은 다음 정규식으로 처리한다 (`_base/health/README.md` enum 정의의 SSOT 구현).
 
@@ -251,7 +238,7 @@ SEC-01 / SEC-05 / SEC-07은 `secrets-patterns.json` 외부 파일을 동적 로�
 
 **`type_declaration` 처리 한계 (single-line 정의)**: 위 3단계는 라인 전체를 제외한다. 따라서 `class PasswordValidator { val secret = "abc1234567890123" }` 같이 한 줄에 타입 선언과 시크릿 리터럴이 함께 있으면 SEC-S02 매칭이 누락된다 (false negative). 워크어라운드: 시크릿 리터럴은 별도 라인 또는 companion `const`/`object`로 분리. 본 한계는 v2.1+에서 토큰-단위 처리로 정밀화 검토.
 
-#### 출처 표기 형식 (SEC-01 / SEC-05 / SEC-07)
+#### 출처 표기 형식 (SEC-01 / SEC-05)
 
 리포트 출력 시 외부 패턴 ID를 함께 표기한다:
 ```
@@ -263,7 +250,7 @@ SEC-05: 하드코딩 시크릿 (src/main/.../Config.kt:42) — 외부 패턴 SEC
 `common.runtime` SEC-S06~S17은 v1.x 회귀 보존을 위해 `confidence: medium`(예외)이다. FAIL 메시지에 다음 안내를 첨부한다.
 > ℹ️ medium confidence — 정보성 로그 메시지(예: `logger.info("Password validation failed")`) false positive 가능. 변수 보간이 아닌 단순 키워드 등장이면 무시 가능. 정밀화는 v2.1+ 검토 (`_base/health/README.md` confidence 가이드 참조).
 
-신규 추가 패턴(`common.hardcoded` SEC-S01~S05, `domain.patterns`)은 모두 `high`이며 별도 안내 없이 FAIL 처리한다.
+신규 추가 패턴(`common.hardcoded` SEC-S01~S05)은 모두 `high`이며 별도 안내 없이 FAIL 처리한다.
 
 #### SEC-01. 민감정보 로깅 금지 (CRITICAL)
 - 사전 조건: 외부 패턴 로드 절차에 따라 `_base/health/secrets-patterns.json` `common.runtime` 로드 성공 (부재/파싱 실패 시 SKIP + WARN). techStack에 따른 코드 파일 매칭 결과 0건이면 SKIP.
@@ -288,7 +275,7 @@ SEC-05: 하드코딩 시크릿 (src/main/.../Config.kt:42) — 외부 패턴 SEC
 - 검사: CORS에서 allowedOrigins("*") 사용 금지
   - 패턴: allowedOrigins("*"), Access-Control-Allow-Origin: *
   - 매칭 위치 리포트 포함
-- 참조: _base/checklists/security-basic.md "입력 검증" + 해당 도메인 security 체크리스트
+- 참조: _base/checklists/security-basic.md "입력 검증"
 
 #### SEC-04. API 인증 (MAJOR)
 - 검사: Controller에 인증 관련 어노테이션 존재 확인
@@ -328,36 +315,7 @@ SEC-05: 하드코딩 시크릿 (src/main/.../Config.kt:42) — 외부 패턴 SEC
   - 노출된 시크릿은 외부 콘솔(AWS/GitHub/Slack)에서 즉시 회수
 - autoFix: 불가 (수동 수정 + 자격 회수 필수)
 
-#### SEC-07. 도메인별 민감 데이터 (CRITICAL)
-- 사전 조건:
-  - `project.json`의 `domain` ≠ `general` (general 도메인은 도메인 특화 패턴 없음 → SKIP)
-  - `.claude/domains/{domain}/health/secrets-patterns.json` 파일 존재 + `domain.patterns` 섹션 존재
-  - 위 모두 미충족 시 SKIP (정상 — 도메인 콘텐츠 미작성)
-- 검사: `domain.patterns` 패턴(high confidence만)을 코드 파일에 매칭. excludeFiles + excludeContexts SSOT 적용. 남은 매칭이 1건 이상이면 FAIL.
-- 체크섬 검증 (false positive 차단):
-  - **PAN(카드번호 16자리)**: 정규식 매칭 후 Luhn 알고리즘 검증
-    - 우→좌 짝수 위치(1-indexed)만 ×2 → 결과가 10 이상이면 자릿수 합으로 변환 → 전체 합 mod 10 == 0이면 통과
-    - Luhn 실패 시 매칭 폐기 (false positive로 간주)
-  - **한국 주민등록번호 (13자리)**: 가중치 [2,3,4,5,6,7,8,9,2,3,4,5] × 앞 12자리 → 합 mod 11 → 11 - 결과 → mod 10이 마지막 자리와 일치
-  - **한국 사업자번호 (10자리)**: 가중치 [1,3,7,1,3,7,1,3,5] × 앞 9자리 → 합산 → (9번째 자리 × 5) ÷ 10 몫을 합에 추가 → (10 - 합 mod 10) mod 10이 10번째 자리(체크섬)와 일치하면 통과. 9번째 자리는 앞 9자리의 마지막(0-indexed `n[8]`, 1-indexed 9th — 기존 "8번째 자리" 표기는 1-indexed/0-indexed 모호로 정정. tests/secrets/conftest.py `biz_ok` 표준 구현). 국세청 사업자등록번호 체계.
-  - 도메인 패턴이 체크섬 검증을 요구하는 경우 도메인 `secrets-patterns.json` description에 명시 + 본 SKILL.md 절차에 위임 (Step 3 도메인 추가 시 체크섬 알고리즘 사양 첨부)
-- FAIL 시 매칭 위치 + 외부 패턴 ID + 도메인 표기 (예: `SEC-07: PAN 노출 (src/.../Order.kt:88) — 외부 패턴 fintech/SEC-S{nn} (PAN Luhn 통과)`)
-- 참조: `domains/{domain}/checklists/`의 해당 도메인 컴플라이언스 항목, `_base/health/README.md` 새 도메인 패턴 추가 절차
-- FAIL 시: backlog 자동 등록 (CRITICAL bugfix)
-- autoFix: 불가 (D5)
-
-> **다층 방어 메모 (D6)**: SEC-07은 헬스체크 시점의 정규식 자동 검사이며, Phase 4 `rules/{domain}/{language}/`는 PR 리뷰 시점의 LLM 의미 판단이다. 동일 라인이 양쪽에서 보고되어도 검사 시점/방식이 다른 다층 방어로 정상이다 — 출처 표기로 분별 가능.
-
 ### 카테고리: agent-config (에이전트 설정 유효성)
-
-#### AC-01. 활성 도메인 유효성 (CRITICAL)
-- 사전 조건: .claude/state/project.json 존재
-- 검사: project.json의 domain 값이 _registry.json에 등록되어 있는지
-  - 주의: 이 항목은 skill-validate Cat 1-3에서도 유사하게 점검됨.
-    skill-validate는 "구조적 존재"를, 이 항목은 "런타임 설정 유효성"을 확인.
-    skill-validate를 최근 실행했다면 SKIP 가능.
-- FAIL 시: backlog 자동 등록
-- autoFix: 불가
 
 #### AC-02. 스킬 SKILL.md 본문 완전성 (MINOR)
 - 사전 조건: 없음 (항상 실행)
@@ -436,48 +394,12 @@ Claude Code 네이티브 훅은 clone 즉시 모든 contributor 세션에서 자
 - autoFix: 불가 (스크립트 수동 리팩토링 필요)
 - 참조: TFT R4 — 훅 `exit 2`/`set -e` 사용 시 세션 차단 위험. 동일 로직은 `scripts/check-hook-blocking.sh`가 CI에서 실행하므로 로컬 상시 확인 가능
 
-### 카테고리: compliance (도메인 조건부 — fintech만 해당)
-
-아래 항목들은 project.json의 domain이 "fintech"일 때만 실행된다.
-파일 패턴 규칙은 security 카테고리와 동일 (techStack 맥락 판단, 0건이면 SKIP).
-
-#### FIN-01. 감사 로그 존재 (CRITICAL)
-- 검사: 코드에서 감사 로그 어노테이션/서비스 패턴 탐지
-  - Kotlin/Java: @AuditLog, @Audited, AuditEvent, auditService
-  - TypeScript: @AuditLog, auditLogger, audit.log
-  - 하나라도 있으면 PASS (any scope)
-- 참조: fintech/checklists/compliance.md "감사 추적" 항목의 자동화 사전 검증
-- FAIL 시: backlog 자동 등록
-
-#### FIN-02. 멱등성 키 (MAJOR)
-- 검사: 결제 관련 Controller에 멱등성 키 파라미터 존재 확인
-  - 대상 파일: *Payment*Controller*, *Order*Controller* 등 (techStack 맥락 판단)
-  - 패턴: idempotencyKey, idempotency-key, Idempotent, X-Idempotency-Key
-  - 대상 파일이 없으면 SKIP
-  - 대상 파일 각각에 패턴이 존재해야 PASS (each scope)
-- 참조: fintech/checklists/domain-logic.md "멱등성 키 필수"
-
-#### FIN-03. 금액 정밀도 (MAJOR)
-- 검사: 금액 관련 변수에 Double/Float 사용 금지
-  - 패턴: Double.*amount, Float.*amount, double.*price, float.*price
-  - domain 모델 파일 대상 (techStack 맥락 판단)
-  - 하나라도 매칭되면 FAIL, 매칭 위치 리포트 포함
-- 참조: fintech/checklists/domain-logic.md "BigDecimal 필수"
-
-#### FIN-04. 트랜잭션 관리 (MAJOR)
-- 검사: 결제 서비스에 트랜잭션 관리 존재 확인
-  - Kotlin/Java: @Transactional, transactionTemplate, TransactionStatus
-  - TypeScript: transaction, beginTransaction, prisma.$transaction
-  - 대상: *Payment*Service* 등 (techStack 맥락 판단)
-  - 대상 파일이 없으면 SKIP
-
 ## 중요 규칙
 
 - command_run(DS-01, DS-02)에서 프로덕션 DB에 접속하는 명령어는 실행하지 마라.
 - autoFix에서 confirm: true인 항목은 반드시 AskUserQuestion으로 사용자 승인을 받아라.
-- security/compliance 항목의 grep 대상 파일 패턴은 techStack에 따라 Claude가 판단한다.
+- security 항목(SEC-*)의 grep 대상 파일 패턴은 techStack에 따라 Claude가 판단한다.
   SKILL.md에 모든 언어 패턴을 열거하지 않는다. Claude가 project.json의 techStack을 보고 적절한 파일 확장자와 패턴을 선택한다.
-- security 카테고리(SEC-*)는 모든 도메인에서 실행된다. compliance 카테고리(FIN-*)는 fintech에서만 실행된다.
 - 이 스킬은 체크리스트(.md)를 대체하지 않는다. 체크리스트는 PR 리뷰용 설계 원칙이고,
   이 스킬은 코드 패턴의 자동 사전 탐지다. "참조" 필드로 관련 체크리스트 항목을 연결한다.
 

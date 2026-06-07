@@ -25,21 +25,6 @@ def base_patterns() -> dict:
 
 
 @pytest.fixture(scope="session")
-def fintech_patterns() -> dict:
-    return _load(".claude/domains/fintech/health/secrets-patterns.json")
-
-
-@pytest.fixture(scope="session")
-def healthcare_patterns() -> dict:
-    return _load(".claude/domains/healthcare/health/secrets-patterns.json")
-
-
-@pytest.fixture(scope="session")
-def ecommerce_patterns() -> dict:
-    return _load(".claude/domains/ecommerce/health/secrets-patterns.json")
-
-
-@pytest.fixture(scope="session")
 def skill_md_text() -> str:
     """skill-health-check/SKILL.md 본문 — SSOT drift 검증용 (M001 후속)."""
     return (REPO_ROOT / ".claude/skills/skill-health-check/SKILL.md").read_text(encoding="utf-8")
@@ -87,36 +72,3 @@ def matches(entry: dict, line: str) -> bool:
     if not re.search(entry["pattern"], line):
         return False
     return excluded_by(line, entry.get("excludeContexts", [])) is None
-
-
-# Checksum helpers — SKILL.md SEC-07 §체크섬 검증 1:1 구현
-def luhn_ok(num: str) -> bool:
-    """PAN Luhn — SKILL.md SEC-07 fintech 체크섬."""
-    digits = [int(c) for c in num if c.isdigit()]
-    if len(digits) != 16:
-        return False
-    s = 0
-    for i, d in enumerate(reversed(digits)):
-        s += d if i % 2 == 0 else (d * 2 if d * 2 < 10 else d * 2 - 9)
-    return s % 10 == 0
-
-
-def rrn_ok(num: str) -> bool:
-    """한국 주민등록번호 (13자리) — 가중치 [2,3,4,5,6,7,8,9,2,3,4,5]."""
-    n = [int(c) for c in num if c.isdigit()]
-    if len(n) != 13:
-        return False
-    w = [2, 3, 4, 5, 6, 7, 8, 9, 2, 3, 4, 5]
-    s = sum(n[i] * w[i] for i in range(12))
-    return (11 - s % 11) % 10 == n[12]
-
-
-def biz_ok(num: str) -> bool:
-    """한국 사업자등록번호 (10자리) — 가중치 [1,3,7,1,3,7,1,3,5] + 8번째×5÷10 몫."""
-    n = [int(c) for c in num if c.isdigit()]
-    if len(n) != 10:
-        return False
-    w = [1, 3, 7, 1, 3, 7, 1, 3, 5]
-    s = sum(n[i] * w[i] for i in range(9))
-    s += (n[8] * 5) // 10
-    return (10 - s % 10) % 10 == n[9]

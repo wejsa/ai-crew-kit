@@ -29,7 +29,7 @@ CLAUDE.md 상태 추적 패턴. currentSkill="skill-plan"
 
 ## 과거 학습 반영
 1. `.claude/state/lessons-learned.json` 존재 확인 → 없으면 스킵
-2. 현재 Task 도메인/키워드 관련 학습 필터링 (impact=high 우선, 최대 5건)
+2. 현재 Task 키워드 관련 학습 필터링 (impact=high 우선, 최대 5건)
 3. 설계 분석 + 스텝 분리에 반영, 계획 파일에 "참고 학습 항목" 섹션 추가
 
 ## 실행 플로우
@@ -74,7 +74,7 @@ agents.enabled에 "db-designer" 포함 시에만 실행.
 Task tool (`run_in_background: true`)로 agent-db-designer 실행, 섹션 3 완료 후 결과 수거.
 
 **에이전트 프롬프트 구성 (토큰 절감)**:
-- 프롬프트에 포함: taskId, domain, spec 파일 경로
+- 프롬프트에 포함: taskId, spec 파일 경로
 - 프롬프트에 포함하지 않음: spec 전체 내용, project.json 전체 (에이전트가 필요 시 자체 Read)
 
 | 항목 | 값 |
@@ -83,7 +83,7 @@ Task tool (`run_in_background: true`)로 agent-db-designer 실행, 섹션 3 완�
 | fallback | "⚠️ DB 설계 분석 불가" + 메인에서 직접 작성 |
 
 ### 3. 설계 분석
-도메인 템플릿 참조 (`.claude/domains/{domain}/templates/` → `_base/templates/` 폴백):
+공통 템플릿 참조 (`.claude/domains/_base/templates/`):
 - 3.1 컴포넌트 설계: 파일 목록, 역할, 패키지 구조
 - 3.2 시퀀스 다이어그램
 - 3.3 API 설계 (해당 시): 엔드포인트, 스키마, 에러 코드
@@ -106,7 +106,7 @@ Step N: {제목}
 - 라인 제한: {N} (미설정 시 전역 prLineLimit 적용)
 - 내용: {설명}, 의존: {이전 Step}
 ```
-참조 컨벤션: CLAUDE.md "도메인 컨벤션 참조" 트리거 테이블로 자동 식별
+참조 컨벤션: CLAUDE.md "공통 컨벤션 참조" 트리거 테이블로 자동 식별
 
 ### 4.5 파일 충돌 검사
 스텝별 수정 파일과 다른 in_progress Task의 lockedFiles 교집합 검사.

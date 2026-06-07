@@ -11,7 +11,7 @@ backlog/
 ├── positive/                                    스키마가 ✅ 통과해야 하는 케이스
 │   ├── empty-backlog.json                       Step 9 N/C 분기 결과
 │   ├── full-backlog-with-phases.json            Step 9 Y/A 분기 (4 phase × 3 task)
-│   └── fintech-with-critical-priority.json      컴플라이언스 격상 케이스
+│   └── backlog-with-critical-priority.json      critical priority 허용 케이스
 │
 └── negative/                                    스키마가 ❌ 거부해야 하는 케이스
     ├── task-current-step-zero.json              currentStep:0 → minimum:1 위반

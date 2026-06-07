@@ -28,8 +28,7 @@ v1.x 사용자는 `/skill-upgrade --version v2.0.0` 한 번이면 충분합니�
 | 항목 | 자동 처리 |
 |------|----------|
 | `project.json` 스키마 확장 | ✅ 4 add_field 자동 마이그레이션 |
-| `CLAUDE.md` 4층 Override 템플릿 갱신 | ✅ 결정적 치환 + `CUSTOM_SECTION` 보존 |
-| `.claude/rules/` 신규 디렉토리 | ✅ 자동 생성 (콘텐츠 0개 — 사용자 추가 시점에만 활성) |
+| `CLAUDE.md` Override 템플릿 갱신 | ✅ 결정적 치환 + `CUSTOM_SECTION` 보존 |
 | `.claude/state/lessons-learned.json` 회귀 보호 | ✅ 기존 데이터 100% 보존, schema 검증 활성 |
 | 가중치 재배분 (Phase 1 hook-safety + Phase 5) | ✅ 자동 — 사용자 점수 영향 ≤1점 |
 
@@ -62,8 +61,7 @@ rm -rf /tmp/ai-crew-kit-latest
 | **누적 학습 데이터** | `.claude/state/` 디렉토리 전체 보존 (주요 파일: lessons-learned.json, completed.json, health-history.json) | 완전 보존 (Phase 7 회귀 보호 메커니즘) |
 | **프로젝트 코드** | src/, docs/, VERSION 등 | 완전 보존 |
 | **CLAUDE.md 커스텀 규칙** | `CUSTOM_SECTION` 마커 사이 내용 | 추출 → 재생성 → 복원 |
-| **도메인 커스텀 파일** | add-doc, add-checklist로 추가한 파일 | 자동 감지 → 복원 |
-| **도메인×언어 rules 콘텐츠** | `.claude/rules/{domain}/{language}/*.md` 사용자 추가분 | 완전 보존 (Phase 4) |
+| **`_base`/`general` 커스텀 파일** | conventions·checklists에 추가한 사용자 파일 | 자동 감지 → 복원 |
 | **도구 권한 설정** | settings.json 커스텀 권한 | 머지 (기존 보존 + 새 항목 추가) |
 
 ## 롤백

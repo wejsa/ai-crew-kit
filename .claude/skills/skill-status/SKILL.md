@@ -26,7 +26,7 @@ complexity-hint: light
 `git branch --show-current`, `git status --short`, `git log --oneline -5`
 
 ### 2. 프로젝트 설정
-project.json: 도메인, 기술 스택, 활성 에이전트, Kit 버전 (kitVersion, 미기록 시 "미설정")
+project.json: 기술 스택, 활성 에이전트, Kit 버전 (kitVersion, 미기록 시 "미설정")
 
 ### 3. 백로그 상태
 backlog.json: todo/in_progress/done/blocked/archived 수량 + 진행 중 Task 상세 (ID, 제목, 현재 스텝)
@@ -45,11 +45,10 @@ Stale 감지 시 복구 안내: `/skill-impl` (재개) 또는 `/skill-backlog up
 ### 5.5 시스템 건강 점검 (--health)
 
 점검 항목:
-- JSON 유효성: `.claude/state/*.json`, `_registry.json` 파싱 검증
-- 필수 파일: project.json, _registry.json, 스키마 2개, CLAUDE.md.tmpl, CLAUDE.md
+- JSON 유효성: `.claude/state/*.json` 파싱 검증
+- 필수 파일: project.json, 스키마 2개, CLAUDE.md.tmpl, CLAUDE.md
 - 스킬 디렉토리: `.claude/skills/*/SKILL.md` 완전성
 - Git 원격 동기화: `git fetch --dry-run`
-- 도메인 레지스트리 정상 여부
 - backlog-completed 정합성: backlog done Task와 completed.json 비교 → 불일치 시 경고
 - Orphan Intent: `.claude/temp/*-complete-intent.json` 검색 → 발견 시 pending 배열 표시
 

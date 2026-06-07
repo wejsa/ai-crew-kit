@@ -251,32 +251,6 @@ graph TD
 
 ---
 
-## 도메인별 문서 참조
-
-### 자동 참조 메커니즘
-
-```javascript
-// 도메인 참고자료 로드
-function loadDomainDocs(domain) {
-    return glob(`domains/${domain}/docs/*.md`);
-}
-
-// fintech 도메인 예시
-// → payment-flow.md, settlement.md, refund-cancel.md, ...
-```
-
-### skill-docs 연동
-
-```
-/skill-docs payment
-→ domains/fintech/docs/payment-flow.md 표시
-
-/skill-docs settlement
-→ domains/fintech/docs/settlement.md 표시
-```
-
----
-
 ## 문서 자동 생성
 
 ### API 문서 자동 생성 (Spring Boot)
@@ -311,7 +285,6 @@ plugins {
  * ```
  *
  * @see PaymentResponse
- * @see domains/fintech/docs/payment-flow.md
  */
 suspend fun createPayment(request: CreatePaymentRequest): PaymentResponse
 ```
@@ -424,7 +397,7 @@ full-feature 워크플로우 마지막 단계
 
 ```
 /skill-docs
-→ 도메인 참고자료 표시 (agent-docs와 협력)
+→ 공통 컨벤션·참고자료 표시 (agent-docs와 협력)
 ```
 
 ---
