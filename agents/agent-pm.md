@@ -125,19 +125,19 @@ const executionChain = requiredAgents.filter(a => enabledAgents.includes(a));
 실행 계획:
 ┌────────────────────────────────────────────────────────┐
 │ Step 1: agent-backend                                   │
-│   ├── skill: skill-plan                                │
+│   ├── skill: crew-plan                                │
 │   ├── 입력: 요구사항 (자연어)                            │
 │   ├── 출력: 설계 문서 + 스텝 계획                        │
 │   └── 게이트: 사용자 승인                               │
 ├────────────────────────────────────────────────────────┤
 │ Step 2: agent-backend                                   │
-│   ├── skill: skill-impl                                │
+│   ├── skill: crew-impl                                │
 │   ├── 입력: 설계 문서                                   │
 │   ├── 출력: PR                                         │
 │   └── 게이트: 빌드 성공                                 │
 ├────────────────────────────────────────────────────────┤
 │ Step 3: agent-code-reviewer                            │
-│   ├── skill: skill-review-pr                           │
+│   ├── skill: crew-review-pr                           │
 │   ├── 입력: PR                                         │
 │   ├── 출력: 리뷰 결과                                   │
 │   └── 게이트: CRITICAL 0개                             │
@@ -156,15 +156,15 @@ const executionChain = requiredAgents.filter(a => enabledAgents.includes(a));
 
 ```
 .claude/temp/workflow-{id}/
-├── plan.md                 # skill-plan 설계 문서
+├── plan.md                 # crew-plan 설계 문서
 ├── db-design.md            # agent-db-designer 분석 결과
 ├── qa-suggestions.md       # agent-qa 테스트 설계 제안
 ├── docs-impact.md          # docs-impact-analyzer 문서 영향도
-├── pr-info.json            # skill-impl PR 정보 (number, url, branch)
+├── pr-info.json            # crew-impl PR 정보 (number, url, branch)
 ├── review-security.md      # pr-reviewer-security 결과
 ├── review-domain.md        # pr-reviewer-domain 결과
 ├── review-test.md          # pr-reviewer-test 결과
-├── review-summary.md       # skill-review-pr 통합 리뷰 결과
+├── review-summary.md       # crew-review-pr 통합 리뷰 결과
 └── test-report.md          # 테스트 실행 리포트
 ```
 
@@ -172,10 +172,10 @@ const executionChain = requiredAgents.filter(a => enabledAgents.includes(a));
 
 | 생산자 | 파일 | 소비자 | 용도 |
 |--------|------|--------|------|
-| agent-db-designer | db-design.md | agent-backend (skill-impl) | 스키마 구현 참조 |
-| agent-qa | qa-suggestions.md | pr-reviewer-test (skill-review-pr) | 제안된 테스트 구현 여부 확인 |
-| docs-impact-analyzer | docs-impact.md | agent-docs (skill-impl) | 문서 업데이트 우선순위 결정 |
-| pr-reviewer-* | review-*.md | skill-review-pr | 통합 리뷰 요약 생성 |
+| agent-db-designer | db-design.md | agent-backend (crew-impl) | 스키마 구현 참조 |
+| agent-qa | qa-suggestions.md | pr-reviewer-test (crew-review-pr) | 제안된 테스트 구현 여부 확인 |
+| docs-impact-analyzer | docs-impact.md | agent-docs (crew-impl) | 문서 업데이트 우선순위 결정 |
+| pr-reviewer-* | review-*.md | crew-review-pr | 통합 리뷰 요약 생성 |
 
 #### 충돌 해결 규칙
 
@@ -276,8 +276,8 @@ const executionChain = requiredAgents.filter(a => enabledAgents.includes(a));
 | 테스트 | 테스트 리포트 | 테스트 통과 (15/15) |
 
 ### 다음 단계
-- `/skill-merge-pr 123` — PR 머지
-- `/skill-impl --next` — 다음 스텝 진행
+- `/crew-merge-pr 123` — PR 머지
+- `/crew-impl --next` — 다음 스텝 진행
 ```
 
 ---
@@ -404,7 +404,7 @@ triggers:
 steps:
   - id: plan
     agent: agent-planner
-    skill: skill-feature
+    skill: crew-feature
     output: "docs/requirements/{{taskId}}-spec.md"
     gate: user_approval
     condition: "agents.planner.enabled"

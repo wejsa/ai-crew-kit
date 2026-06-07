@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/wejsa/ai-crew-kit/.claude/schemas/lessons-learned.schema.json",
-  "title": "Lessons Learned (skill-retro)",
-  "description": "skill-retro가 누적하는 학습 항목 SSOT. impact 권장 임계값: appliedCount>=5 → high, >=3 → medium, <3 → low (skill-retro 출력에 정량 표시 — schema는 강제하지 않고 권장만). SSOT: .claude/skills/skill-retro/SKILL.md §5.3",
+  "title": "Lessons Learned (crew-retro)",
+  "description": "crew-retro가 누적하는 학습 항목 SSOT. impact 권장 임계값: appliedCount>=5 → high, >=3 → medium, <3 → low (crew-retro 출력에 정량 표시 — schema는 강제하지 않고 권장만). SSOT: .claude/skills/crew-retro/SKILL.md §5.3",
   "type": "object",
   "required": ["metadata", "lessons"],
   "additionalProperties": false,
@@ -15,7 +15,7 @@
         "version": {
           "type": "integer",
           "minimum": 1,
-          "description": "Monotonic increment on each write (skill-retro 동시성 가드)"
+          "description": "Monotonic increment on each write (crew-retro 동시성 가드)"
         },
         "updatedAt": {
           "type": "string",

@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://ai-crew-kit.dev/schemas/project.schema.json",
   "title": "AI Crew Kit Project Configuration",
-  "description": "프로젝트 설정 스키마 - skill-init이 생성하고 각 스킬이 참조",
+  "description": "프로젝트 설정 스키마 - crew-init이 생성하고 각 스킬이 참조",
   "type": "object",
   "required": ["name", "version"],
   "properties": {
@@ -35,7 +35,7 @@
           "type": "string",
           "enum": ["nextjs", "react", "react-vite", "vue", "vue-nuxt", "astro", "none"],
           "default": "none",
-          "description": "프론트엔드 프레임워크. skill-init/skill-onboard 파일 기반 감지 결과(react-vite/vue-nuxt/astro)와 정합."
+          "description": "프론트엔드 프레임워크. crew-init/crew-onboard 파일 기반 감지 결과(react-vite/vue-nuxt/astro)와 정합."
         },
         "database": {
           "type": "string",
@@ -147,9 +147,9 @@
           "type": "array",
           "items": {
             "type": "string",
-            "pattern": "^skill-[a-z][a-z0-9-]*$"
+            "pattern": "^(crew|skill)-[a-z][a-z0-9-]*$"
           },
-          "description": "skillProfile이 'custom'일 때 사용할 스킬 이름 목록"
+          "description": "skillProfile이 'custom'일 때 사용할 스킬 이름 목록. 신규 스킬은 crew- 접두사(crew-create 스캐폴딩 기본값). (deprecated v4.0.0: skill- 분기는 v4 이전 커스텀 스킬 grandfather 전용 — 신규 스킬은 crew-만 사용. 향후 메이저에서 제거 후보.)"
         },
         "overridePriority": {
           "type": "string",
@@ -261,7 +261,7 @@
     "kitVersion": {
       "type": "string",
       "pattern": "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9]+(\\.[a-zA-Z0-9]+)*)?$",
-      "description": "AI Crew Kit 프레임워크 버전 (skill-upgrade가 관리, SemVer 2.0.0 프리릴리즈 지원)"
+      "description": "AI Crew Kit 프레임워크 버전 (crew-upgrade가 관리, SemVer 2.0.0 프리릴리즈 지원)"
     },
     "kitSource": {
       "type": "string",
@@ -269,7 +269,7 @@
     },
     "healthCheck": {
       "type": "object",
-      "description": "건강 검진 설정 (/skill-health-check)",
+      "description": "건강 검진 설정 (/crew-health-check)",
       "properties": {
         "exclude": {
           "type": "array",
@@ -367,7 +367,7 @@
     },
     "review": {
       "type": "object",
-      "description": "리뷰 모드/임계치 설정 (skill-review-pr). 미설정 시 자동 Tier 분류 적용. mode와 agents는 상호 배타. thresholds는 critical ≥ major ≥ minor 강제, critical ≥ 50 강제(false-positive 게이트 무력화 방지).",
+      "description": "리뷰 모드/임계치 설정 (crew-review-pr). 미설정 시 자동 Tier 분류 적용. mode와 agents는 상호 배타. thresholds는 critical ≥ major ≥ minor 강제, critical ≥ 50 강제(false-positive 게이트 무력화 방지).",
       "properties": {
         "mode": {
           "type": "string",
@@ -420,7 +420,7 @@
       "not": {
         "required": ["mode", "agents"]
       },
-      "$comment": "critical ≥ major ≥ minor ordering: JSON Schema Draft-07은 cross-field 숫자 비교 불가 — schema 표면 강제 X. 검증은 (a) skill-review-pr Step 4 진입 시 sanity check + 디폴트 강제 + 경고, (b) scripts/validate-schema.sh의 ordering 추가 검사, (c) negative fixture(review-thresholds-ordering-violation.json) 회귀 보호 — 3중 방어선."
+      "$comment": "critical ≥ major ≥ minor ordering: JSON Schema Draft-07은 cross-field 숫자 비교 불가 — schema 표면 강제 X. 검증은 (a) crew-review-pr Step 4 진입 시 sanity check + 디폴트 강제 + 경고, (b) scripts/validate-schema.sh의 ordering 추가 검사, (c) negative fixture(review-thresholds-ordering-violation.json) 회귀 보호 — 3중 방어선."
     }
   },
   "additionalProperties": false,

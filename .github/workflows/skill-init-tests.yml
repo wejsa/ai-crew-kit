@@ -1,11 +1,11 @@
-name: skill-init regression tests
+name: crew-init regression tests
 
 on:
   push:
     branches: [main, develop, 'feature/**', 'fix/**', 'claude/**']
     paths:
-      - '.claude/skills/skill-init/**'
-      - '.claude/skills/skill-onboard/**'
+      - '.claude/skills/crew-init/**'
+      - '.claude/skills/crew-onboard/**'
       - '.claude/schemas/backlog.schema.json'
       - '.claude/schemas/project.schema.json'
       - '.claude/schemas/fixtures/backlog/**'
@@ -14,8 +14,8 @@ on:
   pull_request:
     branches: [main, develop]
     paths:
-      - '.claude/skills/skill-init/**'
-      - '.claude/skills/skill-onboard/**'
+      - '.claude/skills/crew-init/**'
+      - '.claude/skills/crew-onboard/**'
       - '.claude/schemas/backlog.schema.json'
       - '.claude/schemas/project.schema.json'
       - '.claude/schemas/fixtures/backlog/**'
@@ -24,7 +24,7 @@ on:
 
 jobs:
   test:
-    name: pytest tests/skill-init
+    name: pytest tests/skill_init
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -37,5 +37,5 @@ jobs:
       - name: Install dependencies
         run: pip install --upgrade pytest jsonschema
 
-      - name: Run skill-init regression tests
+      - name: Run crew-init regression tests
         run: pytest tests/skill_init/ -v --tb=short

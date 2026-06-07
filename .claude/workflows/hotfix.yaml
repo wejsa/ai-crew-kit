@@ -20,7 +20,7 @@ triggers:
 steps:
   - id: hotfix
     name: "긴급 수정"
-    skill: skill-hotfix
+    skill: crew-hotfix
     input: "{{request}}"
     output: "PR + 패치 릴리스"
     gate: build_success
@@ -35,7 +35,7 @@ steps:
 
   - id: rollback
     name: "릴리스 롤백"
-    skill: skill-rollback
+    skill: crew-rollback
     input: "{{request}}"
     output: "Revert PR + 패치 릴리스"
     gate: build_success

@@ -44,8 +44,8 @@
         }
       ],
       "workflowState": {
-        "currentSkill": "skill-review-pr",
-        "lastCompletedSkill": "skill-impl",
+        "currentSkill": "crew-review-pr",
+        "lastCompletedSkill": "crew-impl",
         "prNumber": 42,
         "fixLoopCount": 1,
         "lastReviewDecision": "REQUEST_CHANGES",

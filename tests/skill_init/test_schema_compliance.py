@@ -1,6 +1,6 @@
-"""Schema compliance regression for skill-init outputs.
+"""Schema compliance regression for crew-init outputs.
 
-Issue #62 — PR #61 (skill-init 재설계) 자체 정적 검증 13 케이스 영속화.
+Issue #62 — PR #61 (crew-init 재설계) 자체 정적 검증 13 케이스 영속화.
 SKILL.md L590~620 task/phase 객체 사양 + 회귀 차단 케이스.
 
 각 테스트는 한 가지 사양만 검증해 실패 원인이 명확하도록 분리되어 있음.
@@ -24,9 +24,9 @@ from .conftest import (
 
 # ── Test 1: SKILL.md Step 9 task 템플릿 (6 필드 omit) ───────────────
 def test_task_template_omits_six_dynamic_fields(base_task: dict, task_schema: dict) -> None:
-    """Step 9 task는 skill-impl이 동적 산정할 6 필드를 omit해야 함.
+    """Step 9 task는 crew-impl이 동적 산정할 6 필드를 omit해야 함.
 
-    init이 lockTTL=3600 박으면 skill-impl 동적 산정(≤3→3600, 4~8→7200, ≥9→10800)이
+    init이 lockTTL=3600 박으면 crew-impl 동적 산정(≤3→3600, 4~8→7200, ≥9→10800)이
     무력화되어 대형 task 동시성 사고 위험 (CRITICAL-C002).
     """
     forbidden_at_init = {
@@ -269,7 +269,7 @@ def test_workflowstate_gate_fields_pass_and_typed(backlog_schema: dict) -> None:
     # 게이트 jq join은 --argjson(숫자)과 비교 → 반드시 정수여야 매치 (P0-②)
     assert isinstance(ws["prNumber"], int) and not isinstance(ws["prNumber"], bool)
     assert isinstance(ws["fixLoopCount"], int)
-    # step.prNumber(SSOT — skill-impl Step 8)도 정수
+    # step.prNumber(SSOT — crew-impl Step 8)도 정수
     assert isinstance(doc["tasks"]["TASK-001"]["steps"][0]["prNumber"], int)
     # 가변 잠금 필드(v2.2.0)도 populated 상태로 통과
     assert doc["tasks"]["TASK-001"]["lockedBy"]
@@ -297,7 +297,7 @@ def test_workflowstate_string_prnumber_rejected(backlog_schema: dict) -> None:
 # 이 테스트가 없으면 누군가 템플릿을 string placeholder로 되돌려도 pytest는 green.
 WORKFLOWSTATE_TEMPLATE_FILES = [
     REPO_ROOT / ".claude/templates/CLAUDE.md.tmpl",
-    REPO_ROOT / ".claude/skills/skill-backlog/SKILL.md",
+    REPO_ROOT / ".claude/skills/crew-backlog/SKILL.md",
 ]
 
 

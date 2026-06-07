@@ -31,7 +31,7 @@ AI Crew Kit을 사용하다가 프레임워크 없이 진행하려는 경우를 
 모든 in_progress Task를 done 또는 todo로 변경하고, 열린 PR을 머지 또는 닫습니다.
 
 ```bash
-/skill-status  # 진행 중인 작업 확인
+/crew-status  # 진행 중인 작업 확인
 ```
 
 ### 2. 상태 파일 백업 (선택)

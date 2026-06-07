@@ -1,6 +1,6 @@
 """v1 backlog → v2 환경 호환성 회귀 보호 (Issue #65).
 
-skill-upgrade는 .claude/state/backlog.json을 보존만 수행한다 (변환 없음).
+crew-upgrade는 .claude/state/backlog.json을 보존만 수행한다 (변환 없음).
 backlog.schema.json은 v1.45.1과 v2 사이 diff가 없으므로 변환 룰 자체가
 불필요. 그러나 step 정의의 `additionalProperties: false` 때문에 v1 시기
 실제 사용된 step.description / step.estimatedLines 필드가 거부되던 sleeper

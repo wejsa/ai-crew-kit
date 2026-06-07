@@ -7,7 +7,7 @@
 # 신호 B(GitHub reviewDecision)는 §10에서 stub `gh`를 PATH에 올려 결정적으로 검증(v2.4.1).
 #
 # ⚠️ fixture는 **실제 스킬이 쓰는 shape**를 모사한다(자체 리뷰 finding #1):
-#    PR 번호는 step.prNumber에 기록되고(skill-impl Step 8), workflowState에는
+#    PR 번호는 step.prNumber에 기록되고(crew-impl Step 8), workflowState에는
 #    lastReviewDecision만 있고 prNumber는 보통 부재. 게이트 join이 step.prNumber를
 #    봐야만 프로덕션에서 발동하므로, fixture가 가짜 필드를 쓰면 안 된다.
 
@@ -38,7 +38,7 @@ write_backlog() {
       "currentStep": 1,
       "steps": [ { "number": 1, "title": "Step 1", "status": "pr_created", "prNumber": $prn } ],
       "workflowState": {
-        "currentSkill": "skill-review-pr",
+        "currentSkill": "crew-review-pr",
         "lastReviewDecision": "$decision",
         "updatedAt": "2026-05-29T00:00:00Z"
       }
@@ -57,7 +57,7 @@ write_backlog_wsonly() {
   "tasks": {
     "TASK-001": {
       "id": "TASK-001", "title": "샘플", "status": "in_progress", "priority": "high", "createdAt": "2026-05-29T00:00:00Z",
-      "workflowState": { "currentSkill": "skill-review-pr", "prNumber": $prn, "lastReviewDecision": "$decision", "updatedAt": "2026-05-29T00:00:00Z" }
+      "workflowState": { "currentSkill": "crew-review-pr", "prNumber": $prn, "lastReviewDecision": "$decision", "updatedAt": "2026-05-29T00:00:00Z" }
     }
   }
 }

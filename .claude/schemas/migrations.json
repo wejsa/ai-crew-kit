@@ -77,7 +77,13 @@
       "from": "2.5.3",
       "to": "3.0.0",
       "changes": [],
-      "comment": "v3.0.0 도메인 무관 범용 전환. project.json의 domain/customDomain은 미사용으로 강등되나 strip하지 않고 보존(additionalProperties:false 검증 실패 회피 + 하위호환). 보존은 skill-upgrade의 state 파일 무변환 복사로 자연 달성되므로 add_field 변경 없음. 사용자 안내는 features[].version=3.0.0 참조."
+      "comment": "v3.0.0 도메인 무관 범용 전환. project.json의 domain/customDomain은 미사용으로 강등되나 strip하지 않고 보존(additionalProperties:false 검증 실패 회피 + 하위호환). 보존은 crew-upgrade의 state 파일 무변환 복사로 자연 달성되므로 add_field 변경 없음. 사용자 안내는 features[].version=3.0.0 참조."
+    },
+    {
+      "from": "3.0.0",
+      "to": "4.0.0",
+      "changes": [],
+      "comment": "v4.0.0 스킬 프리픽스 리네임 skill-* → crew-* (BREAKING). project.json 필드 변경 없음(skillProfile/customSkills/currentSkill 필드명 보존). 구 skill-* 빌트인 스킬 디렉토리는 crew-upgrade Step 11의 .claude/skills/ 통째 교체로 자연 제거(custom/은 별도 백업·복원으로 보존) — v3.0.0 skill-domain 제거와 동일 메커니즘. 사용자 커스텀 스킬이 skill- 접두사를 쓰던 경우를 위해 customSkills 패턴은 ^(crew|skill)- 둘 다 허용(검증 실패 회피). 사용자 안내는 features[].version=4.0.0 참조."
     }
   ],
   "features": [
@@ -86,9 +92,9 @@
       "items": [
         {
           "title": "스텝별 PR 라인 제한 자동 조정",
-          "description": "/skill-plan이 스텝 특성(마이그레이션, 서비스 구현, 테스트 등)에 따라 prLineLimit을 자동 설정합니다.",
+          "description": "/crew-plan이 스텝 특성(마이그레이션, 서비스 구현, 테스트 등)에 따라 prLineLimit을 자동 설정합니다.",
           "action": "none",
-          "detail": "별도 설정 불필요. 다음 /skill-plan 실행 시 자동 적용됩니다."
+          "detail": "별도 설정 불필요. 다음 /crew-plan 실행 시 자동 적용됩니다."
         }
       ]
     },
@@ -116,7 +122,18 @@
           "title": "도메인 무관 범용 프레임워크 전환 (breaking)",
           "description": "fintech/ecommerce/saas/healthcare 도메인 자산과 skill-domain이 제거되었습니다. 프레임워크는 에이전트 팀 오케스트레이션·품질 게이트·스택 인지에 집중하는 범용 모드로 동작합니다.",
           "action": "recommend",
-          "detail": "기존 시드의 project.json domain/customDomain 필드는 보존되나 더 이상 읽히지 않습니다(no-op). 기존 .claude/domains/{fintech,ecommerce,saas,healthcare}/ 와 .claude/rules/ 잔여 디렉토리는 skill-upgrade가 강제 삭제하지 않으며, 원하면 백업 후 opt-in 1회성 정리로 제거할 수 있습니다."
+          "detail": "기존 시드의 project.json domain/customDomain 필드는 보존되나 더 이상 읽히지 않습니다(no-op). 기존 .claude/domains/{fintech,ecommerce,saas,healthcare}/ 와 .claude/rules/ 잔여 디렉토리는 crew-upgrade가 강제 삭제하지 않으며, 원하면 백업 후 opt-in 1회성 정리로 제거할 수 있습니다."
+        }
+      ]
+    },
+    {
+      "version": "4.0.0",
+      "items": [
+        {
+          "title": "스킬 명령어 프리픽스 변경 skill-* → crew-* (breaking)",
+          "description": "22개 빌트인 스킬의 호출 명령어가 /skill-* 에서 /crew-* 로 바뀌었습니다 (예: /skill-impl → /crew-impl, /skill-review-pr → /crew-review-pr). 'AI Crew Kit' 브랜드 일관성 + 다른 스킬과의 이름 충돌 방지가 목적입니다.",
+          "action": "none",
+          "detail": "별도 설정은 불필요합니다. 업그레이드가 .claude/skills/를 통째 교체하므로 구 skill-* 빌트인 디렉토리는 자동 제거되고(커스텀 스킬 .claude/skills/custom/은 보존), CLAUDE.md 스킬 레지스트리도 /crew-*로 재생성됩니다. 이제부터 /crew-* 명령을 사용하세요. 스크립트·문서·alias에 /skill-* 가 박혀 있으면 /crew-* 로 바꿔야 합니다. 커스텀 스킬을 skill- 접두사로 만들었던 경우 customSkills 검증은 계속 통과합니다(패턴이 crew-/skill- 둘 다 허용)."
         }
       ]
     }

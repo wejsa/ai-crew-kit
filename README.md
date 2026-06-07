@@ -1,6 +1,6 @@
 <div align="center">
 
-# AI Crew Kit v3.0.0
+# AI Crew Kit v4.0.0
 
 **범용 AI 크루 개발 프레임워크 — 오케스트레이션 · 품질 게이트 · 스택 인지**
 
@@ -31,7 +31,7 @@ AI Crew Kit은 이제 **Claude Code 플러그인 마켓플레이스**로 설치�
 /plugin install ai-crew-kit@ai-crew-kit
 ```
 
-설치 후 어느 프로젝트에서나 `/skill-init`로 셋업을 시작합니다. clone과 달리 kit 잔여 파일 정리가 필요 없어 **잡티 0**으로 시작됩니다.
+설치 후 어느 프로젝트에서나 `/crew-init`로 셋업을 시작합니다. clone과 달리 kit 잔여 파일 정리가 필요 없어 **잡티 0**으로 시작됩니다.
 
 ### 방법 2 — clone 후 초기화
 
@@ -39,21 +39,21 @@ AI Crew Kit은 이제 **Claude Code 플러그인 마켓플레이스**로 설치�
 git clone https://github.com/wejsa/ai-crew-kit.git my-project
 cd my-project
 claude
-/skill-init --quick
+/crew-init --quick
 ```
 
 > [!TIP]
-> `/skill-init --quick`은 제로 결정 모드로 5분 안에 체험할 수 있습니다.
-> 모든 설정을 직접 선택하려면 `/skill-init`을 사용하세요.
+> `/crew-init --quick`은 제로 결정 모드로 5분 안에 체험할 수 있습니다.
+> 모든 설정을 직접 선택하려면 `/crew-init`을 사용하세요.
 
-`/skill-init`은 ai-crew-kit clone을 자동 감지하여 다음을 한 번에 처리합니다 (사용자 추가 확인 없음):
+`/crew-init`은 ai-crew-kit clone을 자동 감지하여 다음을 한 번에 처리합니다 (사용자 추가 확인 없음):
 
 1. kit git 히스토리 제거 + 새 사용자 리포 초기화
 2. kit 잔여 파일 자동 정리 (14종): `CHANGELOG.md`, `docs/`, `examples/`, `tests/`, `scripts/`, `.github/`, `memory/`, `LICENSE`, `README.md`, `CLAUDE.md`, `VERSION`, `.claude/temp/`, `.claude/hooks/tests/`, `.claude/state/`, `.claude/settings.local.json`
 3. **요구사항 자유 서술 → 기술 스택 LLM 추천 → 에이전트 팀 선택**
-4. **백로그 자동 분해 (opt-in)** — Phase 4-카테고리 템플릿으로 10~25개 Task를 즉시 준비, `/skill-plan`/`/skill-impl` 체인으로 바로 진입
+4. **백로그 자동 분해 (opt-in)** — Phase 4-카테고리 템플릿으로 10~25개 Task를 즉시 준비, `/crew-plan`/`/crew-impl` 체인으로 바로 진입
 5. 사용자 프로젝트용 `CLAUDE.md`/`README.md`/`VERSION`(0.1.0) 새로 생성
-6. `KIT_SOURCE_URL`을 `project.json`의 `kitSource`로 기록 (skill-upgrade가 GitHub에서 kit 가이드 fetch)
+6. `KIT_SOURCE_URL`을 `project.json`의 `kitSource`로 기록 (crew-upgrade가 GitHub에서 kit 가이드 fetch)
 
 > [!NOTE]
 > kit clone 자동 정리는 두 안전장치를 통과해야 실행됩니다 — (1) origin URL 정규식 + initial commit fingerprint 일치, (2) 더티/미푸시/비-main 브랜치 가드. 사용자 시나리오에는 영향이 없으며 kit 개발자 환경 사고만 방지합니다.
@@ -69,10 +69,10 @@ git clone https://github.com/wejsa/ai-crew-kit.git /tmp/ai-crew-kit
 cp -r /tmp/ai-crew-kit/.claude my-existing-project/
 cd my-existing-project
 claude
-/skill-onboard
+/crew-onboard
 ```
 
-> 코드베이스를 자동 스캔하여 기술 스택을 감지하고 설정을 생성합니다. kit clone에 사용자 코드를 함께 둔 경우(시나리오 B)도 `/skill-onboard`가 위와 동일한 자동 정리를 사전에 수행합니다 (사용자 코드 보통 `src/`/`app/` 등 비충돌 경로면 안전; 동일 경로 충돌 의심 시 사전 백업 권장).
+> 코드베이스를 자동 스캔하여 기술 스택을 감지하고 설정을 생성합니다. kit clone에 사용자 코드를 함께 둔 경우(시나리오 B)도 `/crew-onboard`가 위와 동일한 자동 정리를 사전에 수행합니다 (사용자 코드 보통 `src/`/`app/` 등 비충돌 경로면 안전; 동일 경로 충돌 의심 시 사전 백업 권장).
 > 자세한 내용은 [기존 프로젝트 온보딩](./docs/getting-started.md#기존-프로젝트-온보딩)을 참조하세요.
 
 ---
@@ -94,19 +94,19 @@ claude
 
 | 명령어 | 설명 | 자연어 예시 |
 |--------|------|------------|
-| `/skill-status` | 프로젝트 상태 확인 | "상태 확인해줘" |
-| `/skill-feature` | 새 기능 기획 | "새 기능 기획해줘" |
-| `/skill-plan` | 설계 및 스텝 계획 | "다음 작업 가져와줘" |
-| `/skill-impl` | 코드 구현 + PR 생성 | "개발 진행해줘" |
-| `/skill-impl --next` | 다음 스텝 진행 | "이어서 진행해줘" |
-| `/skill-backlog` | 백로그 조회/관리 | "백로그 보여줘" |
-| `/skill-review-pr` | PR 리뷰 ([Tier 분류·confidence 채점](./docs/skill-reference.md)) | "PR 123 리뷰해줘" |
-| `/skill-merge-pr` | PR 머지 | "PR 123 머지해줘" |
-| `/skill-retro` | 완료 Task 회고 | "회고 해줘" |
-| `/skill-hotfix` | main 긴급 수정 | "긴급 수정해줘" |
-| `/skill-rollback` | 릴리스 롤백 | "v1.2.3 롤백해줘" |
-| `/skill-report` | 프로젝트 메트릭 리포트 | "리포트 생성해줘" |
-| `/skill-health-check` | 코드베이스 건강 검진 | "헬스체크 해줘" |
+| `/crew-status` | 프로젝트 상태 확인 | "상태 확인해줘" |
+| `/crew-feature` | 새 기능 기획 | "새 기능 기획해줘" |
+| `/crew-plan` | 설계 및 스텝 계획 | "다음 작업 가져와줘" |
+| `/crew-impl` | 코드 구현 + PR 생성 | "개발 진행해줘" |
+| `/crew-impl --next` | 다음 스텝 진행 | "이어서 진행해줘" |
+| `/crew-backlog` | 백로그 조회/관리 | "백로그 보여줘" |
+| `/crew-review-pr` | PR 리뷰 ([Tier 분류·confidence 채점](./docs/skill-reference.md)) | "PR 123 리뷰해줘" |
+| `/crew-merge-pr` | PR 머지 | "PR 123 머지해줘" |
+| `/crew-retro` | 완료 Task 회고 | "회고 해줘" |
+| `/crew-hotfix` | main 긴급 수정 | "긴급 수정해줘" |
+| `/crew-rollback` | 릴리스 롤백 | "v1.2.3 롤백해줘" |
+| `/crew-report` | 프로젝트 메트릭 리포트 | "리포트 생성해줘" |
+| `/crew-health-check` | 코드베이스 건강 검진 | "헬스체크 해줘" |
 
 전체 명령어와 자연어 매핑은 [스킬 레퍼런스](./docs/skill-reference.md)를 참조하세요.
 
@@ -136,7 +136,7 @@ claude
 | security | 기본 보안 검사 | 25% |
 | agent-config | 에이전트 설정 유효성 | 15% |
 
-`/skill-health-check --fix`로 자동 수정 가능한 항목을 즉시 반영할 수 있습니다.
+`/crew-health-check --fix`로 자동 수정 가능한 항목을 즉시 반영할 수 있습니다.
 
 ---
 
@@ -152,22 +152,22 @@ claude
 | **스킬 프로파일 + 토큰 힌트** | 5종 프로파일(`full` / `developer` / `docs-only` / `custom`)로 CLAUDE.md 노출 스킬 제어 + complexity-hint(heavy/medium/light) 토큰 예산 가이드 |
 | **Layered Override 컨벤션** | `_base` 공통 컨벤션·체크리스트를 `project.json`으로 덮어쓰는 계층형 설정 — PR 리뷰가 프로젝트 컨벤션을 자동 인식 |
 | **AgentShield-lite 시크릿 스캐너** | 하드코딩 시크릿(API 키/AWS/GitHub/Slack) + `.env` 노출 게이트를 CRITICAL로 검출 |
-| **lessons-learned 회귀 보호** | `skill-retro` 학습 데이터에 schema 검증 + secrets 필터(토큰/이메일 자동 redact) + impact 정량(상/중/하) |
+| **lessons-learned 회귀 보호** | `crew-retro` 학습 데이터에 schema 검증 + secrets 필터(토큰/이메일 자동 redact) + impact 정량(상/중/하) |
 
 ### v2.1+ 업데이트
 
 | 버전 | 기능 | 사용자 가치 |
 |:----:|------|------|
 | **v2.1** | 요구사항 우선 init 플로우 + 백로그 자동 분해 | 요구사항 자유 서술 → 스택 LLM 추천 → Phase 4-카테고리 백로그(opt-in) 즉시 생성. 입력 신뢰 경계·sanitization·Hard limits로 안전 |
-| **v2.3** | `skill-review-pr` 자동 Tier 분류 + confidence 채점 | PR 특성으로 T0~T3 자동 라우팅 — 작은 PR(테스트·deps·docs)은 가벼운 경로, 보안/대규모 변경은 풀 리뷰. severity × confidence 매트릭스로 false-positive 필터(CRITICAL은 강등 게시·드롭 X로 누락 방지) |
+| **v2.3** | `crew-review-pr` 자동 Tier 분류 + confidence 채점 | PR 특성으로 T0~T3 자동 라우팅 — 작은 PR(테스트·deps·docs)은 가벼운 경로, 보안/대규모 변경은 풀 리뷰. severity × confidence 매트릭스로 false-positive 필터(CRITICAL은 강등 게시·드롭 X로 누락 방지) |
 | **v2.4** | PreToolUse 머지 품질 게이트 | 미해결 CRITICAL PR을 `gh pr merge` 단계에서 결정적 차단 — prose+LLM 의존 제거 ([상세](#-머지-품질-게이트-v24)) |
 | **v2.5** | 스킬·에이전트별 모델 라우팅 | 구현/머지는 `sonnet`(토큰 절감), 품질 판단(PR 리뷰 종합·버그 탐지 서브에이전트)은 `opus` 고정. 품질 안전망(opt 고정 + 결정론 게이트) 유지한 채 최대 토큰 소비처 절감 |
 | **v2.5.2** | 리뷰 서브에이전트 1M 컨텍스트 실패 자동 폴백 | 부모 세션이 1M 모델일 때 `model: opus` 핀된 리뷰 서브에이전트가 스폰 실패하는 하네스 제약 대응 — 1M 시그니처 감지 시 메인 에이전트 직접 리뷰로 자동 폴백(머지 게이트 안전망 유지) |
 | **v2.5.3** | 마켓플레이스 플러그인 패키징 | `.claude-plugin/marketplace.json` + `plugin.json`으로 Claude Code 플러그인 마켓플레이스 배포 — `/plugin install`로 23개 스킬 + 12개 에이전트 + 품질 게이트 훅을 clone 없이 한 번에 등록 ([설치](#방법-1--플러그인으로-설치-신규)) |
 
-> **examples 안내** — `examples/` 디렉토리는 범용 최소 예제를 제공합니다. 어떤 기술 스택의 프로젝트든 `/skill-init`로 동일하게 초기화할 수 있습니다.
+> **examples 안내** — `examples/` 디렉토리는 범용 최소 예제를 제공합니다. 어떤 기술 스택의 프로젝트든 `/crew-init`로 동일하게 초기화할 수 있습니다.
 >
-> **v1.x 사용자**: [v1.x → v2.0.0 마이그레이션 가이드](./docs/v2/migration-guide.md) 참조 — `/skill-upgrade --version v2.0.0` 자동 마이그레이션(자동 4 add_field, 수동 작업 거의 없음, 점수 영향 ≤1점).
+> **v1.x 사용자**: [v1.x → v2.0.0 마이그레이션 가이드](./docs/v2/migration-guide.md) 참조 — `/crew-upgrade --version v2.0.0` 자동 마이그레이션(자동 4 add_field, 수동 작업 거의 없음, 점수 영향 ≤1점).
 
 ---
 
@@ -180,7 +180,7 @@ claude
 | **Layered Override** | `_base` → `project.json` 순서로 설정 적용 |
 | **Agent Orchestration** | PM이 워크플로우에 따라 에이전트 자동 분배 |
 | **결정적 품질 게이트** | 신뢰 가능한 레이어(hook)가 핵심 게이트(머지 차단)를 담당하고, prose+LLM에 의존하지 않음 |
-| **Zero-Config Start** | `/skill-init` 한 번으로 즉시 가동 |
+| **Zero-Config Start** | `/crew-init` 한 번으로 즉시 가동 |
 
 ---
 

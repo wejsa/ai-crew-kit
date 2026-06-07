@@ -443,12 +443,12 @@ class UserControllerIntegrationTest {
 
 ---
 
-## skill-impl 연동
+## crew-impl 연동
 
 ### 실행 흐름
 
 ```
-/skill-impl
+/crew-impl
     │
     ▼
 ┌─────────────────────────────────────┐
@@ -482,10 +482,10 @@ Step 3: API 엔드포인트 구현
 
 ## 사용법
 
-### skill-impl에서 자동 호출
+### crew-impl에서 자동 호출
 
 ```
-/skill-impl
+/crew-impl
 → agent-backend 자동 활성화
 ```
 

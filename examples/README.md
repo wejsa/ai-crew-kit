@@ -37,10 +37,10 @@ cp -r ai-crew-kit/.claude my-existing-project/
 cd my-existing-project
 
 # 온보딩 실행 (코드베이스 자동 스캔 → 설정 생성)
-/skill-onboard
+/crew-onboard
 
 # 적용 전 스캔 결과만 먼저 확인하려면:
-/skill-onboard --scan-only
+/crew-onboard --scan-only
 ```
 
 ### 처음부터 시작
@@ -50,7 +50,7 @@ cd my-existing-project
 mkdir my-project && cd my-project
 
 # AI Crew Kit 초기화 (요구사항 자유 서술 → 스택 LLM 추천 → 에이전트 팀 선택)
-/skill-init
+/crew-init
 ```
 
 ---
@@ -61,22 +61,22 @@ mkdir my-project && cd my-project
 
 ```bash
 # 1. 기능 기획
-/skill-feature "JWT 토큰 인증"
+/crew-feature "JWT 토큰 인증"
 
 # 2. 설계 및 계획
-/skill-plan
+/crew-plan
 
 # 3. 구현 (스텝별)
-/skill-impl
+/crew-impl
 
 # 4. 리뷰
-/skill-review-pr 1
+/crew-review-pr 1
 
 # 5. 머지
-/skill-merge-pr 1
+/crew-merge-pr 1
 
 # 6. 다음 스텝
-/skill-impl --next
+/crew-impl --next
 ```
 
 ### Quick-Fix 워크플로우 예시

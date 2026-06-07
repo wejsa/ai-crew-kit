@@ -4,14 +4,14 @@
 #
 # 목적:
 #   `gh pr merge` 실행 직전, 해당 PR에 미해결 CRITICAL이 있으면 결정적으로 차단한다.
-#   기존엔 "CRITICAL은 머지 차단"이 prose 지시(skill-merge-pr/CLAUDE.md)였으나 LLM이
+#   기존엔 "CRITICAL은 머지 차단"이 prose 지시(crew-merge-pr/CLAUDE.md)였으나 LLM이
 #   519줄 분기를 한 번만 잘못 따라도 나쁜 PR이 auto-merge되는 구멍이 있었다(W2).
 #   여기서 hook이 직접 deny한다 — 프레임워크의 핵심 게이트를 결정적 레이어로 이동.
 #
 # 게이트 신호 (둘 중 하나라도 차단 판정이면 deny):
 #   A. (state) PR N을 소유한 Task(= step.prNumber==N 또는 workflowState.prNumber==N)의
 #      workflowState.lastReviewDecision == "REQUEST_CHANGES"  → 미해결 CRITICAL 게시됨.
-#      PR 번호의 결정적 SSOT는 step.prNumber(skill-impl Step 8)이므로 거기서도 join해야
+#      PR 번호의 결정적 SSOT는 step.prNumber(crew-impl Step 8)이므로 거기서도 join해야
 #      프로덕션에서 발동한다(workflowState.prNumber만 보면 no-op — 자체 리뷰 finding #1).
 #   B. (GitHub, best-effort) gh pr view reviewDecision == "CHANGES_REQUESTED"
 #      — 타인 PR에서 GitHub가 기록한 request-changes. 네트워크/인증 실패 시 fail-open.
@@ -111,7 +111,7 @@ REASON=""
 # ── 신호 A: backlog lastReviewDecision (결정적, 오프라인) ──
 # PR N을 "소유"하는 Task를 찾아 그 Task의 마지막 리뷰 결정을 읽는다. PR 번호는
 # 두 곳에 기록될 수 있어 둘 다 매칭한다(자체 리뷰 finding #1):
-#   - step.prNumber: skill-impl Step 8이 결정적으로 기록(SSOT — schema step.prNumber).
+#   - step.prNumber: crew-impl Step 8이 결정적으로 기록(SSOT — schema step.prNumber).
 #   - workflowState.prNumber: CLAUDE.md workflowState 프로토콜 템플릿 필드(LLM 갱신, 보조).
 # step.prNumber만 보던 초안은 신호 A가 프로덕션에서 발동하지 못했음.
 if [ -f "$BACKLOG" ]; then
@@ -152,7 +152,7 @@ if [ "$BLOCK" -eq 1 ]; then
     printf '   사유: %s\n' "$REASON"
     printf '   미해결 CRITICAL이 있는 PR은 머지할 수 없습니다.\n'
     printf '   조치:\n'
-    printf '     1) [권장] CRITICAL 수정 후 재리뷰: /skill-review-pr %s --auto-fix\n' "$PRN"
+    printf '     1) [권장] CRITICAL 수정 후 재리뷰: /crew-review-pr %s --auto-fix\n' "$PRN"
     printf '     2) 강등/오탐으로 판단되면 리뷰 결정을 재검토 후 재리뷰\n'
     printf '     3) [의도적 강행] CCK_GATE_BYPASS=1 설정 후 재시도 (사용자 책임)\n'
   } >&2

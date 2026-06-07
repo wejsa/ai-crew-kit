@@ -1,6 +1,6 @@
 """Impact threshold regression tests (Phase 7 Step 2).
 
-SSOT: lessons-learned.schema.json description + skill-retro SKILL.md.
+SSOT: lessons-learned.schema.json description + crew-retro SKILL.md.
 권장: appliedCount >= 5 → high / >= 3 → medium / < 3 → low.
 
 threshold_recommended() 함수가 변경되면 fixture 임계값과 어긋나

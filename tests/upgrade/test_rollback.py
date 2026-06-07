@@ -1,10 +1,10 @@
-"""R6 자동 검증 — `/skill-upgrade --rollback` 라운드트립 보증.
+"""R6 자동 검증 — `/crew-upgrade --rollback` 라운드트립 보증.
 
 Phase 8 Step 3 — phase-8-plan.md R6 (재평가) 1차 자동 방어선.
 
 검증 계약: v1 fixture → v2 마이그레이션 → 롤백 → 원본과 동일
 
-skill-upgrade의 백업/롤백 메커니즘은 (1) Step 9에서 backup.tar.gz 생성,
+crew-upgrade의 백업/롤백 메커니즘은 (1) Step 9에서 backup.tar.gz 생성,
 (2) Step 12에서 project.json에 migrations 적용, (3) `--rollback`이 백업
 시점 상태로 복원. 본 테스트는 *논리적 라운드트립*을 시뮬레이션 — 백업
 시점 deep copy를 저장한 뒤 마이그레이션 결과와 비교, 그리고 백업 복원
@@ -81,9 +81,9 @@ def test_migrated_passes_schema(v1_fixture: dict, schema: dict, migrations: dict
 def test_rollback_roundtrip_restores_v1_exactly(v1_fixture: dict, migrations: dict, schema: dict) -> None:
     """R6 핵심 — 백업 → 마이그레이션된 working → 백업 복원 = 원본 100%.
 
-    skill-upgrade Step 9 (backup tar.gz) → Step 12 (migration applied to working
+    crew-upgrade Step 9 (backup tar.gz) → Step 12 (migration applied to working
     project.json) → `--rollback` (working 폐기 + tar 추출 복원) 라운드트립의 *논리적
-    보증*. 실제 tar 무결성은 skill-upgrade SKILL.md Step 9의 `tar tzf` 검증과 본 PR
+    보증*. 실제 tar 무결성은 crew-upgrade SKILL.md Step 9의 `tar tzf` 검증과 본 PR
     migration-guide.md §4 사전 체크리스트가 책임.
 
     핵심: working에 마이그레이션 *적용 후*, working을 백업으로 *덮어써서* 라운드트립

@@ -393,10 +393,10 @@ full-feature 워크플로우 마지막 단계
 @agent-docs src/api/PaymentController.kt 주석 추가해줘
 ```
 
-### skill-docs에서 참조
+### crew-docs에서 참조
 
 ```
-/skill-docs
+/crew-docs
 → 공통 컨벤션·참고자료 표시 (agent-docs와 협력)
 ```
 

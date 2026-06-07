@@ -125,7 +125,7 @@ if [ -f "$BACKLOG" ]; then
     printf '\n## 재개 방법\n\n'
     # printf: '-' 로 시작하는 포맷은 옵션으로 해석되므로 %s 포맷 필수
     printf '%s\n' '- `docs/v2/phase-1-plan.md` 혹은 해당 계획서 확인'
-    printf '%s\n' '- `/skill-impl` 또는 `/skill-plan`으로 복귀'
+    printf '%s\n' '- `/crew-impl` 또는 `/crew-plan`으로 복귀'
   } > "$TMP_PLAN" 2>/dev/null && mv -f "$TMP_PLAN" "$CONT_PLAN" 2>/dev/null || {
     log_err "continuation-plan 쓰기 실패"
     rm -f "$TMP_PLAN" 2>/dev/null
