@@ -64,15 +64,17 @@ if [ -f "$BACKLOG" ]; then
   source "$(dirname "$0")/lib/atomic-write.sh" 2>/dev/null || log_err "atomic-write.sh 로드 실패"
 
   NOW_EPOCH="$(date -u +%s)"
-  # 만료 기준: lockedAt으로부터 10분 (600초) 경과
-  EXPIRY_SECONDS=600
-
+  # 만료 기준 (v4.5.0): `(lockedAt // assignedAt) + lockTTL < now`. reclaim(crew-plan/impl)과
+  # 동일 윈도우(lockTTL ≥3600). 구 고정 600초(10분)는 긴 빌드/사고 중 거짓 만료 위험이라 폐기.
+  # 비파괴적: 만료된 활성 잠금의 liveness 표시(lockedBy/lockedAt)만 null로 초기화하고
+  # status/assignee는 건드리지 않는다(전체 회수는 스킬 진입 시 reclaim이 수행).
   if command -v atomic_write >/dev/null 2>&1; then
     # 만료된 lock이 있는지 먼저 확인 (매 턴 쓰기 방지)
-    HAS_EXPIRED="$(jq --argjson now "$NOW_EPOCH" --argjson ttl "$EXPIRY_SECONDS" '
+    HAS_EXPIRED="$(jq --argjson now "$NOW_EPOCH" '
       [.tasks[]? | select(
-        (.lockedAt // "") != "" and
-        ((.lockedAt | fromdateiso8601?) // 0) < ($now - $ttl)
+        .status == "in_progress" and
+        ((.lockedAt // .assignedAt // "") != "") and
+        (((.lockedAt // .assignedAt) | fromdateiso8601?) // 0) + (.lockTTL // 3600) < $now
       )] | length > 0
     ' "$BACKLOG" 2>/dev/null || echo false)"
 
@@ -81,11 +83,11 @@ if [ -f "$BACKLOG" ]; then
       # `with_entries(.value |= ...)` 사용. backlog.schema.json:73-79 정합 (PR #73).
       atomic_write "$BACKLOG" jq \
         --argjson now "$NOW_EPOCH" \
-        --argjson ttl "$EXPIRY_SECONDS" \
         '.tasks |= with_entries(
           .value |= (
-            if (.lockedAt // "") != "" and
-               ((.lockedAt | fromdateiso8601?) // 0) < ($now - $ttl)
+            if .status == "in_progress" and
+               ((.lockedAt // .assignedAt // "") != "") and
+               (((.lockedAt // .assignedAt) | fromdateiso8601?) // 0) + (.lockTTL // 3600) < $now
             then . + {lockedAt: null, lockedBy: null}
             else . end
           )

@@ -26,7 +26,7 @@ BACKLOG="$SANDBOX/.claude/state/backlog.json"
 OWNER_SID="dict-owner-sid"
 
 now_epoch="$(date -u +%s)"
-expired_iso="$(date -u -d "@$((now_epoch - 1200))" '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date -u -r "$((now_epoch - 1200))" '+%Y-%m-%dT%H:%M:%SZ')"
+expired_iso="$(date -u -d "@$((now_epoch - 7200))" '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date -u -r "$((now_epoch - 7200))" '+%Y-%m-%dT%H:%M:%SZ')"
 fresh_iso="$(date -u -d "@$((now_epoch - 60))" '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date -u -r "$((now_epoch - 60))" '+%Y-%m-%dT%H:%M:%SZ')"
 
 # schema 정합 dict 형식 — key=Task ID, value=task 객체
@@ -35,8 +35,8 @@ cat > "$BACKLOG" <<EOF
   "metadata": {"lastTaskNumber": 3, "version": 1, "createdAt": "2026-01-01T00:00:00Z", "updatedAt": "2026-01-01T00:00:00Z"},
   "workflowState": "active",
   "tasks": {
-    "TASK-001": {"id": "TASK-001", "title": "owned task", "status": "in_progress", "priority": "high", "createdAt": "2026-01-01T00:00:00Z", "lockedAt": "$expired_iso", "lockedBy": "$OWNER_SID"},
-    "TASK-002": {"id": "TASK-002", "title": "other task", "status": "in_progress", "priority": "medium", "createdAt": "2026-01-01T00:00:00Z", "lockedAt": "$fresh_iso", "lockedBy": "someone-else"},
+    "TASK-001": {"id": "TASK-001", "title": "owned task", "status": "in_progress", "priority": "high", "createdAt": "2026-01-01T00:00:00Z", "lockedAt": "$expired_iso", "lockedBy": "alice@host", "lockedFiles": ["src/Main.kt"], "lockTTL": 3600},
+    "TASK-002": {"id": "TASK-002", "title": "other task", "status": "in_progress", "priority": "medium", "createdAt": "2026-01-01T00:00:00Z", "lockedAt": "$fresh_iso", "lockedBy": "bob@host", "lockedFiles": ["src/Other.kt"], "lockTTL": 3600},
     "TASK-003": {"id": "TASK-003", "title": "done task", "status": "done", "priority": "low", "createdAt": "2026-01-01T00:00:00Z"}
   }
 }
@@ -65,7 +65,7 @@ else
 fi
 
 t2_locked="$(jq -r '.tasks["TASK-002"].lockedAt' "$BACKLOG" 2>/dev/null)"
-assert_eq "$fresh_iso" "$t2_locked" "PostToolUse: TASK-002 (다른 세션 소유) 미갱신" || fail=$((fail + 1))
+assert_eq "$fresh_iso" "$t2_locked" "PostToolUse: TASK-002 (src/Main.kt가 lockedFiles에 없음) 미갱신" || fail=$((fail + 1))
 
 t3_locked="$(jq -r '.tasks["TASK-003"].lockedAt // "null"' "$BACKLOG" 2>/dev/null)"
 assert_eq "null" "$t3_locked" "PostToolUse: TASK-003 (done) lockedAt 부재 유지" || fail=$((fail + 1))

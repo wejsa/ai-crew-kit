@@ -131,12 +131,12 @@
         },
         "lockedBy": {
           "type": ["string", "null"],
-          "description": "현재 잠금 보유 세션 식별자 — heartbeat 갱신 주체. **가변**: 다른 세션이 lock을 인수하거나 stop.sh 만료 해제 시 null. assignee와 의미 분리(동일 값일 수 있으나 라이프사이클 다름). v2.2.0 도입 (PostToolUse heartbeat / Stop 만료 해제 hook이 직접 참조)."
+          "description": "현재 잠금 보유자 식별자 — 보통 `assignee`와 동일 값(user@hostname-...). **가변**: 잠금 인수/해제 시 변경·null. assignee(불변 할당 기록)와 라이프사이클 구분. v2.2.0 도입, v4.5.0 배선: **세션 식별이 아니라 잠금 소유 표시**(스킬은 Claude Code session_id를 얻을 수 없어 session_id 기반 매칭 불가)."
         },
         "lockedAt": {
           "type": ["string", "null"],
           "format": "date-time",
-          "description": "마지막 heartbeat 시각 — PostToolUse hook이 Edit/Write마다 갱신. **가변**: Stop hook이 10분(EXPIRY_SECONDS) 초과 시 null로 해제하여 lock 강제 회수. assignedAt(불변)과 의미 구분. v2.2.0 도입."
+          "description": "마지막 활동(heartbeat) 시각 — **PostToolUse hook이 편집 파일이 해당 Task의 `lockedFiles`에 포함될 때 갱신**(file-membership, session_id 불요). **가변**. 잠금 만료/회수의 1차 신호: reclaim·Stop hook은 `(lockedAt // assignedAt) + lockTTL < now`로 만료 판정. v2.2.0 도입, v4.5.0 배선."
         },
         "lockTTL": {
           "type": ["integer", "null"],

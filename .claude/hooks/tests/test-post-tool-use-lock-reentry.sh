@@ -23,7 +23,7 @@ cat > "$BACKLOG" <<EOF
 {
   "workflowState": "active",
   "tasks": {
-    "T1": {"id": "T1", "status": "in_progress", "lockedAt": "$OLD_LOCKED_AT", "lockedBy": "$SID"}
+    "T1": {"id": "T1", "status": "in_progress", "lockedAt": "$OLD_LOCKED_AT", "lockedBy": "alice@host", "lockedFiles": ["src/foo.kt"]}
   }
 }
 EOF

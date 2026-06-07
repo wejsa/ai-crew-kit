@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.5.0] - 2026-06-07
+
+> **v4.5.0 — lockedBy/lockedAt 잠금 서브시스템 배선** — v2.2.0 이후 무동작이던 잠금 하트비트를 file-membership 방식으로 배선해 기능화한다. 상세 설계·근거는 [ADR-010](docs/requirements/adr-010-lockedby-wiring.md).
+
+### 핵심 제약 (확인됨)
+- Claude Code `session_id`는 SessionStart/PostToolUse/Stop 훅 stdin 모두에 있고 세션 수명 내내 안정적이나, **스킬(모델)이 자신의 session_id를 얻는 경로가 없다**(env·파일 미노출). 따라서 producer가 `lockedBy=session_id`를 쓸 수 없어 기존 `lockedBy==session_id` 하트비트 join은 영구 무매칭이었다. 순진한 수정(lockedBy=assignee)은 포맷 불일치로 10분마다 lock 거짓 만료를 유발 → session_id 매칭 자체를 폐기.
+
+### Changed
+- **하트비트(PostToolUse)**: `lockedBy==session_id` join 제거 → **편집 파일 ∈ task.lockedFiles**인 in_progress task의 `lockedAt` 갱신(session_id 불요). lockedFiles는 task 전용이라 세션 스코핑을 대체.
+- **만료 판정 통일**: reclaim(crew-plan/impl/backlog)·Stop 훅 모두 `(lockedAt // assignedAt) + lockTTL < now`. `lockedAt`(활동 하트비트) 우선, 없으면 `assignedAt` 폴백(in-flight 하위호환).
+- **Stop 훅**: 고정 600초(10분) 만료 폐기(긴 빌드/사고 중 거짓 만료 위험) → per-task `lockTTL`. 만료 시 `lockedBy`/`lockedAt`만 null(비파괴 — status는 스킬 reclaim이 전체 회수).
+- **producer**: crew-plan 조기 잠금이 `assignedAt`/`lockedBy`(=assignee)/`lockedAt` 함께 설정. crew-impl 스텝 시작 시 `lockedBy`/`lockedAt` 설정 + 이후 하트비트는 훅이 자동 → crew-impl의 수동 `assignedAt` 변이 제거(`assignedAt` 불변 복원, schema 정합).
+- **필드 의미 재정의**: `backlog.schema.json`의 `lockedBy`(=잠금 보유자, session 아님)/`lockedAt`(=file-membership 하트비트) description, SI-03 검사 기준.
+
+### Fixed
+- schema "assignedAt 불변" vs crew-impl의 assignedAt 변이 모순 해소(하트비트가 lockedAt로 이동).
+
+### Tests
+- 4개 hook 테스트(heartbeat·lock-expiry·tasks-dict-shape·path-exclude·lock-reentry) 재작성: session_id→file-membership, 600s→lockTTL, `// assignedAt` 폴백 케이스 추가. hook 16/16.
+
+### Notes
+- 런타임 잠금 동작 변경(minor). 기존 시드는 crew-upgrade/`/plugin update`로 전파. in-flight task(lockedAt=null)는 `// assignedAt` 폴백으로 기존과 동일 → 데이터 마이그레이션 불필요.
+
 ## [4.4.1] - 2026-06-07
 
 > **v4.4.1 — 프레임워크 자체 정합성 일괄 수정** — 사용자 프로젝트와 무관하게 kit이 *자기 자신과 모순*되는 내부 정합성 결함을 TFT(6관점 자체정합성 분석, 32 에이전트)로 발굴해 수정한다. producer↔schema, validator↔schema SSOT, 교차참조, 훅↔state, 템플릿 마커, 버전/마이그레이션 6축. 구조적 lock 서브시스템(lockedBy 미배선)은 session_id 배선 설계가 필요해 후속으로 분리.

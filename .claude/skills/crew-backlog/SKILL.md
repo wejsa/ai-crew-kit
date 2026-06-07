@@ -209,7 +209,7 @@ soft delete: `status` → `"archived"`, list에서 기본 제외 (`list --archiv
 **산정 시점**: Task를 `in_progress`로 전환할 때 `lockTTL` 계산하여 저장.
 `lockTTL` 필드가 없는 기존 Task는 기본값 3600(1시간) 적용.
 
-**만료 판정**: `assignedAt` + `lockTTL`초 < 현재 시각 → 만료
+**만료 판정** (v4.5.0): `(lockedAt // assignedAt)` + `lockTTL`초 < 현재 시각 → 만료 (활동 하트비트 `lockedAt` 우선, 없으면 `assignedAt` 폴백)
 - `/crew-status`에서 경고 표시, 다른 세션에서 인계 가능
 
 ### assignee 생성 규칙
