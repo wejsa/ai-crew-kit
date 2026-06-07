@@ -1,5 +1,7 @@
 # v1.x → v2.0.0 마이그레이션 가이드
 
+> ⚠️ **v4.0.0 명령어 변경 안내(역사 문서)**: 이 문서의 `/skill-*` 명령(예: `/skill-upgrade`)은 **v2 시기 표기**입니다. v4.0.0부터 스킬 명령은 `/crew-*`로 바뀌었습니다(`/skill-upgrade` → `/crew-upgrade` 등). 현재 명령·옵션은 [docs/upgrade-guide.md](../upgrade-guide.md)를 SSOT로 따르세요. 본 문서는 v1→v2 변경 컨텍스트의 역사 기록으로 보존됩니다.
+
 > **대상 사용자**: v1.x ai-crew-kit으로 초기화된 기존 프로젝트를 v2.0.0 GA로 업그레이드하는 사용자
 > **상위 계획**: [phase-8-plan.md](./phase-8-plan.md) — 옵션 A Lean Closure (Step 1~6)
 > **선행 머지**: PR #45 (Phase 8 Step 1 — plan + skill-upgrade SKILL.md 갭 fix)

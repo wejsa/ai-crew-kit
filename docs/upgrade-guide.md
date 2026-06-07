@@ -59,6 +59,8 @@ v4.0.0에서 22개 빌트인 스킬의 호출 명령어가 `/skill-*` → `/crew
 
 > ⚠️ **수동 정리 필요**: 본인이 작성한 스크립트·alias·문서·`CLAUDE.md`의 `CUSTOM_SECTION` 안에 `/skill-impl` 같은 구 명령이 박혀 있으면 `/crew-*`로 직접 바꿔야 합니다 (프레임워크는 사용자 콘텐츠를 건드리지 않습니다).
 
+> 💡 **커스텀 스킬 권장**: 본인이 `skill-` 접두사로 만든 커스텀 스킬(`.claude/skills/custom/skill-*`)은 그대로 동작하고 검증도 통과하지만(하위호환 허용), v4 리네임의 목적인 이름 충돌 회피 관점에선 `skill-` 접두사가 미래 안전하지 않습니다(외부 도구의 `/skill-foo`와 충돌 여지). 가능하면 디렉토리·`name:`·`customSkills` 항목을 `crew-`로 직접 변경하는 것을 권장합니다.
+
 > ℹ️ **v3→v4 1회성 거친 모서리(정상)**: 이 한 번의 업그레이드는 **구 `skill-upgrade`가 실행**하는데, 그 마지막 검증 단계가 리네임된 `skill-validate`(현 `crew-validate`)를 호출하므로 "스킬 없음" 경고가 뜨거나 건너뛸 수 있습니다. 업그레이드 자체(스킬 교체·CLAUDE.md 재생성)는 정상 완료되며, **업그레이드 후 `/crew-validate`를 한 번 직접 실행**해 검증을 마치면 됩니다. CLAUDE.md 재생성 검증에서 드물게 거짓 경고가 보여도 레지스트리는 `/crew-*`로 올바르게 재생성됩니다(`git diff CLAUDE.md`로 확인). v4 이후 업그레이드부터는 이 모서리가 사라집니다(`crew-upgrade`가 `crew-validate`를 호출).
 
 ## 최초 업그레이드 (crew-upgrade도 skill-upgrade도 없는 프로젝트)
