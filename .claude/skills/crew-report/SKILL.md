@@ -23,7 +23,7 @@ complexity-hint: medium
 
 | 소스 | 수집 항목 |
 |------|----------|
-| backlog.json | Task 상태별 수량 (total/todo/in_progress/done/blocked/archived), type별 분포, skipped step 수 |
+| backlog.json | Task 상태별 수량 (total/todo/in_progress/done/blocked/paused/archived), type별 분포, skipped step 수 |
 | completed.json | 완료 Task 수, 완료 시각 |
 | execution-log.json | 실행 로그 항목 수 (존재 시) |
 | `gh pr list` | 머지 PR (additions/deletions/reviews), 열린 PR |

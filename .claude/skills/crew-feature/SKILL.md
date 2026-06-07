@@ -1,7 +1,7 @@
 ---
 name: crew-feature
 description: 기능 기획 - 요구사항 정의 + 백로그 Task 등록. 사용자가 "새 기능 기획해줘" 또는 /crew-feature를 요청할 때 사용합니다.
-disable-model-invocation: true
+disable-model-invocation: false
 allowed-tools: Bash(git:*), Read, Write, Glob, Grep, AskUserQuestion
 argument-hint: "[기능명]"
 complexity-hint: medium
@@ -41,7 +41,7 @@ backlog.json에서 유사 Task 확인 → 병합 또는 별도 생성 여부 확
 승인 받을 때까지 진행하지 않음.
 
 ### 5. 백로그 등록
-승인 후 backlog.json에 Task 추가 (id, title, description, status=todo, priority, phase, specFile, dependencies, steps=[], currentStep=0)
+승인 후 backlog.json에 Task 추가 (id, title, description, status=todo, priority, phase, specFile, dependencies, steps=[]). `currentStep`은 schema `minimum: 1`이라 **생략**한다(crew-plan이 픽업 시 1로 설정 — crew-init 규칙과 동일).
 
 ### 6. 커밋 & 푸시
 CLAUDE.md 워크트리 프로토콜 참조.

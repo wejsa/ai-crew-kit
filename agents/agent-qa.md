@@ -126,7 +126,9 @@ describe('OrderService', () => {
 
 ## 체크리스트 (Read로 로드)
 
-- .claude/domains/_base/checklists/common.md (공통 테스트 품질)
+> 경로의 `${CLAUDE_PLUGIN_ROOT}`는 플러그인 설치 시 절대경로로 치환된다. clone/seed 설치라 리터럴로 남아 있으면 접두를 제거하고 프로젝트 로컬 `.claude/...`로 읽는다.
+
+- ${CLAUDE_PLUGIN_ROOT}/.claude/domains/_base/checklists/common.md (공통 테스트 품질)
 
 체크리스트 파일이 존재하지 않으면 해당 파일을 스킵하고 나머지로 분석합니다.
 

@@ -126,7 +126,7 @@ complexity-hint: heavy
 - 검사: project.json의 techStack vs 실제 의존성 파일 대조
   - 탐지 대상: build.gradle.kts, build.gradle, pom.xml, package.json, requirements.txt, go.mod
   - techStack에 "spring-boot-kotlin"이지만 build.gradle이 없으면 FAIL
-  - 반대로 package.json이 있는데 techStack이 "nodejs"가 아니면 FAIL
+  - 반대로 package.json이 있는데 techStack이 "nodejs-typescript"가 아니면 FAIL
 - autoFix: project.json 업데이트 가능 (confirm: true)
 
 #### DS-04. 환경변수 동기화 (MAJOR)
@@ -168,7 +168,7 @@ complexity-hint: heavy
 - 사전 조건: .claude/state/backlog.json 존재
 - 검사: in_progress 상태 Task 중 대응 브랜치가 없는 것
   - 주의: crew-status --health의 orphan intent 점검과는 다른 대상
-- autoFix: status를 'ready'로 리셋 (confirm: true)
+- autoFix: status를 'todo'로 리셋 (confirm: true)
 
 #### SI-03. 잠금 만료 탐지 (MINOR)
 - 사전 조건: .claude/state/backlog.json 존재
@@ -199,6 +199,7 @@ complexity-hint: heavy
   - 주의: 필드명은 agents.enabled (agents.active 아님)
   - enabled에 있으나 파일 없음 → CRITICAL
   - 파일 있으나 enabled에 없음 → MINOR (정보 제공)
+  - **레거시 제거 에이전트 예외**: `devops`는 v1.40.0(ADR-009)에서 제거됐다. backward-compat로 `project.schema.json` enum엔 남아 구 시드의 `agents.disabled`에 존재할 수 있다. `enabled`에 `devops`가 있으면 만족 불가한 CRITICAL이 아니라 **MINOR("제거된 레거시 에이전트 — enabled에서 빼세요")**로 보고하고, `disabled`/미사용이면 무시한다.
 - FAIL 시: backlog 자동 등록
 - autoFix: 불가
 

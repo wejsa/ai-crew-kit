@@ -57,6 +57,11 @@ AI Crew Kit의 CLAUDE.md 자동 생성 엔진입니다.
 | `{{WORKFLOW_CHAINING_RULES}}` | workflowProfile 기반 | 프로필별 자동 체이닝 규칙 테이블 |
 | `{{SKILL_LIST_SECTION}}` | skillProfile + skill-profiles.json 기반 | 프로파일별 스킬 목록 (bash 코드블록) |
 | `{{NATURAL_LANGUAGE_COMMANDS}}` | skillProfile + skill-profiles.json 기반 | 프로파일별 자연어 매핑 테이블 |
+| `{{TECH_STACK_SUMMARY}}` | techStack 기반 | README용 기술 스택 한 줄 요약 |
+| `{{INFRASTRUCTURE}}` | project.json → techStack.infrastructure | README용 인프라 값 |
+| `{{AGENTS_TABLE}}` | agents.enabled 기반 | README용 활성 에이전트 테이블 |
+
+> README.md.tmpl 전용 마커(`{{TECH_STACK_SUMMARY}}`/`{{INFRASTRUCTURE}}`/`{{AGENTS_TABLE}}`)는 CLAUDE.md.tmpl의 `{{TECH_STACK_SECTION}}`/`{{AGENTS_SECTION}}`과 출력 형식만 다른 README용 변형이다.
 
 ---
 

@@ -11,10 +11,11 @@ hook-trigger-count
 *.mutex.d/
 
 # 기본: 이 디렉토리의 모든 파일 무시, 명시 허용만 커밋
+# continuation-plan.md은 stop 훅이 매 턴 로컬 재생성하는 전이 resume 헬퍼(타임스탬프 포함)이며
+# session-start가 로컬에서 읽어 출력하므로 추적하지 않는다(커밋 시 git churn·팀 머지 충돌). v4.4.1.
 *
 !.gitignore
 !backlog.json
 !completed.json
-!continuation-plan.md
 !lessons-learned.json
 !health-history.json

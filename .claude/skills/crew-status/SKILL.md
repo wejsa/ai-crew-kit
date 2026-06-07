@@ -1,7 +1,7 @@
 ---
 name: crew-status
 description: 프로젝트 상태 확인 - 현재 작업 진행상황, 백로그 요약, Git 상태, 시스템 건강 점검. 사용자가 "상태 확인해줘" 또는 /crew-status를 요청할 때 사용합니다.
-disable-model-invocation: true
+disable-model-invocation: false
 allowed-tools: Bash(git:*), Bash(gh:*), Bash(python3:*), Read, Glob
 argument-hint: "[--health [--fix]|--locks]"
 complexity-hint: light
@@ -29,7 +29,7 @@ complexity-hint: light
 project.json: 기술 스택, 활성 에이전트, Kit 버전 (kitVersion, 미기록 시 "미설정")
 
 ### 3. 백로그 상태
-backlog.json: todo/in_progress/done/blocked/archived 수량 + 진행 중 Task 상세 (ID, 제목, 현재 스텝)
+backlog.json: todo/in_progress/done/blocked/paused/archived 수량 + 진행 중 Task 상세 (ID, 제목, 현재 스텝)
 archived 수량은 별도 표시 (활성 Task 집계에서 제외)
 
 ### 4. 계획 파일 확인

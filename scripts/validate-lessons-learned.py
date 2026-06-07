@@ -64,12 +64,19 @@ def collect_known_task_ids() -> tuple[set[str], bool, bool]:
         try:
             data = load_json(BACKLOG_PATH)
             if isinstance(data, dict):
-                for entry in data.get("tasks", []):
-                    if "id" in entry:
-                        ids.add(entry["id"])
-                for entry in data.get("archived", []):
-                    if isinstance(entry, dict) and "id" in entry:
-                        ids.add(entry["id"])
+                # backlog.schema.json: tasks는 object map(key=Task ID). 키 자체가 ID이며
+                # 각 value에도 id가 있다. (v1 array-shape backlog는 list로 폴백 — test_backlog_compat.)
+                # status="archived" Task도 tasks 안에 있으므로 별도 top-level 배열은 없다.
+                tasks = data.get("tasks", {})
+                if isinstance(tasks, dict):
+                    ids.update(tasks.keys())
+                    for entry in tasks.values():
+                        if isinstance(entry, dict) and "id" in entry:
+                            ids.add(entry["id"])
+                elif isinstance(tasks, list):
+                    for entry in tasks:
+                        if isinstance(entry, dict) and "id" in entry:
+                            ids.add(entry["id"])
         except (json.JSONDecodeError, OSError):
             pass
     return ids, completed_seen, backlog_seen
