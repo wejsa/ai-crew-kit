@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.1.1] - 2026-06-07
+
+> **v4.1.1 — 플러그인 SessionStart 훅 경로 수정 (버그픽스)** — 플러그인 환경에서 세션 시작 시 `.claude/hooks/session-start.sh: No such file or directory` 오류가 발생하던 버그를 수정한다.
+
+### Fixed
+
+- **`plugin.json` SessionStart 훅 경로**: `${CLAUDE_PROJECT_DIR}/.claude/hooks/session-start.sh` → `${CLAUDE_PLUGIN_ROOT}/.claude/hooks/session-start.sh`. 나머지 3개 훅(PreToolUse/PostToolUse/Stop)은 이미 `CLAUDE_PLUGIN_ROOT`를 쓰는데 SessionStart만 `CLAUDE_PROJECT_DIR`(사용자 프로젝트 경로)를 가리켜, **로컬 `.claude/hooks/session-start.sh`가 없는 플러그인 설치 프로젝트에서 세션 시작 훅이 "No such file or directory"로 실패**했다. session-start.sh는 내부에서 `CLAUDE_PROJECT_DIR` 환경변수로 프로젝트를 찾고 lib 의존성이 없어 플러그인 경로에서 실행해도 안전하므로, 4개 훅 모두 `CLAUDE_PLUGIN_ROOT`로 통일했다.
+
+> **사용자 영향**: 플러그인 사용자는 `/plugin update` 후 해소됩니다. (clone/seed 프로젝트는 로컬 `.claude/hooks/session-start.sh`를 settings.json 상대경로로 등록하므로 영향 없음.) 프로젝트의 `settings.json`에 구버전 로컬 SessionStart 등록이 남아 같은 오류가 난다면, 해당 항목을 제거하거나 `/crew-upgrade`로 settings.json 훅 동기화를 받으세요.
+
 ## [4.1.0] - 2026-06-07
 
 > **v4.1.0 — 리뷰 관점 `domain` → `architecture` 리네임 (dual-accept, NON-BREAKING)** — PR 리뷰의 '아키텍처 + 비즈니스 로직 일관성' 관점 이름을 `domain` → `architecture`로 바꾼다 (에이전트 `pr-reviewer-domain` → `pr-reviewer-architecture`). v3.0.0에서 비즈니스 도메인 팩(fintech/healthcare/saas/ecommerce)이 제거된 뒤에도 이 리뷰 관점이 `domain`이라는 이름을 써서 "삭제된 도메인 기능"과 혼동을 일으켜 왔다(특히 플러그인 실행 시 `ai-crew-kit:pr-reviewer-domain` UI 라벨). v4.0.0 `crew-` 프리픽스 dual-accept과 동일한 정신으로, 신규는 `architecture`를 정규로 쓰되 기존 `domain` 설정은 레거시 별칭으로 계속 허용해 **검증 실패·마이그레이션 없이** 전환한다.
