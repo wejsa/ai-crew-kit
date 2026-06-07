@@ -23,6 +23,21 @@
 
 ---
 
+## 프레임워크 번들 경로 해석 (필수)
+
+스킬·에이전트가 참조하는 **빌트인 읽기 전용 리소스**(스키마·템플릿·체크리스트·컨벤션 등)는 설치 방식에 따라 위치가 다릅니다. 스킬 본문은 이를 `${CLAUDE_PLUGIN_ROOT}/.claude/<경로>` 형태로 표기합니다:
+
+- **플러그인 설치**: 로드 시 `${CLAUDE_PLUGIN_ROOT}`가 플러그인 설치 경로(절대경로)로 **치환**됩니다 → 그 경로를 그대로 Read.
+- **clone/seed 설치**: `${CLAUDE_PLUGIN_ROOT}`가 **치환되지 않고 리터럴 문자열로 남습니다.** 이 경우 `${CLAUDE_PLUGIN_ROOT}/` 접두를 **제거**하고 **프로젝트 로컬** 경로(`.claude/<경로>`)를 Read하세요.
+
+> **판정 규칙**: 경로에 `${CLAUDE_PLUGIN_ROOT}` 문자열이 그대로 보이면(=치환 안 됨, clone/seed 모드) → `.claude/<경로>`로 읽는다. 절대경로로 치환돼 있으면(=플러그인 모드) → 그 경로로 읽는다.
+
+> **예외 1 — 프로젝트 상태는 항상 로컬**: `.claude/state/`, `.claude/temp/`, `.claude/plans/`, `project.json`, `CLAUDE.md`, `README.md`, `.claude/settings.json`은 프로젝트별 읽기/쓰기 대상이므로 **항상 프로젝트 로컬 경로**를 쓰며 `${CLAUDE_PLUGIN_ROOT}` 접두를 붙이지 않습니다.
+>
+> **예외 2 — crew-upgrade의 클론-소스 읽기는 규칙 밖**: crew-upgrade는 kit 리포를 임시 디렉토리에 클론해 그 소스의 `templates/`·`schemas/` 등을 읽습니다(번들 경로도 프로젝트 경로도 아닌 클론 경로). 이 업그레이드-시점 읽기 경로에는 `${CLAUDE_PLUGIN_ROOT}` 접두를 적용하지 않습니다.
+
+---
+
 ## 30초 요약 (Quick Reference)
 
 ### 매일 쓰는 4가지
@@ -251,7 +266,7 @@ fi
 ```
 
 **필드 타입·소유권 (PreToolUse 머지 게이트 전제조건 — 위반 시 게이트가 silent no-op):**
-> 타입·enum의 SSOT는 `.claude/schemas/backlog.schema.json`(`definitions.workflowState`). 아래는 그 요약이며, 충돌 시 schema가 우선한다.
+> 타입·enum의 SSOT는 `${CLAUDE_PLUGIN_ROOT}/.claude/schemas/backlog.schema.json`(`definitions.workflowState`, 경로 해석은 "프레임워크 번들 경로 해석" 규칙). 아래는 그 요약이며, 충돌 시 schema가 우선한다.
 - `prNumber` / `fixLoopCount`: **정수 또는 `null`** — 따옴표 금지. 문자열 `"42"`는 ① schema 거부(`integer|null`), ② `pre-tool-use.sh`의 숫자 join(`--argjson`) 미스로 머지 게이트가 PR을 못 찾음. PR 생성 시 `prNumber`에 **정수** PR 번호 기록.
 - `lastReviewDecision`: `APPROVED` / `COMMENT` / `REQUEST_CHANGES` / `null`. **crew-review-pr Step 6.5가 매 리뷰마다 소유·갱신.** PreToolUse 머지 게이트(`pre-tool-use.sh`)의 결정적 차단 신호 — `REQUEST_CHANGES`면 미해결 CRITICAL로 간주해 `gh pr merge`를 차단한다.
 

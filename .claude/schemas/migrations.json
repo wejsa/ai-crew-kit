@@ -153,6 +153,17 @@
           "detail": "별도 설정 불필요. 업그레이드가 .claude/agents/를 통째 교체해 pr-reviewer-architecture.md로 자동 갱신됩니다. 기존 project.json의 review.agents=['domain', ...] 설정은 레거시 별칭으로 계속 유효하며 architecture와 동일 리뷰어로 동작합니다(검증 실패 없음). 신규 설정 시 /crew-review-pr config --agents architecture,security 처럼 architecture를 쓰면 됩니다. 플러그인 설치 환경에서는 실행 중 에이전트가 ai-crew-kit:pr-reviewer-architecture로 표시됩니다."
         }
       ]
+    },
+    {
+      "version": "4.2.0",
+      "items": [
+        {
+          "title": "플러그인 자기완결형 경로 — 이중 모드 경로 해석 (Phase 1)",
+          "description": "플러그인 설치 시 스킬이 번들 리소스를 올바르게 읽도록 ${CLAUDE_PLUGIN_ROOT} 기반 이중 모드(plugin/clone) 경로 해석 규칙을 도입했습니다. 이번엔 증명 단계로 crew-impl의 PR body 템플릿 read(실사용 읽기 경로)와 backlog 스키마 참조 2곳에 적용했습니다. 나머지 전체 참조 확대는 v4.3.0 예정입니다.",
+          "action": "none",
+          "detail": "별도 설정 불필요. CLAUDE.md '프레임워크 번들 경로 해석' 규칙이 업그레이드 시 재생성됩니다. clone/seed 프로젝트는 ${CLAUDE_PLUGIN_ROOT}가 리터럴로 남아 규칙에 따라 기존처럼 프로젝트 로컬 .claude/를 읽으므로 동작 변화가 없습니다. 플러그인 설치 프로젝트는 번들에서 읽습니다. ${CLAUDE_PLUGIN_ROOT} 인라인 치환은 실제 플러그인 설치 환경에서만 발현되므로 플러그인 모드 동작은 검증이 필요합니다(가장 쉬운 검증: 플러그인 설치 프로젝트에서 /crew-impl로 PR 생성 시 PR body가 템플릿 구조를 따르는지 확인)."
+        }
+      ]
     }
   ]
 }

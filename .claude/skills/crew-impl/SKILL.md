@@ -110,7 +110,7 @@ CLAUDE.md 워크트리 프로토콜 참조. push 전 develop 동기화 필수.
 - push 실패 시: pull --rebase → backlog.json 충돌은 서로 다른 Task 모두 유지, `metadata.version = max + 1` → 재시도 (최대 2회)
 
 ### 7. PR 생성
-1. PR body 템플릿: `.claude/templates/pr-body.md.tmpl`
+1. PR body 템플릿: `${CLAUDE_PLUGIN_ROOT}/.claude/templates/pr-body.md.tmpl` (경로 해석은 CLAUDE.md "프레임워크 번들 경로 해석" 규칙 — clone/seed면 `.claude/templates/pr-body.md.tmpl`)
 2. 마커 치환: `{{TASK_TITLE}}`, `{{STEP_NUMBER}}`, `{{STEP_TOTAL}}`, `{{CHANGES_LIST}}`
 3. `gh pr create --base develop --title "feat: {taskId} Step {N} - {제목}" --body "{치환된 body}"`
 

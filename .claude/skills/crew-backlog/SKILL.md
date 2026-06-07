@@ -56,7 +56,8 @@ complexity-hint: light
 
 ## 백로그 데이터 구조
 
-**스키마 정의**: `.claude/schemas/backlog.schema.json` (단일 권위 문서)
+**스키마 정의**: `${CLAUDE_PLUGIN_ROOT}/.claude/schemas/backlog.schema.json` (단일 권위 문서)
+> 경로 해석은 CLAUDE.md "프레임워크 번들 경로 해석" 규칙을 따른다 — 플러그인 설치면 치환된 절대경로, clone/seed면 `${CLAUDE_PLUGIN_ROOT}`가 리터럴로 남으므로 접두를 떼고 `.claude/schemas/backlog.schema.json`을 읽는다.
 
 `.claude/state/backlog.json`:
 ```json
