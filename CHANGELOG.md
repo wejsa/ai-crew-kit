@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.2.0] - 2026-06-07
+
+> **v4.2.0 — 플러그인 자기완결형 경로 (Phase 1: 증명)** — 플러그인 설치 시 스킬이 번들 리소스를 올바르게 읽도록 `${CLAUDE_PLUGIN_ROOT}` 기반 이중 모드(plugin/clone) 경로 해석 규칙을 도입한다. 이번 릴리스는 **증명 단계**로, 규칙 + 실사용 읽기 경로 1건(crew-impl의 PR body 템플릿 read) + 스키마 SSOT 포인터 2곳에만 적용한다. 검증 후 전체 참조(스키마·템플릿·체크리스트·컨벤션)로 확대(v4.3.0 예정)한다.
+
+### Added
+
+- **CLAUDE.md "프레임워크 번들 경로 해석" 규칙** (CLAUDE.md.tmpl): 빌트인 읽기 전용 리소스를 `${CLAUDE_PLUGIN_ROOT}/.claude/<경로>`로 표기하고, **플러그인 설치 시 절대경로로 치환 / clone·seed 설치 시 리터럴로 남으면 접두를 떼고 프로젝트 로컬 `.claude/<경로>`로 읽는** 결정적 판정 규칙. 두 예외 명시: ①프로젝트 상태(`state/`/`temp/`/`project.json`/`CLAUDE.md`/`settings.json`)는 항상 로컬, ②crew-upgrade의 클론-소스 읽기는 규칙 밖(번들/프로젝트 경로 아닌 임시 클론 경로).
+
+### Changed
+
+- **crew-impl PR body 템플릿 read 이중 모드화** (실사용 읽기 경로 — 매 PR 생성 시 Read): `.claude/templates/pr-body.md.tmpl` → `${CLAUDE_PLUGIN_ROOT}/.claude/templates/pr-body.md.tmpl` + 인라인 해석 주석. **플러그인 모드 검증 포인트**: 플러그인 설치 프로젝트에서 `/crew-impl` PR 생성 시 PR body가 템플릿 구조를 따르면 번들 템플릿이 정상 해석된 것.
+- **backlog 스키마 SSOT 포인터 이중 모드화** (참조/인용): crew-backlog SKILL.md + CLAUDE.md.tmpl workflowState SSOT 포인터의 `.claude/schemas/backlog.schema.json` → `${CLAUDE_PLUGIN_ROOT}/.claude/schemas/backlog.schema.json`. (이 둘은 능동 Read 경로가 아닌 권위 문서 포인터이므로, 모델이 스키마를 조회할 때 번들 경로로 해석되도록 정렬.)
+
+### Notes
+
+- **배경**: 플러그인 매니페스트는 skills/hooks/agents(루트 미러)만 제공하고 schemas/templates/domains/workflows는 제공하지 않으며, 스킬들이 이를 프로젝트 상대 bare 경로로 참조해 왔다 → 진짜 플러그인-only가 불가했다. 본 변경은 그 격차를 닫는 첫 단계.
+- **검증 한계**: `${CLAUDE_PLUGIN_ROOT}` 인라인 치환은 실제 `/plugin install` 환경에서만 발현되므로, 플러그인 모드 동작은 사용자 검증이 필요하다(위 crew-impl 검증 포인트). clone/seed 모드는 판정 규칙으로 기존과 동일하게 동작(회귀 없음).
+- **잔여(Phase 2/v4.3.0)**: 나머지 schemas/templates/domains/workflows 참조(리뷰어 체크리스트, health-check 데이터, crew-init 템플릿 등) 전체를 동일 규칙으로 전환.
+
 ## [4.1.1] - 2026-06-07
 
 > **v4.1.1 — 플러그인 SessionStart 훅 경로 수정 (버그픽스)** — 플러그인 환경에서 세션 시작 시 `.claude/hooks/session-start.sh: No such file or directory` 오류가 발생하던 버그를 수정한다.
