@@ -6,7 +6,7 @@
 
 AI 에이전트 팀 기반 소프트웨어 개발 프로세스 관리 프레임워크
 
-[![Version](https://img.shields.io/badge/version-v2.5.3-blue?style=flat-square)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v4.0.0-blue?style=flat-square)](./CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](./LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/wejsa/ai-crew-kit?style=flat-square)](https://github.com/wejsa/ai-crew-kit)
 [![Built with Claude Code](https://img.shields.io/badge/built_with-Claude_Code-blueviolet?style=flat-square)](https://claude.ai/download)
@@ -75,6 +75,18 @@ claude
 > 코드베이스를 자동 스캔하여 기술 스택을 감지하고 설정을 생성합니다. kit clone에 사용자 코드를 함께 둔 경우(시나리오 B)도 `/crew-onboard`가 위와 동일한 자동 정리를 사전에 수행합니다 (사용자 코드 보통 `src/`/`app/` 등 비충돌 경로면 안전; 동일 경로 충돌 의심 시 사전 백업 권장).
 > 자세한 내용은 [기존 프로젝트 온보딩](./docs/getting-started.md#기존-프로젝트-온보딩)을 참조하세요.
 
+### 기존 사용자 — 업데이트
+
+> **자동 업데이트되지 않습니다.** AI Crew Kit은 커뮤니티 마켓플레이스라 기본적으로 수동 업데이트입니다.
+
+- **플러그인으로 설치한 경우** — `/plugin update`로 최신 버전을 받습니다 (또는 `/plugin` UI에서 이 마켓플레이스의 auto-update를 켜면 다음 세션 시작 시 자동 적용).
+- **clone / seed 프로젝트인 경우** — 본인 프로젝트의 업그레이드 스킬로 업그레이드합니다.
+
+> [!IMPORTANT]
+> **v3.x → v4.0.0은 BREAKING** — 스킬 명령이 `/skill-*` → `/crew-*`로 바뀌었습니다 (예: `/skill-impl` → `/crew-impl`). v3.x 시드에는 아직 구 `/skill-upgrade`만 있으므로 **첫 업그레이드는 `/skill-upgrade --version v4.0.0`로 실행**하세요 (이 명령이 `.claude/skills/`를 통째 교체하며 스스로를 `crew-upgrade`로 바꿉니다). 이후부터 `/crew-upgrade`를 사용합니다. 업그레이드 후 검증은 `/crew-validate`를 한 번 직접 실행해 마무리하세요. 본인 스크립트·문서·`CLAUDE.md` `CUSTOM_SECTION`의 `/skill-*` 명령은 직접 `/crew-*`로 바꿔야 합니다. 상세·주의사항은 [업그레이드 가이드](./docs/upgrade-guide.md)를 참조하세요.
+>
+> **v1.x → v2.0.0 사용자**: [마이그레이션 가이드](./docs/v2/migration-guide.md) 참조.
+
 ---
 
 ## 🛠 지원 기술 스택
@@ -142,32 +154,18 @@ claude
 
 ## ✨ 주요 기능
 
-> v2.0 GA 이후 v2.5.3까지 누적된 핵심 기능입니다. 패치 단위 전체 변경은 [CHANGELOG](./CHANGELOG.md)를 참조하세요.
-
-### 핵심 자동화 (v2.0 GA)
-
 | 기능 | 사용자 가치 |
 |------|------|
-| **Claude Code 네이티브 훅** (SessionStart / PostToolUse / Stop) | 세션 진입 자동 git sync, lockedAt heartbeat 자동 갱신, 응답 완료 시 continuation-plan 자동 작성 |
-| **스킬 프로파일 + 토큰 힌트** | 5종 프로파일(`full` / `developer` / `docs-only` / `custom`)로 CLAUDE.md 노출 스킬 제어 + complexity-hint(heavy/medium/light) 토큰 예산 가이드 |
+| **Claude Code 네이티브 훅** (SessionStart / PreToolUse / PostToolUse / Stop) | 세션 진입 자동 git sync, lock heartbeat 자동 갱신, 응답 완료 시 continuation-plan 자동 작성, 미해결 CRITICAL PR 머지 결정적 차단 |
+| **스킬 프로파일 + 토큰 힌트 + 모델 라우팅** | 프로파일(`full` / `developer` / `docs-only` / `custom`)로 CLAUDE.md 노출 스킬 제어 + complexity-hint 토큰 예산 가이드 + 스킬별 모델 라우팅(구현 `sonnet`·품질 판단 `opus`) |
+| **자동 Tier 분류 PR 리뷰** | PR 특성으로 T0~T3 자동 라우팅(작은 PR은 경량, 보안/대규모는 풀 리뷰) + severity × confidence 매트릭스 false-positive 필터(CRITICAL은 강등 게시·드롭 X) |
 | **Layered Override 컨벤션** | `_base` 공통 컨벤션·체크리스트를 `project.json`으로 덮어쓰는 계층형 설정 — PR 리뷰가 프로젝트 컨벤션을 자동 인식 |
 | **AgentShield-lite 시크릿 스캐너** | 하드코딩 시크릿(API 키/AWS/GitHub/Slack) + `.env` 노출 게이트를 CRITICAL로 검출 |
 | **lessons-learned 회귀 보호** | `crew-retro` 학습 데이터에 schema 검증 + secrets 필터(토큰/이메일 자동 redact) + impact 정량(상/중/하) |
 
-### v2.1+ 업데이트
-
-| 버전 | 기능 | 사용자 가치 |
-|:----:|------|------|
-| **v2.1** | 요구사항 우선 init 플로우 + 백로그 자동 분해 | 요구사항 자유 서술 → 스택 LLM 추천 → Phase 4-카테고리 백로그(opt-in) 즉시 생성. 입력 신뢰 경계·sanitization·Hard limits로 안전 |
-| **v2.3** | `crew-review-pr` 자동 Tier 분류 + confidence 채점 | PR 특성으로 T0~T3 자동 라우팅 — 작은 PR(테스트·deps·docs)은 가벼운 경로, 보안/대규모 변경은 풀 리뷰. severity × confidence 매트릭스로 false-positive 필터(CRITICAL은 강등 게시·드롭 X로 누락 방지) |
-| **v2.4** | PreToolUse 머지 품질 게이트 | 미해결 CRITICAL PR을 `gh pr merge` 단계에서 결정적 차단 — prose+LLM 의존 제거 ([상세](#-머지-품질-게이트-v24)) |
-| **v2.5** | 스킬·에이전트별 모델 라우팅 | 구현/머지는 `sonnet`(토큰 절감), 품질 판단(PR 리뷰 종합·버그 탐지 서브에이전트)은 `opus` 고정. 품질 안전망(opt 고정 + 결정론 게이트) 유지한 채 최대 토큰 소비처 절감 |
-| **v2.5.2** | 리뷰 서브에이전트 1M 컨텍스트 실패 자동 폴백 | 부모 세션이 1M 모델일 때 `model: opus` 핀된 리뷰 서브에이전트가 스폰 실패하는 하네스 제약 대응 — 1M 시그니처 감지 시 메인 에이전트 직접 리뷰로 자동 폴백(머지 게이트 안전망 유지) |
-| **v2.5.3** | 마켓플레이스 플러그인 패키징 | `.claude-plugin/marketplace.json` + `plugin.json`으로 Claude Code 플러그인 마켓플레이스 배포 — `/plugin install`로 23개 스킬 + 12개 에이전트 + 품질 게이트 훅을 clone 없이 한 번에 등록 ([설치](#방법-1--플러그인으로-설치-신규)) |
-
-> **examples 안내** — `examples/` 디렉토리는 범용 최소 예제를 제공합니다. 어떤 기술 스택의 프로젝트든 `/crew-init`로 동일하게 초기화할 수 있습니다.
+> 머지 품질 게이트 상세는 [위 섹션](#-머지-품질-게이트-v24)을, **버전별 누적 변경 이력은 [CHANGELOG](./CHANGELOG.md)**를 참조하세요.
 >
-> **v1.x 사용자**: [v1.x → v2.0.0 마이그레이션 가이드](./docs/v2/migration-guide.md) 참조 — `/crew-upgrade --version v2.0.0` 자동 마이그레이션(자동 4 add_field, 수동 작업 거의 없음, 점수 영향 ≤1점).
+> **examples 안내** — `examples/` 디렉토리는 범용 최소 예제를 제공합니다. 어떤 기술 스택의 프로젝트든 `/crew-init`로 동일하게 초기화할 수 있습니다.
 
 ---
 
