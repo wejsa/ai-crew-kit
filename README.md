@@ -63,8 +63,27 @@ AI Crew Kit은 **Claude Code 플러그인 마켓플레이스**로 설치합니�
 
 > **자동 업데이트되지 않습니다.** AI Crew Kit은 커뮤니티 마켓플레이스라 기본적으로 수동 업데이트입니다.
 
-- **플러그인으로 설치한 경우** — `/plugin update`로 최신 버전을 받습니다 (또는 `/plugin` UI에서 이 마켓플레이스의 auto-update를 켜면 다음 세션 시작 시 자동 적용).
+- **플러그인으로 설치한 경우** — 아래 권장 절차를 따르세요.
 - **clone / seed 프로젝트인 경우** — 본인 프로젝트의 업그레이드 스킬로 업그레이드합니다.
+
+#### 플러그인 업데이트 권장 절차
+
+```
+/plugin marketplace update ai-crew-kit     # ① 마켓 카탈로그 최신화 (먼저!)
+/plugin update ai-crew-kit@ai-crew-kit      # ② 플러그인 업데이트
+/reload-plugins                             # ③ 현재 세션에 반영
+```
+
+그다음 `/`를 입력해 `/crew-*` 명령이 보이는지 확인하세요.
+
+> [!WARNING]
+> **업데이트 후 `/crew-*` 스킬이 안 보이면** — `/plugin update`가 캐시를 깔끔히 재빌드하지 못해 스킬 등록이 누락되는 경우가 있습니다 (Claude Code 플러그인 캐시 동작; kit 버그 아님). **세션 재시작만으로는 해결되지 않을 수 있으며**, 플러그인을 **제거 후 재설치**하면 확실히 복구됩니다:
+> ```
+> /plugin uninstall ai-crew-kit@ai-crew-kit
+> /plugin install   ai-crew-kit@ai-crew-kit
+> /reload-plugins
+> ```
+> ①의 `marketplace update`를 먼저 하지 않으면 카탈로그가 stale해 업데이트가 헛돌 수 있습니다. 캐시 위치는 `~/.claude/plugins/cache/`입니다.
 
 > [!IMPORTANT]
 > **v3.x → v4.0.0은 BREAKING** — 스킬 명령이 `/skill-*` → `/crew-*`로 바뀌었습니다 (예: `/skill-impl` → `/crew-impl`). v3.x 시드에는 아직 구 `/skill-upgrade`만 있으므로 **첫 업그레이드는 `/skill-upgrade --version v4.0.0`로 실행**하세요 (이 명령이 `.claude/skills/`를 통째 교체하며 스스로를 `crew-upgrade`로 바꿉니다). 이후부터 `/crew-upgrade`를 사용합니다. 업그레이드 후 검증은 `/crew-validate`를 한 번 직접 실행해 마무리하세요. 본인 스크립트·문서·`CLAUDE.md` `CUSTOM_SECTION`의 `/skill-*` 명령은 직접 `/crew-*`로 바꿔야 합니다. 상세·주의사항은 [업그레이드 가이드](./docs/upgrade-guide.md)를 참조하세요.
