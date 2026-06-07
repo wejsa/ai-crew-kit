@@ -21,9 +21,7 @@ AI 에이전트 팀 기반 소프트웨어 개발 프로세스 관리 프레임�
 
 ## 🚀 빠른 시작
 
-### 방법 1 — 플러그인으로 설치 (신규)
-
-AI Crew Kit은 이제 **Claude Code 플러그인 마켓플레이스**로 설치할 수 있습니다. 22개 스킬 + 12개 에이전트 + 품질 게이트 훅(SessionStart / PreToolUse / PostToolUse / Stop)이 한 번에 등록됩니다.
+AI Crew Kit은 **Claude Code 플러그인 마켓플레이스**로 설치합니다. 22개 스킬 + 12개 에이전트 + 품질 게이트 훅(SessionStart / PreToolUse / PostToolUse / Stop)이 한 번에 등록됩니다.
 
 ```bash
 # Claude Code 세션 안에서
@@ -31,14 +29,11 @@ AI Crew Kit은 이제 **Claude Code 플러그인 마켓플레이스**로 설치�
 /plugin install ai-crew-kit@ai-crew-kit
 ```
 
-설치 후 어느 프로젝트에서나 `/crew-init`로 셋업을 시작합니다. clone과 달리 kit 잔여 파일 정리가 필요 없어 **잡티 0**으로 시작됩니다.
+설치 후 어느 프로젝트에서나 `/crew-init`로 셋업을 시작합니다.
 
-### 방법 2 — clone 후 초기화
+**새 프로젝트 시작:**
 
 ```bash
-git clone https://github.com/wejsa/ai-crew-kit.git my-project
-cd my-project
-claude
 /crew-init --quick
 ```
 
@@ -46,17 +41,11 @@ claude
 > `/crew-init --quick`은 제로 결정 모드로 5분 안에 체험할 수 있습니다.
 > 모든 설정을 직접 선택하려면 `/crew-init`을 사용하세요.
 
-`/crew-init`은 ai-crew-kit clone을 자동 감지하여 다음을 한 번에 처리합니다 (사용자 추가 확인 없음):
+`/crew-init`은 다음을 한 번에 처리합니다:
 
-1. kit git 히스토리 제거 + 새 사용자 리포 초기화
-2. kit 잔여 파일 자동 정리 (14종): `CHANGELOG.md`, `docs/`, `examples/`, `tests/`, `scripts/`, `.github/`, `memory/`, `LICENSE`, `README.md`, `CLAUDE.md`, `VERSION`, `.claude/temp/`, `.claude/hooks/tests/`, `.claude/state/`, `.claude/settings.local.json`
-3. **요구사항 자유 서술 → 기술 스택 LLM 추천 → 에이전트 팀 선택**
-4. **백로그 자동 분해 (opt-in)** — Phase 4-카테고리 템플릿으로 10~25개 Task를 즉시 준비, `/crew-plan`/`/crew-impl` 체인으로 바로 진입
-5. 사용자 프로젝트용 `CLAUDE.md`/`README.md`/`VERSION`(0.1.0) 새로 생성
-6. `KIT_SOURCE_URL`을 `project.json`의 `kitSource`로 기록 (crew-upgrade가 GitHub에서 kit 가이드 fetch)
-
-> [!NOTE]
-> kit clone 자동 정리는 두 안전장치를 통과해야 실행됩니다 — (1) origin URL 정규식 + initial commit fingerprint 일치, (2) 더티/미푸시/비-main 브랜치 가드. 사용자 시나리오에는 영향이 없으며 kit 개발자 환경 사고만 방지합니다.
+1. **요구사항 자유 서술 → 기술 스택 LLM 추천 → 에이전트 팀 선택**
+2. **백로그 자동 분해 (opt-in)** — Phase 4-카테고리 템플릿으로 10~25개 Task를 즉시 준비, `/crew-plan`/`/crew-impl` 체인으로 바로 진입
+3. 사용자 프로젝트용 `CLAUDE.md`/`README.md`/`VERSION`(0.1.0) 새로 생성
 
 > [!TIP]
 > **요구사항 우선 플로우** — 한 줄 또는 여러 문단의 요구사항을 입력하면 기술 스택을 LLM이 추천하고 백로그까지 자동으로 분해합니다. 입력 신뢰 경계(prompt injection 방어)·sanitization(셸/path traversal 차단)·Hard limits(phase당 ≤10, 전체 ≤30)가 기본 적용됩니다.
@@ -64,15 +53,10 @@ claude
 **이미 코드베이스가 있는 프로젝트라면:**
 
 ```bash
-# 권장: kit의 .claude/만 기존 프로젝트에 복사 (잡티 0)
-git clone https://github.com/wejsa/ai-crew-kit.git /tmp/ai-crew-kit
-cp -r /tmp/ai-crew-kit/.claude my-existing-project/
-cd my-existing-project
-claude
 /crew-onboard
 ```
 
-> 코드베이스를 자동 스캔하여 기술 스택을 감지하고 설정을 생성합니다. kit clone에 사용자 코드를 함께 둔 경우(시나리오 B)도 `/crew-onboard`가 위와 동일한 자동 정리를 사전에 수행합니다 (사용자 코드 보통 `src/`/`app/` 등 비충돌 경로면 안전; 동일 경로 충돌 의심 시 사전 백업 권장).
+> 코드베이스를 자동 스캔하여 기술 스택을 감지하고 설정을 생성합니다.
 > 자세한 내용은 [기존 프로젝트 온보딩](./docs/getting-started.md#기존-프로젝트-온보딩)을 참조하세요.
 
 ### 기존 사용자 — 업데이트
