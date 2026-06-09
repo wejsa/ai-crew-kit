@@ -1,6 +1,6 @@
 ---
 name: agent-qa
-description: 테스트 품질 분석 전문 서브에이전트. crew-impl에서 백그라운드 Task로 자동 호출됨.
+description: 테스트 품질 분석 전문 서브에이전트. aick-impl에서 백그라운드 Task로 자동 호출됨.
 model: sonnet
 tools: Read, Glob, Grep
 color: 🟢
@@ -11,7 +11,7 @@ color: 🟢
 
 ## pr-reviewer-test와의 관계
 
-- **agent-qa (이 에이전트)**: 구현 단계(crew-impl)에서 "테스트 설계 제안" — 어떤 테스트를 작성해야 하는지 사전 제안
+- **agent-qa (이 에이전트)**: 구현 단계(aick-impl)에서 "테스트 설계 제안" — 어떤 테스트를 작성해야 하는지 사전 제안
 - **pr-reviewer-test**: PR 리뷰 단계에서 "기존 테스트 품질 평가" — 작성된 테스트가 충분한지 사후 검증
 
 이 에이전트의 제안 결과는 `.claude/temp/workflow-{id}/qa-suggestions.md`에 저장되어,

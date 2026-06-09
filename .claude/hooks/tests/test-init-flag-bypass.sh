@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # test-init-flag-bypass.sh — 0-A단계 init/onboard 트리거 보호 마커 (v2.2.0)
 #
-# crew-init/onboard 트랜잭션 동안은 초기 셋업 다수 Write가 정상이므로
+# aick-init/onboard 트랜잭션 동안은 초기 셋업 다수 Write가 정상이므로
 # init-in-progress.flag 존재 시 카운터 진입 자체를 차단해야 한다.
 #
 # 시나리오:
@@ -77,7 +77,7 @@ done
 assert_file_not_exists "$INIT_FLAG" "stale 마커 (TTL 초과) 자동 회수됨" || fail=$((fail + 1))
 assert_file_exists "$DISABLE_FLAG" "stale 마커 회수 후 정상 카운터 동작 → 4회째 비활성화" || fail=$((fail + 1))
 
-# ── 시나리오 4: bulk-edit-in-progress.flag 존재 → 동일 우회 (v4.4.0 crew-impl/fix 보호) ──
+# ── 시나리오 4: bulk-edit-in-progress.flag 존재 → 동일 우회 (v4.4.0 aick-impl/fix 보호) ──
 rm -f "$INIT_FLAG" "$BULK_FLAG" "$DISABLE_FLAG" "$COUNTER"
 rm -f "$TMP_ISO"/*.lock 2>/dev/null
 touch "$BULK_FLAG"

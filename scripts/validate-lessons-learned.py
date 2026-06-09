@@ -12,10 +12,10 @@ Phase 7 Lean Closure (옵션 A) — docs/v2/phase-7-plan.md
 3. impact 임계값 sanity (WARN only — 사용자 override 허용)
    권장: appliedCount>=5 → high / >=3 → medium / <3 → low
 
-> secrets 필터링(SEC-S01~S05)은 Step 2(crew-retro §5.3 통합)에서 도입.
+> secrets 필터링(SEC-S01~S05)은 Step 2(aick-retro §5.3 통합)에서 도입.
 > SEC-S01~S05 모두 `excludeContexts: ["comment"]` 보유 → lesson description은
 > 코멘트성 텍스트라 정적 검증 시 false positive 다발 (PR #43 리뷰 MAJOR).
-> Step 2에서 crew-retro AskUserQuestion으로 사용자 판단 위임.
+> Step 2에서 aick-retro AskUserQuestion으로 사용자 판단 위임.
 
 모드:
 - 기본: `.claude/state/lessons-learned.json` 검증. 부재 시 graceful skip(exit 0)

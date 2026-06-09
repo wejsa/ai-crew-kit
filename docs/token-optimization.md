@@ -18,9 +18,9 @@ AI Crew Kit v2.0.0에서는 각 스킬에 **복잡도 힌트(`complexity-hint`)*
 
 | 스킬 | 역할 |
 |---|---|
-| `crew-review-pr` | 4관점 통합 PR 리뷰 |
-| `crew-plan` | Task 선택 + 설계 분석 + 스텝 분리 |
-| `crew-health-check` | 다중 카테고리 코드베이스 검진 |
+| `aick-review-pr` | 4관점 통합 PR 리뷰 |
+| `aick-plan` | Task 선택 + 설계 분석 + 스텝 분리 |
+| `aick-health-check` | 다중 카테고리 코드베이스 검진 |
 
 ### 🟡 Medium (9개 — Sonnet 권장)
 
@@ -28,15 +28,15 @@ AI Crew Kit v2.0.0에서는 각 스킬에 **복잡도 힌트(`complexity-hint`)*
 
 | 스킬 | 역할 |
 |---|---|
-| `crew-impl` | 스텝 개발 + PR 생성 |
-| `crew-feature` | 요구사항 정의 + 백로그 등록 |
-| `crew-retro` | 완료 Task 회고 + 학습 반영 |
-| `crew-report` | 프로젝트 메트릭 4축 분석 |
-| `crew-estimate` | 작업 복잡도 5팩터 추정 |
-| `crew-fix` | CRITICAL 이슈 자동 수정 |
-| `crew-onboard` | 기존 프로젝트 스캔 + 온보딩 |
-| `crew-review` | 경로 기반 4관점 코드 리뷰 |
-| `crew-hotfix` | main 긴급 수정 + 보안 리뷰 |
+| `aick-impl` | 스텝 개발 + PR 생성 |
+| `aick-feature` | 요구사항 정의 + 백로그 등록 |
+| `aick-retro` | 완료 Task 회고 + 학습 반영 |
+| `aick-report` | 프로젝트 메트릭 4축 분석 |
+| `aick-estimate` | 작업 복잡도 5팩터 추정 |
+| `aick-fix` | CRITICAL 이슈 자동 수정 |
+| `aick-onboard` | 기존 프로젝트 스캔 + 온보딩 |
+| `aick-review` | 경로 기반 4관점 코드 리뷰 |
+| `aick-hotfix` | main 긴급 수정 + 보안 리뷰 |
 
 ### 🟢 Light (10개 — Haiku 가능)
 
@@ -44,16 +44,16 @@ AI Crew Kit v2.0.0에서는 각 스킬에 **복잡도 힌트(`complexity-hint`)*
 
 | 스킬 | 역할 |
 |---|---|
-| `crew-status` | 프로젝트 상태 확인 |
-| `crew-backlog` | Task CRUD |
-| `crew-docs` | 키워드 기반 문서 검색 |
-| `crew-create` | 스킬 스캐폴딩 |
-| `crew-release` | 빌드 + 머지 + 태그 생성 |
-| `crew-upgrade` | 프레임워크 업그레이드 |
-| `crew-validate` | 구조 무결성 검증 |
-| `crew-init` | 프로젝트 초기화 |
-| `crew-merge-pr` | PR Squash 머지 |
-| `crew-rollback` | git revert 기반 롤백 |
+| `aick-status` | 프로젝트 상태 확인 |
+| `aick-backlog` | Task CRUD |
+| `aick-docs` | 키워드 기반 문서 검색 |
+| `aick-create` | 스킬 스캐폴딩 |
+| `aick-release` | 빌드 + 머지 + 태그 생성 |
+| `aick-upgrade` | 프레임워크 업그레이드 |
+| `aick-validate` | 구조 무결성 검증 |
+| `aick-init` | 프로젝트 초기화 |
+| `aick-merge-pr` | PR Squash 머지 |
+| `aick-rollback` | git revert 기반 롤백 |
 
 ---
 
@@ -80,8 +80,8 @@ AI Crew Kit v2.0.0에서는 각 스킬에 **복잡도 힌트(`complexity-hint`)*
   "tokenHints": {
     "defaultComplexity": "medium",
     "skillOverrides": {
-      "crew-impl": "light",
-      "crew-review-pr": "heavy"
+      "aick-impl": "light",
+      "aick-review-pr": "heavy"
     },
     "maxMcpServers": 10,
     "compactionThreshold": 50
@@ -158,7 +158,7 @@ Phase 2의 스킬 프로파일(`developer`/`full`/`docs-only`)과 Phase 3의 복
 | `docs-only` | 3 | 0 | 0 | 3 |
 
 `docs-only` 프로파일은 문서 전용 light 스킬만 사용 → 토큰 소비 최소.
-`developer`는 heavy 2개(crew-plan, crew-review-pr)만 포함 → 나머지는 medium/light로 운영 가능.
+`developer`는 heavy 2개(aick-plan, aick-review-pr)만 포함 → 나머지는 medium/light로 운영 가능.
 
 ---
 
@@ -169,7 +169,7 @@ Phase 2의 스킬 프로파일(`developer`/`full`/`docs-only`)과 Phase 3의 복
 ACK는 이 필드를 **문서 안내용**으로 사용합니다. Claude Code가 자동 모델 전환을 지원하지 않아도 가치는 유지됩니다:
 
 1. 사용자가 스킬 호출 전 복잡도를 인지 → 수동으로 모델/thinking 설정
-2. `/crew-health-check`가 SKILL.md 구조 검증 시 활용
+2. `/aick-health-check`가 SKILL.md 구조 검증 시 활용
 3. 향후 Claude Code가 지원할 경우 자동 연동
 
 ### Q. 내 프로젝트에서 분류가 맞지 않으면?
@@ -180,7 +180,7 @@ ACK는 이 필드를 **문서 안내용**으로 사용합니다. Claude Code가 
 {
   "tokenHints": {
     "skillOverrides": {
-      "crew-review-pr": "medium"  // 간단한 프로젝트에서는 medium으로 충분
+      "aick-review-pr": "medium"  // 간단한 프로젝트에서는 medium으로 충분
     }
   }
 }
@@ -188,7 +188,7 @@ ACK는 이 필드를 **문서 안내용**으로 사용합니다. Claude Code가 
 
 ### Q. 리뷰 서브에이전트가 `Usage credits required for 1M context`로 전부 실패하면?
 
-**증상**: `/crew-review-pr` 실행 시 `pr-reviewer-architecture/security/test`가 **0 tool use로 동시에** `Usage credits required for 1M context` (또는 `Extra usage is required for 1M context · run /extra-usage to enable`)로 실패.
+**증상**: `/aick-review-pr` 실행 시 `pr-reviewer-architecture/security/test`가 **0 tool use로 동시에** `Usage credits required for 1M context` (또는 `Extra usage is required for 1M context · run /extra-usage to enable`)로 실패.
 
 **원인**: PR 코드 문제가 **아닙니다**. 부모 세션이 **1M 컨텍스트 모델**(예: `claude-opus-4-8[1m]`)로 돌고 있을 때, `model: opus`로 핀된 리뷰 서브에이전트가 부모의 1M 컨텍스트 권한/Extra Usage를 **상속받지 못하는 Claude Code 하네스 제약**입니다(서브에이전트 스폰 단계에서 차단 — 관련 이슈 #51060/#45169). Max/Team/Enterprise 구독은 1M Opus가 **포함**이므로 "크레딧 구매"가 필요한 게 아니라, *서브에이전트가 그 권한을 못 물려받는 것*입니다.
 
@@ -200,7 +200,7 @@ ACK는 이 필드를 **문서 안내용**으로 사용합니다. Claude Code가 
    ```
    > 1M 컨텍스트는 *단일 턴이 진짜 200K를 넘는 거대 맥락*(모노레포 통째 분석 등)을 요구할 때만 켜는 특수 모드로 두는 것을 권장합니다.
 
-2. **자동 폴백**(v2.5.2+): 위 시그니처로 2개+ 서브에이전트가 실패하면 `crew-review-pr`이 **즉시 중단하지 않고 메인 에이전트 직접 리뷰로 자동 폴백**합니다. CRITICAL은 여전히 머지 차단(머지 게이트 유지)되지만, 독립 다관점 분리 효과가 약화되므로 **격하 배너**가 출력됩니다. 근본 해소는 1번(세션 200K opus 전환)입니다.
+2. **자동 폴백**(v2.5.2+): 위 시그니처로 2개+ 서브에이전트가 실패하면 `aick-review-pr`이 **즉시 중단하지 않고 메인 에이전트 직접 리뷰로 자동 폴백**합니다. CRITICAL은 여전히 머지 차단(머지 게이트 유지)되지만, 독립 다관점 분리 효과가 약화되므로 **격하 배너**가 출력됩니다. 근본 해소는 1번(세션 200K opus 전환)입니다.
 
 > **주의**: 이는 *런타임 세션 설정*(`/model`로 당신이 고르는 것) 문제이며, kit의 에이전트 `model: opus` 핀과는 별개입니다. 핀은 "어느 등급(opus/sonnet)"만 정하고 "1M 여부"는 세션 설정을 따라갑니다.
 

@@ -35,7 +35,7 @@ BACKLOG="$STATE_DIR/backlog.json"
 DISABLE_FLAG="$STATE_DIR/hook-disabled.flag"
 COUNTER_FILE="$STATE_DIR/hook-trigger-count"
 INIT_FLAG="$STATE_DIR/init-in-progress.flag"
-BULK_FLAG="$STATE_DIR/bulk-edit-in-progress.flag"  # v4.4.0: crew-impl/fix 등 스텝 다중 파일 작업 보호
+BULK_FLAG="$STATE_DIR/bulk-edit-in-progress.flag"  # v4.4.0: aick-impl/fix 등 스텝 다중 파일 작업 보호
 INIT_FLAG_TTL_SECONDS=3600  # 마커 미회수(SKILL 비정상 종료) 대비 1시간 후 stale로 간주
 
 # 임계값/윈도우 외부화 (v2.1.3): 멀티파일 Edit이 잦은 단독 작업자가 자체적으로 완화 가능.
@@ -61,7 +61,7 @@ if [ -f "$DISABLE_FLAG" ]; then
 fi
 
 # ── 0-A단계: 대량 쓰기(bulk-write) 트랜잭션 보호 마커 (v2.2.0, v4.4.0 일반화) ─────
-# crew-init/onboard(초기 셋업)·crew-impl/fix(스텝 다중 파일 생성·수정) 등은
+# aick-init/onboard(초기 셋업)·aick-impl/fix(스텝 다중 파일 생성·수정) 등은
 # 짧은 시간에 다수 Write가 정상이므로 카운터 진입 자체를 차단하여
 # false-positive 자동 비활성화를 방지한다.
 # 마커는 SKILL이 시작 시 생성·종료 시 제거하지만, 비정상 종료 대비 TTL 자동 회수.

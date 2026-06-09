@@ -34,7 +34,7 @@
 
 > **예외 1 — 프로젝트 상태는 항상 로컬**: `.claude/state/`, `.claude/temp/`, `.claude/plans/`, `project.json`, `CLAUDE.md`, `README.md`, `.claude/settings.json`은 프로젝트별 읽기/쓰기 대상이므로 **항상 프로젝트 로컬 경로**를 쓰며 `${CLAUDE_PLUGIN_ROOT}` 접두를 붙이지 않습니다.
 >
-> **예외 2 — crew-upgrade의 클론-소스 읽기는 규칙 밖**: crew-upgrade는 kit 리포를 임시 디렉토리에 클론해 그 소스의 `templates/`·`schemas/` 등을 읽습니다(번들 경로도 프로젝트 경로도 아닌 클론 경로). 이 업그레이드-시점 읽기 경로에는 `${CLAUDE_PLUGIN_ROOT}` 접두를 적용하지 않습니다.
+> **예외 2 — aick-upgrade의 클론-소스 읽기는 규칙 밖**: aick-upgrade는 kit 리포를 임시 디렉토리에 클론해 그 소스의 `templates/`·`schemas/` 등을 읽습니다(번들 경로도 프로젝트 경로도 아닌 클론 경로). 이 업그레이드-시점 읽기 경로에는 `${CLAUDE_PLUGIN_ROOT}` 접두를 적용하지 않습니다.
 
 ---
 
@@ -44,10 +44,10 @@
 
 | 하고 싶은 것 | 명령 |
 |-------------|------|
-| 다음 작업 시작 | "다음 작업 가져와줘" → `/crew-plan` → `/crew-impl` |
-| 소규모 수정 | "OO 고쳐줘" → `/crew-impl --micro "설명"` |
+| 다음 작업 시작 | "다음 작업 가져와줘" → `/aick-plan` → `/aick-impl` |
+| 소규모 수정 | "OO 고쳐줘" → `/aick-impl --micro "설명"` |
 | PR 리뷰 + 머지 | "PR 123 리뷰해줘" → 자동 체이닝 |
-| 상태 확인 | "상태 확인해줘" → `/crew-status` |
+| 상태 확인 | "상태 확인해줘" → `/aick-status` |
 
 ### 3가지 주의사항
 1. **계획 승인 전 코드 작성 금지** — plan → 승인 → impl 순서 필수
@@ -71,8 +71,8 @@
 자주 쓰는 명령:
 
 ```bash
-/crew-status   # 현재 상태 요약
-/crew-plan     # 다음 작업 가져오기
+/aick-status   # 현재 상태 요약
+/aick-plan     # 다음 작업 가져오기
 ```
 
 <details>
@@ -101,10 +101,10 @@ fi
 #    존재하지 않으면 → 아래 3, 4번 진행
 
 # 3. 상태 요약 보기
-/crew-status
+/aick-status
 
 # 4. 다음 작업 가져오기
-/crew-plan
+/aick-plan
 ```
 
 자동 비활성화를 해제하려면 `rm .claude/state/hook-disabled.flag` 후 원인을 점검하세요. 자세한 내용은 `.claude/hooks/README.md` 참조.
@@ -156,20 +156,20 @@ fi
 {{WORKFLOW_CHAINING_RULES}}
 
 ### --all 옵션
-`/crew-impl --all` 사용 시 모든 스텝을 사용자 개입 없이 연속 실행.
+`/aick-impl --all` 사용 시 모든 스텝을 사용자 개입 없이 연속 실행.
 
 ### 루프 가드
-- crew-fix → crew-review-pr 루프: **최대 2회**
-  - 1회: crew-review-pr → CRITICAL → crew-fix → crew-review-pr (재리뷰)
-  - 2회: 재리뷰 → CRITICAL → crew-fix → crew-review-pr (최종 리뷰)
+- aick-fix → aick-review-pr 루프: **최대 2회**
+  - 1회: aick-review-pr → CRITICAL → aick-fix → aick-review-pr (재리뷰)
+  - 2회: 재리뷰 → CRITICAL → aick-fix → aick-review-pr (최종 리뷰)
   - 3회째 CRITICAL 발견 시: REQUEST_CHANGES 출력 후 **즉시 중단** (수동 개입 필요)
-- 카운트 기준: 같은 PR에 대한 crew-fix 호출 횟수
+- 카운트 기준: 같은 PR에 대한 aick-fix 호출 횟수
 
 ### 중단 조건 (이 경우에만 멈추고 사용자에게 보고)
 - CRITICAL 이슈 auto-fix 실패
 - 빌드 실패 (3회 재시도 후)
 - 라인 수 제한 초과 (프로필별 상이)
-- crew-fix → crew-review-pr 루프 2회 초과 (루프 가드 발동)
+- aick-fix → aick-review-pr 루프 2회 초과 (루프 가드 발동)
 
 ### 금지 사항
 - 자동 호출 대상인데 "진행할까요?" 질문하며 멈추기 **금지**
@@ -242,9 +242,9 @@ fi
 
 | 중단 사유 | 상태 | 다음 조치 |
 |----------|------|----------|
-| CRITICAL 2회 재발견 | "PR #{N}에 REQUEST_CHANGES" | "수동으로 CRITICAL 이슈 수정 후 /crew-review-pr {N}" |
-| 빌드 3회 실패 | "빌드 실패 (시도 3/3)" | "빌드 오류 해결 후 /crew-impl --next" |
-| 라인 수 700 초과 | "변경 {N}줄 (700줄 제한 초과)" | "스텝 재분리 필요, /crew-plan으로 재설계" |
+| CRITICAL 2회 재발견 | "PR #{N}에 REQUEST_CHANGES" | "수동으로 CRITICAL 이슈 수정 후 /aick-review-pr {N}" |
+| 빌드 3회 실패 | "빌드 실패 (시도 3/3)" | "빌드 오류 해결 후 /aick-impl --next" |
+| 라인 수 700 초과 | "변경 {N}줄 (700줄 제한 초과)" | "스텝 재분리 필요, /aick-plan으로 재설계" |
 
 ---
 
@@ -268,7 +268,7 @@ fi
 **필드 타입·소유권 (PreToolUse 머지 게이트 전제조건 — 위반 시 게이트가 silent no-op):**
 > 타입·enum의 SSOT는 `${CLAUDE_PLUGIN_ROOT}/.claude/schemas/backlog.schema.json`(`definitions.workflowState`, 경로 해석은 "프레임워크 번들 경로 해석" 규칙). 아래는 그 요약이며, 충돌 시 schema가 우선한다.
 - `prNumber` / `fixLoopCount`: **정수 또는 `null`** — 따옴표 금지. 문자열 `"42"`는 ① schema 거부(`integer|null`), ② `pre-tool-use.sh`의 숫자 join(`--argjson`) 미스로 머지 게이트가 PR을 못 찾음. PR 생성 시 `prNumber`에 **정수** PR 번호 기록.
-- `lastReviewDecision`: `APPROVED` / `COMMENT` / `REQUEST_CHANGES` / `null`. **crew-review-pr Step 6.5가 매 리뷰마다 소유·갱신.** PreToolUse 머지 게이트(`pre-tool-use.sh`)의 결정적 차단 신호 — `REQUEST_CHANGES`면 미해결 CRITICAL로 간주해 `gh pr merge`를 차단한다.
+- `lastReviewDecision`: `APPROVED` / `COMMENT` / `REQUEST_CHANGES` / `null`. **aick-review-pr Step 6.5가 매 리뷰마다 소유·갱신.** PreToolUse 머지 게이트(`pre-tool-use.sh`)의 결정적 차단 신호 — `REQUEST_CHANGES`면 미해결 CRITICAL로 간주해 `gh pr merge`를 차단한다.
 
 **완료 시:** `currentSkill`을 다음 스킬로, `lastCompletedSkill`을 현재 스킬로 갱신.
 > ⚠️ **부분 갱신 시 기존 필드를 드롭하지 말 것.** 특히 `lastReviewDecision`/`prNumber`는 게이트가 읽으므로, currentSkill만 바꾸려다 두 필드를 누락하면 미해결 CRITICAL PR이 머지될 수 있다. workflowState는 항상 전체 객체로 다시 쓴다.
@@ -306,9 +306,9 @@ fi
 | Git push 충돌 | `pull --rebase` 시도 | [권장] 자동 rebase 수락 / 충돌 수동 해결 |
 | PR 생성 실패 | 원인별 분기 | [권장] `gh auth status` 확인 / 재시도 |
 | gh auth 만료 | `gh auth refresh` 안내 | [권장] `! gh auth refresh` 실행 |
-| 세션 끊김 | intent 기반 복구 제안 | [권장] `/crew-status` 후 안내 / 수동 상태 초기화 |
+| 세션 끊김 | intent 기반 복구 제안 | [권장] `/aick-status` 후 안내 / 수동 상태 초기화 |
 | lock TTL 만료 | 자동 연장 제안 | [권장] 연장 수락 / `--extend-lock` / [최후수단] `unlock --force` |
-| 컨텍스트 압축 | workflowState 복원 | [권장] `/crew-status` → 맥락 복원 |
+| 컨텍스트 압축 | workflowState 복원 | [권장] `/aick-status` → 맥락 복원 |
 | subagent 타임아웃 | 스킵 후 진행 | [권장] 결과 없이 진행 수락 / 수동 재실행 |
 
 > 📖 **상세 에러 가이드**: `.claude/docs/troubleshooting.md` 참조
@@ -391,7 +391,7 @@ fi
 
 **동작**:
 1. intent 파일 읽기
-2. 미완료 작업 자동 실행 (crew-merge-pr의 "Intent 기반 복구" 절차)
+2. 미완료 작업 자동 실행 (aick-merge-pr의 "Intent 기반 복구" 절차)
 3. intent 파일 삭제
 4. 복구 결과 알림:
 ```
@@ -406,7 +406,7 @@ fi
 ### 새 기능 (기획부터)
 
 ```
-/crew-feature "기능명"
+/aick-feature "기능명"
   ↓
 요구사항 정의 -> docs/requirements/{{TASK_PREFIX}}-XXX-spec.md
   ↓
@@ -414,29 +414,29 @@ fi
   ↓
 backlog.json에 Task 등록
   ↓
-/crew-plan으로 설계 + 계획 수립
+/aick-plan으로 설계 + 계획 수립
 ```
 
 ### 기존 Task 개발
 
 ```
-/crew-plan
+/aick-plan
   ↓
 Task 선택 -> 요구사항 확인 -> 설계 -> 스텝 분리 계획
   ↓
 (사용자 설계/계획 검토)
   ↓
-/crew-impl 또는 "개발 진행해줘"
+/aick-impl 또는 "개발 진행해줘"
   ↓
 Step 1 개발 -> PR 자동 생성
   ↓
-/crew-review-pr {번호} 또는 "PR {번호} 리뷰해줘"
+/aick-review-pr {번호} 또는 "PR {번호} 리뷰해줘"
   ↓
 (수정 필요 시 수정 -> 커밋 -> 푸시)
   ↓
-/crew-merge-pr {번호} 또는 "PR {번호} 머지해줘"
+/aick-merge-pr {번호} 또는 "PR {번호} 머지해줘"
   ↓
-/crew-impl --next 또는 "다음 스텝 진행해줘"
+/aick-impl --next 또는 "다음 스텝 진행해줘"
   ↓
 (반복)
   ↓
@@ -448,14 +448,14 @@ Step 1 개발 -> PR 자동 생성
 ```
 "긴급 수정해줘: {설명}" 또는 "v1.2.3 롤백해줘"
         │
-        ├── [수정] /crew-hotfix
+        ├── [수정] /aick-hotfix
         │     ├── main에서 hotfix 브랜치 분기
         │     ├── 코드 수정 + 빌드/테스트
         │     ├── PR 생성 (--base main) + 보안 리뷰
         │     ├── 머지 → 패치 버전 범프 → 태그
         │     └── develop 백머지
         │
-        └── [롤백] /crew-rollback
+        └── [롤백] /aick-rollback
               ├── main에서 revert 브랜치 분기
               ├── git revert (히스토리 보존)
               ├── Revert PR 생성 (--base main)
@@ -481,9 +481,9 @@ main (운영)
 - PR은 develop 브랜치로 생성
 - 리뷰 승인 후 Squash 머지
 - **스텝별 PR 생성** ({{PR_LINE_LIMIT}}라인 미만 단위)
-- PR 생성: `/crew-impl` 스텝 완료 시 자동 처리
-- PR 리뷰: `/crew-review-pr {번호}`
-- PR 머지: `/crew-merge-pr {번호}`
+- PR 생성: `/aick-impl` 스텝 완료 시 자동 처리
+- PR 리뷰: `/aick-review-pr {번호}`
+- PR 머지: `/aick-merge-pr {번호}`
 
 ### 커밋 메시지 규칙
 ```
@@ -539,7 +539,7 @@ Types:
 
 ### 스텝 분리 기준
 - 기본 제한: **{{PR_LINE_LIMIT}}라인 미만** (스텝별 자동 조정: 50~1000)
-- crew-plan이 스텝 특성에 따라 prLineLimit을 자동 설정 (사용자 수동 설정 불필요)
+- aick-plan이 스텝 특성에 따라 prLineLimit을 자동 설정 (사용자 수동 설정 불필요)
 
 ### 라인 수 제한
 

@@ -249,40 +249,40 @@ def generate_workflow_chaining_rules(project: dict) -> str:
         return "\n".join([
             "| 완료 스킬 | 조건 | 자동 호출 |",
             "|-----------|------|----------|",
-            "| crew-feature | 사용자 승인 | → crew-plan |",
-            "| crew-plan | 사용자 \"Y\" 승인 | → crew-impl |",
-            "| crew-impl | PR 생성 + 빌드/테스트 통과 | → crew-merge-pr {PR번호} |",
-            "| crew-merge-pr | 남은 스텝 있음 | → crew-impl --next |",
-            "| crew-merge-pr | 마지막 스텝 | Task 완료 처리 후 종료 |",
-            "| crew-hotfix | - | 자동 체이닝 없음 (독립 실행) |",
-            "| crew-rollback | - | 자동 체이닝 없음 (독립 실행) |",
-            "| crew-retro | - | 자동 체이닝 없음 (독립 실행) |",
-            "| crew-report | - | 자동 체이닝 없음 (독립 실행) |",
-            "| crew-onboard | - | 자동 체이닝 없음 (독립 실행) |",
-            "| crew-estimate | - | 자동 체이닝 없음 (독립 실행) |",
-            "| crew-create | - | 자동 체이닝 없음 (독립 실행) |",
+            "| aick-feature | 사용자 승인 | → aick-plan |",
+            "| aick-plan | 사용자 \"Y\" 승인 | → aick-impl |",
+            "| aick-impl | PR 생성 + 빌드/테스트 통과 | → aick-merge-pr {PR번호} |",
+            "| aick-merge-pr | 남은 스텝 있음 | → aick-impl --next |",
+            "| aick-merge-pr | 마지막 스텝 | Task 완료 처리 후 종료 |",
+            "| aick-hotfix | - | 자동 체이닝 없음 (독립 실행) |",
+            "| aick-rollback | - | 자동 체이닝 없음 (독립 실행) |",
+            "| aick-retro | - | 자동 체이닝 없음 (독립 실행) |",
+            "| aick-report | - | 자동 체이닝 없음 (독립 실행) |",
+            "| aick-onboard | - | 자동 체이닝 없음 (독립 실행) |",
+            "| aick-estimate | - | 자동 체이닝 없음 (독립 실행) |",
+            "| aick-create | - | 자동 체이닝 없음 (독립 실행) |",
         ])
     else:
         # standard: 전체 체이닝 (review-pr/fix 포함)
         return "\n".join([
             "| 완료 스킬 | 조건 | 자동 호출 |",
             "|-----------|------|----------|",
-            "| crew-feature | 사용자 승인 | → crew-plan |",
-            "| crew-plan | 사용자 \"Y\" 승인 | → crew-impl |",
-            "| crew-impl | PR 생성 완료 | → crew-review-pr {PR번호} --auto-fix |",
-            "| crew-review-pr | APPROVED | → crew-merge-pr {PR번호} |",
-            "| crew-review-pr | CRITICAL + --auto-fix | → crew-fix {PR번호} |",
-            "| crew-review-pr | REQUEST_CHANGES | ❌ 멈춤 (수정 대기) |",
-            "| crew-fix | 수정 완료 | → crew-review-pr {PR번호} --auto-fix |",
-            "| crew-merge-pr | 남은 스텝 있음 | → crew-impl --next |",
-            "| crew-merge-pr | 마지막 스텝 | Task 완료 처리 후 종료 |",
-            "| crew-hotfix | - | 자동 체이닝 없음 (독립 실행) |",
-            "| crew-rollback | - | 자동 체이닝 없음 (독립 실행) |",
-            "| crew-retro | - | 자동 체이닝 없음 (독립 실행) |",
-            "| crew-report | - | 자동 체이닝 없음 (독립 실행) |",
-            "| crew-onboard | - | 자동 체이닝 없음 (독립 실행) |",
-            "| crew-estimate | - | 자동 체이닝 없음 (독립 실행) |",
-            "| crew-create | - | 자동 체이닝 없음 (독립 실행) |",
+            "| aick-feature | 사용자 승인 | → aick-plan |",
+            "| aick-plan | 사용자 \"Y\" 승인 | → aick-impl |",
+            "| aick-impl | PR 생성 완료 | → aick-review-pr {PR번호} --auto-fix |",
+            "| aick-review-pr | APPROVED | → aick-merge-pr {PR번호} |",
+            "| aick-review-pr | CRITICAL + --auto-fix | → aick-fix {PR번호} |",
+            "| aick-review-pr | REQUEST_CHANGES | ❌ 멈춤 (수정 대기) |",
+            "| aick-fix | 수정 완료 | → aick-review-pr {PR번호} --auto-fix |",
+            "| aick-merge-pr | 남은 스텝 있음 | → aick-impl --next |",
+            "| aick-merge-pr | 마지막 스텝 | Task 완료 처리 후 종료 |",
+            "| aick-hotfix | - | 자동 체이닝 없음 (독립 실행) |",
+            "| aick-rollback | - | 자동 체이닝 없음 (독립 실행) |",
+            "| aick-retro | - | 자동 체이닝 없음 (독립 실행) |",
+            "| aick-report | - | 자동 체이닝 없음 (독립 실행) |",
+            "| aick-onboard | - | 자동 체이닝 없음 (독립 실행) |",
+            "| aick-estimate | - | 자동 체이닝 없음 (독립 실행) |",
+            "| aick-create | - | 자동 체이닝 없음 (독립 실행) |",
         ])
 ```
 
@@ -291,140 +291,140 @@ def generate_workflow_chaining_rules(project: dict) -> str:
 ```python
 # 스킬별 정규 데이터 — 커맨드 + 설명 + 자연어 매핑의 단일 소스
 SKILL_REGISTRY = {
-    "crew-status": {
-        "commands": ['/crew-status         # 상태 확인'],
+    "aick-status": {
+        "commands": ['/aick-status         # 상태 확인'],
         "nl_mappings": [
-            ('"상태 확인해줘"', '`/crew-status`', '프로젝트 상태 확인'),
+            ('"상태 확인해줘"', '`/aick-status`', '프로젝트 상태 확인'),
         ]
     },
-    "crew-backlog": {
-        "commands": ['/crew-backlog        # 백로그 조회'],
+    "aick-backlog": {
+        "commands": ['/aick-backlog        # 백로그 조회'],
         "nl_mappings": [
-            ('"백로그 보여줘"', '`/crew-backlog list`', '백로그 조회'),
-            ('"버그만 보여줘"', '`/crew-backlog list --type=bug`', '버그 타입 필터'),
-            ('"내 작업 보여줘"', '`/crew-backlog list --assignee=me`', '내 할당 필터'),
-            ('"오래된 작업 보여줘"', '`/crew-backlog list --stale=7d`', '장기 미변경 필터'),
-            ('"대시보드 보여줘"', '`/crew-backlog dashboard`', 'Phase 진행률 현황'),
-            ('"의존성 보여줘"', '`/crew-backlog deps`', '의존성 트리'),
-            ('"{ID} 보관해줘"', '`/crew-backlog archive {ID}`', 'Task soft delete'),
-            ('"일괄 변경해줘"', '`/crew-backlog batch`', '다중 Task 일괄 변경'),
-            ('"버그 등록해줘: {설명}"', '`/crew-backlog add "{설명}" --type=bug`', '버그 등록'),
-            ('"Task 추가해줘: {제목}"', '`/crew-backlog add "{제목}"`', 'Task 등록 (type AI 추론)'),
-            ('"{ID} 수정해줘"', '`/crew-backlog update {ID}`', 'Task 대화형 수정'),
-            ('"{ID} 일시정지해줘"', '`/crew-backlog update {ID} --pause "사유"`', 'Task 일시정지'),
-            ('"{ID} 재개해줘"', '`/crew-backlog update {ID} --resume`', '일시정지 Task 재개'),
+            ('"백로그 보여줘"', '`/aick-backlog list`', '백로그 조회'),
+            ('"버그만 보여줘"', '`/aick-backlog list --type=bug`', '버그 타입 필터'),
+            ('"내 작업 보여줘"', '`/aick-backlog list --assignee=me`', '내 할당 필터'),
+            ('"오래된 작업 보여줘"', '`/aick-backlog list --stale=7d`', '장기 미변경 필터'),
+            ('"대시보드 보여줘"', '`/aick-backlog dashboard`', 'Phase 진행률 현황'),
+            ('"의존성 보여줘"', '`/aick-backlog deps`', '의존성 트리'),
+            ('"{ID} 보관해줘"', '`/aick-backlog archive {ID}`', 'Task soft delete'),
+            ('"일괄 변경해줘"', '`/aick-backlog batch`', '다중 Task 일괄 변경'),
+            ('"버그 등록해줘: {설명}"', '`/aick-backlog add "{설명}" --type=bug`', '버그 등록'),
+            ('"Task 추가해줘: {제목}"', '`/aick-backlog add "{제목}"`', 'Task 등록 (type AI 추론)'),
+            ('"{ID} 수정해줘"', '`/aick-backlog update {ID}`', 'Task 대화형 수정'),
+            ('"{ID} 일시정지해줘"', '`/aick-backlog update {ID} --pause "사유"`', 'Task 일시정지'),
+            ('"{ID} 재개해줘"', '`/aick-backlog update {ID} --resume`', '일시정지 Task 재개'),
         ]
     },
-    "crew-feature": {
-        "commands": ['/crew-feature        # 새 기능 기획 (요구사항 + backlog 등록)'],
+    "aick-feature": {
+        "commands": ['/aick-feature        # 새 기능 기획 (요구사항 + backlog 등록)'],
         "nl_mappings": [
-            ('"새 기능 기획해줘: {기능명}"', '`/crew-feature {기능명}`', '새 기능 기획 + 요구사항 문서'),
+            ('"새 기능 기획해줘: {기능명}"', '`/aick-feature {기능명}`', '새 기능 기획 + 요구사항 문서'),
         ]
     },
-    "crew-plan": {
-        "commands": ['/crew-plan           # 다음 작업 + 설계 + 스텝 분리 계획 수립'],
+    "aick-plan": {
+        "commands": ['/aick-plan           # 다음 작업 + 설계 + 스텝 분리 계획 수립'],
         "nl_mappings": [
-            ('"다음 작업 가져와줘"', '`/crew-plan`', 'Task 선택 + 설계 + 스텝 계획'),
+            ('"다음 작업 가져와줘"', '`/aick-plan`', 'Task 선택 + 설계 + 스텝 계획'),
         ]
     },
-    "crew-impl": {
+    "aick-impl": {
         "commands": [
-            '/crew-impl           # 스텝 개발 + PR 생성',
-            '/crew-impl --micro "OO"  # 소규모 수정 (plan 생략, ≤3 파일)',
+            '/aick-impl           # 스텝 개발 + PR 생성',
+            '/aick-impl --micro "OO"  # 소규모 수정 (plan 생략, ≤3 파일)',
         ],
         "nl_mappings": [
-            ('"개발 진행해줘"', '`/crew-impl`', 'Step 1 개발 -> PR 생성'),
-            ('"다음 스텝 진행해줘"', '`/crew-impl --next`', '다음 스텝 개발 -> PR 생성'),
-            ('"전체 개발 진행해줘"', '`/crew-impl --all`', '모든 스텝 연속 개발'),
-            ('"이어서 진행해줘"', '`/crew-impl --retry`', '실패한 스텝 재시작'),
-            ('"스텝 건너뛰기"', '`/crew-impl --skip`', '빌드 실패 스텝 건너뛰기'),
-            ('"OO 고쳐줘"', '`/crew-impl --micro "OO"`', '소규모 수정 (규모 자동 판단)'),
-            ('"OO 버그 수정해줘"', '`/crew-impl --micro "OO"`', '버그 Micro 경로'),
-            ('"간단하게 OO 추가해줘"', '`/crew-impl --micro "OO"`', '소규모 추가 Micro 경로'),
-            ('"빌드만 확인해줘"', '`/crew-impl --dry-run`', '빌드/테스트 검증만 (PR 미생성)'),
-            ('"테스트 돌려봐"', '`/crew-impl --dry-run`', '빌드/테스트 검증만'),
+            ('"개발 진행해줘"', '`/aick-impl`', 'Step 1 개발 -> PR 생성'),
+            ('"다음 스텝 진행해줘"', '`/aick-impl --next`', '다음 스텝 개발 -> PR 생성'),
+            ('"전체 개발 진행해줘"', '`/aick-impl --all`', '모든 스텝 연속 개발'),
+            ('"이어서 진행해줘"', '`/aick-impl --retry`', '실패한 스텝 재시작'),
+            ('"스텝 건너뛰기"', '`/aick-impl --skip`', '빌드 실패 스텝 건너뛰기'),
+            ('"OO 고쳐줘"', '`/aick-impl --micro "OO"`', '소규모 수정 (규모 자동 판단)'),
+            ('"OO 버그 수정해줘"', '`/aick-impl --micro "OO"`', '버그 Micro 경로'),
+            ('"간단하게 OO 추가해줘"', '`/aick-impl --micro "OO"`', '소규모 추가 Micro 경로'),
+            ('"빌드만 확인해줘"', '`/aick-impl --dry-run`', '빌드/테스트 검증만 (PR 미생성)'),
+            ('"테스트 돌려봐"', '`/aick-impl --dry-run`', '빌드/테스트 검증만'),
         ]
     },
-    "crew-review": {
-        "commands": ['/crew-review         # 코드 리뷰'],
+    "aick-review": {
+        "commands": ['/aick-review         # 코드 리뷰'],
         "nl_mappings": [
-            ('"{경로} 코드 리뷰해줘"', '`/crew-review {경로}`', '코드 경로 종합 리뷰'),
+            ('"{경로} 코드 리뷰해줘"', '`/aick-review {경로}`', '코드 경로 종합 리뷰'),
         ]
     },
-    "crew-review-pr": {
-        "commands": ['/crew-review-pr {num}  # PR 코드 리뷰'],
+    "aick-review-pr": {
+        "commands": ['/aick-review-pr {num}  # PR 코드 리뷰'],
         "nl_mappings": [
-            ('"PR {번호} 리뷰해줘"', '`/crew-review-pr {번호}`', 'PR 리뷰'),
+            ('"PR {번호} 리뷰해줘"', '`/aick-review-pr {번호}`', 'PR 리뷰'),
         ]
     },
-    "crew-merge-pr": {
-        "commands": ['/crew-merge-pr {num}   # PR 머지'],
+    "aick-merge-pr": {
+        "commands": ['/aick-merge-pr {num}   # PR 머지'],
         "nl_mappings": [
-            ('"PR {번호} 머지해줘"', '`/crew-merge-pr {번호}`', 'PR 머지'),
+            ('"PR {번호} 머지해줘"', '`/aick-merge-pr {번호}`', 'PR 머지'),
         ]
     },
-    "crew-docs": {
-        "commands": ['/crew-docs           # 참고자료'],
+    "aick-docs": {
+        "commands": ['/aick-docs           # 참고자료'],
         "nl_mappings": []
     },
-    "crew-retro": {
-        "commands": ['/crew-retro          # 완료 Task 회고 + 학습 반영'],
+    "aick-retro": {
+        "commands": ['/aick-retro          # 완료 Task 회고 + 학습 반영'],
         "nl_mappings": [
-            ('"회고 해줘"', '`/crew-retro`', '최근 완료 Task 회고'),
-            ('"전체 회고 요약해줘"', '`/crew-retro --summary`', '전체 회고 요약'),
+            ('"회고 해줘"', '`/aick-retro`', '최근 완료 Task 회고'),
+            ('"전체 회고 요약해줘"', '`/aick-retro --summary`', '전체 회고 요약'),
         ]
     },
-    "crew-hotfix": {
-        "commands": ['/crew-hotfix         # main 긴급 수정'],
+    "aick-hotfix": {
+        "commands": ['/aick-hotfix         # main 긴급 수정'],
         "nl_mappings": [
-            ('"긴급 수정해줘: {설명}"', '`/crew-hotfix "{설명}"`', 'main 긴급 수정'),
+            ('"긴급 수정해줘: {설명}"', '`/aick-hotfix "{설명}"`', 'main 긴급 수정'),
         ]
     },
-    "crew-rollback": {
-        "commands": ['/crew-rollback       # 릴리스 롤백'],
+    "aick-rollback": {
+        "commands": ['/aick-rollback       # 릴리스 롤백'],
         "nl_mappings": [
-            ('"{태그} 롤백해줘"', '`/crew-rollback {태그}`', '릴리스/PR 롤백'),
+            ('"{태그} 롤백해줘"', '`/aick-rollback {태그}`', '릴리스/PR 롤백'),
         ]
     },
-    "crew-report": {
-        "commands": ['/crew-report         # 프로젝트 메트릭 리포트'],
+    "aick-report": {
+        "commands": ['/aick-report         # 프로젝트 메트릭 리포트'],
         "nl_mappings": [
-            ('"리포트 생성해줘"', '`/crew-report`', '프로젝트 메트릭 리포트'),
+            ('"리포트 생성해줘"', '`/aick-report`', '프로젝트 메트릭 리포트'),
         ]
     },
-    "crew-onboard": {
-        "commands": ['/crew-onboard        # 기존 프로젝트 온보딩'],
+    "aick-onboard": {
+        "commands": ['/aick-onboard        # 기존 프로젝트 온보딩'],
         "nl_mappings": [
-            ('"이 프로젝트에 적용해줘"', '`/crew-onboard`', '기존 프로젝트 온보딩'),
+            ('"이 프로젝트에 적용해줘"', '`/aick-onboard`', '기존 프로젝트 온보딩'),
         ]
     },
-    "crew-estimate": {
-        "commands": ['/crew-estimate       # 작업 복잡도 추정'],
+    "aick-estimate": {
+        "commands": ['/aick-estimate       # 작업 복잡도 추정'],
         "nl_mappings": [
-            ('"이 작업 얼마나 걸려?"', '`/crew-estimate {TASK-ID}`', '작업 복잡도 추정'),
-            ('"스프린트 플래닝 해줘"', '`/crew-estimate --sprint`', '스프린트 플래닝'),
+            ('"이 작업 얼마나 걸려?"', '`/aick-estimate {TASK-ID}`', '작업 복잡도 추정'),
+            ('"스프린트 플래닝 해줘"', '`/aick-estimate --sprint`', '스프린트 플래닝'),
         ]
     },
-    "crew-create": {
-        "commands": ['/crew-create         # 커스텀 스킬 생성'],
+    "aick-create": {
+        "commands": ['/aick-create         # 커스텀 스킬 생성'],
         "nl_mappings": [
-            ('"커스텀 스킬 만들어줘: {name}"', '`/crew-create {name}`', '커스텀 스킬 생성'),
+            ('"커스텀 스킬 만들어줘: {name}"', '`/aick-create {name}`', '커스텀 스킬 생성'),
         ]
     },
-    "crew-health-check": {
-        "commands": ['/crew-health-check   # 코드베이스 건강 검진'],
+    "aick-health-check": {
+        "commands": ['/aick-health-check   # 코드베이스 건강 검진'],
         "nl_mappings": []
     },
-    "crew-release": {
-        "commands": ['/crew-release        # 릴리스'],
+    "aick-release": {
+        "commands": ['/aick-release        # 릴리스'],
         "nl_mappings": []
     },
-    "crew-upgrade": {
-        "commands": ['/crew-upgrade        # 프레임워크 업그레이드'],
+    "aick-upgrade": {
+        "commands": ['/aick-upgrade        # 프레임워크 업그레이드'],
         "nl_mappings": []
     },
-    "crew-init": {
-        "commands": ['/crew-init           # 프로젝트 초기화'],
+    "aick-init": {
+        "commands": ['/aick-init           # 프로젝트 초기화'],
         "nl_mappings": []
     },
 }
@@ -459,7 +459,7 @@ def resolve_skill_profile(project: dict) -> list[str]:
     # 와일드카드: 전체 스킬 디렉토리 탐색 - internal 제외
     if skills == "*":
         all_skills = [d.name for d in Path(".claude/skills").iterdir()
-                      if d.is_dir() and d.name.startswith("crew-")]
+                      if d.is_dir() and d.name.startswith(("aick-", "crew-", "skill-"))]
         return sorted([s for s in all_skills if s not in internal])
 
     return skills
@@ -646,10 +646,10 @@ def generate_claude_md(project_json_path: str) -> str:
 
 ## 사용 시점
 
-### 1. 프로젝트 초기화 (crew-init)
+### 1. 프로젝트 초기화 (aick-init)
 
 ```
-/crew-init
+/aick-init
   ↓
 대화형 설정 수집
   ↓
@@ -665,7 +665,7 @@ CLAUDE.md 생성
 ```
 project.json 수동 편집
   ↓
-/crew-status (변경 감지)
+/aick-status (변경 감지)
   ↓
 CLAUDE.md 재생성 제안
 ```
@@ -699,7 +699,7 @@ PR 생성 시 사용되는 body 템플릿입니다.
 | `{{CHANGES_LIST}}` | 런타임 (git diff) | "" | 변경 사항 목록 |
 
 #### 사용 시점
-- `crew-impl` → PR 생성 시 자동 로드
+- `aick-impl` → PR 생성 시 자동 로드
 
 ### 조건부 섹션
 

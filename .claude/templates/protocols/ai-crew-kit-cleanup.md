@@ -1,6 +1,6 @@
 # Protocol: ai-crew-kit clone 자동 정리
 
-> **SSOT**. `crew-init` Step 1, `crew-onboard` 사전 조건 2번이 본 파일을 참조합니다. 양쪽 SKILL.md에 동일 내용을 *복제하지 마세요* (drift 방지 — Issue #63 도입).
+> **SSOT**. `aick-init` Step 1, `aick-onboard` 사전 조건 2번이 본 파일을 참조합니다. 양쪽 SKILL.md에 동일 내용을 *복제하지 마세요* (drift 방지 — Issue #63 도입).
 
 ## 목적
 
@@ -99,10 +99,10 @@ tar czf .pre-onboard-backup-$(date +%s).tar.gz docs tests scripts .github
 
 ## 변경 이력
 
-- 2026-05-11: Issue #63 — crew-init/crew-onboard에 중복되던 약 85줄을 본 protocol로 단일화. drift 위험 차단.
+- 2026-05-11: Issue #63 — aick-init/aick-onboard에 중복되던 약 85줄을 본 protocol로 단일화. drift 위험 차단.
 - (이전 v2.0.2/v2.0.3 cleanup 14종 확정 등 변경은 git log 참조)
 
 ## 관련
 
-- 호출 SKILL: `.claude/skills/crew-init/SKILL.md`, `.claude/skills/crew-onboard/SKILL.md`
+- 호출 SKILL: `.claude/skills/aick-init/SKILL.md`, `.claude/skills/aick-onboard/SKILL.md`
 - 회귀 테스트: 본 protocol의 동작 자체는 LLM 자연어 실행이라 단위 테스트 부재. M1 fingerprint는 ai-crew-kit 자체 git 히스토리에 강하게 결합되어 있어 사용자 환경에서 우회 가능성 낮음.

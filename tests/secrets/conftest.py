@@ -26,8 +26,8 @@ def base_patterns() -> dict:
 
 @pytest.fixture(scope="session")
 def skill_md_text() -> str:
-    """crew-health-check/SKILL.md 본문 — SSOT drift 검증용 (M001 후속)."""
-    return (REPO_ROOT / ".claude/skills/crew-health-check/SKILL.md").read_text(encoding="utf-8")
+    """aick-health-check/SKILL.md 본문 — SSOT drift 검증용 (M001 후속)."""
+    return (REPO_ROOT / ".claude/skills/aick-health-check/SKILL.md").read_text(encoding="utf-8")
 
 
 def get_pattern(data: dict, section: str, pattern_id: str) -> dict:
@@ -44,7 +44,7 @@ def get_pattern(data: dict, section: str, pattern_id: str) -> dict:
     raise KeyError(f"{pattern_id} not found in {section}")
 
 
-# excludeContexts SSOT — crew-health-check/SKILL.md security 카테고리 헤더 일관
+# excludeContexts SSOT — aick-health-check/SKILL.md security 카테고리 헤더 일관
 EXCLUDE_CTX = {
     "env_var_reference": [
         re.compile(r"process\.env\.\w+"),

@@ -10,7 +10,7 @@ ai-crew-kit/
 ├── CHANGELOG.md         # 상세 변경 이력
 ├── README.md            # 제목에 버전 표시
 └── .claude/skills/
-    └── crew-release/   # 릴리스 자동화 스킬
+    └── aick-release/   # 릴리스 자동화 스킬
 ```
 
 ## 파일 설명
@@ -47,9 +47,9 @@ MAJOR.MINOR.PATCH (예: 1.2.3)
 ### 자동화 방법 (권장)
 ```bash
 # develop 브랜치에서 실행
-/crew-release patch   # 버그 수정 릴리스
-/crew-release minor   # 기능 추가 릴리스
-/crew-release major   # Breaking 변경 릴리스
+/aick-release patch   # 버그 수정 릴리스
+/aick-release minor   # 기능 추가 릴리스
+/aick-release major   # Breaking 변경 릴리스
 ```
 
 ### 수동 방법
@@ -76,7 +76,7 @@ git tag -a v1.2.0 -m "Release v1.2.0"
 git push origin develop main v1.2.0
 ```
 
-## crew-release 상세
+## aick-release 상세
 
 ### 실행 조건
 - develop 브랜치에서만 실행 가능
@@ -129,4 +129,4 @@ git push origin develop --force
 
 - [Semantic Versioning](https://semver.org/)
 - [Keep a Changelog](https://keepachangelog.com/)
-- [crew-release 스킬](./../skills/crew-release/SKILL.md)
+- [aick-release 스킬](./../skills/aick-release/SKILL.md)

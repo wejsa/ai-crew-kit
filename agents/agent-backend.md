@@ -445,12 +445,12 @@ class UserControllerIntegrationTest {
 
 ---
 
-## crew-impl 연동
+## aick-impl 연동
 
 ### 실행 흐름
 
 ```
-/crew-impl
+/aick-impl
     │
     ▼
 ┌─────────────────────────────────────┐
@@ -484,10 +484,10 @@ Step 3: API 엔드포인트 구현
 
 ## 사용법
 
-### crew-impl에서 자동 호출
+### aick-impl에서 자동 호출
 
 ```
-/crew-impl
+/aick-impl
 → agent-backend 자동 활성화
 ```
 

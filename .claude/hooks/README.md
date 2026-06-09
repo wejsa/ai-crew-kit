@@ -74,12 +74,12 @@ exec 0</dev/null                  # stdin을 /dev/null로 — 자식 프로세�
 **발동 시점**: 모든 `Bash` 도구 호출 직전
 **timeout**: 10초
 **매처**: `Bash`
-**목적**: `gh pr merge` 직전, 미해결 CRITICAL이 있는 PR의 머지를 **결정적으로 차단**한다. 기존엔 "CRITICAL은 머지 차단"이 prose 지시(crew-merge-pr/CLAUDE.md)였으나, LLM이 review 분기를 한 번만 잘못 따라도 나쁜 PR이 auto-merge되는 구멍이 있었다. 이 게이트가 그 구멍을 닫는다.
+**목적**: `gh pr merge` 직전, 미해결 CRITICAL이 있는 PR의 머지를 **결정적으로 차단**한다. 기존엔 "CRITICAL은 머지 차단"이 prose 지시(aick-merge-pr/CLAUDE.md)였으나, LLM이 review 분기를 한 번만 잘못 따라도 나쁜 PR이 auto-merge되는 구멍이 있었다. 이 게이트가 그 구멍을 닫는다.
 
 **동작**:
 1. `gh pr merge`가 아닌 모든 Bash 명령 → 즉시 `exit 0` (의견 없음, 오버헤드 최소).
 2. PR 번호 추출 후 **차단 신호** 검사 (둘 중 하나라도 차단이면 deny):
-   - **신호 A (state, 오프라인 결정적)**: PR N을 소유한 Task(`step.prNumber == N` **또는** `workflowState.prNumber == N`)의 `workflowState.lastReviewDecision == "REQUEST_CHANGES"` → 미해결 CRITICAL 게시됨. PR 번호의 결정적 SSOT는 `step.prNumber`(crew-impl Step 8)이므로 거기서도 join한다 — `workflowState.prNumber`만 보면 실제 backlog에서 발동하지 못한다.
+   - **신호 A (state, 오프라인 결정적)**: PR N을 소유한 Task(`step.prNumber == N` **또는** `workflowState.prNumber == N`)의 `workflowState.lastReviewDecision == "REQUEST_CHANGES"` → 미해결 CRITICAL 게시됨. PR 번호의 결정적 SSOT는 `step.prNumber`(aick-impl Step 8)이므로 거기서도 join한다 — `workflowState.prNumber`만 보면 실제 backlog에서 발동하지 못한다.
    - **신호 B (GitHub, best-effort)**: `gh pr view N --json reviewDecision == CHANGES_REQUESTED` (타인 PR에서 GitHub가 기록한 request-changes). 네트워크/인증/`gh` 부재 시 fail-open.
 3. 차단 시 `exit 2` + stderr에 사유·복구 안내(재리뷰 / 우회) 출력.
 
@@ -93,9 +93,9 @@ exec 0</dev/null                  # stdin을 /dev/null로 — 자식 프로세�
 
 **fail-open 시나리오** (게이트 장애가 정상 머지를 막지 않도록 → `exit 0`): `jq` 부재, stdin 부재, backlog 부재, PR 번호 추출 불가, 매칭 `workflowState` 없음, GitHub 조회 실패.
 
-> 신호 A는 `backlog.schema.json`의 `workflowState.lastReviewDecision`(v2.4.0 정식 등록)에 의존한다. 이 필드는 crew-review-pr Step 6.5가 매 리뷰마다 갱신한다. 이전에는 스킬이 참조했으나 schema 미등록(`additionalProperties:false`)으로 거부되던 sleeper였다 — 본 게이트와 함께 정식화되어 crew-fix 모드 판정도 같이 복구됨.
+> 신호 A는 `backlog.schema.json`의 `workflowState.lastReviewDecision`(v2.4.0 정식 등록)에 의존한다. 이 필드는 aick-review-pr Step 6.5가 매 리뷰마다 갱신한다. 이전에는 스킬이 참조했으나 schema 미등록(`additionalProperties:false`)으로 거부되던 sleeper였다 — 본 게이트와 함께 정식화되어 aick-fix 모드 판정도 같이 복구됨.
 >
-> **한계**: kit 개발 리포 자체는 backlog state가 없어 신호 A가 no-op(claim 감지와 동일) — 실효는 사용자 프로젝트에서 발현. 기존 사용자가 업그레이드 시 PreToolUse 등록을 받으려면 `settings.json` 병합이 필요(crew-upgrade 후속 과제).
+> **한계**: kit 개발 리포 자체는 backlog state가 없어 신호 A가 no-op(claim 감지와 동일) — 실효는 사용자 프로젝트에서 발현. 기존 사용자가 업그레이드 시 PreToolUse 등록을 받으려면 `settings.json` 병합이 필요(aick-upgrade 후속 과제).
 
 ### SessionStart (`session-start.sh`)
 
@@ -146,8 +146,8 @@ exec 0</dev/null                  # stdin을 /dev/null로 — 자식 프로세�
 
 | 마커 | 생성·회수 주체 | 용도 |
 |------|---------------|------|
-| `init-in-progress.flag` | `crew-init`/`crew-onboard` | 초기 셋업 다수 Write (v2.2.0) |
-| `bulk-edit-in-progress.flag` | `crew-impl`/`crew-fix`/`crew-hotfix` (코드 수정 구간 set→빌드·테스트 후 rm) | 스텝 다중 파일 생성·수정 (v4.4.0) |
+| `init-in-progress.flag` | `aick-init`/`aick-onboard` | 초기 셋업 다수 Write (v2.2.0) |
+| `bulk-edit-in-progress.flag` | `aick-impl`/`aick-fix`/`aick-hotfix` (코드 수정 구간 set→빌드·테스트 후 rm) | 스텝 다중 파일 생성·수정 (v4.4.0) |
 
 > **트레이드오프(설계 의도)**: 두 마커는 프로젝트 공유 경로(`.claude/state/`)에 있어 세션 스코프가 아니다. 한 세션이 마커를 둔 동안에는 **동일 프로젝트의 다른 동시 세션도 카운터가 면제**된다(서킷브레이커는 안전망일 뿐 핵심 게이트가 아니므로 허용). 스킬은 작업 구간 종료 시 즉시 회수하며, 크래시로 미회수돼도 1시간 TTL이 상한을 보장한다. 새 스킬이 같은 패턴을 도입할 때는 이 SSOT를 따른다(스킬마다 독자 마커명을 만들지 말 것).
 
