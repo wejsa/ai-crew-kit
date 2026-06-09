@@ -14,7 +14,7 @@
 
 ## `secrets-patterns.json` 개요
 
-`crew-health-check`이 SEC-01 / SEC-05 검사 시 자동 로드하는 **공통 패턴 라이브러리**. 도메인 무관 시크릿(API 키, AWS 자격, 클라우드 토큰 등)과 민감정보 로깅 패턴을 정의한다.
+`aick-health-check`이 SEC-01 / SEC-05 검사 시 자동 로드하는 **공통 패턴 라이브러리**. 도메인 무관 시크릿(API 키, AWS 자격, 클라우드 토큰 등)과 민감정보 로깅 패턴을 정의한다.
 
 ### 검사 항목 매핑
 
@@ -49,7 +49,7 @@
 | `confidence` | ✅ | enum | `high` / `medium` / `low` — **v2.0 MVP**: 신규 패턴은 `high`, `common.runtime`(SEC-S06~S17, v1.x SEC-01 회귀)은 `medium` 허용. 자세한 정책은 아래 §confidence 등급 가이드 참조 |
 | `description` | ✅ | string | 위반 시 사용자에게 표시할 한글 설명 |
 | `excludeFiles` | 권장 | string[] | 글롭 패턴. 매칭 파일 검사 제외 |
-| `excludeContexts` | 권장 | enum[] | `env_var_reference` / `type_declaration` / `comment` — `crew-health-check` SKILL.md에 처리 절차 정의 |
+| `excludeContexts` | 권장 | enum[] | `env_var_reference` / `type_declaration` / `comment` — `aick-health-check` SKILL.md에 처리 절차 정의 |
 
 ## confidence 등급 가이드
 
@@ -78,12 +78,12 @@
 
 ## `excludeContexts` enum 정의
 
-`crew-health-check` SKILL.md에서 다음 정규식으로 처리한다 (SSOT).
+`aick-health-check` SKILL.md에서 다음 정규식으로 처리한다 (SSOT).
 
 | enum | 정규식 | 매칭 시 검사 제외 |
 |------|--------|-----|
 | `env_var_reference` | `process\.env\.\w+`, `os\.environ\[`, `os\.getenv\(`, `System\.getenv\(`, `os\.Getenv\(`, `os\.LookupEnv\(` | 환경변수 참조 (실제 시크릿 아님). JS / Python(dict + getenv) / Java / Go(Getenv + LookupEnv) 커버 |
-| `type_declaration` | `class\|interface\|type` 키워드 직후 단어 | 타입/클래스 선언 (예: `class Password`). 라인 단위 제외이므로 single-line 정의 + 시크릿 리터럴 동일 라인은 false negative — `crew-health-check` SKILL.md §처리 한계 참조 |
+| `type_declaration` | `class\|interface\|type` 키워드 직후 단어 | 타입/클래스 선언 (예: `class Password`). 라인 단위 제외이므로 single-line 정의 + 시크릿 리터럴 동일 라인은 false negative — `aick-health-check` SKILL.md §처리 한계 참조 |
 | `comment` | 라인 시작 `//`, `#`, `/*`, ` * ` | 주석 라인 |
 
 ## 새 공통 패턴 추가 절차
@@ -128,7 +128,7 @@ v2.0 보류(v2.1+ 재검토):
 - 상위 설계: [docs/v2/phase-5-security.md](https://github.com/wejsa/ai-crew-kit/blob/main/docs/v2/phase-5-security.md)
 - TFT 분석: [docs/v2/phase-5-tft-analysis.md](https://github.com/wejsa/ai-crew-kit/blob/main/docs/v2/phase-5-tft-analysis.md)
 - 구현 계획: [docs/v2/phase-5-plan.md](https://github.com/wejsa/ai-crew-kit/blob/main/docs/v2/phase-5-plan.md)
-- 검사 절차: [crew-health-check SKILL.md](../../../skills/crew-health-check/SKILL.md) `secrets` 카테고리 (Step 2 이후)
+- 검사 절차: [aick-health-check SKILL.md](../../../skills/aick-health-check/SKILL.md) `secrets` 카테고리 (Step 2 이후)
 - Phase 4 도메인 × 언어 rules와의 경계: [docs/v2/phase-5-tft-analysis.md §3](https://github.com/wejsa/ai-crew-kit/blob/main/docs/v2/phase-5-tft-analysis.md)
 
 > kit dev 문서(docs/v2/) 링크는 ai-crew-kit GitHub 리포를 가리킵니다. 사용자 프로젝트에는 `docs/`가 포함되지 않으므로(자동 정리됨), GitHub URL로 참조합니다. `.claude/skills/...` 내부 링크는 사용자 프로젝트에서도 유효합니다. **버전 주의**: `blob/main`은 최신 main 기준이며 사용자 시드 시점과 다를 수 있습니다 — 시드 시점 보존이 필요하면 `blob/{kitVersion 태그}`로 변경하세요.

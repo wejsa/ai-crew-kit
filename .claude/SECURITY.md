@@ -18,7 +18,7 @@
 1. **CODEOWNERS 게이팅** — `.github/CODEOWNERS`에 `.claude/settings.json`, `.claude/hooks/`, `.claude/schemas/`를 보안 오너로 등록. PR 생성 시 자동 리뷰 요청.
 2. **스키마 화이트리스트** — `project.schema.json` `hookMatcher`에서 허용 이벤트/필드만 통과. `patternProperties`로 v2.1+ 공식 이벤트만 확장.
 3. **비블로킹 규칙** — `.claude/hooks/README.md` 규정: `exit 2`/`set -e` 금지, 대화형 프롬프트 차단 env 강제.
-4. **Hook Integrity Audit (Step 5 예정)** — `crew-health-check` 카테고리 `hook-safety`가 다음을 정적 검사:
+4. **Hook Integrity Audit (Step 5 예정)** — `aick-health-check` 카테고리 `hook-safety`가 다음을 정적 검사:
    - HI-01 (CRITICAL): 위험 패턴 (`rm -rf`, `sudo`, `curl | sh`, `git reset --hard`, `git push --force`)
    - HI-02 (CRITICAL): 외부 스크립트/URL 참조
    - HI-03 (MINOR): `project.schema.json` 준수

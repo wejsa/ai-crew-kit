@@ -16,7 +16,7 @@ domains/_base/                            ← 공통 기본값 (conventions·che
 
 **체크리스트 로딩:**
 1. `_base/checklists/` — 모든 프로젝트 공통 체크리스트
-2. `/crew-review-pr` 실행 시 자동 적용
+2. `/aick-review-pr` 실행 시 자동 적용
 
 **conventions 로딩:**
 - `_base/conventions/*.md` — API 설계, DB, 에러 처리, 보안, 테스트 등 공통 컨벤션
@@ -43,8 +43,8 @@ domains/_base/                            ← 공통 기본값 (conventions·che
 │   │   └── templates/          # 공통 템플릿
 │   └── general/                # 범용 기본 문서 (getting-started 등)
 └── skills/
-    ├── crew-*/                # 내장 스킬
-    └── custom/                 # 커스텀 스킬 (crew-create로 생성)
+    ├── aick-*/                # 내장 스킬
+    └── custom/                 # 커스텀 스킬 (aick-create로 생성)
 ```
 
 ---
@@ -68,7 +68,7 @@ domains/_base/                            ← 공통 기본값 (conventions·che
 
 ### 방법 2: 별도 컨벤션 파일 추가
 
-공통 컨벤션을 보완하는 파일을 `_base/conventions/`에 신규 생성할 수 있습니다. 업그레이드 시 내장 파일(`crew-upgrade` 업데이트 대상)과 충돌하지 않도록 파일명을 구분하세요.
+공통 컨벤션을 보완하는 파일을 `_base/conventions/`에 신규 생성할 수 있습니다. 업그레이드 시 내장 파일(`aick-upgrade` 업데이트 대상)과 충돌하지 않도록 파일명을 구분하세요.
 
 ```bash
 # 예: 팀 전용 컨벤션 파일 추가
@@ -79,7 +79,7 @@ domains/_base/                            ← 공통 기본값 (conventions·che
 
 ### 방법 3: 체크리스트 파일 추가
 
-`_base/checklists/`에 마크다운 테이블 형식으로 체크리스트 파일을 추가합니다. `/crew-review-pr` 실행 시 자동 적용됩니다.
+`_base/checklists/`에 마크다운 테이블 형식으로 체크리스트 파일을 추가합니다. `/aick-review-pr` 실행 시 자동 적용됩니다.
 
 #### 체크리스트 형식
 
@@ -158,7 +158,7 @@ SQL DB 간 구문 차이는 Claude가 컨텍스트에 맞춰 적용합니다(자
 
 ### 팀 표준 강제 (CUSTOM_SECTION)
 
-> **보존 범위 안내**: `crew-upgrade`의 CUSTOM_SECTION 자동 보존 메커니즘은 `CLAUDE.md`와 `README.md` 두 파일에만 적용됩니다. `_base/conventions/database.md` 같은 conventions 파일에 직접 마커를 다는 방식은 업그레이드 시 자동 보존이 보장되지 않으므로, 다음 두 가지 대안을 권장합니다.
+> **보존 범위 안내**: `aick-upgrade`의 CUSTOM_SECTION 자동 보존 메커니즘은 `CLAUDE.md`와 `README.md` 두 파일에만 적용됩니다. `_base/conventions/database.md` 같은 conventions 파일에 직접 마커를 다는 방식은 업그레이드 시 자동 보존이 보장되지 않으므로, 다음 두 가지 대안을 권장합니다.
 >
 > - **(권장)** 팀 DB 표준은 `CLAUDE.md`의 CUSTOM_SECTION에 추가 — 자동 보존됨, agent-db-designer도 CLAUDE.md를 참조
 > - **(대안)** 별도 파일(예: `domains/_base/conventions/database-team.md`) 신규 생성 — 업그레이드 시 보존되며 `CLAUDE.md`에서 참조 링크 추가
@@ -183,7 +183,7 @@ SQL DB 간 구문 차이는 Claude가 컨텍스트에 맞춰 적용합니다(자
 
 ```bash
 # 스킬 스캐폴딩 생성
-/crew-create
+/aick-create
 ```
 
 `.claude/skills/custom/` 디렉토리에 생성되며, `CLAUDE.md`의 `CUSTOM_SECTION`에 자동 등록됩니다. 프레임워크 업그레이드 시에도 커스텀 스킬은 보존됩니다.

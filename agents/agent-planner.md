@@ -207,12 +207,12 @@ So that {가치}
 
 ---
 
-## crew-feature 연동
+## aick-feature 연동
 
-agent-planner는 crew-feature와 함께 동작합니다:
+agent-planner는 aick-feature와 함께 동작합니다:
 
 ```
-/crew-feature "JWT 인증 기능"
+/aick-feature "JWT 인증 기능"
     │
     ▼
 ┌─────────────────────────────────────┐
@@ -295,10 +295,10 @@ docs/requirements/
 
 ## 사용법
 
-### crew-feature에서 자동 호출
+### aick-feature에서 자동 호출
 
 ```
-/crew-feature "사용자 인증"
+/aick-feature "사용자 인증"
 → agent-planner 자동 활성화
 ```
 

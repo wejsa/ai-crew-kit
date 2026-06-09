@@ -1,10 +1,10 @@
-"""crew-upgrade가 .claude/hooks/ + settings.json hooks 필드 전파를 문서화하는지 정적 검증.
+"""aick-upgrade가 .claude/hooks/ + settings.json hooks 필드 전파를 문서화하는지 정적 검증.
 
-배경(게이트 전파 부채, 2026-06): crew-upgrade는 `.claude/hooks/` 스크립트를
+배경(게이트 전파 부채, 2026-06): aick-upgrade는 `.claude/hooks/` 스크립트를
 업데이트 대상에서 누락하고 settings.json은 권한만 머지해, v2.4.0 PreToolUse 머지
 게이트(스크립트 + 등록)가 기존 시드 프로젝트에 전파되지 않았다.
 
-crew-upgrade는 prose-executed(LLM이 본문 지침을 직접 수행)라 실행 단위 테스트가
+aick-upgrade는 prose-executed(LLM이 본문 지침을 직접 수행)라 실행 단위 테스트가
 없다. 본 테스트는 전파의 **필요조건** — hooks가 업데이트 scope에 명시되어 있다 —
 을 정적으로 회귀 가드한다. hooks가 다시 누락되면(원래 부채 재발) fail.
 """
@@ -19,7 +19,7 @@ SKILL_MD = (
     Path(__file__).resolve().parents[2]
     / ".claude"
     / "skills"
-    / "crew-upgrade"
+    / "aick-upgrade"
     / "SKILL.md"
 )
 

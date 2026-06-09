@@ -1,12 +1,12 @@
 <div align="center">
 
-# AI Crew Kit v4.5.0
+# AI Crew Kit v4.6.0
 
 **범용 AI 크루 개발 프레임워크 — 오케스트레이션 · 품질 게이트 · 스택 인지**
 
 AI 에이전트 팀 기반 소프트웨어 개발 프로세스 관리 프레임워크
 
-[![Version](https://img.shields.io/badge/version-v4.5.0-blue?style=flat-square)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v4.6.0-blue?style=flat-square)](./CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](./LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/wejsa/ai-crew-kit?style=flat-square)](https://github.com/wejsa/ai-crew-kit)
 [![Built with Claude Code](https://img.shields.io/badge/built_with-Claude_Code-blueviolet?style=flat-square)](https://claude.ai/download)
@@ -29,22 +29,22 @@ AI Crew Kit은 **Claude Code 플러그인 마켓플레이스**로 설치합니�
 /plugin install ai-crew-kit@ai-crew-kit
 ```
 
-설치 후 어느 프로젝트에서나 `/crew-init`로 셋업을 시작합니다.
+설치 후 어느 프로젝트에서나 `/aick-init`로 셋업을 시작합니다.
 
 **새 프로젝트 시작:**
 
 ```bash
-/crew-init --quick
+/aick-init --quick
 ```
 
 > [!TIP]
-> `/crew-init --quick`은 제로 결정 모드로 5분 안에 체험할 수 있습니다.
-> 모든 설정을 직접 선택하려면 `/crew-init`을 사용하세요.
+> `/aick-init --quick`은 제로 결정 모드로 5분 안에 체험할 수 있습니다.
+> 모든 설정을 직접 선택하려면 `/aick-init`을 사용하세요.
 
-`/crew-init`은 다음을 한 번에 처리합니다:
+`/aick-init`은 다음을 한 번에 처리합니다:
 
 1. **요구사항 자유 서술 → 기술 스택 LLM 추천 → 에이전트 팀 선택**
-2. **백로그 자동 분해 (opt-in)** — Phase 4-카테고리 템플릿으로 10~25개 Task를 즉시 준비, `/crew-plan`/`/crew-impl` 체인으로 바로 진입
+2. **백로그 자동 분해 (opt-in)** — Phase 4-카테고리 템플릿으로 10~25개 Task를 즉시 준비, `/aick-plan`/`/aick-impl` 체인으로 바로 진입
 3. 사용자 프로젝트용 `CLAUDE.md`/`README.md`/`VERSION`(0.1.0) 새로 생성
 
 > [!TIP]
@@ -53,7 +53,7 @@ AI Crew Kit은 **Claude Code 플러그인 마켓플레이스**로 설치합니�
 **이미 코드베이스가 있는 프로젝트라면:**
 
 ```bash
-/crew-onboard
+/aick-onboard
 ```
 
 > 코드베이스를 자동 스캔하여 기술 스택을 감지하고 설정을 생성합니다.
@@ -74,10 +74,10 @@ AI Crew Kit은 **Claude Code 플러그인 마켓플레이스**로 설치합니�
 /reload-plugins                             # ③ 현재 세션에 반영
 ```
 
-그다음 `/`를 입력해 `/crew-*` 명령이 보이는지 확인하세요.
+그다음 `/`를 입력해 `/aick-*` 명령이 보이는지 확인하세요.
 
 > [!WARNING]
-> **업데이트 후 `/crew-*` 스킬이 안 보이면** — `/plugin update`가 캐시를 깔끔히 재빌드하지 못해 스킬 등록이 누락되는 경우가 있습니다 (Claude Code 플러그인 캐시 동작; kit 버그 아님). **세션 재시작만으로는 해결되지 않을 수 있으며**, 플러그인을 **제거 후 재설치**하면 확실히 복구됩니다:
+> **업데이트 후 `/aick-*` 스킬이 안 보이면** — `/plugin update`가 캐시를 깔끔히 재빌드하지 못해 스킬 등록이 누락되는 경우가 있습니다 (Claude Code 플러그인 캐시 동작; kit 버그 아님). **세션 재시작만으로는 해결되지 않을 수 있으며**, 플러그인을 **제거 후 재설치**하면 확실히 복구됩니다:
 > ```
 > /plugin uninstall ai-crew-kit@ai-crew-kit
 > /plugin install   ai-crew-kit@ai-crew-kit
@@ -86,9 +86,9 @@ AI Crew Kit은 **Claude Code 플러그인 마켓플레이스**로 설치합니�
 > ①의 `marketplace update`를 먼저 하지 않으면 카탈로그가 stale해 업데이트가 헛돌 수 있습니다. 캐시 위치는 `~/.claude/plugins/cache/`입니다.
 
 > [!IMPORTANT]
-> **v3.x → v4.0.0은 BREAKING** — 스킬 명령이 `/skill-*` → `/crew-*`로 바뀌었습니다 (예: `/skill-impl` → `/crew-impl`). v3.x 시드에는 아직 구 `/skill-upgrade`만 있으므로 **첫 업그레이드는 `/skill-upgrade --version v4.0.0`로 실행**하세요 (이 명령이 `.claude/skills/`를 통째 교체하며 스스로를 `crew-upgrade`로 바꿉니다). 이후부터 `/crew-upgrade`를 사용합니다. 업그레이드 후 검증은 `/crew-validate`를 한 번 직접 실행해 마무리하세요. 본인 스크립트·문서·`CLAUDE.md` `CUSTOM_SECTION`의 `/skill-*` 명령은 직접 `/crew-*`로 바꿔야 합니다. 상세·주의사항은 [업그레이드 가이드](./docs/upgrade-guide.md)를 참조하세요.
+> **v4.5.x → v4.6.0은 BREAKING** — 스킬 명령이 `/crew-*` → `/aick-*`로 바뀌었습니다 (예: `/crew-impl` → `/aick-impl`). v4.0~4.5 시드에는 아직 `/crew-upgrade`만 있으므로 **첫 업그레이드는 `/crew-upgrade --version v4.6.0`로 실행**하세요 (이 명령이 `.claude/skills/`를 통째 교체하며 스스로를 `aick-upgrade`로 바꿉니다). 이후부터 `/aick-upgrade`를 사용합니다. 업그레이드 후 검증은 `/aick-validate`를 한 번 직접 실행해 마무리하세요. 본인 스크립트·문서·`CLAUDE.md` `CUSTOM_SECTION`의 `/crew-*` 명령은 직접 `/aick-*`로 바꿔야 합니다. 상세·주의사항은 [업그레이드 가이드](./docs/upgrade-guide.md)를 참조하세요.
 >
-> **v1.x → v2.0.0 사용자**: [마이그레이션 가이드](./docs/v2/migration-guide.md) 참조.
+> **v3.x 이하 사용자**: 구 `/skill-*`(v3.x)는 `/skill-upgrade`로 v4.0(`/crew-*`)까지 올린 뒤 위 절차로 v4.6(`/aick-*`)으로 올립니다. **v1.x → v2.0.0**: [마이그레이션 가이드](./docs/v2/migration-guide.md) 참조.
 
 ---
 
@@ -109,19 +109,19 @@ AI Crew Kit은 **Claude Code 플러그인 마켓플레이스**로 설치합니�
 
 | 명령어 | 설명 | 자연어 예시 |
 |--------|------|------------|
-| `/crew-status` | 프로젝트 상태 확인 | "상태 확인해줘" |
-| `/crew-feature` | 새 기능 기획 | "새 기능 기획해줘" |
-| `/crew-plan` | 설계 및 스텝 계획 | "다음 작업 가져와줘" |
-| `/crew-impl` | 코드 구현 + PR 생성 | "개발 진행해줘" |
-| `/crew-impl --next` | 다음 스텝 진행 | "이어서 진행해줘" |
-| `/crew-backlog` | 백로그 조회/관리 | "백로그 보여줘" |
-| `/crew-review-pr` | PR 리뷰 ([Tier 분류·confidence 채점](./docs/skill-reference.md)) | "PR 123 리뷰해줘" |
-| `/crew-merge-pr` | PR 머지 | "PR 123 머지해줘" |
-| `/crew-retro` | 완료 Task 회고 | "회고 해줘" |
-| `/crew-hotfix` | main 긴급 수정 | "긴급 수정해줘" |
-| `/crew-rollback` | 릴리스 롤백 | "v1.2.3 롤백해줘" |
-| `/crew-report` | 프로젝트 메트릭 리포트 | "리포트 생성해줘" |
-| `/crew-health-check` | 코드베이스 건강 검진 | "헬스체크 해줘" |
+| `/aick-status` | 프로젝트 상태 확인 | "상태 확인해줘" |
+| `/aick-feature` | 새 기능 기획 | "새 기능 기획해줘" |
+| `/aick-plan` | 설계 및 스텝 계획 | "다음 작업 가져와줘" |
+| `/aick-impl` | 코드 구현 + PR 생성 | "개발 진행해줘" |
+| `/aick-impl --next` | 다음 스텝 진행 | "이어서 진행해줘" |
+| `/aick-backlog` | 백로그 조회/관리 | "백로그 보여줘" |
+| `/aick-review-pr` | PR 리뷰 ([Tier 분류·confidence 채점](./docs/skill-reference.md)) | "PR 123 리뷰해줘" |
+| `/aick-merge-pr` | PR 머지 | "PR 123 머지해줘" |
+| `/aick-retro` | 완료 Task 회고 | "회고 해줘" |
+| `/aick-hotfix` | main 긴급 수정 | "긴급 수정해줘" |
+| `/aick-rollback` | 릴리스 롤백 | "v1.2.3 롤백해줘" |
+| `/aick-report` | 프로젝트 메트릭 리포트 | "리포트 생성해줘" |
+| `/aick-health-check` | 코드베이스 건강 검진 | "헬스체크 해줘" |
 
 전체 명령어와 자연어 매핑은 [스킬 레퍼런스](./docs/skill-reference.md)를 참조하세요.
 
@@ -152,7 +152,7 @@ rm -f .claude/state/hook-disabled.flag
 #    { "env": { "CCK_HOOK_THRESHOLD": "10", "CCK_HOOK_WINDOW_SEC": "10" } }
 ```
 
-> `crew-impl`·`crew-fix`는 스텝 다중 파일 작업 동안 `bulk-edit-in-progress.flag`로 카운터를 자동 면제하므로(v4.4.0+) 정상 워크플로우에서는 거의 발동하지 않습니다. 수동 다중 편집이 잦은 경우에만 위 env로 완화하세요. 진단 도구·패턴별 권장값은 [`.claude/hooks/README.md`](./.claude/hooks/README.md)를 참조하세요.
+> `aick-impl`·`aick-fix`는 스텝 다중 파일 작업 동안 `bulk-edit-in-progress.flag`로 카운터를 자동 면제하므로(v4.4.0+) 정상 워크플로우에서는 거의 발동하지 않습니다. 수동 다중 편집이 잦은 경우에만 위 env로 완화하세요. 진단 도구·패턴별 권장값은 [`.claude/hooks/README.md`](./.claude/hooks/README.md)를 참조하세요.
 
 ---
 
@@ -167,7 +167,7 @@ rm -f .claude/state/hook-disabled.flag
 | security | 기본 보안 검사 | 25% |
 | agent-config | 에이전트 설정 유효성 | 15% |
 
-`/crew-health-check --fix`로 자동 수정 가능한 항목을 즉시 반영할 수 있습니다.
+`/aick-health-check --fix`로 자동 수정 가능한 항목을 즉시 반영할 수 있습니다.
 
 ---
 
@@ -180,11 +180,11 @@ rm -f .claude/state/hook-disabled.flag
 | **자동 Tier 분류 PR 리뷰** | PR 특성으로 T0~T3 자동 라우팅(작은 PR은 경량, 보안/대규모는 풀 리뷰) + severity × confidence 매트릭스 false-positive 필터(CRITICAL은 강등 게시·드롭 X) |
 | **Layered Override 컨벤션** | `_base` 공통 컨벤션·체크리스트를 `project.json`으로 덮어쓰는 계층형 설정 — PR 리뷰가 프로젝트 컨벤션을 자동 인식 |
 | **AgentShield-lite 시크릿 스캐너** | 하드코딩 시크릿(API 키/AWS/GitHub/Slack) + `.env` 노출 게이트를 CRITICAL로 검출 |
-| **lessons-learned 회귀 보호** | `crew-retro` 학습 데이터에 schema 검증 + secrets 필터(토큰/이메일 자동 redact) + impact 정량(상/중/하) |
+| **lessons-learned 회귀 보호** | `aick-retro` 학습 데이터에 schema 검증 + secrets 필터(토큰/이메일 자동 redact) + impact 정량(상/중/하) |
 
 > 머지 품질 게이트 상세는 [위 섹션](#-머지-품질-게이트-v24)을, **버전별 누적 변경 이력은 [CHANGELOG](./CHANGELOG.md)**를 참조하세요.
 >
-> **examples 안내** — `examples/` 디렉토리는 범용 최소 예제를 제공합니다. 어떤 기술 스택의 프로젝트든 `/crew-init`로 동일하게 초기화할 수 있습니다.
+> **examples 안내** — `examples/` 디렉토리는 범용 최소 예제를 제공합니다. 어떤 기술 스택의 프로젝트든 `/aick-init`로 동일하게 초기화할 수 있습니다.
 
 ---
 
@@ -197,7 +197,7 @@ rm -f .claude/state/hook-disabled.flag
 | **Layered Override** | `_base` → `project.json` 순서로 설정 적용 |
 | **Agent Orchestration** | PM이 워크플로우에 따라 에이전트 자동 분배 |
 | **결정적 품질 게이트** | 신뢰 가능한 레이어(hook)가 핵심 게이트(머지 차단)를 담당하고, prose+LLM에 의존하지 않음 |
-| **Zero-Config Start** | `/crew-init` 한 번으로 즉시 가동 |
+| **Zero-Config Start** | `/aick-init` 한 번으로 즉시 가동 |
 
 ---
 

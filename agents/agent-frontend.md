@@ -406,12 +406,12 @@ describe('BaseButton', () => {
 
 ---
 
-## crew-impl 연동
+## aick-impl 연동
 
 ### 실행 흐름
 
 ```
-/crew-impl (프론트엔드 스텝)
+/aick-impl (프론트엔드 스텝)
     │
     ▼
 ┌─────────────────────────────────────┐
@@ -444,7 +444,7 @@ describe('BaseButton', () => {
 
 ## 사용법
 
-### crew-impl에서 자동 호출
+### aick-impl에서 자동 호출
 
 프론트엔드 관련 스텝에서 자동 활성화됩니다.
 

@@ -1,6 +1,6 @@
-"""Shared fixtures for crew-init regression tests.
+"""Shared fixtures for aick-init regression tests.
 
-Issue #62 — v2.1.0 PR #61 (crew-init 재설계) 후속 영속화.
+Issue #62 — v2.1.0 PR #61 (aick-init 재설계) 후속 영속화.
 PR #61이 사용하던 휘발성 `/tmp/validate_skill_init.py`(13 케이스)를 정착시키고
 Hard limits cross-field 강제 / Step 4 sanitization 정규식까지 확장 커버.
 """
@@ -57,7 +57,7 @@ def base_task(now: str) -> dict:
     init 시점에 채우는 필드만 포함:
     - id, title, description, status, type, priority, phase, dependencies, createdAt
 
-    init이 채우지 않는 필드 (crew-plan/impl이 동적 산정):
+    init이 채우지 않는 필드 (aick-plan/impl이 동적 산정):
     - assignee, assignedAt, lockTTL, lockedFiles, steps, workflowState
     - currentStep (minimum:1 — init 시점엔 부재)
     - specFile (type:string — null 불가, init 시점엔 spec 없음)

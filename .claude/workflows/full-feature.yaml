@@ -18,7 +18,7 @@ steps:
   - id: plan
     name: "요구사항 정의"
     agent: agent-planner
-    skill: crew-feature
+    skill: aick-feature
     input: "{{request}}"
     output: "docs/requirements/{{taskId}}-spec.md"
     gate: user_approval
@@ -32,7 +32,7 @@ steps:
   - id: design_db
     name: "DB 설계"
     agent: agent-db-designer
-    skill: crew-plan
+    skill: aick-plan
     input: "{{steps.plan.output}}"
     output: "docs/architecture/{{taskId}}-erd.md"
     gate: user_approval
@@ -47,7 +47,7 @@ steps:
   - id: design_code
     name: "코드 설계"
     agent: agent-backend
-    skill: crew-plan
+    skill: aick-plan
     input:
       - "{{steps.plan.output}}"
       - "{{steps.design_db.output}}"
@@ -62,7 +62,7 @@ steps:
   - id: implement
     name: "코드 구현"
     agent: agent-backend
-    skill: crew-impl
+    skill: aick-impl
     input: "{{steps.design_code.output}}"
     output: "PR"
     gate: build_success
@@ -76,7 +76,7 @@ steps:
   - id: implement_frontend
     name: "프론트엔드 구현"
     agent: agent-frontend
-    skill: crew-impl
+    skill: aick-impl
     input: "{{steps.design_code.output}}"
     output: "PR"
     gate: build_success
@@ -91,7 +91,7 @@ steps:
   - id: review
     name: "코드 리뷰"
     agent: agent-code-reviewer
-    skill: crew-review-pr
+    skill: aick-review-pr
     input: "{{steps.implement.output}}"
     output: "리뷰 결과"
     gate: critical_zero
@@ -118,7 +118,7 @@ steps:
 
   - id: merge
     name: "PR 머지"
-    skill: crew-merge-pr
+    skill: aick-merge-pr
     input: "{{steps.review.output}}"
     gate: review_approved
     description: |

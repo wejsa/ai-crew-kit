@@ -4,10 +4,10 @@ AI Crew Kit을 사용한 프로젝트 개발 시작 가이드입니다.
 
 ## 1. 프로젝트 초기화
 
-### crew-init 실행
+### aick-init 실행
 
 ```bash
-/crew-init
+/aick-init
 ```
 
 대화형으로 다음을 설정합니다:
@@ -33,7 +33,7 @@ your-project/
 ### 새 기능 추가
 
 ```bash
-/crew-feature "사용자 인증 기능"
+/aick-feature "사용자 인증 기능"
 ```
 
 또는 자연어로:
@@ -49,10 +49,10 @@ your-project/
 
 ## 3. 설계 및 계획
 
-### crew-plan 실행
+### aick-plan 실행
 
 ```bash
-/crew-plan
+/aick-plan
 ```
 
 또는:
@@ -72,9 +72,9 @@ your-project/
 ### 스텝별 개발
 
 ```bash
-/crew-impl              # Step 1 시작
-/crew-impl --next       # 다음 스텝
-/crew-impl --all        # 전체 스텝 연속
+/aick-impl              # Step 1 시작
+/aick-impl --next       # 다음 스텝
+/aick-impl --all        # 전체 스텝 연속
 ```
 
 또는:
@@ -95,7 +95,7 @@ your-project/
 ### PR 리뷰
 
 ```bash
-/crew-review-pr 123
+/aick-review-pr 123
 ```
 
 또는:
@@ -119,7 +119,7 @@ your-project/
 ### PR 머지
 
 ```bash
-/crew-merge-pr 123
+/aick-merge-pr 123
 ```
 
 또는:
@@ -138,43 +138,43 @@ your-project/
 ## 워크플로우 요약
 
 ```
-/crew-feature "기능명"     # 1. 기획
+/aick-feature "기능명"     # 1. 기획
     ↓
-/crew-plan                 # 2. 설계 + 계획
+/aick-plan                 # 2. 설계 + 계획
     ↓
-/crew-impl                 # 3. 구현 (Step 1)
+/aick-impl                 # 3. 구현 (Step 1)
     ↓
-/crew-review-pr N          # 4. 리뷰
+/aick-review-pr N          # 4. 리뷰
     ↓
-/crew-merge-pr N           # 5. 머지
+/aick-merge-pr N           # 5. 머지
     ↓
-/crew-impl --next          # 6. 다음 스텝 (반복)
+/aick-impl --next          # 6. 다음 스텝 (반복)
 ```
 
 ## 자주 사용하는 명령어
 
 | 명령어 | 설명 |
 |--------|------|
-| `/crew-status` | 현재 상태 확인 |
-| `/crew-backlog` | 백로그 조회 |
-| `/crew-docs` | 참고자료 조회 |
-| `/crew-review {경로}` | 코드 리뷰 (PR 외) |
+| `/aick-status` | 현재 상태 확인 |
+| `/aick-backlog` | 백로그 조회 |
+| `/aick-docs` | 참고자료 조회 |
+| `/aick-review {경로}` | 코드 리뷰 (PR 외) |
 
 ## 자연어 명령어
 
 | 말하기 | 동작 |
 |--------|------|
-| "상태 확인해줘" | `/crew-status` |
-| "새 기능 기획해줘: 로그인" | `/crew-feature 로그인` |
-| "다음 작업 가져와줘" | `/crew-plan` |
-| "개발 진행해줘" | `/crew-impl` |
-| "PR 리뷰해줘" | `/crew-review-pr` |
+| "상태 확인해줘" | `/aick-status` |
+| "새 기능 기획해줘: 로그인" | `/aick-feature 로그인` |
+| "다음 작업 가져와줘" | `/aick-plan` |
+| "개발 진행해줘" | `/aick-impl` |
+| "PR 리뷰해줘" | `/aick-review-pr` |
 
 ## 도움말
 
 더 많은 정보는 다음을 참조하세요:
 
 ```bash
-/crew-status    # 현재 상태 및 다음 단계 안내
-/crew-docs      # 참고자료 목록
+/aick-status    # 현재 상태 및 다음 단계 안내
+/aick-docs      # 참고자료 목록
 ```

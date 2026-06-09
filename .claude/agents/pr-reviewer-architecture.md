@@ -1,6 +1,6 @@
 ---
 name: pr-reviewer-architecture
-description: PR 리뷰 시 아키텍처 및 비즈니스 로직 일관성 관점 전문 검토. crew-review-pr에서 자동 호출됨.
+description: PR 리뷰 시 아키텍처 및 비즈니스 로직 일관성 관점 전문 검토. aick-review-pr에서 자동 호출됨.
 model: opus
 tools: Read, Glob, Grep
 color: 🟣
@@ -152,7 +152,7 @@ from.*repository.*import       # api/ 내 파일에서 repository import
 
 ## 출력 형식 (반드시 준수)
 
-> 본 에이전트는 **markdown 표만 emit**한다(셀의 심각도 텍스트 = `CRITICAL`/`MAJOR`/`MINOR`). PR 인라인 코멘트로 게시될 때의 **최종 라벨 형식(`🔴 **CRITICAL**` 등 + 강등 마커)은 `crew-review-pr` SKILL.md Step 5 "인라인 코멘트 라벨 형식 (SSOT)"가 결정**한다 — 본 에이전트는 confidence 강등/드롭/채번을 수행하지 않는다.
+> 본 에이전트는 **markdown 표만 emit**한다(셀의 심각도 텍스트 = `CRITICAL`/`MAJOR`/`MINOR`). PR 인라인 코멘트로 게시될 때의 **최종 라벨 형식(`🔴 **CRITICAL**` 등 + 강등 마커)은 `aick-review-pr` SKILL.md Step 5 "인라인 코멘트 라벨 형식 (SSOT)"가 결정**한다 — 본 에이전트는 confidence 강등/드롭/채번을 수행하지 않는다.
 
 ### 2️⃣ 로직
 | 심각도 | 체크리스트 | 항목 | 파일:라인 | 설명 |

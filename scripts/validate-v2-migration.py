@@ -11,7 +11,7 @@ Phase 8 Step 3 — examples 마이그레이션 검증 + 회귀 fixture (Task 8-3
 검증 범위 (한계):
     - migrations.json의 `add_field` 타입 변경만 시뮬레이션. `add_gitignore_entry`
       등 다른 type은 project.json 외부 파일/리소스 영향이라 본 스크립트가 처리하지 않음
-      (crew-upgrade SKILL.md Step 12-5에서 별도 메커니즘으로 처리).
+      (aick-upgrade SKILL.md Step 12-5에서 별도 메커니즘으로 처리).
     - cumulative 적용 — 0.0.0 ~ target 사이의 모든 add_field를 to 버전 오름차순 적용.
       project.schema.json의 top-level properties에 속하지 않는 path(예: backlog.* —
       backlog.json 영역)는 자동 스킵하여 schema `additionalProperties: false` 충돌 방지.
@@ -42,14 +42,14 @@ TARGET_VERSION = "2.0.0"
 # OQ-02: v2 schema에 정의되어 있으나 migrations.json이 add_field로 추가하지 않는 필드
 OQ_02_FIELDS = ["customDomain", "healthCheck", "orchestrator"]
 
-# migrations.json의 default 값에 등장하는 placeholder — crew-upgrade가 런타임 치환
+# migrations.json의 default 값에 등장하는 placeholder — aick-upgrade가 런타임 치환
 # (예: kitVersion="${KIT_VERSION}" → 실제 업그레이드 대상 버전). 본 시뮬레이션은
 # target 버전 + 공식 저장소 URL로 치환한다 (시뮬레이션 일관성 + schema pattern 통과).
 DEFAULT_KIT_SOURCE = "https://github.com/wejsa/ai-crew-kit.git"
 
 
 def make_placeholders(target: str, kit_source: str = DEFAULT_KIT_SOURCE) -> dict[str, str]:
-    """crew-upgrade Step 12-4 환경 변수 시뮬레이션용 placeholder 매핑."""
+    """aick-upgrade Step 12-4 환경 변수 시뮬레이션용 placeholder 매핑."""
     return {"${KIT_VERSION}": target, "${KIT_SOURCE}": kit_source}
 
 
@@ -108,7 +108,7 @@ def apply_migrations(
     schema_top_keys: set[str] | None = None,
     placeholders: dict[str, str] | None = None,
 ) -> list[str]:
-    """target 버전 *이하*의 모든 add_field cumulative 적용 (실제 crew-upgrade 동작 시뮬레이션).
+    """target 버전 *이하*의 모든 add_field cumulative 적용 (실제 aick-upgrade 동작 시뮬레이션).
 
     Args:
         project: 입력 project.json (in-place 변경).

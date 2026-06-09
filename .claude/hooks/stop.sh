@@ -64,7 +64,7 @@ if [ -f "$BACKLOG" ]; then
   source "$(dirname "$0")/lib/atomic-write.sh" 2>/dev/null || log_err "atomic-write.sh 로드 실패"
 
   NOW_EPOCH="$(date -u +%s)"
-  # 만료 기준 (v4.5.0): `(lockedAt // assignedAt) + lockTTL < now`. reclaim(crew-plan/impl)과
+  # 만료 기준 (v4.5.0): `(lockedAt // assignedAt) + lockTTL < now`. reclaim(aick-plan/impl)과
   # 동일 윈도우(lockTTL ≥3600). 구 고정 600초(10분)는 긴 빌드/사고 중 거짓 만료 위험이라 폐기.
   # 비파괴적: 만료된 활성 잠금의 liveness 표시(lockedBy/lockedAt)만 null로 초기화하고
   # status/assignee는 건드리지 않는다(전체 회수는 스킬 진입 시 reclaim이 수행).
@@ -129,7 +129,7 @@ if [ -f "$BACKLOG" ]; then
     printf '\n## 재개 방법\n\n'
     # printf: '-' 로 시작하는 포맷은 옵션으로 해석되므로 %s 포맷 필수
     printf '%s\n' '- 진행 중 Task의 계획 파일 `.claude/temp/{taskId}-plan.md` 확인'
-    printf '%s\n' '- `/crew-impl` 또는 `/crew-plan`으로 복귀'
+    printf '%s\n' '- `/aick-impl` 또는 `/aick-plan`으로 복귀'
   } > "$TMP_PLAN" 2>/dev/null && mv -f "$TMP_PLAN" "$CONT_PLAN" 2>/dev/null || {
     log_err "continuation-plan 쓰기 실패"
     rm -f "$TMP_PLAN" 2>/dev/null

@@ -14,11 +14,11 @@ AI Crew Kit(v3.0.0+, 도메인 무관 범용 프레임워크)의 기본 설정 �
 ## 워크플로우
 
 ```bash
-/crew-plan          # TASK-001 선택 + 스텝별 설계
-/crew-impl          # 스텝 구현 + PR
-/crew-review-pr 1   # 다관점 리뷰
-/crew-merge-pr 1    # 머지
-/crew-impl --next   # 다음 스텝
+/aick-plan          # TASK-001 선택 + 스텝별 설계
+/aick-impl          # 스텝 구현 + PR
+/aick-review-pr 1   # 다관점 리뷰
+/aick-merge-pr 1    # 머지
+/aick-impl --next   # 다음 스텝
 ```
 
 ## 특징

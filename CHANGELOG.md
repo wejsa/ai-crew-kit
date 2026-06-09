@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.6.0] - 2026-06-09
+
+> **v4.6.0 — 스킬 프리픽스 `crew-*` → `aick-*` 리네임 (BREAKING)** — 22개 빌트인 스킬의 호출 명령이 `/crew-*` → `/aick-*`로 바뀝니다 (예: `/crew-impl` → `/aick-impl`). 'AI Crew Kit(AICK)' 브랜드와 명령 프리픽스를 일치시키고 외부 스킬과의 이름 충돌을 줄입니다. **semver상 major이나 채택 규모를 고려해 minor(4.6.0)로 릴리스 — 번호는 minor지만 내용은 BREAKING입니다.**
+
+### Changed (BREAKING)
+- **스킬 22종 리네임**: 디렉토리 `.claude/skills/crew-*` → `aick-*`, SKILL.md `name:`, 모든 `/crew-*` 명령 참조, 에이전트·`CLAUDE.md.tmpl`·workflows·docs 교차 참조 일괄 전환.
+- **하위호환 dual-accept**: `backlog.schema.json` `currentSkill` enum은 `aick-*`(정식) + `crew-*` + `skill-*` 모두 허용(in-flight backlog.json 검증 실패 회피). `project.schema.json` `customSkills` 패턴 `^(crew|skill)-` → `^(aick|crew|skill)-`. 신규 커스텀 스킬 기본 접두사(`aick-create`)는 `aick-`.
+- 버전 동기화: `VERSION`/`plugin.json`/`marketplace.json`(metadata+plugins — 4.3.0 stale drift 동반 수정)/README 타이틀·뱃지 = 4.6.0.
+
+### Migration
+- 기존 v4.0~4.5 시드: **첫 업그레이드는 구 명령 `/crew-upgrade --version v4.6.0`로 실행**(스스로를 `aick-upgrade`로 교체) → 이후 `/aick-*` 사용. `.claude/skills/` 통째 교체로 구 `crew-*` 자연 제거, `custom/`은 보존. 업그레이드 후 `/aick-validate` 1회 권장. 본인 스크립트·문서·`CLAUDE.md` `CUSTOM_SECTION`의 `/crew-*`는 수동 치환 필요. `migrations.json` features[].version=4.6.0 안내.
+- `ai-crew-kit`(리포·플러그인 이름)·`crew-kit-*`(클론 정리 토큰)은 변경 없음.
+
+### Notes
+- 프레임워크 자기 리포는 backlog state가 없어 런타임 영향 없음. 사용자 시드/플러그인은 위 마이그레이션으로 전파.
+
 ## [4.5.0] - 2026-06-07
 
 > **v4.5.0 — lockedBy/lockedAt 잠금 서브시스템 배선** — v2.2.0 이후 무동작이던 잠금 하트비트를 file-membership 방식으로 배선해 기능화한다. 상세 설계·근거는 [ADR-010](docs/requirements/adr-010-lockedby-wiring.md).

@@ -1,6 +1,6 @@
 ---
 name: agent-code-reviewer
-description: 4관점 통합 코드 리뷰 가이드. crew-review-pr에서 참조됨. subagent로 직접 호출되지 않음.
+description: 4관점 통합 코드 리뷰 가이드. aick-review-pr에서 참조됨. subagent로 직접 호출되지 않음.
 ---
 
 # 코드 리뷰 에이전트 (agent-code-reviewer)
@@ -240,34 +240,34 @@ logger.info("Token validation: success")
 
 ## Sub-Agent 연동 참고
 
-crew-review-pr에서 4관점 리뷰 실행 시, 아래 3개 전용 subagent가 병렬 호출됩니다:
+aick-review-pr에서 4관점 리뷰 실행 시, 아래 3개 전용 subagent가 병렬 호출됩니다:
 
 | subagent 파일 | 담당 관점 |
 |--------------|----------|
 | `.claude/agents/pr-reviewer-security.md` | 3️⃣ 보안 |
 | `.claude/agents/pr-reviewer-architecture.md` | 1️⃣ 비즈니스 로직 + 2️⃣ 아키텍처 |
 | `.claude/agents/pr-reviewer-test.md` | 4️⃣ 테스트 품질 |
-| `.claude/agents/agent-qa.md` | 테스트 설계 제안 (crew-impl 백그라운드) |
+| `.claude/agents/agent-qa.md` | 테스트 설계 제안 (aick-impl 백그라운드) |
 
 > 이 에이전트 문서는 4관점 리뷰의 전체 워크플로우를 정의합니다.
 > 개별 관점의 세부 지침은 각 subagent 파일에 정의되어 있습니다.
-> agent-qa는 PR 리뷰가 아닌 테스트 설계 제안 용도로, crew-impl에서 별도 호출됩니다.
+> agent-qa는 PR 리뷰가 아닌 테스트 설계 제안 용도로, aick-impl에서 별도 호출됩니다.
 
 ---
 
 ## 사용법
 
-### crew-review에서 호출
+### aick-review에서 호출
 
 ```
-/crew-review src/main/kotlin/
+/aick-review src/main/kotlin/
 → agent-code-reviewer 4관점 검토 수행
 ```
 
-### crew-review-pr에서 호출
+### aick-review-pr에서 호출
 
 ```
-/crew-review-pr 123
+/aick-review-pr 123
 → agent-code-reviewer PR 변경사항 검토
 ```
 

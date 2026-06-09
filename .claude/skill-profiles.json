@@ -1,19 +1,19 @@
 {
   "description": "스킬 프로파일 정의 — CLAUDE.md에 노출할 스킬 세트를 프로파일별로 관리",
-  "internal": ["crew-fix", "crew-validate"],
+  "internal": ["aick-fix", "aick-validate"],
   "profiles": {
     "developer": {
       "description": "일상 개발 (계획 → 구현 → 리뷰 → 머지)",
       "skills": [
-        "crew-status",
-        "crew-backlog",
-        "crew-feature",
-        "crew-plan",
-        "crew-impl",
-        "crew-review-pr",
-        "crew-merge-pr",
-        "crew-hotfix",
-        "crew-retro"
+        "aick-status",
+        "aick-backlog",
+        "aick-feature",
+        "aick-plan",
+        "aick-impl",
+        "aick-review-pr",
+        "aick-merge-pr",
+        "aick-hotfix",
+        "aick-retro"
       ]
     },
     "full": {
@@ -23,9 +23,9 @@
     "docs-only": {
       "description": "문서 작업 전용",
       "skills": [
-        "crew-status",
-        "crew-docs",
-        "crew-create"
+        "aick-status",
+        "aick-docs",
+        "aick-create"
       ]
     }
   },

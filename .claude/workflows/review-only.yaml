@@ -18,7 +18,7 @@ steps:
   - id: review
     name: "코드 리뷰"
     agent: agent-code-reviewer
-    skill: crew-review
+    skill: aick-review
     input: "{{request}}"
     output: "리뷰 결과"
     description: |

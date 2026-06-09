@@ -1,6 +1,6 @@
 ---
 name: pr-reviewer-test
-description: PR 리뷰 시 테스트 품질 관점 전문 검토. crew-review-pr에서 자동 호출됨.
+description: PR 리뷰 시 테스트 품질 관점 전문 검토. aick-review-pr에서 자동 호출됨.
 model: opus
 tools: Read, Glob, Grep
 color: 🔵
@@ -23,7 +23,7 @@ color: 🔵
 
 ## agent-qa와의 관계
 
-- **agent-qa**: 구현 단계(crew-impl)에서 "테스트 설계 제안" — 어떤 테스트가 필요한지 사전 제안
+- **agent-qa**: 구현 단계(aick-impl)에서 "테스트 설계 제안" — 어떤 테스트가 필요한지 사전 제안
 - **pr-reviewer-test (이 에이전트)**: PR 리뷰 단계에서 "기존 테스트 품질 평가" — 작성된 테스트가 충분한지 사후 검증
 
 agent-qa의 제안 결과가 `.claude/temp/workflow-{id}/qa-suggestions.md`에 있으면 Read로 참조하여,
@@ -33,7 +33,7 @@ agent-qa의 제안 결과가 `.claude/temp/workflow-{id}/qa-suggestions.md`에 �
 
 **0. 변경 분류**: `/tmp/pr-{N}-diff.txt`에서 변경 파일을 소스 파일과 테스트 파일로 분류.
 
-- **테스트 자체 품질 모드** (소스 변경 0건 + 테스트 100% 변경 — crew-review-pr의 T1a 분류 시): 절차 1·2·3(소스↔테스트 매핑/누락 보고) 건너뛰고 신규/변경 테스트의 자체 품질만 평가:
+- **테스트 자체 품질 모드** (소스 변경 0건 + 테스트 100% 변경 — aick-review-pr의 T1a 분류 시): 절차 1·2·3(소스↔테스트 매핑/누락 보고) 건너뛰고 신규/변경 테스트의 자체 품질만 평가:
   - assert/expect 등 실제 검증문 존재 여부 (빈 테스트 차단)
   - 경계값/예외 케이스 커버리지 (Happy Path만 있는지)
   - 테스트 스멜 (sleep, 외부 호출, 비결정성, hardcoded date 등 — 아래 "테스트 스멜 탐지" 섹션 참조)
@@ -162,7 +162,7 @@ requests\.get\(|requests\.post\(  # 외부 API 직접 호출 (Mock 필요)
 
 ## 출력 형식 (반드시 준수)
 
-> 본 에이전트는 **markdown 표만 emit**한다(셀의 심각도 텍스트 = `CRITICAL`/`MAJOR`/`MINOR`). PR 인라인 코멘트로 게시될 때의 **최종 라벨 형식(`🔴 **CRITICAL**` 등 + 강등 마커)은 `crew-review-pr` SKILL.md Step 5 "인라인 코멘트 라벨 형식 (SSOT)"가 결정**한다 — 본 에이전트는 confidence 강등/드롭/채번을 수행하지 않는다.
+> 본 에이전트는 **markdown 표만 emit**한다(셀의 심각도 텍스트 = `CRITICAL`/`MAJOR`/`MINOR`). PR 인라인 코멘트로 게시될 때의 **최종 라벨 형식(`🔴 **CRITICAL**` 등 + 강등 마커)은 `aick-review-pr` SKILL.md Step 5 "인라인 코멘트 라벨 형식 (SSOT)"가 결정**한다 — 본 에이전트는 confidence 강등/드롭/채번을 수행하지 않는다.
 
 ### 4️⃣ 테스트 품질
 | 심각도 | 체크리스트 | 항목 | 파일:라인 | 설명 |

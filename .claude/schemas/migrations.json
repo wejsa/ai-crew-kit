@@ -90,6 +90,12 @@
       "to": "4.1.0",
       "changes": [],
       "comment": "리뷰 관점 'domain' → 'architecture' 리네임 (NON-BREAKING dual-accept). pr-reviewer-domain 에이전트 → pr-reviewer-architecture, review.agents enum은 architecture(canonical)+domain(레거시 별칭) 둘 다 허용, contains 필수는 {enum:[architecture,domain]}로 완화 — 기존 시드의 review.agents=['domain',...]는 검증 실패 없이 그대로 통과. v3.0.0에서 제거된 비즈니스 도메인 팩과의 명칭 혼동 해소가 목적. v4.0.0 crew- 프리픽스 dual-accept(customSkills ^(crew|skill)-)와 동일 정신. project.json 자동 변환 불필요(레거시 값 계속 동작) — crew-review-pr config로 재설정 시 architecture로 정규화. 빌트인 에이전트 파일은 crew-upgrade Step 11의 .claude/agents/ 통째 교체로 pr-reviewer-architecture.md로 자연 갱신. 사용자 안내는 features[].version=4.1.0 참조."
+    },
+    {
+      "from": "4.1.0",
+      "to": "4.6.0",
+      "changes": [],
+      "comment": "v4.6.0 스킬 프리픽스 리네임 crew-* → aick-* (BREAKING — semver상 major이나 채택 규모 고려해 minor로 릴리스, 내용은 breaking). project.json 필드 변경 없음(skillProfile/customSkills/currentSkill 필드명 보존). 구 crew-* 빌트인 스킬 디렉토리는 aick-upgrade(구 crew-upgrade) Step 11의 .claude/skills/ 통째 교체로 자연 제거(custom/은 별도 백업·복원으로 보존) — v4.0.0 skill-*→crew-* 리네임과 동일 메커니즘. customSkills 패턴은 ^(aick|crew|skill)- 셋 다 허용, currentSkill enum도 aick-*(정식)+crew-*+skill-* 모두 허용(in-flight 하위호환, 검증 실패 회피). 첫 업그레이드는 본인 프로젝트의 구 명령 /crew-upgrade --version v4.6.0로 실행. 사용자 안내는 features[].version=4.6.0 참조."
     }
   ],
   "features": [
@@ -173,6 +179,17 @@
           "description": "Phase 1에서 검증된 ${CLAUDE_PLUGIN_ROOT} 이중 모드 경로 해석을 나머지 프레임워크 리소스 참조(리뷰어·에이전트 체크리스트/컨벤션, health-check 데이터, crew-init/onboard 템플릿·프로토콜) 전반으로 확대했습니다. 순수 플러그인 설치 프로젝트에서도 스킬·에이전트가 번들 리소스를 정상 읽습니다.",
           "action": "none",
           "detail": "별도 설정 불필요. 에이전트는 CLAUDE.md를 못 받으므로 해석 규칙을 각 정의에 인라인 자급자족 추가했고, 스킬은 CLAUDE.md 규칙을 참조합니다. clone/seed 프로젝트는 규칙에 따라 기존처럼 프로젝트 로컬 .claude/를 읽으므로 동작 변화 없음. crew-upgrade는 클론-소스 기반이라 EXEMPT."
+        }
+      ]
+    },
+    {
+      "version": "4.6.0",
+      "items": [
+        {
+          "title": "스킬 명령어 프리픽스 변경 crew-* → aick-* (breaking)",
+          "description": "22개 빌트인 스킬의 호출 명령어가 /crew-* 에서 /aick-* 로 바뀌었습니다 (예: /crew-impl → /aick-impl, /crew-review-pr → /aick-review-pr). 'AI Crew Kit(AICK)' 브랜드와 명령 프리픽스 일치 + 다른 스킬과의 이름 충돌 방지가 목적입니다. (semver상 BREAKING이나 채택 규모를 고려해 minor 4.6.0으로 릴리스 — 내용은 breaking.)",
+          "action": "none",
+          "detail": "별도 설정은 불필요합니다. 업그레이드가 .claude/skills/를 통째 교체하므로 구 crew-* 빌트인 디렉토리는 자동 제거되고(커스텀 스킬 .claude/skills/custom/은 보존), CLAUDE.md 스킬 레지스트리도 /aick-*로 재생성됩니다. 첫 업그레이드는 본인 프로젝트의 구 명령 /crew-upgrade --version v4.6.0로 실행하세요(이 명령이 스스로를 aick-upgrade로 교체). 이제부터 /aick-* 명령을 사용하세요. 스크립트·문서·alias에 /crew-* 가 박혀 있으면 /aick-* 로 바꿔야 합니다. 커스텀 스킬을 crew-/skill- 접두사로 만들었던 경우 customSkills 검증은 계속 통과합니다(패턴이 aick-/crew-/skill- 셋 다 허용)."
         }
       ]
     }

@@ -44,8 +44,8 @@
         }
       ],
       "workflowState": {
-        "currentSkill": "crew-review-pr",
-        "lastCompletedSkill": "crew-impl",
+        "currentSkill": "aick-review-pr",
+        "lastCompletedSkill": "aick-impl",
         "prNumber": 42,
         "fixLoopCount": 1,
         "lastReviewDecision": "REQUEST_CHANGES",
