@@ -10,7 +10,7 @@ on:
       - '.claude/schemas/project.schema.json'
       - '.claude/schemas/fixtures/backlog/**'
       - 'tests/skill_init/**'
-      - '.github/workflows/skill-init-tests.yml'
+      - '.github/workflows/aick-init-tests.yml'
   pull_request:
     branches: [main, develop]
     paths:
@@ -20,7 +20,7 @@ on:
       - '.claude/schemas/project.schema.json'
       - '.claude/schemas/fixtures/backlog/**'
       - 'tests/skill_init/**'
-      - '.github/workflows/skill-init-tests.yml'
+      - '.github/workflows/aick-init-tests.yml'
 
 jobs:
   test:
