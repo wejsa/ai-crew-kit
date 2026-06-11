@@ -17,35 +17,50 @@ AI 에이전트 팀 기반 소프트웨어 개발 프로세스 관리 프레임�
 
 ## ⚡ Try it in 5 minutes
 
-Watch the **deterministic merge gate** block a bad merge — no real PR, no GitHub auth needed; the gate itself runs fully offline (setup fetches one fixture file).
+Watch the **deterministic merge gate** stop a bad merge — no real PR, no GitHub auth needed; the gate decision itself runs fully offline.
 
 ```bash
-# 1. Install the plugin (inside any Claude Code session)
+# 1. Install the plugin (inside any Claude Code session).
+#    This CLI command installs USER-WIDE (works in any folder). If you instead used
+#    the /plugin UI and picked "project" scope, the plugin does NOT follow you to
+#    other folders — re-run these two commands inside the demo session at step 3.
 /plugin marketplace add wejsa/ai-crew-kit
 /plugin install ai-crew-kit@ai-crew-kit
 ```
 
 ```bash
-# 2. Create a scratch project seeded with the demo fixture — it simulates
-#    PR #42 whose review found an unresolved CRITICAL issue
+# 2. In a regular terminal (not the Claude prompt), anywhere you like:
+#    create a throwaway sandbox — unrelated to step 1's directory — and seed it
+#    with the demo fixture (simulates PR #42 with an unresolved CRITICAL review).
 mkdir gate-demo && cd gate-demo && git init -q && git commit --allow-empty -qm init
 mkdir -p .claude/state
-curl -fsSL https://raw.githubusercontent.com/wejsa/ai-crew-kit/main/examples/merge-gate-demo/.claude/state/backlog.json \
-  -o .claude/state/backlog.json
+BASE=https://raw.githubusercontent.com/wejsa/ai-crew-kit/main/examples/merge-gate-demo
+curl -fsSL "$BASE/.claude/state/backlog.json" -o .claude/state/backlog.json
+curl -fsSL "$BASE/CLAUDE.md" -o CLAUDE.md   # tells the session to run commands literally
 ```
 
-**3.** Start `claude` **in that directory** and ask: *"Run exactly: `gh pr merge 42 --squash`"*
+**3.** Start `claude` **in that directory** (the gate reads the session root's state; `jq` must be installed) and paste:
 
-**4.** The PreToolUse hook denies the merge **before the command ever runs**:
+> Do not use any skill. Run this exact bash command as-is: `gh pr merge 42 --squash`
 
-```
-🛑 [pre-tool-use] Merge blocked — PR #42
-   Reason: backlog: last review decision is REQUEST_CHANGES (unresolved CRITICAL posted)
+**4.** The merge is stopped. `cat .claude/state/hook-errors.log` tells you **which layer** stopped it:
+
+| You saw | Layer that fired | hook-errors.log |
+|---------|------------------|-----------------|
+| 🛑 `Merge blocked — PR #42` denial before execution | **deterministic hook** — the demo's point | `merge blocked` line present |
+| Claude invoked a merge skill / declined on its own | prose layer — the hook never got the chance | empty or absent |
+
+Either way the bad merge is stopped (defense in depth) — but **only the hook is guaranteed**. Live-model routing varies run to run, and that variance is exactly why the gate is a bash hook, not a prompt. To watch the hook fire **deterministically — same result for every user, every time** (run inside `gate-demo/`):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/wejsa/ai-crew-kit/main/.claude/hooks/pre-tool-use.sh -o /tmp/gate.sh
+echo '{"tool_input":{"command":"gh pr merge 42 --squash"}}' \
+  | CLAUDE_PROJECT_DIR="$PWD" bash /tmp/gate.sh; echo "exit=$?"   # → 🛑 + exit=2 (the gate decision makes zero network calls)
 ```
 
 The merge gate is 100% deterministic — a bash hook, not LLM prose.
 
-→ Full walkthrough (including how to bypass deliberately): [examples/merge-gate-demo](./examples/merge-gate-demo/) · How it works: [docs/merge-gate-explained.md](./docs/merge-gate-explained.md)
+→ Full walkthrough (all outcomes, bypass, troubleshooting): [examples/merge-gate-demo](./examples/merge-gate-demo/) · How it works: [docs/merge-gate-explained.md](./docs/merge-gate-explained.md)
 
 ---
 

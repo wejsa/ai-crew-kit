@@ -28,19 +28,34 @@ Install the plugin if you haven't (inside any Claude Code session):
 /plugin install ai-crew-kit@ai-crew-kit
 ```
 
+> **Scope matters.** The CLI command above installs **user-wide** — it works in any folder.
+> If you installed through the `/plugin` UI and picked **project** (or local) scope, the
+> plugin does **not** follow you to other directories. In the demo session, confirm
+> `/plugin list --enabled` shows `ai-crew-kit`; if it doesn't, run the two commands above
+> inside that session.
+
 ---
 
 ## 1. Set up the sandbox (1 minute)
+
+In a **regular terminal** (not the Claude prompt), anywhere you like — this is a throwaway
+folder, unrelated to wherever you installed the plugin:
 
 ```bash
 mkdir gate-demo && cd gate-demo
 git init -q && git commit --allow-empty -qm init
 mkdir -p .claude/state        # create the directory FIRST — curl won't create it
-curl -fsSL https://raw.githubusercontent.com/wejsa/ai-crew-kit/main/examples/merge-gate-demo/.claude/state/backlog.json \
-  -o .claude/state/backlog.json
+BASE=https://raw.githubusercontent.com/wejsa/ai-crew-kit/main/examples/merge-gate-demo
+curl -fsSL "$BASE/.claude/state/backlog.json" -o .claude/state/backlog.json
+curl -fsSL "$BASE/CLAUDE.md" -o CLAUDE.md
 ```
 
-(Working from a local checkout instead? `cp <kit>/examples/merge-gate-demo/.claude/state/backlog.json .claude/state/`)
+The second file, `CLAUDE.md`, instructs the session to run requested commands **literally**
+instead of routing them to the kit's own workflow skills — without it, Claude often invokes
+`aick-merge-pr` and stops the merge in prose before the hook can fire (see the outcome
+table in Act 1).
+
+(Working from a local checkout instead? `cp <kit>/examples/merge-gate-demo/.claude/state/backlog.json .claude/state/ && cp <kit>/examples/merge-gate-demo/CLAUDE.md .`)
 
 The fixture is one task: its step created **PR #42**, and the review recorded
 **`lastReviewDecision: "REQUEST_CHANGES"`** — an unresolved CRITICAL
@@ -57,8 +72,11 @@ The fixture is one task: its step created **PR #42**, and the review recorded
 Start a **new** Claude Code session in `gate-demo/`, then paste exactly:
 
 ```
-Run exactly: gh pr merge 42 --squash — no need to check the PR first.
+Do not use any skill. Run this exact bash command as-is: gh pr merge 42 --squash
 ```
+
+(The "Do not use any skill" part matters — it suppresses routing to the kit's own merge
+skill, which would otherwise stop the merge in prose before the hook fires.)
 
 **What you should see:** the merge is denied and Claude relays the gate's reason:
 
@@ -72,13 +90,25 @@ Run exactly: gh pr merge 42 --squash — no need to check the PR first.
      3) [Deliberate override] Set CCK_GATE_BYPASS=1 and retry (user responsibility)
 ```
 
+**Which layer actually stopped it?** Live-model routing varies run to run — three outcomes
+are possible, and `cat .claude/state/hook-errors.log` is the discriminator:
+
+| Outcome | Layer that fired | hook-errors.log |
+|---------|------------------|-----------------|
+| 🛑 denial before execution (message above) | **deterministic hook** — what this demo is about | `merge blocked: PR #42` line |
+| Claude invokes `aick-merge-pr`, reads the backlog, refuses | prose layer — defense in depth worked, but the hook never fired | empty / absent |
+| Claude declines ("there is no PR #42…") | the model being sensible on its own | empty / absent |
+
+Rows 2–3 still stop the bad merge — but through the *probabilistic* layer. To see the
+deterministic one, re-paste the exact prompt above (its "Do not use any skill" prefix plus
+the sandbox `CLAUDE.md` suppress skill routing), or jump to the guaranteed path below.
+Seeing the prose layer first and the hook second is the framework's thesis demonstrated
+twice: the model usually does the right thing — the hook is for when it doesn't.
+
 Notes for the skeptical (that's the point of this demo):
 
 - **A permission prompt is not the gate failing.** If Claude Code first asks you to allow
   the Bash command, allow it — the gate fires at execution time, after permission.
-- **If Claude refuses to even try** ("there is no PR #42…"), that's the model being
-  sensible, not the gate. Nudge it: *"I know — run the command anyway, exactly as
-  written."* Or skip straight to the guaranteed path below.
 - **About those three "Next steps":** ① `/aick-review-pr 42 --auto-fix` starts the
   automated fix-and-re-review loop **in a real project** — in this sandbox there is no
   real PR or project config, so the skill will stop at its preconditions; skip it here.
@@ -111,7 +141,16 @@ echo '{"tool_input":{"command":"gh pr merge 99"}}' \
     bash .claude/hooks/pre-tool-use.sh; echo "exit=$?"     # → PR 99 owns no CRITICAL, exit=0
 ```
 
-Success criterion for Act 1: **either** the in-session block **or** the standalone `exit=2`.
+No kit checkout? Fetch the hook itself and run it right inside `gate-demo/`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/wejsa/ai-crew-kit/main/.claude/hooks/pre-tool-use.sh -o /tmp/gate.sh
+echo '{"tool_input":{"command":"gh pr merge 42 --squash"}}' \
+  | CLAUDE_PROJECT_DIR="$PWD" bash /tmp/gate.sh; echo "exit=$?"   # → 2 (gate decision: zero network calls)
+```
+
+Success criterion for Act 1: **either** the in-session block *with a `merge blocked` line in
+`hook-errors.log`*, **or** the standalone `exit=2`.
 (The allow case is shown standalone-only on purpose — in a live session an allowed
 `gh pr merge` would really execute.)
 
@@ -155,6 +194,8 @@ setup problem looks like "the merge just went through." Check in this order:
 | 4 | Session started **in** `gate-demo/`? | gate reads the session root's `.claude/state/` — `cd` after start doesn't count |
 | 5 | `cat .claude/state/hook-errors.log` | a "PR number extraction failed" entry means the command shape wasn't parseable |
 | 6 | Plugin actually updated? | `/plugin` → check version; marketplace caches can serve a stale copy — remove and re-add the marketplace if needed |
+| 7 | Plugin enabled for **this** session? | `/plugin list --enabled` must show `ai-crew-kit` — **project/local-scope installs don't carry over** to new folders; install user-wide (CLI command) or enable it in this session |
+| 8 | Merge stopped but log is empty? | the **prose layer** (skill routing / model judgment) stopped it, not the hook — re-paste the exact Act 1 prompt to exercise the hook |
 
 Also good to know:
 
