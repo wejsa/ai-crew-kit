@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.6.1] - 2026-06-11
+
+> **v4.6.1 — 머지 게이트 5분 데모 + 영문 도달면 (distribution-first Phase A)** — 결정적 머지 게이트를 실제 PR·GitHub 인증·네트워크 없이 5분 안에 체험하는 데모와, 영어 사용자를 위한 최소 노출면(README Try-it·게이트 해설 문서·플러그인 메타·게이트/데모 경로 출력 문자열)을 추가합니다. 기능 변경 없음(docs/strings-only patch).
+
+### Added
+- **`examples/merge-gate-demo/`**: REQUEST_CHANGES 상태 fixture(`backlog.json` — 영문, lock 필드 전무, prNumber 정수 42 양쪽 join) + 영문 walkthrough(Preflight→Act 1 차단→인라인 우회 불가 보너스→Act 2 의도적 우회→fail-open 트러블슈팅) + 오염 방지 `.gitignore`. fixture는 CI `schema-validation.yml`의 examples glob에 자동 편입되어 회귀 보호.
+- **`docs/merge-gate-explained.md`** (영문): 게이트 동작 원리 — 신호 A/B join 조건, fail-open 13경로 설계 철학, 우회 env 3종, 감사 로그, standalone 검증, 정직한 한계(§7), FAQ. 루트 `.gitignore`에 `!docs/merge-gate-explained.md` 예외 추가(docs/* 화이트리스트).
+- **README "⚡ Try it in 5 minutes"** (영문): 설치 2명령 + 데모 4단계 + transparency 1줄("100% deterministic — a bash hook, not LLM prose").
+
+### Changed
+- **사용자 노출 문자열 영문화 (게이트·데모 경로 한정)**: pre-tool-use.sh 차단 메시지·우회 배너·log_err, session-start.sh 데모 경로 stdout(sync 상태·In-progress tasks), stop.sh continuation-plan 템플릿(# Resume work). 로직·exit code·env 의미론 무변경. 워크트리 claims 블록·내부 log_err·SKILL.md prose는 한국어 유지(i18n 경계 주석 명시, 전면 영문화는 v4.7+ 별도 판단). 테스트 assert 2곳 동일 커밋 갱신.
+- **플러그인 메타 영문화**: plugin.json/marketplace.json description 3곳(metadata drift 동시 정리), keywords +`merge-gate`/`deterministic`/`quality-assurance`(2곳 동기), SessionStart statusMessage "git sync + state load"(plugin.json + .claude/settings.json 패리티).
+- **docs/getting-started.md**: 설치 Step 1을 저장소 클론 → 플러그인 마켓플레이스 설치로 갱신(클론 방식은 대안으로 유지).
+
+### Fixed
+- README/데모의 "no network required" 표현을 "게이트 자체는 오프라인(셋업은 fixture 1회 fetch)"으로 정정 — 셋업 curl과의 모순 제거(자체 code-review).
+
 ## [4.6.0] - 2026-06-09
 
 > **v4.6.0 — 스킬 프리픽스 `crew-*` → `aick-*` 리네임 (BREAKING)** — 22개 빌트인 스킬의 호출 명령이 `/crew-*` → `/aick-*`로 바뀝니다 (예: `/crew-impl` → `/aick-impl`). 'AI Crew Kit(AICK)' 브랜드와 명령 프리픽스를 일치시키고 외부 스킬과의 이름 충돌을 줄입니다. **semver상 major이나 채택 규모를 고려해 minor(4.6.0)로 릴리스 — 번호는 minor지만 내용은 BREAKING입니다.**

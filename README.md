@@ -1,12 +1,12 @@
 <div align="center">
 
-# AI Crew Kit v4.6.0
+# AI Crew Kit v4.6.1
 
 **범용 AI 크루 개발 프레임워크 — 오케스트레이션 · 품질 게이트 · 스택 인지**
 
 AI 에이전트 팀 기반 소프트웨어 개발 프로세스 관리 프레임워크
 
-[![Version](https://img.shields.io/badge/version-v4.6.0-blue?style=flat-square)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v4.6.1-blue?style=flat-square)](./CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](./LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/wejsa/ai-crew-kit?style=flat-square)](https://github.com/wejsa/ai-crew-kit)
 [![Built with Claude Code](https://img.shields.io/badge/built_with-Claude_Code-blueviolet?style=flat-square)](https://claude.ai/download)
