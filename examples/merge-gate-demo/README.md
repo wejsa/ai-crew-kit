@@ -78,9 +78,13 @@ Do not use any skill. Run this exact bash command as-is: gh pr merge 42 --squash
 (The "Do not use any skill" part matters — it suppresses routing to the kit's own merge
 skill, which would otherwise stop the merge in prose before the hook fires.)
 
-**What you should see:** the merge is denied and Claude relays the gate's reason:
+**What you should see** (measured in a real session): the Bash tool call itself fails with
+the hook's denial — Claude Code renders it as a `PreToolUse:Bash hook error` block under the
+tool call, and Claude then relays the reason in its reply:
 
 ```
+● Bash(gh pr merge 42 --squash)
+  ⎿  Error: PreToolUse:Bash hook error: [bash ".../pre-tool-use.sh"]:
 🛑 [pre-tool-use] Merge blocked — PR #42
    Reason: backlog: last review decision is REQUEST_CHANGES (unresolved CRITICAL posted)
    A PR with unresolved CRITICAL findings cannot be merged.
@@ -163,8 +167,17 @@ The override is a human-only action: the variable must be in the CLI's own envir
 1. Exit the Claude session.
 2. Restart it with the override: `CCK_GATE_BYPASS=1 claude`
    (equivalent: put `{"env": {"CCK_GATE_BYPASS": "1"}}` in the sandbox's `.claude/settings.json`)
-3. Paste the same prompt: `Run exactly: gh pr merge 42 --squash`
-4. This time the gate steps aside — and leaves a paper trail:
+3. Paste the same Act 1 prompt: `Do not use any skill. Run this exact bash command as-is: gh pr merge 42 --squash`
+4. This time the gate steps aside. Two things about what you'll see (measured in a real session):
+
+- You will **not** see the 🔓 bypass banner in the UI — it goes to the hook's stderr, and
+  Claude Code only surfaces hook stderr for *blocking* (exit 2) hooks. Don't wait for it.
+- The visible signal is the **error's provenance shifting**: in Act 1 the failure was a
+  `PreToolUse:Bash hook error … Merge blocked` (the command never ran); now the command
+  **actually executes** and `gh` itself fails (`no git remotes found` — PR #42 never
+  existed). That shift — hook error → gh error — *is* the bypass working.
+
+And it leaves a paper trail:
 
 ```bash
 cat .claude/state/hook-errors.log
@@ -172,9 +185,8 @@ cat .claude/state/hook-errors.log
 # [ ... ] [pre-tool-use] merge gate bypassed (CCK_GATE_BYPASS) — cmd: gh pr merge 42 --squash
 ```
 
-The subsequent `gh` error ("no such PR / not authenticated") is **expected** — the gate
-stepped aside, and `gh` itself fails because PR #42 never existed. The point is the log:
-every block and every bypass is recorded with a timestamp.
+Every block and every bypass is recorded with a timestamp — a human can open the gate,
+but never silently.
 
 5. Clean up so the gate works again: exit, unset the env (or delete the settings entry),
    restart normally.
