@@ -164,8 +164,8 @@ Spring Boot (Kotlin · Java) · Node.js (TypeScript) · Python (FastAPI · Djang
 |----------|----------|
 | [Getting started](./docs/getting-started.en.md) | **EN** · [KO (full)](./docs/getting-started.md) |
 | [Core concepts](./docs/concepts.en.md) | **EN** · [KO (full)](./docs/concepts.md) |
-| [Merge gate explained](./docs/merge-gate-explained.md) | **EN** |
-| [Merge gate demo (5 min)](./examples/merge-gate-demo/) | **EN** |
+| [Merge gate explained](./docs/merge-gate-explained.md) | **EN** · [KO](./docs/merge-gate-explained.ko.md) |
+| [Merge gate demo (5 min)](./examples/merge-gate-demo/) | **EN** · [KO](./examples/merge-gate-demo/README.ko.md) |
 | [Skill reference](./docs/skill-reference.md) | KO |
 | [Workflow guide](./docs/workflow-guide.md) | KO |
 | [Token optimization](./docs/token-optimization.md) | KO |

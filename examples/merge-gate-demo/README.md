@@ -1,4 +1,8 @@
+<!-- PARITY: this document pairs with README.ko.md (Korean) — always update both together -->
+
 # Merge Gate Demo — watch a bad merge get blocked in 5 minutes
+
+English · [한국어](./README.ko.md)
 
 This demo makes AI Crew Kit's **deterministic merge gate** fire in front of you:
 Claude tries to merge a PR whose review found an unresolved CRITICAL issue, and a

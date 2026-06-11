@@ -63,9 +63,9 @@ echo '{"tool_input":{"command":"gh pr merge 42 --squash"}}' \
   | CLAUDE_PROJECT_DIR="$PWD" bash /tmp/gate.sh; echo "exit=$?"   # → 🛑 + exit=2 (게이트 판정은 네트워크 호출 0회)
 ```
 
-**머지 판정 루프에는 모델이 없습니다** — bash 훅이 기록된 리뷰 상태를 읽습니다: 같은 상태, 같은 판정, 매번. ([보장하는 것과 못 하는 것](./docs/merge-gate-explained.md#7-what-the-gate-does-not-do-honest-edition))
+**머지 판정 루프에는 모델이 없습니다** — bash 훅이 기록된 리뷰 상태를 읽습니다: 같은 상태, 같은 판정, 매번. ([보장하는 것과 못 하는 것](./docs/merge-gate-explained.ko.md#7-게이트가-하지-않는-것-정직한-한계))
 
-→ 전체 walkthrough (모든 결과 경로·우회·트러블슈팅): [examples/merge-gate-demo](./examples/merge-gate-demo/) · 동작 원리: [docs/merge-gate-explained.md](./docs/merge-gate-explained.md)
+→ 전체 walkthrough (모든 결과 경로·우회·트러블슈팅): [머지 게이트 데모](./examples/merge-gate-demo/README.ko.md) · 동작 원리: [머지 게이트 해설](./docs/merge-gate-explained.ko.md)
 
 ---
 
@@ -263,7 +263,8 @@ rm -f .claude/state/hook-disabled.flag
 | [핵심 개념](./docs/concepts.md) | 에이전트 팀, 디렉토리 구조, 실행 모델 |
 | [스킬 레퍼런스](./docs/skill-reference.md) | 전체 스킬 목록, 자연어 매핑, Tier 분류 매트릭스 |
 | [워크플로우 가이드](./docs/workflow-guide.md) | 자동 체이닝, 7가지 워크플로우, 품질 게이트, Git 전략 |
-| [Merge Gate Explained (영문)](./docs/merge-gate-explained.md) | 결정적 머지 게이트 동작 원리 — 신호 A/B, fail-open 설계, 우회 env, standalone 검증 |
+| [머지 게이트 해설](./docs/merge-gate-explained.ko.md) ([EN](./docs/merge-gate-explained.md)) | 결정적 머지 게이트 동작 원리 — 신호 A/B, fail-open 설계, 우회 env, standalone 검증 |
+| [머지 게이트 데모 (5분)](./examples/merge-gate-demo/README.ko.md) ([EN](./examples/merge-gate-demo/README.md)) | 차단 → 우회 실패 → 기록되는 사람의 우회 실습 |
 | [토큰 최적화](./docs/token-optimization.md) | 스킬 프로파일, 모델 라우팅, 리뷰 Tier, 1M 실패 대응 Q&A |
 | [커스터마이징](./docs/customization.md) | 참고자료/체크리스트 추가, DB·마이그레이션 도구 변경, Layered Override |
 | [Cowork 플러그인](./docs/cowork-plugin.md) | Cowork 환경에서 kit 활용 |

@@ -1,6 +1,8 @@
+<!-- PARITY: this document pairs with merge-gate-explained.ko.md (Korean) — always update both together -->
+
 # Merge Gate Explained
 
-> [← Back to README](../README.md) · Try it live: [examples/merge-gate-demo](../examples/merge-gate-demo/)
+> [← Back to README](../README.md) · [한국어](./merge-gate-explained.ko.md) · Try it live: [examples/merge-gate-demo](../examples/merge-gate-demo/)
 
 **TL;DR** — AI Crew Kit blocks `gh pr merge` for any PR whose last review posted an unresolved
 CRITICAL finding. The block is not a prompt, a convention, or an instruction the model is asked
