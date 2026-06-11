@@ -3,7 +3,7 @@
   "name": "ai-crew-kit",
   "displayName": "AI Crew Kit",
   "version": "4.6.0",
-  "description": "범용 AI 크루 기반 소프트웨어 개발 프로세스 관리 프레임워크 — 에이전트 팀 오케스트레이션(plan→impl→review→merge) + 품질 게이트 (22개 스킬 + 12개 에이전트 + 품질 게이트 훅).",
+  "description": "General-purpose AI crew framework for software development process management — agent team orchestration (plan→impl→review→merge) plus a deterministic merge quality gate. 22 skills + 12 agents + quality gate hooks.",
   "author": {
     "name": "wejsa"
   },
@@ -15,7 +15,10 @@
     "agent-orchestration",
     "process-management",
     "code-review",
-    "quality-gate"
+    "quality-gate",
+    "merge-gate",
+    "deterministic",
+    "quality-assurance"
   ],
   "skills": "./.claude/skills/",
   "hooks": {
@@ -26,7 +29,7 @@
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/.claude/hooks/session-start.sh\"",
             "timeout": 30,
-            "statusMessage": "git sync + 상태 로드"
+            "statusMessage": "git sync + state load"
           }
         ]
       }
