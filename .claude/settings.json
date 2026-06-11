@@ -42,7 +42,7 @@
             "type": "command",
             "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh",
             "timeout": 30,
-            "statusMessage": "git sync + 상태 로드"
+            "statusMessage": "git sync + state load"
           }
         ]
       }

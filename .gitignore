@@ -83,6 +83,7 @@ docs/*
 !docs/eject-guide.md
 !docs/token-optimization.md
 !docs/cowork-plugin.md
+!docs/merge-gate-explained.md
 !docs/v2/
 !docs/v2/**
 !docs/archive/

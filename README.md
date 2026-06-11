@@ -1,12 +1,12 @@
 <div align="center">
 
-# AI Crew Kit v4.6.0
+# AI Crew Kit v4.6.1
 
 **범용 AI 크루 개발 프레임워크 — 오케스트레이션 · 품질 게이트 · 스택 인지**
 
 AI 에이전트 팀 기반 소프트웨어 개발 프로세스 관리 프레임워크
 
-[![Version](https://img.shields.io/badge/version-v4.6.0-blue?style=flat-square)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v4.6.1-blue?style=flat-square)](./CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](./LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/wejsa/ai-crew-kit?style=flat-square)](https://github.com/wejsa/ai-crew-kit)
 [![Built with Claude Code](https://img.shields.io/badge/built_with-Claude_Code-blueviolet?style=flat-square)](https://claude.ai/download)
@@ -14,6 +14,40 @@ AI 에이전트 팀 기반 소프트웨어 개발 프로세스 관리 프레임�
 [빠른 시작](#-빠른-시작) · [지원 스택](#-지원-기술-스택) · [명령어](#-주요-명령어) · [문서](#-상세-문서)
 
 </div>
+
+## ⚡ Try it in 5 minutes
+
+Watch the **deterministic merge gate** block a bad merge — no real PR, no GitHub auth needed; the gate itself runs fully offline (setup fetches one fixture file).
+
+```bash
+# 1. Install the plugin (inside any Claude Code session)
+/plugin marketplace add wejsa/ai-crew-kit
+/plugin install ai-crew-kit@ai-crew-kit
+```
+
+```bash
+# 2. Create a scratch project seeded with the demo fixture — it simulates
+#    PR #42 whose review found an unresolved CRITICAL issue
+mkdir gate-demo && cd gate-demo && git init -q && git commit --allow-empty -qm init
+mkdir -p .claude/state
+curl -fsSL https://raw.githubusercontent.com/wejsa/ai-crew-kit/main/examples/merge-gate-demo/.claude/state/backlog.json \
+  -o .claude/state/backlog.json
+```
+
+**3.** Start `claude` **in that directory** and ask: *"Run exactly: `gh pr merge 42 --squash`"*
+
+**4.** The PreToolUse hook denies the merge **before the command ever runs**:
+
+```
+🛑 [pre-tool-use] Merge blocked — PR #42
+   Reason: backlog: last review decision is REQUEST_CHANGES (unresolved CRITICAL posted)
+```
+
+The merge gate is 100% deterministic — a bash hook, not LLM prose.
+
+→ Full walkthrough (including how to bypass deliberately): [examples/merge-gate-demo](./examples/merge-gate-demo/) · How it works: [docs/merge-gate-explained.md](./docs/merge-gate-explained.md)
+
+---
 
 > **프레임워크 철학** — AI Crew Kit은 **"어떻게 짜는지"가 아니라 "어떤 프로세스로 만드는지"**를 관리합니다. 코드 작성과 기술 판단은 Claude가 담당하고, 프레임워크는 워크플로우 자동화·품질 게이트·팀 컨벤션을 제공합니다. REST, WebSocket, GraphQL, gRPC 등 모든 프로토콜의 코드를 Claude가 작성할 수 있으며, 프레임워크는 그 과정의 품질을 보장합니다.
 
@@ -209,6 +243,7 @@ rm -f .claude/state/hook-disabled.flag
 | [핵심 개념](./docs/concepts.md) | 에이전트 팀, 디렉토리 구조, 실행 모델 |
 | [스킬 레퍼런스](./docs/skill-reference.md) | 전체 스킬 목록, 자연어 매핑, Tier 분류 매트릭스 |
 | [워크플로우 가이드](./docs/workflow-guide.md) | 자동 체이닝, 7가지 워크플로우, 품질 게이트, Git 전략 |
+| [Merge Gate Explained (영문)](./docs/merge-gate-explained.md) | 결정적 머지 게이트 동작 원리 — 신호 A/B, fail-open 설계, 우회 env, standalone 검증 |
 | [토큰 최적화](./docs/token-optimization.md) | 스킬 프로파일, 모델 라우팅, 리뷰 Tier, 1M 실패 대응 Q&A |
 | [커스터마이징](./docs/customization.md) | 참고자료/체크리스트 추가, DB·마이그레이션 도구 변경, Layered Override |
 | [Cowork 플러그인](./docs/cowork-plugin.md) | Cowork 환경에서 kit 활용 |

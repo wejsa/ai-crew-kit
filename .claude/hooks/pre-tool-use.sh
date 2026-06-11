@@ -77,8 +77,8 @@ esac
 # ── 의도적 우회 ───────────────────────────────────────
 case "${CCK_GATE_BYPASS:-0}" in
   1|true|TRUE|yes|YES)
-    log_err "머지 게이트 우회됨 (CCK_GATE_BYPASS) — cmd: $CMD_NORM"
-    printf '🔓 [%s] 머지 게이트 우회 (CCK_GATE_BYPASS). 사용자 책임 하 진행.\n' "$HOOK_NAME" >&2
+    log_err "merge gate bypassed (CCK_GATE_BYPASS) — cmd: $CMD_NORM"
+    printf '🔓 [%s] Merge gate bypassed (CCK_GATE_BYPASS). Proceeding under user responsibility.\n' "$HOOK_NAME" >&2
     exit 0
     ;;
 esac
@@ -98,7 +98,7 @@ PRN="$(printf '%s' "$CMD_NORM" | awk '
     for (i=start; i<=NF; i++) { t=$i; sub(/^.*\//,"",t); if (t ~ /^[0-9]+$/) { print t; exit } }
   }')"
 if [ -z "$PRN" ]; then
-  log_err "PR 번호 추출 실패 — fail-open allow. cmd: $CMD_NORM"
+  log_err "PR number extraction failed — fail-open allow. cmd: $CMD_NORM"
   exit 0
 fi
 # 선행 0 정규화: jq --argjson과 gh는 `042` 같은 비표준 JSON/번호를 거부(jq<1.7)하므로
@@ -127,7 +127,7 @@ if [ -f "$BACKLOG" ]; then
   ' "$BACKLOG" 2>/dev/null || echo '')"
   if [ "$DECISION" = "REQUEST_CHANGES" ]; then
     BLOCK=1
-    REASON="backlog: 직전 리뷰 결정 REQUEST_CHANGES (미해결 CRITICAL 게시됨)"
+    REASON="backlog: last review decision is REQUEST_CHANGES (unresolved CRITICAL posted)"
   fi
 fi
 
@@ -145,16 +145,18 @@ if [ "$BLOCK" -eq 0 ] && [ "$NO_GH" -eq 0 ] && command -v gh >/dev/null 2>&1; th
 fi
 
 # ── 판정 ──────────────────────────────────────────────
+# NOTE: 아래 차단 메시지는 README.md(Try-it)·examples/merge-gate-demo/README.md에
+# verbatim 인용됨 — 문구 수정 시 두 문서도 함께 갱신할 것 (test:108은 "Merge blocked"만 고정).
 if [ "$BLOCK" -eq 1 ]; then
-  log_err "머지 차단: PR #$PRN — $REASON"
+  log_err "merge blocked: PR #$PRN — $REASON"
   {
-    printf '🛑 [%s] 머지 차단 — PR #%s\n' "$HOOK_NAME" "$PRN"
-    printf '   사유: %s\n' "$REASON"
-    printf '   미해결 CRITICAL이 있는 PR은 머지할 수 없습니다.\n'
-    printf '   조치:\n'
-    printf '     1) [권장] CRITICAL 수정 후 재리뷰: /aick-review-pr %s --auto-fix\n' "$PRN"
-    printf '     2) 강등/오탐으로 판단되면 리뷰 결정을 재검토 후 재리뷰\n'
-    printf '     3) [의도적 강행] CCK_GATE_BYPASS=1 설정 후 재시도 (사용자 책임)\n'
+    printf '🛑 [%s] Merge blocked — PR #%s\n' "$HOOK_NAME" "$PRN"
+    printf '   Reason: %s\n' "$REASON"
+    printf '   A PR with unresolved CRITICAL findings cannot be merged.\n'
+    printf '   Next steps:\n'
+    printf '     1) [Recommended] Fix the CRITICAL findings, then re-review: /aick-review-pr %s --auto-fix\n' "$PRN"
+    printf '     2) If this is a downgraded or false-positive finding, re-examine the review decision and re-review\n'
+    printf '     3) [Deliberate override] Set CCK_GATE_BYPASS=1 and retry (user responsibility)\n'
   } >&2
   exit 2
 fi

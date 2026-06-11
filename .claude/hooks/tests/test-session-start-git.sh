@@ -35,12 +35,12 @@ assert_eq 0 "$rc" "exit 0 when jq missing" || fail=$((fail + 1))
 assert_contains "$output" "jq 미설치" "jq missing warning logged" || fail=$((fail + 1))
 
 # 3. continuation-plan 존재 → stdout 출력 확인
-printf '# 이어서 작업\n\n- T1: 테스트\n' > "$SANDBOX/.claude/state/continuation-plan.md"
+printf '# Resume work\n\n- T1: 테스트\n' > "$SANDBOX/.claude/state/continuation-plan.md"
 output="$(cd "$SANDBOX" && CLAUDE_PROJECT_DIR="$SANDBOX" \
   bash "$SANDBOX/.claude/hooks/session-start.sh" <<< '{}' 2>&1)"
 rc=$?
 assert_eq 0 "$rc" "exit 0 with continuation-plan" || fail=$((fail + 1))
-assert_contains "$output" "이어서 작업" "continuation-plan content on stdout" || fail=$((fail + 1))
+assert_contains "$output" "Resume work" "continuation-plan content on stdout" || fail=$((fail + 1))
 
 if [ "$fail" -gt 0 ]; then
   printf '\n💥 %d assertion(s) failed\n' "$fail" >&2

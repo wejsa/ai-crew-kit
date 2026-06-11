@@ -1,0 +1,37 @@
+{
+  "metadata": {
+    "lastTaskNumber": 1,
+    "projectPrefix": "DEMO",
+    "version": 1,
+    "createdAt": "2026-06-11T00:00:00Z",
+    "updatedAt": "2026-06-11T00:00:00Z"
+  },
+  "tasks": {
+    "DEMO-001": {
+      "id": "DEMO-001",
+      "title": "Add login rate limiting",
+      "description": "Block brute-force login attempts. PR #42 was reviewed and a CRITICAL issue was found: the limiter counts per-process, so it resets on every deploy.",
+      "status": "in_progress",
+      "type": "feature",
+      "priority": "high",
+      "createdAt": "2026-06-11T00:00:00Z",
+      "currentStep": 1,
+      "steps": [
+        {
+          "number": 1,
+          "title": "Rate limiter middleware",
+          "status": "pr_created",
+          "prNumber": 42
+        }
+      ],
+      "workflowState": {
+        "currentSkill": "aick-review-pr",
+        "lastCompletedSkill": "aick-impl",
+        "prNumber": 42,
+        "fixLoopCount": 0,
+        "lastReviewDecision": "REQUEST_CHANGES",
+        "updatedAt": "2026-06-11T00:00:00Z"
+      }
+    }
+  }
+}

@@ -13,14 +13,18 @@
 
 ## 설치 단계
 
-**Step 1: 저장소 클론**
+**Step 1: 플러그인 설치** (Claude Code 세션 안에서)
 ```bash
-git clone https://github.com/wejsa/ai-crew-kit.git my-project
-cd my-project
+/plugin marketplace add wejsa/ai-crew-kit
+/plugin install ai-crew-kit@ai-crew-kit
 ```
 
-**Step 2: Claude Code 실행**
+> 22개 스킬 + 12개 에이전트 + 품질 게이트 훅이 한 번에 등록되며, 어느 프로젝트에서나 사용할 수 있습니다.
+> 저장소를 직접 클론해 시작하는 구방식도 동작하지만(아래 "기존 프로젝트 온보딩"의 시나리오 B 참조), 플러그인 설치를 권장합니다.
+
+**Step 2: 프로젝트 디렉토리에서 Claude Code 실행**
 ```bash
+cd my-project   # 새 디렉토리 또는 기존 프로젝트
 claude
 ```
 
