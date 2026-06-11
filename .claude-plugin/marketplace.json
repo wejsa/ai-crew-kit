@@ -7,14 +7,14 @@
   },
   "metadata": {
     "description": "General-purpose AI crew framework for software development process management — agent team orchestration (plan→impl→review→merge) plus a deterministic merge quality gate. 22 skills + 12 agents + quality gate hooks.",
-    "version": "4.6.1"
+    "version": "4.7.0"
   },
   "plugins": [
     {
       "name": "ai-crew-kit",
       "source": "./",
       "description": "General-purpose AI crew framework — agent orchestration plus a deterministic merge quality gate (22 skills, 12 agents, quality gate hooks).",
-      "version": "4.6.1",
+      "version": "4.7.0",
       "author": {
         "name": "wejsa"
       },

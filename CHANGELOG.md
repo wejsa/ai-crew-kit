@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.7.0] - 2026-06-12
+
+> **v4.7.0 — 영문 노출면 번들 + 한·영 문서 완전 패리티 (distribution-first Phase B)** — README가 English-canonical로 전환되고(한국어 전문은 README.ko.md), 영문 docs 2종·데모 시각화 SVG·한국어판 게이트 문서 2종이 추가됩니다. 기능 변경 없음(docs-only — 노출면 규모를 고려해 minor).
+
+### Added
+- **English-canonical README.md** + `README.ko.md`(한국어 전문 이관, Try-it 포함 완전 패리티, PARITY 페어 마커로 동시 갱신 강제). 버전 표기·배지는 영문 README가 SSOT.
+- **영문 docs**: `docs/getting-started.en.md`, `docs/concepts.en.md` — 한국어판과 섹션 단위 패리티(에이전트 역할 표·스택 빌드/테스트 표·Python 퀵스타트·핵심 원칙 등 양방향 갭 보강, 한국어 concepts에는 결정론 레이어 훅 4종 표 추가).
+- **한국어판 게이트 문서**: `docs/merge-gate-explained.ko.md`, `examples/merge-gate-demo/README.ko.md` — 전문 번역(코드 블록·훅 출력은 기계 텍스트라 원문 유지). 모든 독자 문서가 한·영 쌍.
+- **데모 시각화**: `docs/assets/merge-gate-demo.svg` — 실측 세션 3막(차단 → 인라인 우회 실패 → 사람의 우회 + 감사 로그 타임라인), GitHub 다크 터미널 스타일, 양쪽 README 히어로 임베드.
+- **데모 샌드박스 CLAUDE.md**(`examples/merge-gate-demo/CLAUDE.md`): 세션이 명령을 literal 실행하도록 지시 — 스킬 라우팅으로 훅이 발동 못 하는 경로 억제(첫 사용자 실측 반영).
+
+### Changed
+- **Try-it/walkthrough 일관성 재구성** (첫 사용자 실측 2회 반영): 결과를 단정하지 않고 **레이어 판별 매트릭스**(훅 vs prose, `hook-errors.log`가 판별자)로 안내, 보장 경로(standalone 파이프)를 "모든 사용자 동일 결과" 경로로 승격, 강화 프롬프트("Do not use any skill...") 채택, 플러그인 스코프 경고(project/local 스코프는 다른 폴더에 안 따라옴), Act 2 배너 비노출(exit 0 훅 stderr는 UI 미표시)·에러 출처 전환 신호 문서화, 트러블슈팅 8행.
+- **결정성 문구 정직화**: "100% deterministic" 제거 → "**No model in the decision loop** — same recorded state, same verdict, every time" + honest-limits(§7) 링크. 판정 루프의 무모델·재현성(참)과 보호 100%(거짓 — fail-open 13경로·신호는 워크플로우가 기록)를 구분.
+- kit-clone-cleanup 삭제 목록에 `README.ko.md` 추가(protocol SSOT rm 16종 + 문서 열거부 동기).
+- `.gitignore`: docs 화이트리스트 예외 5건(en/ko 신규 문서 + assets/).
+
 ## [4.6.1] - 2026-06-11
 
 > **v4.6.1 — 머지 게이트 5분 데모 + 영문 도달면 (distribution-first Phase A)** — 결정적 머지 게이트를 실제 PR·GitHub 인증·네트워크 없이 5분 안에 체험하는 데모와, 영어 사용자를 위한 최소 노출면(README Try-it·게이트 해설 문서·플러그인 메타·게이트/데모 경로 출력 문자열)을 추가합니다. 기능 변경 없음(docs/strings-only patch).
