@@ -118,18 +118,18 @@ if [ -f "$BACKLOG" ]; then
   fi
 
   # 2-3. 원자적 continuation-plan 생성
-  ACTIVE_TASKS="$(jq -r '.tasks[]? | select(.status == "in_progress") | "- \(.id): \(.title // "(제목 없음)")"' "$BACKLOG" 2>/dev/null || true)"
+  ACTIVE_TASKS="$(jq -r '.tasks[]? | select(.status == "in_progress") | "- \(.id): \(.title // "(no title)")"' "$BACKLOG" 2>/dev/null || true)"
   TS="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
   TMP_PLAN="${CONT_PLAN}.tmp.$$"
   {
-    printf '# 이어서 작업\n\n'
-    printf '> 자동 생성: %s\n\n' "$TS"
-    printf '## 진행 중 Task\n\n'
+    printf '# Resume work\n\n'
+    printf '> Auto-generated: %s\n\n' "$TS"
+    printf '## In-progress tasks\n\n'
     printf '%s\n' "$ACTIVE_TASKS"
-    printf '\n## 재개 방법\n\n'
+    printf '\n## How to resume\n\n'
     # printf: '-' 로 시작하는 포맷은 옵션으로 해석되므로 %s 포맷 필수
-    printf '%s\n' '- 진행 중 Task의 계획 파일 `.claude/temp/{taskId}-plan.md` 확인'
-    printf '%s\n' '- `/aick-impl` 또는 `/aick-plan`으로 복귀'
+    printf '%s\n' '- Check the plan file for the in-progress task: `.claude/temp/{taskId}-plan.md`'
+    printf '%s\n' '- Resume with `/aick-impl` or `/aick-plan`'
   } > "$TMP_PLAN" 2>/dev/null && mv -f "$TMP_PLAN" "$CONT_PLAN" 2>/dev/null || {
     log_err "continuation-plan 쓰기 실패"
     rm -f "$TMP_PLAN" 2>/dev/null

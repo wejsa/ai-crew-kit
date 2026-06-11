@@ -62,7 +62,7 @@ if command -v git >/dev/null 2>&1 && { [ -d .git ] || git rev-parse --git-dir >/
   UPSTREAM="$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)"
   SYNC_ATTEMPTED=0
   if [ -z "$UPSTREAM" ]; then
-    printf '  upstream 미설정 — sync 스킵 (%s)\n' "$BRANCH"
+    printf '  no upstream configured — sync skipped (%s)\n' "$BRANCH"
   elif [ "$IS_WORKTREE" -eq 1 ]; then
     SYNC_ATTEMPTED=1
     git fetch --quiet origin 2>/dev/null || log_err "git fetch 실패 (계속 진행)"
@@ -76,9 +76,9 @@ if command -v git >/dev/null 2>&1 && { [ -d .git ] || git rev-parse --git-dir >/
     AFTER_SHA="$(git rev-parse HEAD 2>/dev/null || echo '')"
     if [ -n "$BEFORE_SHA" ] && [ "$BEFORE_SHA" != "$AFTER_SHA" ]; then
       NEW_COUNT="$(git rev-list --count "$BEFORE_SHA..$AFTER_SHA" 2>/dev/null || echo '?')"
-      printf '✓ 동기화 완료 (+%s commits, %s)\n' "$NEW_COUNT" "$BRANCH"
+      printf '✓ synced (+%s commits, %s)\n' "$NEW_COUNT" "$BRANCH"
     else
-      printf '✓ 최신 상태 (%s)\n' "$BRANCH"
+      printf '✓ up to date (%s)\n' "$BRANCH"
     fi
   fi
 else
@@ -97,8 +97,8 @@ fi
 if [ -f "$BACKLOG" ] && command -v jq >/dev/null 2>&1; then
   IN_PROGRESS="$(jq -r '[.tasks[]? | select(.status == "in_progress")] | length' "$BACKLOG" 2>/dev/null || echo 0)"
   if [ "$IN_PROGRESS" != "0" ] && [ "$IN_PROGRESS" != "" ]; then
-    printf '\n🔵 진행 중 Task (%s건):\n' "$IN_PROGRESS"
-    jq -r '.tasks[]? | select(.status == "in_progress") | "  - \(.id): \(.title // "(제목 없음)")"' "$BACKLOG" 2>/dev/null || true
+    printf '\n🔵 In-progress tasks (%s):\n' "$IN_PROGRESS"
+    jq -r '.tasks[]? | select(.status == "in_progress") | "  - \(.id): \(.title // "(no title)")"' "$BACKLOG" 2>/dev/null || true
   fi
 elif [ -f "$BACKLOG" ]; then
   # jq 미설치 graceful skip

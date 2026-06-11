@@ -105,7 +105,7 @@ print_header "2. gh pr merge 42 (step.prNumber=42, REQUEST_CHANGES) → block(2)
 assert_eq "2" "$(run_hook "$S" "gh pr merge 42 --squash --delete-branch")" "실제 shape(step.prNumber)로 차단" || fails=$((fails+1))
 out="$(printf '{"tool_name":"Bash","tool_input":{"command":"gh pr merge 42 --squash"}}' \
   | CLAUDE_PROJECT_DIR="$S" CCK_GATE_NO_GH=1 bash "$HOOK" 2>&1 1>/dev/null)"
-assert_contains "$out" "머지 차단" "차단 사유 메시지" || fails=$((fails+1))
+assert_contains "$out" "Merge blocked" "차단 사유 메시지" || fails=$((fails+1))
 assert_contains "$out" "CCK_GATE_BYPASS" "우회 안내 포함" || fails=$((fails+1))
 
 # ── 3. APPROVED / COMMENT → allow ───────────────────
