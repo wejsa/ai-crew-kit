@@ -6,17 +6,66 @@
 
 AI 에이전트 팀 기반 소프트웨어 개발 프로세스 관리 프레임워크
 
-[**English README**](./README.md) — 버전 배지·Try-it 데모·릴리스 기준은 영문 README가 SSOT입니다
+[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](./LICENSE)
+[![GitHub Stars](https://img.shields.io/github/stars/wejsa/ai-crew-kit?style=flat-square)](https://github.com/wejsa/ai-crew-kit)
+[![Built with Claude Code](https://img.shields.io/badge/built_with-Claude_Code-blueviolet?style=flat-square)](https://claude.ai/download)
+
+[**English README**](./README.md) — 버전 배지·릴리스 기준은 영문 README가 SSOT입니다
 
 [빠른 시작](#-빠른-시작) · [지원 스택](#-지원-기술-스택) · [명령어](#-주요-명령어) · [문서](#-상세-문서)
 
 </div>
 
----
+![머지 게이트 실동작 — 차단, 우회 실패, 기록되는 사람의 우회 (실제 세션 캡처)](./docs/assets/merge-gate-demo.svg)
+
+<!-- PARITY: 아래 Try-it 섹션은 README.md의 "Try it in 5 minutes"와 페어 — 한쪽 수정 시 반드시 동시 갱신 -->
 
 ## ⚡ 5분 체험 (Try it)
 
-결정적 머지 게이트가 나쁜 머지를 차단하는 장면을 5분 안에 직접 봅니다 — 실제 PR·GitHub 인증 불필요, 게이트 판정은 완전 오프라인. 단계별 안내는 [영문 README의 Try it 섹션](./README.md#-try-it-in-5-minutes)과 [데모 walkthrough](./examples/merge-gate-demo/)를 따라 주세요. 동작 원리는 [Merge Gate Explained](./docs/merge-gate-explained.md)를 참조하세요.
+**결정적 머지 게이트**가 나쁜 머지를 막는 장면을 직접 봅니다 — 실제 PR·GitHub 인증 불필요, 게이트 판정은 완전 오프라인.
+
+```bash
+# 1. 플러그인 설치 (Claude Code 세션 안에서).
+#    이 CLI 명령은 사용자 전역(user-wide)으로 설치됩니다. /plugin UI에서 "project"
+#    스코프를 골랐다면 다른 폴더에는 적용되지 않으니, 그 경우 3번의 데모 세션에서
+#    아래 두 명령을 다시 실행하세요.
+/plugin marketplace add wejsa/ai-crew-kit
+/plugin install ai-crew-kit@ai-crew-kit
+```
+
+```bash
+# 2. 일반 터미널에서(Claude 프롬프트 아님), 아무 위치에나:
+#    1번 디렉토리와 무관한 일회용 샌드박스를 만들고 데모 fixture를 받습니다
+#    (리뷰에서 미해결 CRITICAL이 발견된 PR #42 상황을 시뮬레이션).
+mkdir gate-demo && cd gate-demo && git init -q && git commit --allow-empty -qm init
+mkdir -p .claude/state
+BASE=https://raw.githubusercontent.com/wejsa/ai-crew-kit/main/examples/merge-gate-demo
+curl -fsSL "$BASE/.claude/state/backlog.json" -o .claude/state/backlog.json
+curl -fsSL "$BASE/CLAUDE.md" -o CLAUDE.md   # 세션이 명령을 literal하게 실행하도록 지시
+```
+
+**3.** **그 디렉토리 안에서** `claude`를 시작하고(게이트는 세션 루트의 상태를 읽음, `jq` 필수) 붙여넣기:
+
+> Do not use any skill. Run this exact bash command as-is: `gh pr merge 42 --squash`
+
+**4.** 머지가 막힙니다. `cat .claude/state/hook-errors.log`로 **어느 레이어**가 막았는지 판별합니다:
+
+| 본 것 | 발동한 레이어 | hook-errors.log |
+|---|---|---|
+| 실행 전 🛑 `Merge blocked — PR #42` 거부 | **결정론 훅** — 데모의 핵심 | `merge blocked` 줄 존재 |
+| Claude가 머지 스킬을 호출 / 스스로 거절 | prose 레이어 — 훅은 기회가 없었음 | 비어 있거나 없음 |
+
+어느 쪽이든 나쁜 머지는 막히지만(다층 방어) **보장되는 것은 훅뿐**입니다. 라이브 모델의 라우팅은 매번 다를 수 있고, 그 분산이 바로 게이트가 프롬프트가 아닌 bash 훅인 이유입니다. 훅이 **결정적으로 — 모든 사용자에게 매번 같은 결과로** 발동하는 것을 보려면 (`gate-demo/` 안에서):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/wejsa/ai-crew-kit/main/.claude/hooks/pre-tool-use.sh -o /tmp/gate.sh
+echo '{"tool_input":{"command":"gh pr merge 42 --squash"}}' \
+  | CLAUDE_PROJECT_DIR="$PWD" bash /tmp/gate.sh; echo "exit=$?"   # → 🛑 + exit=2 (게이트 판정은 네트워크 호출 0회)
+```
+
+**머지 판정 루프에는 모델이 없습니다** — bash 훅이 기록된 리뷰 상태를 읽습니다: 같은 상태, 같은 판정, 매번. ([보장하는 것과 못 하는 것](./docs/merge-gate-explained.md#7-what-the-gate-does-not-do-honest-edition))
+
+→ 전체 walkthrough (모든 결과 경로·우회·트러블슈팅): [examples/merge-gate-demo](./examples/merge-gate-demo/) · 동작 원리: [docs/merge-gate-explained.md](./docs/merge-gate-explained.md)
 
 ---
 

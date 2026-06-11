@@ -19,6 +19,8 @@ English · [**한국어**](./README.ko.md)
 
 ![The merge gate in action — the block, the failed bypass, and the audited human override (captured from a real session)](./docs/assets/merge-gate-demo.svg)
 
+<!-- PARITY: this Try-it section pairs with README.ko.md "5분 체험 (Try it)" — always update both together -->
+
 ## ⚡ Try it in 5 minutes
 
 Watch the **deterministic merge gate** stop a bad merge — no real PR, no GitHub auth needed; the gate decision itself runs fully offline.
@@ -62,7 +64,7 @@ echo '{"tool_input":{"command":"gh pr merge 42 --squash"}}' \
   | CLAUDE_PROJECT_DIR="$PWD" bash /tmp/gate.sh; echo "exit=$?"   # → 🛑 + exit=2 (the gate decision makes zero network calls)
 ```
 
-The merge gate is 100% deterministic — a bash hook, not LLM prose.
+**No model in the decision loop** — the merge verdict is a bash hook reading recorded review state, not LLM prose: same state, same verdict, every time. ([What it does and doesn't guarantee](./docs/merge-gate-explained.md#7-what-the-gate-does-not-do-honest-edition))
 
 → Full walkthrough (all outcomes, bypass, troubleshooting): [examples/merge-gate-demo](./examples/merge-gate-demo/) · How it works: [docs/merge-gate-explained.md](./docs/merge-gate-explained.md)
 

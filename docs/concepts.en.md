@@ -16,7 +16,18 @@ The role split is strict:
 | Writing code | — | every language, protocol, library |
 | Technical judgment | — | architecture patterns, library choices, optimization |
 
-Why: Claude already knows WebSocket, GraphQL, gRPC, CQRS — re-teaching them in a framework only creates maintenance cost and conflicts with the model's newer knowledge. Processes don't age the way technology conventions do. (The kit deliberately does **not** prescribe protocol code, library usage, or architecture patterns.)
+Why: Claude already knows WebSocket, GraphQL, gRPC, CQRS — re-teaching them in a framework only creates maintenance cost and conflicts with the model's newer knowledge. Processes don't age the way technology conventions do. The kit deliberately does **not**: teach protocol-specific code (WebSocket, gRPC, …), define library usage (socket.io, Apollo, …), or mandate architecture patterns (event sourcing, CQRS, …) — those belong to Claude's knowledge and your project's requirements.
+
+## Supported stacks
+
+| Backend | Build | Test |
+|---------|-------|------|
+| Spring Boot (Kotlin / Java) | `./gradlew build` | `./gradlew test` |
+| Node.js (TypeScript) | `npm run build` | `npm test` |
+| Python (FastAPI / Django) | `pip install -e '.[dev]'` | `pytest --cov` |
+| Go | `go build ./...` | `go test ./...` |
+
+Frontend: Next.js · React + Vite · Vue / Nuxt · Astro (all `npm run build`). These get automatic build/test gate detection and conventions; anything else works too — Claude implements it, and the process around it stays identical.
 
 ## The agent team
 
@@ -30,6 +41,17 @@ Why: Claude already knows WebSocket, GraphQL, gRPC, CQRS — re-teaching them in
   planner           backend          code-reviewer
   db-designer       frontend         qa · docs
 ```
+
+| Agent | Role | Activation |
+|-------|------|------------|
+| **agent-pm** | orchestration, workflow management | always on |
+| **agent-backend** | backend implementation | default |
+| **agent-code-reviewer** | multi-perspective code review | default |
+| **agent-planner** | requirements definition, planning | optional |
+| **agent-frontend** | frontend implementation | optional |
+| **agent-db-designer** | DB design analysis (sub-agent) | optional |
+| **agent-qa** | test quality analysis (sub-agent) | optional |
+| **agent-docs** | documentation automation | optional |
 
 **Sub-agents invoked automatically by skills** (read-only: Read/Glob/Grep):
 
@@ -89,6 +111,15 @@ State files under `.claude/state/` are git-tracked and schema-validated (`additi
 - Edits inside `lockedFiles` refresh the heartbeat automatically (PostToolUse)
 - Expired locks are released non-destructively; `/aick-status --locks` to inspect, `/aick-backlog unlock {taskId} --force` for emergencies
 - `claude --worktree <name>` (Claude Code 2.1.49+) is auto-detected by all skills
+
+## Core principles
+
+| Principle | Meaning |
+|-----------|---------|
+| **Stack-aware** | the detected stack tunes builds, reviews, and recommendations |
+| **Layered override** | `domains/_base/` → `project.json` → `CLAUDE.md` `CUSTOM_SECTION` |
+| **Agent orchestration** | the PM distributes agents according to the workflow |
+| **Zero-config start** | one `/aick-init` and you're running |
 
 ## Layered override
 

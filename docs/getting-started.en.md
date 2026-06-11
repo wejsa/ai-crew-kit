@@ -65,6 +65,15 @@ claude
 - **Trust boundary**: requirements input gets prompt-injection defenses, shell/path-traversal sanitization, and hard limits (≤10 tasks per phase, ≤30 total).
 - **Kit-clone cleanup**: if you started from a clone of `ai-crew-kit` itself, init detects it (origin URL + commit fingerprint, with dirty/unpushed/non-main guards) and removes kit-dev residue (CHANGELOG, docs/, examples/, tests/, scripts/, .github/, memory/, LICENSE, README.md, README.ko.md, CLAUDE.md, VERSION, .claude/temp/, .claude/hooks/tests/, .claude/state/, .claude/settings.local.json) so you start with a clean user project.
 
+### Starting a Python project
+
+```bash
+/aick-init   # → backend: python-fastapi → generates pyproject.toml, app/, tests/conftest.py, alembic/
+/aick-init   # → backend: python-django  → generates pyproject.toml, manage.py, config/, apps/
+```
+
+Four Python conventions apply automatically: `python-project-structure`, `python-testing`, `python-dependency`, `python-patterns`.
+
 ## Onboarding an existing codebase
 
 Use `/aick-onboard` to apply AI Crew Kit to a project that already has code.
@@ -89,6 +98,14 @@ What onboarding does:
 ```
 
 Options: `/aick-onboard --scan-only` runs the scan without generating anything — useful to preview detection before committing.
+
+**After onboarding:**
+
+```bash
+/aick-feature "existing feature name"   # register existing features as backlog tasks
+/aick-backlog                           # review the backlog
+/aick-plan                              # start working
+```
 
 | | `/aick-init` | `/aick-onboard` |
 |---|---|---|

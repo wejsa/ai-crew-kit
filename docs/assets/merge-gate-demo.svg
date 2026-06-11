@@ -79,7 +79,7 @@
   </g>
 
   <!-- ── Footer ─────────────────────────────────────────── -->
-  <text x="440" y="960" text-anchor="middle" class="ft">The merge gate is 100% deterministic — a bash hook, not LLM prose.</text>
-  <text x="440" y="986" text-anchor="middle" class="h2">Try it yourself in 5 minutes — no real PR, no GitHub auth needed</text>
+  <text x="440" y="960" text-anchor="middle" class="ft">No model in the decision loop — the merge verdict is a bash hook, not LLM prose.</text>
+  <text x="440" y="986" text-anchor="middle" class="h2">Same recorded state, same verdict, every time · Try it in 5 minutes — no real PR, no GitHub auth needed</text>
   <text x="440" y="1010" text-anchor="middle" class="blu">github.com/wejsa/ai-crew-kit</text>
 </svg>

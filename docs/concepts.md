@@ -127,6 +127,19 @@ AI Crew Kit은 **프롬프트 기반 시스템**입니다.
 - Claude Code가 SKILL.md, workflow YAML을 읽고 직접 수행
 - 모든 설정 파일은 "명세"이며, Claude가 이해하고 따름
 
+### 결정론 레이어 (훅 4종)
+
+프롬프트 기반 코어 주위에 작은 **결정론 레이어**가 있습니다:
+
+| 훅 | 시점 | 역할 |
+|-----|------|------|
+| session-start | 세션 시작 | git sync, continuation-plan 재생, 진행 중 Task 안내 |
+| pre-tool-use | 모든 Bash 직전 | **머지 품질 게이트** — 미해결 CRITICAL PR의 `gh pr merge`를 exit 2로 거부 |
+| post-tool-use | Edit/Write 직후 | lock 하트비트(file-membership), 무한 루프 방어 |
+| stop | 응답 종료마다 | lock TTL 만료 정리, continuation-plan 작성 |
+
+> Bookkeeping 훅(3종)은 절대 비차단(exit 0). 게이트 훅은 설계상 차단하되 인프라 실패에는 **fail-open**이며, 우회는 명시적·사람 전용·감사 기록됩니다. 상세: [merge-gate-explained.md](./merge-gate-explained.md)
+
 ### 상태 저장
 
 | 경로 | 용도 | Git 관리 |
