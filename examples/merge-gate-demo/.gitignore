@@ -1,0 +1,7 @@
+# Demo side effects — running the demo in-place (inside this repo) must not
+# dirty the working tree. The hooks write these under .claude/state/.
+# (Primary guidance: copy the fixture OUT to a scratch directory — see README.)
+.claude/state/hook-errors.log
+.claude/state/continuation-plan.md
+.claude/state/hook-trigger-count
+.claude/state/hook-disabled.flag
