@@ -17,7 +17,7 @@ AI 에이전트 팀 기반 소프트웨어 개발 프로세스 관리 프레임�
 
 ## ⚡ Try it in 5 minutes
 
-Watch the **deterministic merge gate** block a bad merge — no real PR, no GitHub auth, no network required.
+Watch the **deterministic merge gate** block a bad merge — no real PR, no GitHub auth needed; the gate itself runs fully offline (setup fetches one fixture file).
 
 ```bash
 # 1. Install the plugin (inside any Claude Code session)

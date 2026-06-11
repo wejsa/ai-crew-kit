@@ -4,7 +4,7 @@ This demo makes AI Crew Kit's **deterministic merge gate** fire in front of you:
 Claude tries to merge a PR whose review found an unresolved CRITICAL issue, and a
 bash PreToolUse hook denies the command **before it ever runs**.
 
-- **No real PR. No GitHub auth. No network.** A single fixture file simulates the state.
+- **No real PR. No GitHub auth.** The gate itself makes zero network calls — a single fixture file simulates the state (setup fetches it once, or copy it from a local checkout).
 - Act 1 (the block) takes ~5 minutes. Act 2 (the deliberate bypass) adds 1–2 more.
 - Platforms: **Linux / macOS / WSL**. Native Windows is untested — use WSL.
 

@@ -59,6 +59,8 @@ if command -v git >/dev/null 2>&1 && { [ -d .git ] || git rev-parse --git-dir >/
 
   BEFORE_SHA="$(git rev-parse HEAD 2>/dev/null || echo '')"
 
+  # i18n 경계(v4.6.1): 데모 경로에서 보이는 사용자 stdout(sync 상태·in-progress Task)은 영문,
+  # 워크트리 claims 블록·log_err(내부 로그)는 한국어 유지 — 전면 영문화는 v4.7+ 별도 판단.
   UPSTREAM="$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)"
   SYNC_ATTEMPTED=0
   if [ -z "$UPSTREAM" ]; then

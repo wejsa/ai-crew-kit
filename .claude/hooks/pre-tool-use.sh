@@ -145,6 +145,8 @@ if [ "$BLOCK" -eq 0 ] && [ "$NO_GH" -eq 0 ] && command -v gh >/dev/null 2>&1; th
 fi
 
 # ── 판정 ──────────────────────────────────────────────
+# NOTE: 아래 차단 메시지는 README.md(Try-it)·examples/merge-gate-demo/README.md에
+# verbatim 인용됨 — 문구 수정 시 두 문서도 함께 갱신할 것 (test:108은 "Merge blocked"만 고정).
 if [ "$BLOCK" -eq 1 ]; then
   log_err "merge blocked: PR #$PRN — $REASON"
   {
