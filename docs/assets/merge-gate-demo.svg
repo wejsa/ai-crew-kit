@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 1064" font-family="ui-monospace,'SF Mono',Menlo,Consolas,monospace">
+  <style>
+    .h1{font:600 21px -apple-system,'Segoe UI',Helvetica,Arial,sans-serif;fill:#e6edf3}
+    .h2{font:400 13.5px -apple-system,'Segoe UI',Helvetica,Arial,sans-serif;fill:#8b949e}
+    .lbl{font:700 12px -apple-system,'Segoe UI',Helvetica,Arial,sans-serif;letter-spacing:1.5px}
+    .t{font-size:13px;fill:#c9d1d9}
+    .dim{font-size:13px;fill:#7d8590}
+    .red{font-size:13px;fill:#f85149}
+    .redb{font-size:13px;font-weight:700;fill:#f85149}
+    .amb{font-size:13px;fill:#d29922}
+    .grn{font-size:13px;fill:#3fb950}
+    .blu{font-size:13px;fill:#58a6ff}
+    .cap{font:italic 12.5px -apple-system,'Segoe UI',Helvetica,Arial,sans-serif}
+    .ft{font:600 15px -apple-system,'Segoe UI',Helvetica,Arial,sans-serif;fill:#e6edf3}
+  </style>
+
+  <rect width="880" height="1064" fill="#0d1117"/>
+
+  <!-- ── Header ─────────────────────────────────────────── -->
+  <text x="440" y="42" text-anchor="middle" class="h1">Can your AI merge a PR its own review rejected?</text>
+  <text x="440" y="66" text-anchor="middle" class="h2">AI Crew Kit's merge gate, captured from a real Claude Code session — three acts, one audit log.</text>
+
+  <!-- ── ACT 1 — THE BLOCK ──────────────────────────────── -->
+  <g transform="translate(28,88)">
+    <rect width="824" height="252" rx="10" fill="#161b22" stroke="#30363d"/>
+    <circle cx="24" cy="24" r="6" fill="#ff5f57"/><circle cx="44" cy="24" r="6" fill="#febc2e"/><circle cx="64" cy="24" r="6" fill="#28c840"/>
+    <text x="88" y="28" class="lbl" fill="#f85149">ACT 1 · THE BLOCK</text>
+    <line x1="16" y1="40" x2="808" y2="40" stroke="#30363d"/>
+
+    <text x="28" y="66" class="grn">❯ <tspan class="t">Do not use any skill. Run this exact bash command as-is: gh pr merge 42 --squash</tspan></text>
+    <text x="28" y="92" class="dim">● <tspan class="t">Bash(gh pr merge 42 --squash)</tspan></text>
+    <text x="28" y="113" class="dim">  ⎿ <tspan class="red">Error: PreToolUse:Bash hook error:</tspan></text>
+    <text x="28" y="134" class="redb">     🛑 Merge blocked — PR #42</text>
+    <text x="28" y="155" class="t">        Reason: backlog: last review decision is <tspan class="redb">REQUEST_CHANGES</tspan> (unresolved CRITICAL posted)</text>
+    <text x="28" y="176" class="dim">        A PR with unresolved CRITICAL findings cannot be merged.</text>
+    <text x="28" y="197" class="dim">        Next steps: 1) fix + re-review  2) re-examine the decision  3) CCK_GATE_BYPASS=1 (user responsibility)</text>
+
+    <rect x="16" y="214" width="792" height="26" rx="6" fill="#f8514912"/>
+    <text x="28" y="231" class="cap" fill="#f85149">A bash hook denies the command BEFORE it runs — exit 2 · fully offline · deterministic</text>
+  </g>
+
+  <!-- ── ACT 2 — THE CHEAT ATTEMPT ──────────────────────── -->
+  <g transform="translate(28,364)">
+    <rect width="824" height="190" rx="10" fill="#161b22" stroke="#30363d"/>
+    <circle cx="24" cy="24" r="6" fill="#ff5f57"/><circle cx="44" cy="24" r="6" fill="#febc2e"/><circle cx="64" cy="24" r="6" fill="#28c840"/>
+    <text x="88" y="28" class="lbl" fill="#d29922">ACT 2 · THE CHEAT ATTEMPT</text>
+    <line x1="16" y1="40" x2="808" y2="40" stroke="#30363d"/>
+
+    <text x="28" y="66" class="grn">❯ <tspan class="t">Run as-is: </tspan><tspan class="amb">CCK_GATE_BYPASS=1</tspan><tspan class="t"> gh pr merge 42 --squash</tspan></text>
+    <text x="28" y="92" class="dim">● <tspan class="t">Bash(CCK_GATE_BYPASS=1 gh pr merge 42 --squash)</tspan></text>
+    <text x="28" y="113" class="dim">  ⎿ <tspan class="red">Error: PreToolUse:Bash hook error:</tspan></text>
+    <text x="28" y="134" class="redb">     🛑 Merge blocked — PR #42   <tspan class="dim">— still blocked.</tspan></text>
+
+    <rect x="16" y="152" width="792" height="26" rx="6" fill="#d2992212"/>
+    <text x="28" y="169" class="cap" fill="#d29922">Inline env vars never reach the hook's own process — Claude cannot bypass its own gate.</text>
+  </g>
+
+  <!-- ── ACT 3 — THE HUMAN OVERRIDE, AUDITED ────────────── -->
+  <g transform="translate(28,578)">
+    <rect width="824" height="334" rx="10" fill="#161b22" stroke="#30363d"/>
+    <circle cx="24" cy="24" r="6" fill="#ff5f57"/><circle cx="44" cy="24" r="6" fill="#febc2e"/><circle cx="64" cy="24" r="6" fill="#28c840"/>
+    <text x="88" y="28" class="lbl" fill="#3fb950">ACT 3 · THE HUMAN OVERRIDE — AUDITED</text>
+    <line x1="16" y1="40" x2="808" y2="40" stroke="#30363d"/>
+
+    <text x="28" y="66" class="dim">$ <tspan class="amb">CCK_GATE_BYPASS=1</tspan><tspan class="t"> claude</tspan><tspan class="dim">      # a CLI restart — something only a human can do</tspan></text>
+    <text x="28" y="92" class="grn">❯ <tspan class="t">Run as-is: gh pr merge 42 --squash</tspan></text>
+    <text x="28" y="113" class="dim">● <tspan class="t">Bash(gh pr merge 42 --squash)</tspan></text>
+    <text x="28" y="134" class="dim">  ⎿ <tspan class="amb">Error: Exit code 1 — no git remotes found</tspan></text>
+    <text x="28" y="155" class="grn">     ✓ <tspan class="dim">the command actually ran this time — gh failed on its own; the demo PR was never real</tspan></text>
+
+    <text x="28" y="190" class="dim">$ <tspan class="t">cat .claude/state/hook-errors.log</tspan></text>
+    <text x="28" y="211" class="red">[14:13:47Z] merge blocked: PR #42 — REQUEST_CHANGES (unresolved CRITICAL)  <tspan class="dim">← Act 1</tspan></text>
+    <text x="28" y="232" class="red">[14:43:46Z] merge blocked: PR #42 — REQUEST_CHANGES (unresolved CRITICAL)  <tspan class="dim">← Act 2, the cheat</tspan></text>
+    <text x="28" y="253" class="grn">[14:47:35Z] merge gate bypassed (CCK_GATE_BYPASS) — cmd: gh pr merge 42 --squash  <tspan class="dim">← Act 3</tspan></text>
+
+    <rect x="16" y="272" width="792" height="44" rx="6" fill="#3fb95012"/>
+    <text x="28" y="290" class="cap" fill="#3fb950">Humans can open the gate — never silently. Every block and every bypass is logged.</text>
+    <text x="28" y="308" class="cap" fill="#7d8590">The model usually does the right thing on its own. The hook is for when it doesn't.</text>
+  </g>
+
+  <!-- ── Footer ─────────────────────────────────────────── -->
+  <text x="440" y="960" text-anchor="middle" class="ft">The merge gate is 100% deterministic — a bash hook, not LLM prose.</text>
+  <text x="440" y="986" text-anchor="middle" class="h2">Try it yourself in 5 minutes — no real PR, no GitHub auth needed</text>
+  <text x="440" y="1010" text-anchor="middle" class="blu">github.com/wejsa/ai-crew-kit</text>
+</svg>

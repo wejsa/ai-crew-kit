@@ -64,14 +64,14 @@ M1 검출 + M2 가드 모두 통과 시:
    | 항목 | 처리 | 비고 |
    |---|---|---|
    | `CHANGELOG.md`, `docs/`, `examples/`, `tests/`, `scripts/`, `.github/`, `memory/`, `LICENSE` (8종) | **삭제** | kit 메타 |
-   | `README.md`, `CLAUDE.md`, `VERSION` (3종) | **삭제** | 호출 SKILL.md가 사용자 프로젝트용으로 새로 생성 |
+   | `README.md`, `README.ko.md`, `CLAUDE.md`, `VERSION` (4종) | **삭제** | 호출 SKILL.md가 사용자 프로젝트용으로 새로 생성 (README.ko.md는 kit 한국어 README — v4.6.1+) |
    | `.claude/temp/`, `.claude/hooks/tests/`, `.claude/state/`, `.claude/settings.local.json` (4종) | **삭제** | kit dev 잡티 |
    | `.claude/` 본체, `.claude/SECURITY.md`, `.gitignore`, `.gitattributes` | **보존** | 프레임워크 본체 + 사용자 hook 추가 시에도 동일 보안 원칙 적용 |
    | `src/`, `app/`, `lib/`, 사용자가 추가한 untracked 파일 | **보존** | M2 Guard 1이 untracked 무시 — 시나리오 B 안전 |
 
-   실행 명령 (15종 단일 rm — 위 표의 *삭제* 항목):
+   실행 명령 (16종 단일 rm — 위 표의 *삭제* 항목):
    ```bash
-   rm -rf CHANGELOG.md docs examples tests scripts .github memory LICENSE README.md CLAUDE.md VERSION .claude/temp .claude/hooks/tests .claude/state .claude/settings.local.json
+   rm -rf CHANGELOG.md docs examples tests scripts .github memory LICENSE README.md README.ko.md CLAUDE.md VERSION .claude/temp .claude/hooks/tests .claude/state .claude/settings.local.json
    ```
 
 4. **보고**: `"✓ ai-crew-kit clone 감지 → 표준 초기화 + kit 잔여 N개 자동 정리"`

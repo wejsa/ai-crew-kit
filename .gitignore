@@ -84,6 +84,10 @@ docs/*
 !docs/token-optimization.md
 !docs/cowork-plugin.md
 !docs/merge-gate-explained.md
+!docs/getting-started.en.md
+!docs/concepts.en.md
+!docs/assets/
+!docs/assets/**
 !docs/v2/
 !docs/v2/**
 !docs/archive/

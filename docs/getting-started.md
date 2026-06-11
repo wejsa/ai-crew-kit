@@ -89,7 +89,7 @@ claude
 >
 > **재현성**: 동일 요구사항으로 두 번 초기화하면 도메인/Backend/Database/Phase 4-카테고리 구조/priority 분포는 결정적으로 동일. Task 개수(±2)와 wording은 LLM sampling 한계로 경험적 관측 (SLA 아님).
 
-> **1단계 자동 정리**: ai-crew-kit clone에서 시작한 경우 kit dev 잡티 14종(CHANGELOG, docs, examples, tests, scripts, .github, memory, LICENSE, README.md, CLAUDE.md, VERSION, .claude/temp, .claude/hooks/tests, .claude/state, .claude/settings.local.json)이 추가 확인 없이 자동 삭제되어 깨끗한 사용자 프로젝트로 시작합니다. README.md/CLAUDE.md/VERSION은 Step 6에서 사용자 프로젝트용으로 새로 생성됩니다. **검출 기준**: `git remote origin`이 `[/:]ai-crew-kit(\.git)?$` 매칭 + initial commit SHA가 `ab0269a14...` (kit fingerprint)와 일치. **가드**: 더티 워킹 트리/미푸시 커밋/비-main 브랜치 중 하나라도 해당하면 정리 SKIP하고 일반 진행 (kit 개발자 보호). kit 가이드 문서(getting-started, customization 등)는 GitHub 리포에서 항상 참조 가능 — `project.json.kitSource`로 기록됨.
+> **1단계 자동 정리**: ai-crew-kit clone에서 시작한 경우 kit dev 잡티(CHANGELOG, docs, examples, tests, scripts, .github, memory, LICENSE, README.md, README.ko.md, CLAUDE.md, VERSION, .claude/temp, .claude/hooks/tests, .claude/state, .claude/settings.local.json)가 추가 확인 없이 자동 삭제되어 깨끗한 사용자 프로젝트로 시작합니다. README.md/CLAUDE.md/VERSION은 Step 6에서 사용자 프로젝트용으로 새로 생성됩니다. **검출 기준**: `git remote origin`이 `[/:]ai-crew-kit(\.git)?$` 매칭 + initial commit SHA가 `ab0269a14...` (kit fingerprint)와 일치. **가드**: 더티 워킹 트리/미푸시 커밋/비-main 브랜치 중 하나라도 해당하면 정리 SKIP하고 일반 진행 (kit 개발자 보호). kit 가이드 문서(getting-started, customization 등)는 GitHub 리포에서 항상 참조 가능 — `project.json.kitSource`로 기록됨.
 
 ### Python 프로젝트로 시작하기
 

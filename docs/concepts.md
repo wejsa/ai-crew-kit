@@ -106,10 +106,10 @@ CLAUDE.md               # AI 에이전트 지시문
 README.md               # 프로젝트 README (템플릿 기반)
 VERSION                 # 프로젝트 버전 (0.1.0부터 시작)
 
-# ai-crew-kit clone에서 시작한 경우 aick-init/aick-onboard가 다음 14종을 자동 삭제
+# ai-crew-kit clone에서 시작한 경우 aick-init/aick-onboard가 다음을 자동 삭제
 # (kit dev 잡티 — 사용자 프로젝트에 불필요):
 #   CHANGELOG.md, docs/, examples/, tests/, scripts/, .github/, memory/, LICENSE,
-#   README.md, CLAUDE.md, VERSION (Step 6에서 사용자용 새로 생성),
+#   README.md, README.ko.md, CLAUDE.md, VERSION (Step 6에서 사용자용 새로 생성),
 #   .claude/temp/, .claude/hooks/tests/, .claude/state/, .claude/settings.local.json
 
 docs/
