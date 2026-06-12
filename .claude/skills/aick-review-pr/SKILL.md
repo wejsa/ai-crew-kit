@@ -404,12 +404,14 @@ Step 3 sub-agent들이 반환한 markdown 표 + prose를 다음 정규식 규약
 ### 6.5 실행 로그 + workflowState 갱신
 - execution-log.json: APPROVED → action="approved", REQUEST_CHANGES → action="request_changes"
 - **workflowState.lastReviewDecision 갱신** (aick-fix 모드 판정 SSOT): 본 회차 결정값을 `APPROVED` / `COMMENT` / `REQUEST_CHANGES` 중 하나로 저장. aick-fix가 auto-fix vs 수동 호출 모드를 정확히 분기하기 위함(fixLoopCount 단독으로는 직전 루프 잔재가 잘못 분류).
-- **소유 Task 부재 시 (ad-hoc PR, v4.8.0)**: 본 PR을 소유한 backlog Task가 없으면(경량 점검에서 이미 판별) `workflowState` 대신 `.claude/state/review-decisions.json`에 본 회차 결정값을 기록한다 — PreToolUse 머지 게이트 **신호 A2**의 원천(미기록 시 ad-hoc PR은 게이트 fail-open). 소유 Task가 있으면 transient에 쓰지 않는다(이중 기록 금지 — 게이트는 A→A2 순 OR 평가):
+- **소유 Task 부재 시 (ad-hoc PR, v4.8.0)**: 본 PR을 소유한 backlog Task가 없으면(경량 점검에서 이미 판별) `workflowState` 대신 `.claude/state/review-decisions.json`에 본 회차 결정값을 기록한다 — PreToolUse 머지 게이트 **신호 A2**의 원천(미기록 시 ad-hoc PR은 게이트 fail-open). 소유 Task가 있으면 transient에 쓰지 않는다(이중 기록 금지 — 게이트도 소유 Task가 있는 PR에서는 A2를 평가하지 않으므로, 과거 ad-hoc 시절의 stale 엔트리는 무해):
   ```bash
   f=.claude/state/review-decisions.json
-  [ -f "$f" ] || echo '{}' > "$f"
-  jq --arg n "{N}" --arg d "{결정값}" --arg s "aick-review-pr" --arg t "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-     '.[$n] = {decision:$d, source:$s, updatedAt:$t}' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+  n=$((10#{N}))   # 키 십진 정규화 — 게이트 조회·스키마 패턴과 일치 (선행 0 금지)
+  jq -e . "$f" >/dev/null 2>&1 || echo '{}' > "$f"   # 부재·깨진 파일 초기화
+  jq --arg n "$n" --arg d "{결정값}" --arg s "aick-review-pr" --arg t "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+     '.[$n] = {decision:$d, source:$s, updatedAt:$t}' "$f" > "$f.tmp.$$" && mv "$f.tmp.$$" "$f" || rm -f "$f.tmp.$$"
+  jq -r --arg n "$n" '.[$n].decision' "$f"   # 기록 검증 — 출력이 결정값과 다르면 사용자에게 보고
   ```
 
 ### 7. 다음 스킬

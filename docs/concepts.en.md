@@ -54,20 +54,19 @@ actually run; see [docs/archive/agents/](./archive/agents/)).
                           + agent-code-reviewer (review guide document)
 ```
 
-### The 7 agents (every one has a real invocation path)
+### The 7 agents (6 spawned + 1 review guide)
 
 | Agent | Invoked by | Role | Activation |
 |-------|------------|------|------------|
-| **pr-reviewer-architecture** | `aick-review-pr` | architecture + business-logic consistency | always (per tier) |
-| **pr-reviewer-security** | `aick-review-pr` | security review | always (per tier) |
-| **pr-reviewer-test** | `aick-review-pr` | test quality review | always (per tier) |
+| **pr-reviewer-architecture** | `aick-review-pr` | architecture + business-logic consistency | auto (per tier/mode) |
+| **pr-reviewer-security** | `aick-review-pr` | security review | auto (per tier/mode) |
+| **pr-reviewer-test** | `aick-review-pr` | test quality review | auto (per tier/mode) |
 | **docs-impact-analyzer** | `aick-impl` | docs impact analysis + draft suggestions | always |
 | **agent-qa** | `aick-impl` | test quality analysis (background) | `qa` in `agents.enabled` (default ON) |
 | **agent-db-designer** | `aick-plan` | DB design analysis (parallel) | `db-designer` in `agents.enabled` (default OFF) |
 | **agent-code-reviewer** | `aick-review-pr` | 4-perspective review guide (reference doc — never spawned) | default |
 
-All analysis agents are read-only (Read/Glob/Grep).
-
+All analysis agents are read-only (Read/Glob/Grep), and are invoked only through skills.
 `agent-db-designer` and `agent-qa` run only when listed in `project.json` → `agents.enabled`.
 
 ## Directory layout

@@ -194,6 +194,12 @@ assert_eq "0" "$(run_hook "$S11" "gh pr merge 42 --squash")" "malformed JSON →
 write_backlog "$S" 42 REQUEST_CHANGES
 write_decisions "$S" 42 APPROVED
 assert_eq "2" "$(run_hook "$S" "gh pr merge 42 --squash")" "신호 A 차단 + A2 APPROVED 공존 → block(2) (OR 의미론)" || fails=$((fails+1))
+# 소유 스코프: 소유 Task의 최신 결정 APPROVED + stale transient REQUEST_CHANGES →
+# A2는 소유 Task가 있는 PR에서 평가되지 않으므로 allow. (ad-hoc→Task 소유 전환 시
+# stale 엔트리가 최신 backlog 결정을 이겨 영구 차단(wedge)되는 회귀 방지 — finding A5/B4)
+write_backlog "$S" 42 APPROVED
+write_decisions "$S" 42 REQUEST_CHANGES
+assert_eq "0" "$(run_hook "$S" "gh pr merge 42 --squash")" "소유 Task APPROVED + stale transient RC → allow(0) (A2 소유 스코프 제외)" || fails=$((fails+1))
 rm -f "$S/.claude/state/review-decisions.json"
 
 printf '\n'

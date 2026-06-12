@@ -53,19 +53,20 @@ backend·frontend·docs 제거 — 12종 → 실동작 7종, [docs/archive/agent
                               + agent-code-reviewer (리뷰 가이드 문서)
 ```
 
-### 에이전트 7종 (전부 실호출 경로 보유)
+### 에이전트 7종 (6종 스폰 + 리뷰 가이드 1종)
 
 | | 에이전트 | 호출 스킬 | 역할 | 기본 활성화 |
 |---|---------|----------|------|------------|
-| 🟣 | **pr-reviewer-architecture** | aick-review-pr | 아키텍처 + 비즈니스 로직 일관성 리뷰 | 무조건 호출 |
-| 🔴 | **pr-reviewer-security** | aick-review-pr | 보안 리뷰 | 무조건 호출 |
-| 🔵 | **pr-reviewer-test** | aick-review-pr | 테스트 품질 리뷰 | 무조건 호출 (Tier에 따라) |
+| 🟣 | **pr-reviewer-architecture** | aick-review-pr | 아키텍처 + 비즈니스 로직 일관성 리뷰 | 자동 (Tier/모드에 따라) |
+| 🔴 | **pr-reviewer-security** | aick-review-pr | 보안 리뷰 | 자동 (Tier/모드에 따라) |
+| 🔵 | **pr-reviewer-test** | aick-review-pr | 테스트 품질 리뷰 | 자동 (Tier/모드에 따라) |
 | 📝 | **docs-impact-analyzer** | aick-impl | 문서 영향도 분석 + 초안 제안 | 무조건 호출 |
 | 🧪 | **agent-qa** | aick-impl | 테스트 품질 분석 (백그라운드) | `agents.enabled`에 `qa` (기본 ON) |
 | 🗃️ | **agent-db-designer** | aick-plan | DB 설계 분석 (병렬) | `agents.enabled`에 `db-designer` (기본 OFF) |
 | 👀 | **agent-code-reviewer** | aick-review-pr | 4관점 통합 리뷰 가이드 (참조 문서 — 직접 호출 없음) | 기본 |
 
 > 분석 에이전트는 전부 읽기 전용(Read/Glob/Grep)이며, 스킬을 통해서만 호출됩니다.
+> agent-db-designer·agent-qa는 `project.json`의 `agents.enabled`에 있을 때만 실행됩니다.
 
 ## 디렉토리 구조
 

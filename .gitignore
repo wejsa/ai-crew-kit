@@ -101,4 +101,5 @@ docs/*
 .claude/state/hook-trigger-count
 # 머지 게이트 신호 A2 — 로컬 전용 transient 상태 (v4.8.0, D3: 커밋하면 hotfix 플로우의
 # Clean working tree 전제가 깨짐. 게이트는 로컬 파일을 읽으므로 차단 실효 동일)
-.claude/state/review-decisions.json
+# 글롭: atomic write의 .tmp.$$ 잔재까지 커버
+.claude/state/review-decisions.json*

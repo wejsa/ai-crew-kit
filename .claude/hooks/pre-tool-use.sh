@@ -16,6 +16,7 @@
 #   A2. (transient state, v4.8.0) backlog Task가 없는 PR(핫픽스·ad-hoc 리뷰)의 결정 —
 #      .claude/state/review-decisions.json (aick-hotfix Step 7 / aick-review-pr Step 6.5
 #      소유 Task 부재 시 기록, 로컬 전용·gitignore). 오프라인 결정적, 파싱 실패 fail-open.
+#      소유 Task가 있는 PR에서는 평가하지 않음(신호 A가 SSOT — stale transient wedge 방지).
 #   B. (GitHub, best-effort) gh pr view reviewDecision == "CHANGES_REQUESTED"
 #      — 타인 PR에서 GitHub가 기록한 request-changes. 네트워크/인증 실패 시 fail-open.
 #
@@ -117,6 +118,7 @@ REASON=""
 #   - step.prNumber: aick-impl Step 8이 결정적으로 기록(SSOT — schema step.prNumber).
 #   - workflowState.prNumber: CLAUDE.md workflowState 프로토콜 템플릿 필드(LLM 갱신, 보조).
 # step.prNumber만 보던 초안은 신호 A가 프로덕션에서 발동하지 못했음.
+OWNED=0
 if [ -f "$BACKLOG" ]; then
   DECISION="$(jq -r --argjson n "$PRN" '
     first(
@@ -132,15 +134,28 @@ if [ -f "$BACKLOG" ]; then
     BLOCK=1
     REASON="backlog: last review decision is REQUEST_CHANGES (unresolved CRITICAL posted)"
   fi
+  # 소유 Task 존재 여부 — A2 평가 스코프 결정에 사용. 소유 Task가 있는 PR은 신호 A의
+  # 영역이므로 A2를 평가하지 않는다(과거 ad-hoc 리뷰의 stale transient 엔트리가 최신
+  # backlog 결정을 이겨 영구 차단(wedge)되는 것 방지 — 자체 리뷰 finding A5/B4).
+  OWNED_CNT="$(jq -r --argjson n "$PRN" '
+    [.tasks[]? | select(
+      (.workflowState.prNumber // -1) == $n
+      or any((.steps // [])[]?; (.prNumber // -1) == $n)
+    )] | length
+  ' "$BACKLOG" 2>/dev/null || echo 0)"
+  case "$OWNED_CNT" in (''|*[!0-9]*) OWNED_CNT=0 ;; esac
+  [ "$OWNED_CNT" -gt 0 ] && OWNED=1
 fi
 
 # ── 신호 A2: transient review decision (결정적, 오프라인) ──
 # backlog Task가 없는 PR(핫픽스·ad-hoc 리뷰)의 리뷰 결정. aick-hotfix Step 7 /
 # aick-review-pr Step 6.5(소유 Task 부재 시)가 기록, 머지 성공 시 삭제.
-# 형식 SSOT: .claude/schemas/review-decisions.schema.json (키 = PR 번호 십진 문자열).
+# 형식 SSOT: .claude/schemas/review-decisions.schema.json (키 = PR 번호 십진 문자열,
+# 선행 0 금지 — 본 훅의 $((10#$PRN)) 정규화 키 조회와 일치).
 # 로컬 전용(gitignore) — 다른 세션/머신에 비전파. 파싱 실패는 fail-open.
+# 소유 Task가 있는 PR(OWNED=1)은 평가하지 않는다 — 그 PR의 결정 SSOT는 backlog(신호 A).
 DECISIONS="$STATE_DIR/review-decisions.json"
-if [ "$BLOCK" -eq 0 ] && [ -f "$DECISIONS" ]; then
+if [ "$BLOCK" -eq 0 ] && [ "$OWNED" -eq 0 ] && [ -f "$DECISIONS" ]; then
   TDECISION="$(jq -r --arg n "$PRN" '.[$n].decision // empty' "$DECISIONS" 2>/dev/null || echo '')"
   if [ "$TDECISION" = "REQUEST_CHANGES" ]; then
     BLOCK=1

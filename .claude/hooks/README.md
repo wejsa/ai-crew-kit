@@ -302,7 +302,7 @@ bash .claude/hooks/tests/run-all.sh           # 전체
 bash .claude/hooks/tests/test-stop-recursion.sh  # 개별
 ```
 
-커버: 재귀 방지, jq/git 미설치, 워크트리 동시 write(flock), 만료 lock 해제, continuation-plan 디바운스/idle 스킵, develop 미반영 워크트리 claim 감지(이중 claim/자기 제외/stale 무시), HI-04 체커 자체, **머지 게이트(실제 backlog shape의 step.prNumber join 차단/통과·우회·비활성·fail-open·PR번호 추출 견고성 — `test-pre-tool-use-merge-gate.sh` 19 assertion)**.
+커버: 재귀 방지, jq/git 미설치, 워크트리 동시 write(flock), 만료 lock 해제, continuation-plan 디바운스/idle 스킵, develop 미반영 워크트리 claim 감지(이중 claim/자기 제외/stale 무시), HI-04 체커 자체, **머지 게이트(실제 backlog shape의 step.prNumber join 차단/통과·우회·비활성·fail-open·PR번호 추출 견고성·신호 A2 transient 결정/소유 스코프 — `test-pre-tool-use-merge-gate.sh`)**, **SessionStart 게이트 데이터 계약 경고(`test-session-start-contract-warnings.sh`)**.
 
 ---
 

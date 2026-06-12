@@ -438,8 +438,8 @@
         "infrastructure": "docker-compose"
       },
       "agents": {
-        "enabled": ["pm", "backend", "code-reviewer", "qa", "db-designer"],
-        "disabled": ["frontend", "planner", "docs"]
+        "enabled": ["code-reviewer", "qa", "db-designer"],
+        "disabled": []
       },
       "conventions": {
         "taskPrefix": "PG-GW",

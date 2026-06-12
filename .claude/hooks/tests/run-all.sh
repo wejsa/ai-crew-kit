@@ -21,6 +21,7 @@ tests=(
   "test-tasks-dict-shape.sh"
   "test-init-flag-bypass.sh"
   "test-pre-tool-use-merge-gate.sh"
+  "test-session-start-contract-warnings.sh"
 )
 
 passed=0

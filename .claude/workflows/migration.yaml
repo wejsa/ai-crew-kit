@@ -1,5 +1,6 @@
 # Migration Workflow
 # 레거시 마이그레이션 워크플로우
+# agent: main = 메인 세션이 직접 수행 (v4.8.0 — 미배선 에이전트 제거: 구현·기획·문서화는 메인 세션 몫)
 
 name: migration
 displayName: "마이그레이션"
@@ -18,7 +19,7 @@ triggers:
 steps:
   - id: analyze
     name: "마이그레이션 분석"
-    agent: agent-planner
+    agent: main
     input: "{{request}}"
     output: "docs/migration/{{taskId}}-analysis.md"
     gate: user_approval
@@ -31,7 +32,7 @@ steps:
 
   - id: plan
     name: "마이그레이션 계획"
-    agent: agent-planner
+    agent: main
     skill: aick-plan
     input: "{{steps.analyze.output}}"
     output: ".claude/temp/{{taskId}}-migration-plan.md"
@@ -57,7 +58,7 @@ steps:
 
   - id: implement
     name: "코드 마이그레이션"
-    agent: agent-backend
+    agent: main
     skill: aick-impl
     input: "{{steps.plan.output}}"
     output: "PR"

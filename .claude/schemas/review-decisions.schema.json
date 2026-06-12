@@ -1,11 +1,11 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "review-decisions.schema.json",
+  "$id": "https://ai-crew-kit.dev/schemas/review-decisions.schema.json",
   "title": "Transient Review Decisions",
-  "description": "backlog Task가 없는 PR(핫픽스·ad-hoc 리뷰)의 리뷰 결정 기록 — PreToolUse 머지 게이트 신호 A2의 원천 (.claude/state/review-decisions.json). 키 = PR 번호의 십진 문자열. 작성: aick-hotfix Step 7, aick-review-pr Step 6.5(소유 Task 부재 시). 삭제: 머지 성공 시(aick-hotfix Step 8, aick-merge-pr). 로컬 전용(gitignore) — git 전파하지 않음. TTL 없음: PR 번호는 영구 유일하므로 잔존 엔트리는 무해(올바른 차단 유지). 런타임 검증 없음 — 게이트는 방어적 jq로 소비(파싱 실패=fail-open), 본 스키마는 계약 문서+회귀 보호용. v4.8.0 도입.",
+  "description": "backlog Task가 없는 PR(핫픽스·ad-hoc 리뷰)의 리뷰 결정 기록 — PreToolUse 머지 게이트 신호 A2의 원천 (.claude/state/review-decisions.json). 키 = PR 번호의 십진 문자열(선행 0 금지 — 게이트의 $((10#N)) 정규화 키 조회와 일치, 작성 측도 동일 정규화 의무). 작성: aick-hotfix Step 7, aick-review-pr Step 6.5(소유 Task 부재 시). 삭제: 머지 성공 시(aick-hotfix Step 8, aick-merge-pr). 게이트는 소유 backlog Task가 있는 PR에서 A2를 평가하지 않으므로(신호 A가 SSOT), ad-hoc→Task 소유 전환 후의 stale 엔트리는 무해. 로컬 전용(gitignore) — git 전파하지 않음. TTL 없음: PR 번호는 영구 유일. 런타임 검증 없음 — 게이트는 방어적 jq로 소비(파싱 실패=fail-open), 본 스키마는 계약 문서+회귀 보호용. v4.8.0 도입.",
   "type": "object",
   "patternProperties": {
-    "^[0-9]+$": {
+    "^(0|[1-9][0-9]*)$": {
       "type": "object",
       "required": ["decision", "source", "updatedAt"],
       "properties": {

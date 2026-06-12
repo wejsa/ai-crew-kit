@@ -50,7 +50,7 @@ CLAUDE.md 워크트리 프로토콜의 "머지 후 동기화" 참조.
 **머지 후 정리 (best-effort, 실패 무시)**: `.claude/state/review-decisions.json`에 본 PR 엔트리가 있으면 삭제 — 머지 게이트 신호 A2의 잔존 엔트리 정리(잔존해도 무해하나 파일을 작게 유지):
 ```bash
 f=.claude/state/review-decisions.json
-[ -f "$f" ] && jq --arg n "{N}" 'del(.[$n])' "$f" > "$f.tmp" && mv "$f.tmp" "$f" || true
+[ -f "$f" ] && { jq --arg n "$((10#{N}))" 'del(.[$n])' "$f" > "$f.tmp.$$" && mv "$f.tmp.$$" "$f" || rm -f "$f.tmp.$$"; } || true
 ```
 
 ### 3.5 Post-Merge Health Gate

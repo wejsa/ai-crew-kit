@@ -103,9 +103,9 @@
       "changes": [
         {
           "type": "add_gitignore_entry",
-          "entry": ".claude/state/review-decisions.json",
+          "entry": ".claude/state/review-decisions.json*",
           "comment": "머지 게이트 신호 A2 — 핫픽스·ad-hoc 리뷰 결정의 로컬 전용 transient 상태 (v4.8.0). 커밋하면 hotfix 플로우의 Clean working tree 전제가 깨지므로 git 추적 제외. 게이트(pre-tool-use.sh)는 로컬 파일을 읽으므로 차단 실효 동일.",
-          "trackedWarning": "이미 .claude/state/review-decisions.json을 추적 중이라면 `git rm --cached .claude/state/review-decisions.json` 실행 후 커밋 권장 (로컬 전용 상태 — 세션 간 공유 의도 없음)"
+          "trackedWarning": "이미 .claude/state/review-decisions.json을 추적 중이라면 `git rm --cached .claude/state/review-decisions.json`(글롭 매치 파일 포함) 실행 후 커밋 권장 (로컬 전용 상태 — 세션 간 공유 의도 없음)"
         }
       ]
     }

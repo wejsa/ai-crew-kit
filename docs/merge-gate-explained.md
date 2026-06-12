@@ -89,8 +89,13 @@ verdict in `.claude/state/review-decisions.json` (keyed by PR number; format pin
 
 If the entry for the PR being merged says `REQUEST_CHANGES`, the merge is blocked — same
 offline, deterministic semantics as Signal A. Entries are deleted after a successful merge,
-and a re-review overwrites them. The file is **local-only** (gitignored): the verdict protects
-the machine where the review ran, and does not propagate to other clones — see §7.
+and a re-review overwrites them. Two scoping rules keep A2 honest:
+
+- **A2 is only consulted when no backlog task owns the PR.** Once a task owns it, the backlog
+  (Signal A) is the single source of truth — a stale transient entry from an earlier ad-hoc
+  review can never overrule a newer backlog decision.
+- The file is **local-only** (gitignored): the verdict protects the machine where the review
+  ran, and does not propagate to other clones — see §7.
 
 ### Signal B — GitHub review decision (best-effort, networked)
 
@@ -206,7 +211,7 @@ is a single task whose step created PR #42 and whose review recorded `REQUEST_CH
 
 The gate's behavior is pinned by a regression suite —
 [`.claude/hooks/tests/test-pre-tool-use-merge-gate.sh`](../.claude/hooks/tests/test-pre-tool-use-merge-gate.sh)
-covers blocking, allowing, bypass, fail-open paths, and PR-number extraction edge cases
+covers blocking, allowing, bypass, fail-open paths, transient decisions (Signal A2, including ownership scoping), and PR-number extraction edge cases
 (URLs, flags, embedded digits, leading zeros), and runs in CI.
 
 ---

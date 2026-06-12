@@ -24,5 +24,5 @@ AI Crew Kit(v3.0.0+, 도메인 무관 범용 프레임워크)의 기본 설정 �
 ## 특징
 - 도메인 무관 범용 설정 (`project.json`에 `domain` 없음)
 - 기술 스택 기반 빌드/테스트 게이트
-- PM·backend·code-reviewer·qa 에이전트 활성화
+- code-reviewer·qa 에이전트 활성화 (오케스트레이션·구현은 메인 세션 — v4.8.0)
 - plan → impl → review → merge 오케스트레이션

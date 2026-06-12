@@ -534,7 +534,7 @@ chmod 444 "$BACKUP_DIR/MANIFEST.txt" "$BACKUP_DIR/MANIFEST.sha256" 2>/dev/null |
 4. **VERSION**: `echo "0.1.0" > VERSION`
 5. **README.md**: `${CLAUDE_PLUGIN_ROOT}/.claude/templates/README.md.tmpl` (clone/seed면 `.claude/templates/README.md.tmpl`) 마커 치환
 6. **docs/api-specs/**: `mkdir -p`
-7. **.gitignore** 업데이트 — 필수 엔트리: `.claude/worktrees/`(상태 파일 경합 방지), `.claude/state/review-decisions.json`(머지 게이트 신호 A2 — 로컬 전용 transient 상태, v4.8.0)
+7. **.gitignore** 업데이트 — 필수 엔트리: `.claude/worktrees/`(상태 파일 경합 방지), `.claude/state/review-decisions.json*`(머지 게이트 신호 A2 — 로컬 전용 transient 상태 + atomic-write tmp 잔재, v4.8.0)
 8. **Git 초기 커밋** (선택): `git add` → `git commit` → `git checkout -b develop`
 
 **Python 스택 시 추가 생성**:

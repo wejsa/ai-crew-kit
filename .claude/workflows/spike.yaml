@@ -1,5 +1,6 @@
 # Spike Workflow
 # 기술 검증 (PoC) 워크플로우
+# agent: main = 메인 세션이 직접 수행 (v4.8.0 — 미배선 에이전트 제거: 구현·기획·문서화는 메인 세션 몫)
 
 name: spike
 displayName: "기술 검증 (Spike)"
@@ -20,7 +21,7 @@ triggers:
 steps:
   - id: research
     name: "기술 조사"
-    agent: agent-backend
+    agent: main
     input: "{{request}}"
     output: "조사 결과"
     description: |
@@ -31,7 +32,7 @@ steps:
 
   - id: prototype
     name: "프로토타입 구현"
-    agent: agent-backend
+    agent: main
     input: "{{steps.research.output}}"
     output: "프로토타입 코드"
     description: |
@@ -42,7 +43,7 @@ steps:
 
   - id: evaluate
     name: "결과 평가"
-    agent: agent-backend
+    agent: main
     input: "{{steps.prototype.output}}"
     output: "평가 리포트"
     gate: user_approval
@@ -54,7 +55,7 @@ steps:
 
   - id: document
     name: "결과 문서화"
-    agent: agent-docs
+    agent: main
     input: "{{steps.evaluate.output}}"
     output: "docs/spikes/{{taskId}}-spike-result.md"
     condition: "agents.docs.enabled"

@@ -122,6 +122,24 @@ else
   printf '  ✓ done Task 미검사' && printf '\n'
 fi
 
+# ── 4.5. 견고성: 비-string lastCompletedSkill이 다른 경고를 죽이지 않음 ──
+# jq endswith는 비-string 입력에서 에러(exit 5) — 가드(`strings`) 없으면 한 Task의
+# 깨진 필드가 다른 Task의 C1 경고까지 통째로 무음화한다(자체 리뷰 finding A2).
+print_header "4.5. TASK-001 lastCompletedSkill=숫자(깨진 데이터) + TASK-002 문자열 prNumber → C1은 살아있어야"
+write_backlog_raw "$S" '{
+  "TASK-001": {
+    "id": "TASK-001", "title": "t", "status": "in_progress", "priority": "high", "createdAt": "2026-06-12T00:00:00Z",
+    "workflowState": { "currentSkill": "aick-impl", "lastCompletedSkill": 123, "lastReviewDecision": null, "updatedAt": "2026-06-12T00:00:00Z" }
+  },
+  "TASK-002": {
+    "id": "TASK-002", "title": "t", "status": "in_progress", "priority": "high", "createdAt": "2026-06-12T00:00:00Z",
+    "workflowState": { "currentSkill": "aick-review-pr", "prNumber": "42", "lastReviewDecision": "REQUEST_CHANGES", "updatedAt": "2026-06-12T00:00:00Z" }
+  }
+}'
+out="$(run_hook_out "$S")"; rc=$?
+assert_eq "0" "$rc" "exit 0 (R4)" || fails=$((fails+1))
+assert_contains "$out" "TASK-002: workflowState.prNumber is a string" "깨진 이웃 Task에도 C1 경고 생존" || fails=$((fails+1))
+
 # ── 5. 견고성: backlog 부재/깨진 JSON → 무출력 + exit 0 ─────
 print_header "5. backlog 부재·malformed → 경고 없음 + exit 0"
 S5=$(new_sandbox)

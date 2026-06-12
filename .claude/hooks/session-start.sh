@@ -115,25 +115,27 @@ fi
 #   C3: step이 pr_created인데 prNumber null → 신호 A join 원천 부재
 # R4: 모든 실패 경로 무시(경고는 부가 기능 — 본 훅을 절대 막지 않는다). 출력 영문(게이트 문자열과 일관).
 if [ -f "$BACKLOG" ] && command -v jq >/dev/null 2>&1; then
+  # jq 강건성: 비-string 필드(스키마 위반 데이터 — 정확히 본 섹션이 가시화하려는 부류)가
+  # 프로그램 전체를 abort시키지 않도록 endswith 입력을 `strings`로 가드하고, 배열 수집
+  # 대신 스트리밍 출력(중간 에러 시에도 앞선 경고는 보존)을 쓴다.
   CONTRACT_WARNINGS="$(jq -r '
-    [ .tasks[]? | select(type == "object") | select(.status == "in_progress") | . as $t
-      | (
-          ( if (($t.workflowState.prNumber? | type) == "string") then
-              "  ⚠️ \($t.id): workflowState.prNumber is a string — merge gate cannot match this PR (use an integer; see CLAUDE.md workflowState protocol)"
-            else empty end ),
-          ( if (($t.workflowState.fixLoopCount? | type) == "string") then
-              "  ⚠️ \($t.id): workflowState.fixLoopCount is a string — schema requires integer or null"
-            else empty end ),
-          ( ($t.steps // [])[]? | select((.prNumber? | type) == "string")
-            | "  ⚠️ \($t.id) step \(.number // "?"): step.prNumber is a string — merge gate cannot match this PR (use an integer)" ),
-          ( if ((($t.workflowState.lastCompletedSkill? // "") | endswith("review-pr"))
-                and ($t.workflowState.lastReviewDecision? == null)) then
-              "  ⚠️ \($t.id): review completed but lastReviewDecision not recorded — merge gate will fail open for PR #\($t.workflowState.prNumber? // "?")"
-            else empty end ),
-          ( ($t.steps // [])[]? | select((.status? == "pr_created") and (.prNumber? == null))
-            | "  ⚠️ \($t.id) step \(.number // "?"): pr_created without prNumber — gate signal A cannot join" )
-        )
-    ] | .[]
+    .tasks[]? | select(type == "object") | select(.status == "in_progress") | . as $t
+    | (
+        ( if (($t.workflowState.prNumber? | type) == "string") then
+            "  ⚠️ \($t.id): workflowState.prNumber is a string — merge gate cannot match this PR (use an integer; see CLAUDE.md workflowState protocol)"
+          else empty end ),
+        ( if (($t.workflowState.fixLoopCount? | type) == "string") then
+            "  ⚠️ \($t.id): workflowState.fixLoopCount is a string — schema requires integer or null"
+          else empty end ),
+        ( ($t.steps // [])[]? | select((.prNumber? | type) == "string")
+          | "  ⚠️ \($t.id) step \(.number // "?"): step.prNumber is a string — merge gate cannot match this PR (use an integer)" ),
+        ( if (((($t.workflowState.lastCompletedSkill? | strings) // "") | endswith("review-pr"))
+              and ($t.workflowState.lastReviewDecision? == null)) then
+            "  ⚠️ \($t.id): review completed but lastReviewDecision not recorded — merge gate will fail open for PR #\($t.workflowState.prNumber? // "?")"
+          else empty end ),
+        ( ($t.steps // [])[]? | select((.status? == "pr_created") and (.prNumber? == null))
+          | "  ⚠️ \($t.id) step \(.number // "?"): pr_created without prNumber — gate signal A cannot join" )
+      )
   ' "$BACKLOG" 2>/dev/null || true)"
   if [ -n "$CONTRACT_WARNINGS" ]; then
     printf '\n⚠️ Merge-gate data contract warnings:\n'

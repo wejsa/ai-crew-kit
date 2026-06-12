@@ -89,9 +89,14 @@ kit의 리뷰 스킬은 판정을 `backlog.json`에 기록합니다. 게이트�
 ```
 
 머지하려는 PR의 엔트리가 `REQUEST_CHANGES`면 차단됩니다 — 신호 A와 동일한 오프라인·
-결정적 의미론입니다. 엔트리는 머지 성공 시 삭제되고, 재리뷰가 덮어씁니다. 이 파일은
-**로컬 전용**(gitignore)입니다: 판정은 리뷰가 돌았던 머신을 보호하며, 다른 클론에는
-전파되지 않습니다 — §7 참조.
+결정적 의미론입니다. 엔트리는 머지 성공 시 삭제되고, 재리뷰가 덮어씁니다. A2를
+정직하게 유지하는 스코프 규칙 둘:
+
+- **A2는 backlog Task가 소유하지 않은 PR에서만 평가됩니다.** Task가 소유하는 순간
+  backlog(신호 A)가 단일 진실 소스입니다 — 과거 ad-hoc 리뷰의 stale transient 엔트리가
+  더 새로운 backlog 결정을 이길 수 없습니다.
+- 이 파일은 **로컬 전용**(gitignore)입니다: 판정은 리뷰가 돌았던 머신을 보호하며,
+  다른 클론에는 전파되지 않습니다 — §7 참조.
 
 ### 신호 B — GitHub 리뷰 결정 (best-effort, 네트워크)
 
@@ -207,7 +212,7 @@ fixture(아래는 스냅샷 — 정본은
 
 게이트의 동작은 회귀 스위트로 고정되어 있습니다 —
 [`.claude/hooks/tests/test-pre-tool-use-merge-gate.sh`](../.claude/hooks/tests/test-pre-tool-use-merge-gate.sh)가
-차단·허용·우회·fail-open 경로와 PR 번호 추출 엣지 케이스(URL, 플래그, 임베드 숫자,
+차단·허용·우회·fail-open 경로, transient 결정(신호 A2 — 소유 스코프 포함), PR 번호 추출 엣지 케이스(URL, 플래그, 임베드 숫자,
 선행 0)를 커버하며 CI에서 실행됩니다.
 
 ---
