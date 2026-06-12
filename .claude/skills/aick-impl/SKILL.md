@@ -24,6 +24,7 @@ complexity-hint: medium
 2. backlog.json 존재 + 유효 JSON
 3. in_progress Task 존재 (`--micro` 시 자동 생성하므로 면제)
 4. 계획 파일 `.claude/temp/{taskId}-plan.md` 존재 **+ 해당 Task의 `planApprovedAt != null`** (`--micro` 시 둘 다 면제). planApprovedAt이 null/부재면 STOP — 계획이 사용자 승인을 받지 않았음(prose 분기 오류 또는 구버전 backlog) → `/aick-plan` 재실행 안내 (v4.8.0: 승인의 결정적 기록 — aick-plan Step 7이 기록)
+   - **계획 파일 유실** (planApprovedAt != null인데 계획 파일 부재 — `.claude/temp/`는 로컬 전용이라 temp 정리·머신 이동 시 발생): STOP + 안내 `⚠️ 계획 파일 유실: {taskId} — /aick-plan {taskId} 재실행 시 승인 무효화 후 재계획됩니다`. aick-plan Step 1 재계획 분기가 결정적으로 복구(이전엔 impl "파일 없음"·plan "in_progress 잠금" 양쪽 STOP인 데드락, v4.8.0). 상태 변경은 aick-plan이 단독 소유 — 본 스킬은 쓰지 않음
 5. 현재 스텝 status == pending (`--micro` 시 자동 설정)
 6. origin/develop 동기화: >5 뒤처짐 → STOP, 1-5 → 자동 merge
 - `--next` 추가 조건: 이전 스텝 PR 머지 완료 **또는 skipped** + develop 최신 동기화

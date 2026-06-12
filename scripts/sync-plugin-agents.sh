@@ -15,6 +15,7 @@
 #   Claude Code가 프로젝트 `.claude/agents/` 를 자동탐색한다. 에이전트를
 #   추가/수정한 뒤 반드시 이 스크립트를 실행해 `agents/` 미러를 동기화하고
 #   함께 커밋한다. (`agents/` 는 GitHub 마켓플레이스 clone이 서빙하므로 커밋 필수)
+#   CI `validate-plugin.yml` 이 미러 불일치·버전 드리프트를 차단한다.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SRC="$ROOT/.claude/agents"

@@ -1,0 +1,60 @@
+name: Plugin Consistency
+
+on:
+  push:
+    branches: [main, develop, 'feature/**', 'feat/**', 'fix/**']
+    paths:
+      - 'agents/**'
+      - '.claude/agents/**'
+      - '.claude-plugin/**'
+      - 'VERSION'
+      - 'scripts/sync-plugin-agents.sh'
+      - '.github/workflows/validate-plugin.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'agents/**'
+      - '.claude/agents/**'
+      - '.claude-plugin/**'
+      - 'VERSION'
+      - 'scripts/sync-plugin-agents.sh'
+      - '.github/workflows/validate-plugin.yml'
+
+jobs:
+  consistency:
+    name: agents 미러 + 버전 3중 일치 + manifest 유효성
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install jq
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq jq
+
+      - name: manifest JSON 유효성 (plugin.json / marketplace.json)
+        run: |
+          jq empty .claude-plugin/plugin.json
+          jq empty .claude-plugin/marketplace.json
+
+      - name: agents/ 미러 동기화 검증 (SSOT = .claude/agents/)
+        run: |
+          bash scripts/sync-plugin-agents.sh
+          if [ -n "$(git status --porcelain -- agents/)" ]; then
+            echo "::error::agents/ mirror is out of sync with .claude/agents/ — run scripts/sync-plugin-agents.sh and commit the result"
+            git status --porcelain -- agents/
+            git diff -- agents/ | head -100
+            exit 1
+          fi
+
+      - name: 버전 3중 일치 (VERSION ↔ plugin.json ↔ marketplace.json)
+        run: |
+          V_FILE="$(tr -d '[:space:]' < VERSION)"
+          V_PLUGIN="$(jq -r '.version' .claude-plugin/plugin.json)"
+          V_MKT_META="$(jq -r '.metadata.version' .claude-plugin/marketplace.json)"
+          V_MKT_PLUGIN="$(jq -r '.plugins[0].version' .claude-plugin/marketplace.json)"
+          echo "VERSION=$V_FILE plugin.json=$V_PLUGIN marketplace.metadata=$V_MKT_META marketplace.plugins[0]=$V_MKT_PLUGIN"
+          if [ "$V_FILE" != "$V_PLUGIN" ] || [ "$V_FILE" != "$V_MKT_META" ] || [ "$V_FILE" != "$V_MKT_PLUGIN" ]; then
+            echo "::error::version mismatch — sync plugin.json/marketplace.json to the VERSION file before release"
+            exit 1
+          fi
