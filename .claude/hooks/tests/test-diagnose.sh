@@ -50,8 +50,8 @@ EOF
 out="$(run_diagnose)"; rc=$?
 assert_eq "0" "$rc" "clean: exit 0" || fail=$((fail + 1))
 assert_contains "$out" "ENABLED" "clean: 🟢 ENABLED" || fail=$((fail + 1))
-assert_contains "$out" "[등록 상태]" "clean: 등록 상태 섹션" || fail=$((fail + 1))
-assert_contains "$out" "[영향 평가]" "clean: 영향 평가 섹션" || fail=$((fail + 1))
+assert_contains "$out" "[Registration]" "clean: 등록 상태 섹션" || fail=$((fail + 1))
+assert_contains "$out" "[Impact]" "clean: 영향 평가 섹션" || fail=$((fail + 1))
 
 # ── 시나리오 2: flag 존재 + lockedBy 0건 → 영향 없음 ──
 touch "$FLAG"
@@ -65,8 +65,8 @@ EOF
 out="$(run_diagnose)"; rc=$?
 assert_eq "0" "$rc" "flag+no-lock: exit 0" || fail=$((fail + 1))
 assert_contains "$out" "DISABLED" "flag+no-lock: DISABLED 표시" || fail=$((fail + 1))
-assert_contains "$out" "비활성 영향 없음" "flag+no-lock: 영향 없음 결론" || fail=$((fail + 1))
-assert_contains "$out" "추정 원인" "flag+no-lock: count>=4면 추정 원인 표시" || fail=$((fail + 1))
+assert_contains "$out" "disable has no impact" "flag+no-lock: 영향 없음 결론" || fail=$((fail + 1))
+assert_contains "$out" "likely cause" "flag+no-lock: count>=4면 추정 원인 표시" || fail=$((fail + 1))
 
 # ── 시나리오 3: flag 존재 + lockedBy 1건 → 🟡 경고 ──
 cat > "$BACKLOG" <<'EOF'
@@ -77,19 +77,19 @@ cat > "$BACKLOG" <<'EOF'
 EOF
 out="$(run_diagnose)"; rc=$?
 assert_eq "0" "$rc" "flag+lock: exit 0" || fail=$((fail + 1))
-assert_contains "$out" "10분 넘기면" "flag+lock: 만료 경고" || fail=$((fail + 1))
+assert_contains "$out" "lockTTL expires" "flag+lock: 만료 경고" || fail=$((fail + 1))
 
 # ── 시나리오 4: backlog.json 부재 → graceful ──
 rm -f "$BACKLOG" "$FLAG" "$COUNTER"
 out="$(run_diagnose)"; rc=$?
 assert_eq "0" "$rc" "no-backlog: exit 0 (graceful)" || fail=$((fail + 1))
-assert_contains "$out" "in_progress Task: 0건" "no-backlog: 0건 출력" || fail=$((fail + 1))
+assert_contains "$out" "in_progress tasks: 0" "no-backlog: 0건 출력" || fail=$((fail + 1))
 
 # ── 시나리오 5: settings.json 부재 → graceful ──
 rm -f "$SETTINGS"
 out="$(run_diagnose)"; rc=$?
 assert_eq "0" "$rc" "no-settings: exit 0 (graceful)" || fail=$((fail + 1))
-assert_contains "$out" "hook 미설정" "no-settings: 미설정 경고" || fail=$((fail + 1))
+assert_contains "$out" "hooks not configured" "no-settings: 미설정 경고" || fail=$((fail + 1))
 
 # ── 시나리오 6: read-only 보장 — 실행이 파일을 mutate하지 않는지 ──
 # 복원

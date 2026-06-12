@@ -23,7 +23,7 @@ complexity-hint: medium
 1. project.json 존재
 2. backlog.json 존재 + 유효 JSON
 3. in_progress Task 존재 (`--micro` 시 자동 생성하므로 면제)
-4. 계획 파일 `.claude/temp/{taskId}-plan.md` 존재 (`--micro` 시 면제)
+4. 계획 파일 `.claude/temp/{taskId}-plan.md` 존재 **+ 해당 Task의 `planApprovedAt != null`** (`--micro` 시 둘 다 면제). planApprovedAt이 null/부재면 STOP — 계획이 사용자 승인을 받지 않았음(prose 분기 오류 또는 구버전 backlog) → `/aick-plan` 재실행 안내 (v4.8.0: 승인의 결정적 기록 — aick-plan Step 7이 기록)
 5. 현재 스텝 status == pending (`--micro` 시 자동 설정)
 6. origin/develop 동기화: >5 뒤처짐 → STOP, 1-5 → 자동 merge
 - `--next` 추가 조건: 이전 스텝 PR 머지 완료 **또는 skipped** + develop 최신 동기화
@@ -31,7 +31,7 @@ complexity-hint: medium
 ## 잠금 자동 정리 (Lock Auto-cleanup)
 사전 조건 검사 중, 현재 작업 Task **외**의 `in_progress` Task를 스캔:
 1. `(lockedAt // assignedAt)` + (`lockTTL` ?? 3600) < 현재 시각 → 만료 감지 (v4.5.0: 활동 하트비트 `lockedAt` 우선)
-2. 만료된 Task: `status` → `"todo"`, `assignee`/`assignedAt`/`lockedBy`/`lockedAt`/`lockedFiles` 초기화
+2. 만료된 Task: `status` → `"todo"`, `assignee`/`assignedAt`/`lockedBy`/`lockedAt`/`lockedFiles`/`planApprovedAt` 초기화 (승인은 잠금 사이클에 귀속 — 재선택 시 aick-plan이 재승인)
 3. 로그: `🔓 잠금 만료 자동 해제: {TASK-ID}`
 4. 현재 작업 Task는 제외 (자기 자신의 lock은 정리하지 않음)
 
@@ -72,33 +72,8 @@ CLAUDE.md 워크트리 프로토콜 참조.
 | fast | <limit | limit~min(limit×2,1000) | — | >min(limit×2,1000) |
 
 ### 5. 빌드 & 테스트
-`project.json`의 `buildCommands` 우선 → 미설정 시 `techStack` 기반 폴백:
-
-| 스택 | 빌드 | 테스트 | 린트 |
-|------|------|--------|------|
-| spring-boot-kotlin | `./gradlew build` | `./gradlew test` | `./gradlew ktlintCheck` |
-| spring-boot-java (Gradle) | `./gradlew build` | `./gradlew test` | `./gradlew checkstyleMain` |
-| spring-boot-java (Maven) | `mvn package` | `mvn test` | `mvn checkstyle:check` |
-| nodejs-typescript | `npm run build` | `npm test` | `npm run lint` |
-| python-fastapi | - | `pytest` | `ruff check .` |
-| python-django | `python manage.py check` | `pytest` | `ruff check .` |
-| go | `go build ./...` | `go test ./...` | `golangci-lint run` |
-| nextjs | `next build` | `vitest` 또는 `jest` | `next lint` |
-| react-vite | `vite build` | `vitest` | `eslint .` |
-| vue-nuxt | `nuxt build` | `vitest` | `eslint .` |
-| vue | `vite build` | `vitest` | `eslint .` |
-| astro | `astro build` | `vitest` | `eslint .` |
-
-**패키지 매니저 자동 감지** (Lock 파일 기준, `buildCommands` 미설정 시):
-
-| Lock 파일 | 매니저 | 빌드 | 테스트 | 린트 |
-|-----------|--------|------|--------|------|
-| `bun.lockb` | bun | `bun run build` | `bun test` | `bun run lint` |
-| `pnpm-lock.yaml` | pnpm | `pnpm build` | `pnpm test` | `pnpm lint` |
-| `yarn.lock` | yarn | `yarn build` | `yarn test` | `yarn lint` |
-| `package-lock.json` | npm | `npm run build` | `npm test` | `npm run lint` |
-
-복수 Lock 파일 존재 시 위 우선순위(bun > pnpm > yarn > npm) 적용.
+`project.json`의 `buildCommands` 우선 → 미설정 시 `techStack` 기반 폴백.
+스택별 명령 표 SSOT: `${CLAUDE_PLUGIN_ROOT}/.claude/templates/protocols/build-commands.md` (clone/seed면 `.claude/templates/protocols/build-commands.md`)를 Read 후 적용 — 본 스킬에 표 복제 금지.
 
 실패 시 수정 후 재실행, 3회 실패 시 사용자 보고.
 

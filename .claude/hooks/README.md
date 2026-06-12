@@ -39,6 +39,16 @@ Claude Code 네이티브 훅으로 ai-crew-kit 워크플로우 자동화를 구�
 
 > Gate 훅은 파일 상단에 `# hi04-exempt: gate-hook` 마커를 선언해야 HI-04 정적 검사의 exit-2 금지에서 면제된다(opt-in). 마커 없는 훅의 `exit 2`는 여전히 위반으로 잡힌다.
 
+### i18n 정책 (v4.8.0 확정)
+
+| 표면 | 언어 | 근거 |
+|------|------|------|
+| 훅의 **사용자 가시 출력** (stdout · stderr · `hook-errors.log`) | **영문** | English-canonical 배포 전략과 일관 — 데모·게이트 경로(v4.6.1)에서 전면(v4.8.0)으로 확대 |
+| 스크립트 **주석** | 한국어 | 유지보수자 문서 — 사용자 비노출 |
+| SKILL.md prose · 한국어 문서(.ko.md 등) | 한국어 | 기존 결정(D3) — 번역 금지 |
+
+신규 훅 문자열은 영문으로 작성한다. 테스트의 출력 assert는 영문 문자열과 페어로 갱신할 것 (`diagnose.sh`의 구 한국어 로그 grep은 `-e` 이중 패턴으로 하위호환).
+
 ### Bookkeeping 훅 작성 규칙
 
 Bookkeeping 훅은 **Claude 세션을 절대 차단하지 않아야** 합니다. 다음 규칙을 지키세요.
@@ -118,7 +128,7 @@ exec 0</dev/null                  # stdin을 /dev/null로 — 자식 프로세�
 **timeout**: 15초
 **동작**:
 1. `stop_hook_active=true` 수신 시 즉시 exit 0 (공식 재귀 방지)
-2. backlog.json의 만료(10분 초과) 잠금 해제 (원자적 쓰기)
+2. backlog.json의 만료(`(lockedAt // assignedAt) + lockTTL` 초과 — v4.5.0) 잠금 해제 (원자적 쓰기)
 3. continuation-plan 조건부 갱신:
    - 60초 이내 갱신됐으면 스킵 (디바운스)
    - `workflowState=idle` 또는 `in_progress` Task 0건이면 스킵
@@ -131,7 +141,9 @@ exec 0</dev/null                  # stdin을 /dev/null로 — 자식 프로세�
 **발동 시점**: `Edit` / `Write` 도구 호출 완료 직후
 **timeout**: 10초
 **매처**: `Edit|Write`
-**동작**: 현재 세션이 `lockedBy`로 소유한 `in_progress` Task의 `lockedAt`을 현재 시각으로 갱신(heartbeat). stop.sh 만료 감지(10분 TTL)와 연동. `lockedBy`/`lockedAt`은 v2.2.0부터 `backlog.schema.json`에 정식 필드로 정의(가변 잠금 의미, `assignee`/`assignedAt`(불변 할당)와 구분).
+**동작**: 현재 세션이 `lockedBy`로 소유한 `in_progress` Task의 `lockedAt`을 현재 시각으로 갱신(heartbeat). stop.sh 만료 감지(`lockTTL` 기반 — v4.5.0)와 연동. `lockedBy`/`lockedAt`은 v2.2.0부터 `backlog.schema.json`에 정식 필드로 정의(가변 잠금 의미, `assignee`/`assignedAt`(불변 할당)와 구분).
+
+> **한계 (file-membership)**: 하트비트는 편집 파일이 해당 Task의 `lockedFiles`에 포함될 때만 갱신된다(스킬이 session_id를 얻을 수 없어 파일 소속으로 세션을 대신 식별 — v4.5.0 ADR-010). 계획에 없는 파일만 장시간 편집하는 세션은 하트비트가 갱신되지 않아 lockTTL 만료로 잠금이 회수될 수 있다 — aick-plan의 `lockedFiles` 정확 기록이 전제.
 
 **3단계 무한 루프 방어 + 대량 쓰기 보호 마커** (TFT R1/R2 + v2.2.0, v4.4.0 일반화):
 
@@ -181,14 +193,14 @@ bash .claude/hooks/diagnose.sh
 
 출력 예시:
 ```
-[등록 상태]   SessionStart/PostToolUse/Stop 등록 + 스크립트 존재
-[PostToolUse] status: 🔴 DISABLED since 2026-05-12T11:55:50Z (3d ago)
-              trigger-count: window_start=... count=4
-              추정 원인: 응답 1회당 Edit/Write ≥4회 호출
-[Stop]        continuation-plan.md: absent (idle 스킵 정상)
-              만료된 lock: 0건 / 만료 임박: 0건
-[영향 평가]   in_progress 1건 (lockedBy 0건) → 🟢 비활성 영향 없음
-[행동 옵션]   [A] 그대로 / [B] 복구 / [C] 임계값 완화
+[Registration] SessionStart/PostToolUse/Stop registered + scripts present
+[PostToolUse]  status: 🔴 DISABLED since 2026-05-12T11:55:50Z (3d ago)
+               trigger-count: window_start=... count=4
+               likely cause: 4 Edit/Write calls per response
+[Stop]         continuation-plan.md: absent (may be normal — idle skip)
+               expired locks: 0 / expiring soon: 0
+[Impact]       in_progress tasks: 1 (with lockedBy: 0) → 🟢 no impact
+[Options]      [A] continue / [B] recover / [C] relax threshold
 ```
 
 ## 자동 비활성화 진단 가이드
@@ -213,13 +225,13 @@ bash .claude/hooks/diagnose.sh
 ```
 현재 in_progress Task 중 lockedBy 설정된 게 있나?
 ├─ 없음 → 영향 0. 복구 불필요 (그대로 진행 가능)
-└─ 있음 → 작업 예상 시간이 10분 초과 예정?
-          ├─ 아니오 → 그대로 가능 (stop.sh가 만료된 lock만 해제, 단기 작업은 무영향)
+└─ 있음 → 작업 예상 시간이 lockTTL(기본 1시간, plan이 동적 산정) 초과 예정?
+          ├─ 아니오 → 그대로 가능 (stop.sh가 만료된 lock만 해제, TTL 내 작업은 무영향)
           └─ 예    → 복구 권장 (heartbeat 갱신으로 lock 강제 해제 방지)
                     또는 임계값 완화 (CCK_HOOK_THRESHOLD=8 등)
 ```
 
-`diagnose.sh`가 위 트리를 자동 판정해서 `[영향 평가]` 섹션에 결론을 출력합니다.
+`diagnose.sh`가 위 트리를 자동 판정해서 `[Impact]` 섹션에 결론을 출력합니다.
 
 ### Stop 부재 ≠ 미동작
 

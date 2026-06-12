@@ -74,12 +74,12 @@ for _flag in "$INIT_FLAG" "$BULK_FLAG"; do
   fi
   # stale 마커 (TTL 초과) — SKILL이 정리 못 하고 종료된 케이스. 자동 회수.
   rm -f "$_flag" 2>/dev/null
-  log_err "$(basename "$_flag") stale 회수 (age=${flag_age}s > ${INIT_FLAG_TTL_SECONDS}s)"
+  log_err "stale flag reclaimed: $(basename "$_flag") (age=${flag_age}s > ${INIT_FLAG_TTL_SECONDS}s)"
 done
 
 # jq 미설치 graceful skip
 if ! command -v jq >/dev/null 2>&1; then
-  log_err "jq 미설치 — heartbeat 스킵"
+  log_err "jq not installed — heartbeat skipped"
   exit 0
 fi
 
@@ -143,9 +143,9 @@ printf '%s %s\n' "$WINDOW_START" "$COUNT" > "$COUNTER_FILE" 2>/dev/null || true
 
 if [ "$COUNT" -gt "$TRIGGER_MAX" ]; then
   touch "$DISABLE_FLAG" 2>/dev/null
-  printf '⚠️  [%s] %ss 내 %s회 트리거 — 자동 비활성화됨. 재개: %s 삭제. 정상 작업인데 반복되면 임계값 완화 → CCK_HOOK_THRESHOLD(기본 %s)/CCK_HOOK_WINDOW_SEC(기본 %s) 환경변수(.claude/settings.json env). 진단·가이드: .claude/hooks/README.md\n' \
-    "$HOOK_NAME" "$TRIGGER_WINDOW_SECONDS" "$COUNT" "$DISABLE_FLAG" "$TRIGGER_MAX" "$TRIGGER_WINDOW_SECONDS" >&2
-  log_err "자동 비활성화 발동 (count=$COUNT, window_start=$WINDOW_START)"
+  printf '⚠️  [%s] %s triggers within %ss — auto-disabled. Re-enable: delete %s. If this recurs during normal work, relax via CCK_HOOK_THRESHOLD (default %s) / CCK_HOOK_WINDOW_SEC (default %s) env vars (.claude/settings.json env). Diagnostics: .claude/hooks/README.md\n' \
+    "$HOOK_NAME" "$COUNT" "$TRIGGER_WINDOW_SECONDS" "$DISABLE_FLAG" "$TRIGGER_MAX" "$TRIGGER_WINDOW_SECONDS" >&2
+  log_err "auto-disable triggered (count=$COUNT, window_start=$WINDOW_START)"
   exit 0
 fi
 
@@ -167,7 +167,7 @@ trap 'rm -f "$LOCK" 2>/dev/null' EXIT
 if [ -f "$BACKLOG" ]; then
   # shellcheck source=./lib/atomic-write.sh
   source "$(dirname "$0")/lib/atomic-write.sh" 2>/dev/null || {
-    log_err "atomic-write.sh 로드 실패"
+    log_err "failed to load atomic-write.sh"
     exit 0
   }
 

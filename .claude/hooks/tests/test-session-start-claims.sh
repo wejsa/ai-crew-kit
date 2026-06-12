@@ -88,9 +88,9 @@ run_hook() {
 # ── 시나리오 1: develop에서 실행 ──────────────────────────
 out="$(run_hook)"; rc=$?
 assert_eq 0 "$rc" "develop 실행 exit 0" || fail=$((fail + 1))
-assert_contains "$out" "develop 미반영 워크트리 claim 감지" "경고 섹션 출력" || fail=$((fail + 1))
+assert_contains "$out" "Worktree claims not yet on develop" "경고 섹션 출력" || fail=$((fail + 1))
 assert_contains "$out" "T-001" "T-001 감지" || fail=$((fail + 1))
-assert_contains "$out" "복수 워크트리 동시 claim" "T-001 이중 claim 🔴" || fail=$((fail + 1))
+assert_contains "$out" "claimed by multiple worktrees" "T-001 이중 claim 🔴" || fail=$((fail + 1))
 assert_contains "$out" "T-003" "T-003 단일 claim 감지" || fail=$((fail + 1))
 assert_contains "$out" "assignee: aaa" "T-003 assignee 표시" || fail=$((fail + 1))
 # T-002는 develop=done → stale, 경고 안 됨

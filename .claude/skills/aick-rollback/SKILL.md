@@ -41,7 +41,8 @@ git checkout -b "revert/${TARGET_LABEL}"
 - 충돌 시: 충돌 파일 목록 + 수동 해결 안내
 
 ### 4. 빌드/테스트 검증
-buildCommands 우선 → techStack 폴백 (aick-release와 동일 패턴)
+buildCommands 우선 → techStack 폴백.
+스택별 명령 표 SSOT: `${CLAUDE_PLUGIN_ROOT}/.claude/templates/protocols/build-commands.md` (clone/seed면 `.claude/templates/protocols/build-commands.md`)를 Read 후 적용 — 본 스킬에 표 복제 금지.
 
 ### 5. Revert PR 생성
 `git push -u origin "$BRANCH_NAME"` → `gh pr create --base main`

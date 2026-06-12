@@ -81,18 +81,7 @@ touch .claude/state/init-in-progress.flag 2>/dev/null || true
 **캐시/메시지큐**: docker-compose + 의존성 (redis/rabbitmq/kafka)
 **인프라**: docker-compose.yml → docker-compose / k8s/ → kubernetes / Dockerfile만 → docker-compose
 
-**빌드 명령어 감지** (techStack 기반):
-- spring/kotlin → ./gradlew build/test/ktlintCheck
-- java → ./gradlew build/test/checkstyleMain (Maven: mvn package/test)
-- node/typescript → npm run build/test/lint (package.json scripts 확인)
-- go → go build/test + golangci-lint
-- python-fastapi → pytest / ruff check .
-- python-django → python manage.py check / pytest / ruff check .
-- nextjs → next build / vitest 또는 jest / next lint
-- react-vite → vite build / vitest / eslint .
-- vue-nuxt → nuxt build / vitest / eslint .
-- vue → vite build / vitest / eslint .
-- astro → astro build / vitest / eslint .
+**빌드 명령어 감지** (techStack 기반): 스택별 명령 표 SSOT: `${CLAUDE_PLUGIN_ROOT}/.claude/templates/protocols/build-commands.md` (clone/seed면 `.claude/templates/protocols/build-commands.md`)를 Read 후 적용 — 본 스킬에 표 복제 금지. node/typescript는 package.json scripts 존재 확인 후 채택.
 
 **기존 구조 분석**: 소스 파일 수, 테스트 존재 여부, 기존 문서
 

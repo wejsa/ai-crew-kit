@@ -64,7 +64,7 @@ if [ -f "$COUNTER" ]; then
   assert_eq "4" "$c" "4회째 호출 후 COUNT=4" || fail=$((fail + 1))
 fi
 
-if grep -q "자동 비활성화" "$STDERR_LOG"; then
+if grep -q "auto-disabled" "$STDERR_LOG"; then
   echo "  ✓ stderr에 비활성화 경고 출력"
 else
   echo "  ✗ stderr 경고 누락" >&2

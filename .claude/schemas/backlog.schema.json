@@ -129,6 +129,11 @@
           "format": "date-time",
           "description": "할당 시각 — assignee가 처음 설정된 시각. **불변**: 할당 시점에 1회 기록, 만료/해제 시점은 별도(`lockedAt` 기반 TTL)."
         },
+        "planApprovedAt": {
+          "type": ["string", "null"],
+          "format": "date-time",
+          "description": "aick-plan Step 6 사용자 승인 시각 — aick-impl 사전 조건이 검증하는 결정적 승인 기록 (v4.8.0: 사용자 승인이 prose-only였던 마지막 결정 지점 해소). 승인 전·승인 거절(N)·잠금 만료로 Task가 todo로 복귀할 때 null. workflowState가 아닌 task 레벨인 이유: workflowState는 체이닝 스킬이 전체 객체로 재작성하므로 드롭 위험 — 승인 라이프사이클은 Task 라이프사이클을 따른다."
+        },
         "lockedBy": {
           "type": ["string", "null"],
           "description": "현재 잠금 보유자 식별자 — 보통 `assignee`와 동일 값(user@hostname-...). **가변**: 잠금 인수/해제 시 변경·null. assignee(불변 할당 기록)와 라이프사이클 구분. v2.2.0 도입, v4.5.0 배선: **세션 식별이 아니라 잠금 소유 표시**(스킬은 Claude Code session_id를 얻을 수 없어 session_id 기반 매칭 불가)."

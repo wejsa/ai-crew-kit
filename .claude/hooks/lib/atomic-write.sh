@@ -47,7 +47,8 @@ atomic_write() {
     return 0
   }
 
-  if command -v flock >/dev/null 2>&1; then
+  # ACK_MUTEX_IMPL=mkdir: 테스트 시임 — flock 가용 환경에서도 mkdir 폴백 경로 강제 (기본 auto)
+  if [ "${ACK_MUTEX_IMPL:-auto}" != "mkdir" ] && command -v flock >/dev/null 2>&1; then
     (
       exec 9> "$lock"
       if flock -x -w 5 9; then
@@ -58,11 +59,32 @@ atomic_write() {
     )
   else
     # mkdir 뮤텍스 폴백 (macOS 일부 환경 대비)
+    # 스테일 회수(v4.8.0): 보유 프로세스가 크래시하면 mutex 디렉토리가 영구 잔존해
+    # 이후 모든 쓰기가 5초 timeout으로 유실되던 결함 — 약 2분 초과 mutex는 스테일로
+    # 판정하고 1회 강제 회수 후 재시도한다 (정상 보유는 수 초 내 해제되므로 안전).
+    # `-mmin +1`의 실제 경계는 GNU find 절사 의미론상 age≥2분(자체 리뷰 G4 실측 —
+    # 61~119초는 비매치). 판정→rmdir 사이 밀리초급 TOCTOU 창이 이론상 존재하나
+    # 회수 1회 가드 + tmp+mv 쓰기라 파일 파손은 없음(수용된 lost-update 클래스, G9).
     local mutex="${target}.mutex.d"
-    local waited=0
+    local waited=0 reclaimed=0
+    _ack_reclaim_stale_mutex() {
+      [ "$reclaimed" -eq 0 ] || return 1   # 회수는 1회만
+      if [ -n "$(find "$mutex" -maxdepth 0 -mmin +1 2>/dev/null)" ]; then
+        rmdir "$mutex" 2>/dev/null || true
+        _ack_log_error "atomic_write: stale mkdir mutex reclaimed (>2m): $mutex"
+        reclaimed=1
+        return 0
+      fi
+      return 1
+    }
+    _ack_reclaim_stale_mutex || true   # 진입 전 1차 검사 (직전 크래시 잔재 즉시 회수)
     while ! mkdir "$mutex" 2>/dev/null; do
       waited=$((waited + 1))
       if [ "$waited" -ge 50 ]; then
+        if _ack_reclaim_stale_mutex; then
+          waited=0   # 회수 성공 — 재시도 윈도우 1회 리셋
+          continue
+        fi
         _ack_log_error "atomic_write: mkdir mutex timeout: $mutex"
         return 0
       fi

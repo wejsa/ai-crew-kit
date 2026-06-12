@@ -66,11 +66,12 @@ PR 리뷰 코멘트에서 직접 파싱 (`gh api repos/{owner}/{repo}/pulls/{num
 각 CRITICAL 이슈: 파일 읽기 → 문제 분석 → 수정 작성 → Edit 적용
 
 ### 4. 빌드 검증
-`project.json`의 `buildCommands.build` 우선 → `techStack` 기반 폴백 (spring→gradlew, node→npm, go→go build).
+`project.json`의 `buildCommands.build` 우선 → `techStack` 기반 폴백.
+스택별 명령 표 SSOT: `${CLAUDE_PLUGIN_ROOT}/.claude/templates/protocols/build-commands.md` (clone/seed면 `.claude/templates/protocols/build-commands.md`)를 Read 후 적용 — 본 스킬에 표 복제 금지.
 실패 시 수정 재시도 (최대 3회), 3회 실패 → 에러 보고 후 종료.
 
 ### 5. 테스트 검증
-`project.json`의 `buildCommands.test` 우선 → `techStack` 기반 폴백.
+`project.json`의 `buildCommands.test` 우선 → `techStack` 기반 폴백 (위 SSOT 표 동일).
 실패 시 수정 재시도 (최대 3회), 3회 실패 → 에러 보고 후 종료.
 
 ### 6. 커밋 & 푸시

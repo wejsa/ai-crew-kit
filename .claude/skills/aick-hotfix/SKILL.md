@@ -40,7 +40,8 @@ git checkout -b "hotfix/${HOTFIX_ID}-${DESCRIPTION_SLUG}"
 원칙: 최소한의 변경만 수행
 
 ### 4. 빌드/테스트 검증
-buildCommands 우선 → techStack 폴백 (aick-release와 동일 패턴)
+buildCommands 우선 → techStack 폴백.
+스택별 명령 표 SSOT: `${CLAUDE_PLUGIN_ROOT}/.claude/templates/protocols/build-commands.md` (clone/seed면 `.claude/templates/protocols/build-commands.md`)를 Read 후 적용 — 본 스킬에 표 복제 금지.
 
 ### 5. 커밋
 `git add -A` → `hotfix: {HOTFIX_ID} - {수정 설명}` + Co-Authored-By

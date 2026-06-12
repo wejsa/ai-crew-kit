@@ -53,7 +53,7 @@ rm -rf .claude/docs .claude/temp
 ### 4. 선택적 정리
 
 ```bash
-# 상태 파일도 삭제하는 경우
+# 상태 파일도 삭제하는 경우 (review-decisions.json 등 로컬 전용 상태 포함 — 통째 삭제로 충분)
 rm -rf .claude/state
 
 # CLAUDE.md 삭제하는 경우

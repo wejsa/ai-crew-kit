@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ai-crew-kit.dev/schemas/execution-log.schema.json",
+  "title": "Execution Log",
+  "description": "스킬 실행 이벤트의 append-only 로그 (.claude/state/execution-log.json). 캐노니컬 shape SSOT는 aick-status '실행 로그 프로토콜' 섹션: top-level = JSON 배열, entry = {timestamp, taskId, skill, action, details} + 스킬별 부가 필드. **알려진 action 목록의 SSOT도 같은 섹션의 '스킬별 action' 표** — 본 스키마에 복제하지 않는다(손복사 드리프트 방지, 자체 리뷰 finding G3). additionalProperties:true인 이유: 로그는 게이트가 읽지 않는 진단·리포트용 데이터라 부가 필드 확장을 허용 — backlog처럼 strict하게 잠그면 스킬 추가 시 sleeper(검증 거부) 재발 위험(이 리포 4회 사고 클래스). action은 snake_case pattern만 강제. 500건 초과 시 아카이브 규칙도 aick-status 참조. 런타임 강제 검증 없음 — 계약 문서+회귀 보호용. v4.8.0 도입.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "timestamp",
+      "action"
+    ],
+    "properties": {
+      "timestamp": {
+        "type": "string",
+        "format": "date-time",
+        "description": "이벤트 시각 (ISO 8601 UTC)"
+      },
+      "action": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*$",
+        "description": "이벤트 종류 — snake_case. 알려진 값 목록의 SSOT는 aick-status '스킬별 action' 표 (본 스키마는 pattern만 강제 — 엄격 enum 비채택 사유는 스키마 description 참조)"
+      },
+      "taskId": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "관련 Task ID (Task 무관 이벤트 — hotfix/rollback/health_check — 는 생략 가능)"
+      },
+      "skill": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "기록 주체 스킬 (예: aick-impl)"
+      },
+      "details": {
+        "description": "스킬별 상세 — 문자열 또는 객체 (예: health_check_completed의 {mode, score, grade, ...})"
+      },
+      "prNumber": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "description": "관련 PR 번호"
+      },
+      "stepNumber": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "description": "관련 스텝 번호"
+      },
+      "version": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "관련 릴리스 버전 (hotfix/rollback)"
+      }
+    },
+    "additionalProperties": true
+  }
+}
