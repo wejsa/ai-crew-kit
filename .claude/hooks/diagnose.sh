@@ -142,11 +142,13 @@ if [ "$have_jq" -eq 1 ] && [ -f "$BACKLOG" ]; then
   now_ep="$(date -u +%s)"
   expired_count="$(jq --argjson now "$now_ep" '
     [.tasks[]? | select(
+      .status == "in_progress" and
       ((.lockedAt // .assignedAt // "") != "") and
       ((((.lockedAt // .assignedAt) | fromdateiso8601?) // 0) + (.lockTTL // 3600)) < $now
     )] | length' "$BACKLOG" 2>/dev/null || echo 0)"
   near_count="$(jq --argjson now "$now_ep" '
     [.tasks[]? | select(
+      .status == "in_progress" and
       ((.lockedAt // .assignedAt // "") != "") and
       (((((.lockedAt // .assignedAt) | fromdateiso8601?) // 0) + (.lockTTL // 3600)) >= $now) and
       (((((.lockedAt // .assignedAt) | fromdateiso8601?) // 0) + (.lockTTL // 3600)) < ($now + 120))

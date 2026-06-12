@@ -168,7 +168,7 @@ complexity-hint: heavy
 - 사전 조건: .claude/state/backlog.json 존재
 - 검사: in_progress 상태 Task 중 대응 브랜치가 없는 것
   - 주의: aick-status --health의 orphan intent 점검과는 다른 대상
-- autoFix: status를 'todo'로 리셋 (confirm: true)
+- autoFix: status를 'todo'로 리셋 + 잠금·승인 필드 초기화(assignee/assignedAt/lockedBy/lockedAt/lockedFiles/planApprovedAt — reclaim 목록과 동일) (confirm: true)
 
 #### SI-03. 잠금 만료 탐지 (MINOR)
 - 사전 조건: .claude/state/backlog.json 존재

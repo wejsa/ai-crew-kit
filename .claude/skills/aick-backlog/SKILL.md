@@ -171,6 +171,7 @@ soft delete: `status` → `"archived"`, list에서 기본 제외 (`list --archiv
 
 동작: dry-run → 사용자 확인 → 일괄 변경 + `metadata.version` 1회 증가 → Git 커밋 & 푸시
 제약: `--set-status=in_progress` 불가 (잠금/assignee 개별 처리 필요), 최대 20개
+`--set-status=todo`는 잠금·승인 필드도 함께 초기화: assignee/assignedAt/lockedBy/lockedAt/lockedFiles/planApprovedAt (reclaim 목록과 동일)
 
 ## deps 서브커맨드
 
@@ -221,7 +222,7 @@ soft delete: `status` → `"archived"`, list에서 기본 제외 (`list --archiv
 
 **사용 조건**: assignee가 현재 세션과 다름 + `--force` 필수 + "I understand the risks" 입력
 
-**해제 후**: assignee/assignedAt 제거, lockedFiles 초기화, status→`todo`, 커밋 & 푸시, 감사 로그 기록
+**해제 후**: assignee/assignedAt/lockedBy/lockedAt 제거, lockedFiles 초기화, **planApprovedAt→null**(승인은 잠금 사이클 귀속 — 잔존 시 스테일 승인이 aick-impl 사전 조건 4를 통과), status→`todo`, 커밋 & 푸시, 감사 로그 기록
 
 ## 에러 복구
 CLAUDE.md "에러 복구 프로토콜" 참조. 미존재 시 3회 재시도 후 사용자 보고.

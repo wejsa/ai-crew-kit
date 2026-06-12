@@ -14,11 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **릴리스 멱등 가드** (`aick-release` Step 2.5): 태그 존재=완료 판정 SSOT — 중복 실행 STOP, 중간 실패는 CHANGELOG/VERSION/릴리스 커밋 기반 결정적 재개(Step 9 또는 10부터).
 - **execution-log 스키마** (`execution-log.schema.json`): 캐노니컬 shape(append-only 배열, timestamp+action 필수) 정식화 — 마지막 무스키마 상태 파일 해소. action은 pattern 강제+알려진 17종 문서화(엄격 enum 비채택 — sleeper 재발 클래스 회피).
 - **검증망 확장**: `validate-schema.sh` §6 — backlog·review-decisions·execution-log 스키마 세트 일괄 검증(메타+positive+negative fixture, PASS 22→46). `add_gitignore_entry` 마이그레이션 실행 테스트 6건(멱등성·데이터 계약·kit↔시드 동기).
-- **훅 견고성**: `session-start.sh` 네트워크 git 호출 `timeout 8` 래핑(네트워크 블랙홀 방어, timeout 부재 시 graceful) · `atomic-write.sh` mkdir 뮤텍스 스테일(60초 초과) 자동 회수 — 크래시 잔재로 이후 쓰기가 유실되던 영구 누수 해소(+`ACK_MUTEX_IMPL` 테스트 시임).
+- **훅 견고성**: `session-start.sh` 네트워크 git 호출 `timeout 8` 래핑(네트워크 블랙홀 방어, timeout 부재 시 graceful) · `atomic-write.sh` mkdir 뮤텍스 스테일(약 2분 초과 — `-mmin +1` 절사 의미론) 자동 회수 — 크래시 잔재로 이후 쓰기가 유실되던 영구 누수 해소(+`ACK_MUTEX_IMPL` 테스트 시임).
 
 ### Changed (closeout)
 - **빌드 명령 표 SSOT**: `protocols/build-commands.md`로 추출(스택 12행+패키지 매니저 표) — impl 12스택 vs release 3스택 발산 해소, 소비 스킬 6곳(impl·release·fix·hotfix·rollback·onboard) 참조 전환.
-- **훅 i18n 전면 영문**: 사용자 가시 출력(stdout/stderr/hook-errors.log) 전체 영문화(diagnose 포함 60+ 문자열) + 정책 명문화(hooks/README — 가시 출력=영문, 주석·SKILL prose=한국어). 테스트 assert 12곳 동기.
+- **훅 i18n 전면 영문**: 사용자 가시 출력(stdout/stderr/hook-errors.log) 전체 영문화(diagnose 포함 43개 문자열 — 실측) + 정책 명문화(hooks/README — 가시 출력=영문, 주석·SKILL prose=한국어). 테스트 assert 12곳 동기.
 - **`aick-review` 포지셔닝 명문화**: "비-PR 로컬 코드 리뷰" — 게이트 연동 정식 경로(`aick-review-pr`)와의 역할 구분을 SKILL.md·skill-reference에 기재.
 
 ### Fixed (closeout)

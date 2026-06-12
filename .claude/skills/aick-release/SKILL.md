@@ -39,14 +39,14 @@ complexity-hint: light
 ### 2. 새 버전 계산
 MAJOR.MINOR.PATCH 파싱 → 타입에 따라 범프
 
-### 2.5 멱등 검사 (중복 실행·중간 실패 재개 — v4.8.0)
-**태그 존재 = 릴리스 완료 판정의 SSOT.** 결정적 체크 순서:
+### 2.5 멱등 검사 (중간 실패 재개·스테일 중복 — v4.8.0)
+**태그 존재 = 릴리스 완료 판정의 SSOT.** ⚠️ 재개 감지는 반드시 **범프 전 `CURRENT_VERSION` 기준** — Step 9 커밋 이후 실패하면 VERSION이 이미 전진해 있어 NEW 기준 검사는 영구 불발(자체 리뷰 finding G1: 데드 브랜치)이다.
+
 1. `git fetch --tags origin` (사전 조건 6의 fetch에 태그 보강)
-2. **태그 `v$NEW_VERSION` 존재** (`git rev-parse -q --verify "refs/tags/v$NEW_VERSION"` 또는 `git ls-remote --tags origin "v$NEW_VERSION"` 비어있지 않음) → **STOP**: "이미 릴리스된 버전입니다 — 재실행 불필요. 다음 버전이 목적이면 버전타입을 재확인하세요."
-3. 태그 없음 + (CHANGELOG에 `## [$NEW_VERSION]` 섹션 존재 **또는** `VERSION` 파일 == `$NEW_VERSION`) → **중간 실패 재개 모드**: Step 3 통과 후 Step 4~7(변경사항 수집·파일 업데이트) 스킵.
-   - develop 최신 커밋 제목 == `chore: release v$NEW_VERSION` → Step 10(main 머지)부터 재개
-   - 아니면 → Step 9(develop 커밋)부터 재개
-   - 재개 모드임을 출력에 명시: "⟳ 중간 실패 재개 — Step {N}부터"
+2. **미완 릴리스 재개 감지 (CURRENT 기준)**: 태그 `v$CURRENT_VERSION` **부재**(`git rev-parse -q --verify "refs/tags/v$CURRENT_VERSION"` 실패 + `git ls-remote --tags origin "v$CURRENT_VERSION"` 비어 있음) **+** CHANGELOG에 `## [$CURRENT_VERSION]` 섹션 **존재** → 직전 릴리스가 파일 업데이트 후 중단된 상태. AskUserQuestion 1회: "직전 릴리스 v$CURRENT_VERSION이 미완(태그 없음)입니다. 완성을 재개할까요? [재개 / 새 버전 진행]"
+   - **재개** → `NEW_VERSION = $CURRENT_VERSION`으로 재설정(Step 2 범프 결과 폐기), Step 3(빌드) 통과 후 Step 4~8 스킵. develop 최신 커밋 제목 == `chore: release v$CURRENT_VERSION` → Step 10(main 머지)부터, 아니면 Step 9(develop 커밋)부터. 출력에 명시: "⟳ v$CURRENT_VERSION 재개 — Step {N}부터"
+   - **새 버전 진행** → 케이스 3으로
+3. **스테일 중복 감지 (NEW 기준)**: 태그 `v$NEW_VERSION` 이미 존재 → **STOP**: "v$NEW_VERSION은 이미 릴리스됨 — 로컬 checkout이 stale합니다. `git pull` 후 재실행하세요."
 4. 둘 다 아님 → 정상 진행 (Step 3으로).
 
 ### 3. 빌드 & 테스트 검증
@@ -121,4 +121,4 @@ git merge develop -m "Merge branch 'develop' for release v$NEW_VERSION"
 ## 주의사항
 - develop 브랜치에서만 실행, main 직접 실행 금지
 - Clean 상태 필수, 충돌 발생 시 수동 해결 후 재시도
-- **재실행은 안전(멱등)** — Step 2.5가 태그(완료 SSOT)·CHANGELOG·VERSION으로 완료/재개/정상을 결정적으로 분기. 롤백 표의 Step 10+ 롤백 후 재실행도 동일 분기가 재개 처리
+- **재실행은 안전(멱등)** — Step 2.5가 **CURRENT 기준** 태그(완료 SSOT)·CHANGELOG로 미완 릴리스를 감지해 재개/정상을 결정적으로 분기(범프 후 NEW 기준 검사는 데드 브랜치 — 금지). 롤백 표의 Step 10+ 롤백 후 재실행도 동일 분기가 재개 처리. 완주 후 재실행은 정상적으로 다음 버전을 진행한다
