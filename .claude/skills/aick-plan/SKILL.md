@@ -40,7 +40,7 @@ Task 선택 전에 모든 `in_progress` Task를 스캔:
 
 1. 각 Task의 `(lockedAt // assignedAt)` + (`lockTTL` ?? 3600) < 현재 시각인지 검사 (v4.5.0: 활동 하트비트 `lockedAt` 우선, 없으면 `assignedAt` 폴백)
 2. 만료된 Task 발견 시:
-   - `status` → `"todo"`, `assignee` → `null`, `assignedAt` → `null`, `lockedBy` → `null`, `lockedAt` → `null`, `lockedFiles` → `[]`
+   - `status` → `"todo"`, `assignee` → `null`, `assignedAt` → `null`, `lockedBy` → `null`, `lockedAt` → `null`, `lockedFiles` → `[]`, `planApprovedAt` → `null`
    - `workflowState` → `null`
    - `metadata.version` 1 증가
    - 로그: `🔓 잠금 만료 자동 해제: {TASK-ID} "{제목}" (만료: {N}분 전)`
@@ -120,13 +120,13 @@ Step N: {제목}
 ### 6. 사용자 검토/승인 요청
 승인 받을 때까지 개발 진행 금지.
 - **Y**: 상태 업데이트 후 aick-impl 자동 호출
-- **N**: 잠금 해제 (status→todo, assignee→null) + push + 종료
+- **N**: 잠금 해제 (status→todo, assignee→null, **planApprovedAt→null**) + push + 종료
 - **수정사항**: 해당 부분만 반영 후 재제시
 
 ### 7. 상태 업데이트 (승인 후)
 > status/assignee는 1.5에서 설정됨. 여기서는 파일 잠금 + 스텝 정보만 갱신.
 
-backlog.json 업데이트: `lockedAt` 갱신(활동 하트비트 — `assignedAt`는 불변, v4.5.0), lockedFiles, steps 배열 (prLineLimit 포함, 설정 시만), currentStep=1
+backlog.json 업데이트: `lockedAt` 갱신(활동 하트비트 — `assignedAt`는 불변, v4.5.0), **`planApprovedAt` = 현재 ISO 8601**(승인의 결정적 기록 — aick-impl 사전 조건이 검증, v4.8.0), lockedFiles, steps 배열 (prLineLimit 포함, 설정 시만), currentStep=1
 - `metadata.version` 1 증가, `aick-backlog` 쓰기 프로토콜 준수
 - **lockTTL 산정** (aick-backlog "동적 TTL"): ≤3파일→3600, 4-8→7200, ≥9→10800
 - CLAUDE.md 워크트리 프로토콜에 따라 push. **push 성공 확인 후에만** aick-impl 호출

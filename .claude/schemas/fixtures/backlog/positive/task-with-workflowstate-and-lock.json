@@ -14,7 +14,11 @@
     "todo": 0
   },
   "phases": {
-    "1": { "name": "기반/인프라", "description": "인증/스키마", "status": "in_progress" }
+    "1": {
+      "name": "기반/인프라",
+      "description": "인증/스키마",
+      "status": "in_progress"
+    }
   },
   "tasks": {
     "TASK-001": {
@@ -32,14 +36,18 @@
       "lockedBy": "alice@host-20260529-100000",
       "lockedAt": "2026-05-29T10:30:00+00:00",
       "lockTTL": 3600,
-      "lockedFiles": ["src/auth/jwt.py"],
+      "lockedFiles": [
+        "src/auth/jwt.py"
+      ],
       "currentStep": 1,
       "steps": [
         {
           "number": 1,
           "title": "JWT 발급/검증",
           "status": "pr_created",
-          "files": ["src/auth/jwt.py"],
+          "files": [
+            "src/auth/jwt.py"
+          ],
           "prNumber": 42
         }
       ],
@@ -51,7 +59,8 @@
         "lastReviewDecision": "REQUEST_CHANGES",
         "autoChainArgs": "42 --auto-fix",
         "updatedAt": "2026-05-29T10:30:00+00:00"
-      }
+      },
+      "planApprovedAt": "2026-05-29T00:05:00Z"
     }
   }
 }
