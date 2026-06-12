@@ -76,6 +76,7 @@ docker-compose.override.yml
 docs/*
 !docs/getting-started.md
 !docs/skill-reference.md
+!docs/skill-reference.en.md
 !docs/concepts.md
 !docs/workflow-guide.md
 !docs/customization.md

@@ -7,7 +7,7 @@
 | | |
 |---|---|
 | **Required** | [Claude Code](https://claude.ai/download) CLI |
-| **Recommended** | Git 2.30+ · `jq` (the merge gate needs it; without it the gate fails open) |
+| **Recommended** | Git 2.30+ · `jq` + `timeout` (the merge gate needs both; without them it fails open — macOS: `brew install coreutils` installs it as `gtimeout` — add gnubin to `PATH`) |
 
 > No external runtime needed — Claude Code reads the framework's files and executes them directly. Node.js, Python, etc. are only needed for *your project's* stack.
 
@@ -132,6 +132,29 @@ Creates a requirements doc (`docs/requirements/{TASK-ID}-spec.md`) and a backlog
 ```
 
 Each phase has a user-approval gate, and `gh pr merge` is additionally guarded by the [deterministic merge gate](./merge-gate-explained.md) — a PR whose review posted an unresolved CRITICAL cannot be merged, no matter what the model decides.
+
+## Team adoption
+
+The kit's state lives in git (`.claude/state/project.json`, `backlog.json`, `CLAUDE.md`), so a team shares it like any other code:
+
+1. **One person initializes.** Run `/aick-init` (or `/aick-onboard`) in the project, review the generated files, commit and push them.
+2. **Everyone else installs the plugin** (user-wide, two commands), pulls the project, and runs `/aick-status` — no further setup. Same plugin version across the team is recommended (`/plugin update`).
+3. **Parallel work is lock-protected.** `/aick-plan` claims a task with a lock (TTL + activity heartbeat); two sessions cannot claim the same task, and expired locks self-release. On one machine, use `claude --worktree <name>` for parallel sessions.
+4. **One rule for hotfix/ad-hoc PRs:** finish the merge on the machine where the review ran. Those verdicts are recorded locally only (gate signal A2, gitignored) — merging from another clone falls back to GitHub's review state alone. Workflow-chain PRs (plan→impl→review) are unaffected: their state travels through git. ([details](./merge-gate-explained.md#7-what-the-gate-does-not-do-honest-edition))
+
+## FAQ
+
+**Does it conflict with our existing CI/CD (GitHub Actions, GitLab CI, …)?**
+No. The kit runs only inside Claude Code sessions on a developer's machine — your CI pipeline is untouched and keeps triggering on push/PR exactly as before. The merge gate guards Claude's own `gh pr merge` calls *in-session*; it is not a server-side rule. For team-wide hard enforcement, combine it with branch protection.
+
+**A skill stopped mid-way (network error, closed laptop). Do I redo everything?**
+No. Restart `claude` in the project and say "continue" — the continuation plan and the task lock pick up where you left off. If the *plan file* itself was lost (`.claude/temp/` is local-only, so machine moves or temp cleanup can drop it), run `/aick-plan {TASK-ID}`: it voids the stale approval and re-plans deterministically.
+
+**What does it cost in tokens?**
+Depends on project size and PR shape — there is no official benchmark, so treat any absolute number with suspicion. Structurally: the review step is the most expensive (2–3 sub-agents read the diff independently on T2/T3 PRs), implementation scales with step count, and everything else is light. Small PRs are automatically routed to cheap review tiers (T0/T1) — keeping PRs small is the single biggest cost lever. Measure with `/usage`; tuning levers (profiles, model routing, context size): [token optimization (Korean)](./token-optimization.md).
+
+**Can I uninstall it later without losing my project?**
+Yes — your code, git history, and generated docs are plain files. Removing the plugin removes the skills/hooks; the state files (`.claude/state/`) stay inert. Full removal checklist: [eject guide (Korean)](./eject-guide.md).
 
 ## When you get stuck
 

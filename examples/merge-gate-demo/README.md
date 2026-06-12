@@ -99,7 +99,9 @@ tool call, and Claude then relays the reason in its reply:
 ```
 
 **Which layer actually stopped it?** Live-model routing varies run to run — three outcomes
-are possible, and `cat .claude/state/hook-errors.log` is the discriminator:
+are possible. **All three stop the bad merge; none of them means your setup is broken.**
+The table only tells you *which layer* did it (`cat .claude/state/hook-errors.log` is the
+discriminator) — row 1 is the deterministic layer this demo exists to show:
 
 | Outcome | Layer that fired | hook-errors.log |
 |---------|------------------|-----------------|

@@ -7,7 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-> **품질 번들 + 마감 번들 (공개 대비)** — 머지 게이트 커버리지 완성(핫픽스 경로), 리뷰 프롬프트 인젝션 격리, 게이트 데이터 결함 가시화, 미배선 에이전트 정리 + 완결 감사 기반 마감(승인 영속화·빌드 SSOT·릴리스 멱등·훅 견고성·i18n 전면 영문). 차기 minor(4.8.0 예정)로 릴리스.
+> **품질 번들 + 마감 번들 + 분석 후속 + Phase C 문서 (공개 대비)** — 머지 게이트 커버리지 완성(핫픽스 경로), 리뷰 프롬프트 인젝션 격리, 게이트 데이터 결함 가시화, 미배선 에이전트 정리 + 완결 감사 기반 마감(승인 영속화·빌드 SSOT·릴리스 멱등·훅 견고성·i18n 전면 영문) + 재분석 후속(blocked 복귀·데드락 해소·플러그인 CI·M002) + 공개 대비 문서(Why·영문 스킬 레퍼런스·팀 도입 FAQ·비용 기대치). 차기 minor(4.8.0 예정)로 릴리스.
+
+### Added (Phase C docs)
+- **영문 스킬 레퍼런스** (`docs/skill-reference.en.md`): 전체 명령·Tier 분류·confidence 매트릭스 영문화 + **"Which skill, when?" 상황 기반 의사결정 표** 신설(한국어판에도 동일 표 추가 — 22개 스킬 인지 부하 해소). README 문서 표·Commands 링크 EN 승격, `.gitignore` 화이트리스트 등재.
+- **"Why not just plain Claude Code?" 섹션** (README EN·KO 페어): 단독 사용 대비 차별점을 4행 대비표로 — 결정론 머지 게이트(no model in the decision loop)·세션을 넘는 상태·기록되는 승인 게이트·자동 컨벤션 해석. 정직한 마무리("코드 생성만 필요하면 이 킷은 필요 없음") 포함.
+- **팀 도입 시나리오 + FAQ** (getting-started EN·KO): 한 사람 init→커밋, 나머지는 플러그인+pull, 잠금 기반 병렬 작업, **핫픽스/ad-hoc PR은 리뷰한 머신에서 머지(A2 수칙)** + FAQ 4문항(CI/CD 무충돌·중단 재개와 계획 유실 복구·토큰 비용 구조·제거 안전성).
+- **비용 기대치 (정직판)** (`token-optimization.md` §8): 절대 수치 벤치마크 부재를 명시하고 1 기능 루프의 구조적 비용(리뷰가 최고가, impl은 스텝 수 비례)과 절감 레버 5종(작은 PR=Tier 강등이 최대 레버, 프로필, 모델 라우팅, 200K 운용, 실측 우선) 정리.
+
+### Changed (Phase C docs)
+- Try-it·Requirements에 `timeout` preflight 추가 (README EN·KO 페어 + getting-started.en): `jq`와 함께 게이트 평가 필수 — 부재 시 fail-open, macOS는 coreutils 안내. 데모 README에만 있던 전제를 메인 도달면으로 승격.
+- 머지 게이트 데모 Act 1 결과 표 리프레이밍 (EN·KO 페어): "세 결과 모두 나쁜 머지를 막은 것 — 셋업 문제가 아님"을 표 앞에 명시(첫 시도자가 prose 레이어 발동을 실패로 오독하던 경로 차단).
+- `skill-reference.md`(KO): `/aick-validate --fix` 행 추가(타임스탬프 교정 반영), 영문판 상호 링크.
 
 ### Added (closeout)
 - **plan 승인 영속화**: `task.planApprovedAt`(schema 신설) — `aick-plan` Step 7이 승인 시각을 기록하고 `aick-impl` 사전 조건 4가 null이면 STOP(`--micro` 면제). 사용자 승인이 prose-only였던 마지막 결정 지점 해소. 승인 거절·잠금 만료 reclaim 시 null 초기화(잠금 사이클 귀속).

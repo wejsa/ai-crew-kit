@@ -45,7 +45,7 @@ curl -fsSL "$BASE/.claude/state/backlog.json" -o .claude/state/backlog.json
 curl -fsSL "$BASE/CLAUDE.md" -o CLAUDE.md   # tells the session to run commands literally
 ```
 
-**3.** Start `claude` **in that directory** (the gate reads the session root's state; `jq` must be installed) and paste:
+**3.** Start `claude` **in that directory** (the gate reads the session root's state; `jq` and `timeout` must be installed — without them the gate fails open. macOS: `brew install coreutils`, which installs it as `gtimeout` — add the gnubin dir to `PATH`) and paste:
 
 > Do not use any skill. Run this exact bash command as-is: `gh pr merge 42 --squash`
 
@@ -71,6 +71,21 @@ echo '{"tool_input":{"command":"gh pr merge 42 --squash"}}' \
 ---
 
 > **Philosophy** — AI Crew Kit manages *how software gets made*, not *how code gets written*. Claude owns the code and the technical judgment; the framework provides workflow automation, quality gates, and team conventions. Any protocol, any library — the framework guards the process around it.
+
+---
+
+## 🧭 Why not just plain Claude Code?
+
+Claude Code alone already writes excellent code. What it doesn't give you is a *process* that holds up across sessions, branches, and contributors:
+
+| Plain Claude Code | With AI Crew Kit |
+|---|---|
+| "Don't merge with unresolved CRITICALs" is a prompt — holds until the model has a bad day | A bash PreToolUse hook denies `gh pr merge` *before it runs* — **no model in the decision loop** |
+| Workflow context lives in chat history — gone when the session ends | Backlog, task locks, review decisions, continuation plans live in versioned state files — sessions resume, teammates see the same state |
+| Phase transitions happen implicitly | feature → plan → impl → review → merge chains automatically, with explicit human approval gates recorded in state |
+| Conventions get re-pasted every session | Stack-aware conventions and review checklists resolve automatically — reviews load them without being asked |
+
+If all you need is code generation, you don't need this kit. If you want the *process around the code* to be inspectable and enforced, that's what it adds.
 
 ---
 
@@ -149,7 +164,7 @@ Infrastructure failures **fail open** — a broken gate must never block legitim
 | `/aick-hotfix` · `/aick-rollback` | emergency main fix · audited release rollback |
 | `/aick-retro` · `/aick-report` · `/aick-health-check` | retrospectives · metrics · codebase health |
 
-Natural-language triggers work too ("review PR 123"). Full list: [skill reference (Korean)](./docs/skill-reference.md).
+Natural-language triggers work too ("review PR 123"). Full list + "which skill, when?" guide: [skill reference](./docs/skill-reference.en.md) ([KO](./docs/skill-reference.md)).
 
 ## 🛠 Supported stacks
 
@@ -167,7 +182,7 @@ Spring Boot (Kotlin · Java) · Node.js (TypeScript) · Python (FastAPI · Djang
 | [Core concepts](./docs/concepts.en.md) | **EN** · [KO (full)](./docs/concepts.md) |
 | [Merge gate explained](./docs/merge-gate-explained.md) | **EN** · [KO](./docs/merge-gate-explained.ko.md) |
 | [Merge gate demo (5 min)](./examples/merge-gate-demo/) | **EN** · [KO](./examples/merge-gate-demo/README.ko.md) |
-| [Skill reference](./docs/skill-reference.md) | KO |
+| [Skill reference](./docs/skill-reference.en.md) | **EN** · [KO](./docs/skill-reference.md) |
 | [Workflow guide](./docs/workflow-guide.md) | KO |
 | [Token optimization](./docs/token-optimization.md) | KO |
 | [Customization](./docs/customization.md) | KO |
@@ -180,7 +195,7 @@ Spring Boot (Kotlin · Java) · Node.js (TypeScript) · Python (FastAPI · Djang
 | | |
 |---|---|
 | **Required** | [Claude Code](https://claude.ai/download) CLI |
-| **Recommended** | Claude Code v2.1.49+ (native git worktrees) · Git 2.30+ · `jq` (the merge gate needs it to evaluate — without it the gate fails open) |
+| **Recommended** | Claude Code v2.1.49+ (native git worktrees) · Git 2.30+ · `jq` + `timeout` (the merge gate needs both to evaluate — without them it fails open; macOS: `brew install coreutils` installs it as `gtimeout` — add gnubin to `PATH`) |
 
 > No external runtime — the framework is prose, bash, and JSON Schema. Your project's stack brings its own toolchain (Node.js, Python, Go, JDK, …). For parallel work, `claude --worktree <name>` and external orchestrators are auto-detected by all skills.
 

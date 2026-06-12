@@ -44,7 +44,7 @@ curl -fsSL "$BASE/.claude/state/backlog.json" -o .claude/state/backlog.json
 curl -fsSL "$BASE/CLAUDE.md" -o CLAUDE.md   # 세션이 명령을 literal하게 실행하도록 지시
 ```
 
-**3.** **그 디렉토리 안에서** `claude`를 시작하고(게이트는 세션 루트의 상태를 읽음, `jq` 필수) 붙여넣기:
+**3.** **그 디렉토리 안에서** `claude`를 시작하고(게이트는 세션 루트의 상태를 읽음, `jq`·`timeout` 필수 — 없으면 게이트가 fail-open. macOS는 `brew install coreutils` 후 gnubin을 `PATH`에 추가 — g 접두사 `gtimeout`으로 설치됨) 붙여넣기:
 
 > Do not use any skill. Run this exact bash command as-is: `gh pr merge 42 --squash`
 
@@ -70,6 +70,21 @@ echo '{"tool_input":{"command":"gh pr merge 42 --squash"}}' \
 ---
 
 > **프레임워크 철학** — AI Crew Kit은 **"어떻게 짜는지"가 아니라 "어떤 프로세스로 만드는지"**를 관리합니다. 코드 작성과 기술 판단은 Claude가 담당하고, 프레임워크는 워크플로우 자동화·품질 게이트·팀 컨벤션을 제공합니다. REST, WebSocket, GraphQL, gRPC 등 모든 프로토콜의 코드를 Claude가 작성할 수 있으며, 프레임워크는 그 과정의 품질을 보장합니다.
+
+---
+
+## 🧭 그냥 Claude Code만 쓰면 안 되나?
+
+Claude Code 단독으로도 코드는 이미 훌륭하게 작성합니다. 단독으로 얻을 수 없는 것은 세션·브랜치·구성원을 가로질러 유지되는 **프로세스**입니다:
+
+| Claude Code 단독 | AI Crew Kit과 함께 |
+|---|---|
+| "미해결 CRITICAL이면 머지 금지"는 프롬프트 — 모델이 한 번 어긋나면 끝 | bash PreToolUse 훅이 `gh pr merge`를 *실행 전에* 거부 — **머지 판정 루프에 모델 없음** |
+| 워크플로우 맥락이 대화 기록에만 존재 — 세션이 끝나면 소멸 | 백로그·Task 잠금·리뷰 결정·continuation plan이 버전 관리되는 상태 파일에 존재 — 세션은 재개되고, 팀원은 같은 상태를 봄 |
+| 단계 전환이 암묵적으로 일어남 | feature → plan → impl → review → merge가 자동 체이닝되되, 중요한 전환마다 명시적 사람 승인이 상태에 기록됨 |
+| 컨벤션을 매 세션 다시 붙여넣음 | 스택 인지 컨벤션·리뷰 체크리스트가 자동 해석됨 — 리뷰가 알아서 읽음 |
+
+코드 생성만 필요하다면 이 킷은 필요 없습니다. 코드를 둘러싼 *프로세스*가 점검 가능하고 강제되기를 원한다면, 그것이 킷이 더하는 것입니다.
 
 ---
 
@@ -177,7 +192,7 @@ AI Crew Kit은 **Claude Code 플러그인 마켓플레이스**로 설치합니�
 | `/aick-report` | 프로젝트 메트릭 리포트 | "리포트 생성해줘" |
 | `/aick-health-check` | 코드베이스 건강 검진 | "헬스체크 해줘" |
 
-전체 명령어와 자연어 매핑은 [스킬 레퍼런스](./docs/skill-reference.md)를 참조하세요.
+전체 명령어·자연어 매핑·"어떤 스킬을 언제 쓰나" 가이드는 [스킬 레퍼런스](./docs/skill-reference.md) ([EN](./docs/skill-reference.en.md))를 참조하세요.
 
 ---
 
@@ -262,7 +277,7 @@ rm -f .claude/state/hook-disabled.flag
 |------|------|
 | [설치 및 시작하기](./docs/getting-started.md) | 설치 상세, 초기화 흐름, 온보딩, **첫 기능 만들기** |
 | [핵심 개념](./docs/concepts.md) | 에이전트 팀, 디렉토리 구조, 실행 모델 |
-| [스킬 레퍼런스](./docs/skill-reference.md) | 전체 스킬 목록, 자연어 매핑, Tier 분류 매트릭스 |
+| [스킬 레퍼런스](./docs/skill-reference.md) ([EN](./docs/skill-reference.en.md)) | 전체 스킬 목록, "어떤 스킬을 언제", 자연어 매핑, Tier 분류 매트릭스 |
 | [워크플로우 가이드](./docs/workflow-guide.md) | 자동 체이닝, 7가지 워크플로우, 품질 게이트, Git 전략 |
 | [머지 게이트 해설](./docs/merge-gate-explained.ko.md) ([EN](./docs/merge-gate-explained.md)) | 결정적 머지 게이트 동작 원리 — 신호 A/A2/B, fail-open 설계, 우회 env, standalone 검증 |
 | [머지 게이트 데모 (5분)](./examples/merge-gate-demo/README.ko.md) ([EN](./examples/merge-gate-demo/README.md)) | 차단 → 우회 실패 → 기록되는 사람의 우회 실습 |
@@ -282,7 +297,7 @@ rm -f .claude/state/hook-disabled.flag
 | 구분 | 요구사항 |
 |------|---------|
 | **필수** | [Claude Code](https://claude.ai/download) CLI |
-| **권장** | Claude Code v2.1.49+ (네이티브 git worktree 지원), Git 2.30+, `jq` (머지 게이트 판정에 필요 — 없으면 게이트가 fail-open) |
+| **권장** | Claude Code v2.1.49+ (네이티브 git worktree 지원), Git 2.30+, `jq`·`timeout` (머지 게이트 판정에 필요 — 없으면 게이트가 fail-open. macOS는 `brew install coreutils` 후 gnubin을 `PATH`에 추가 — `gtimeout`으로 설치됨) |
 
 > 프레임워크 자체는 외부 런타임 없이 동작합니다. 프로젝트 빌드/테스트에 필요한 런타임(Node.js, Python, Go, JDK 등)은 선택한 기술 스택에 따라 별도 설치합니다.
 
