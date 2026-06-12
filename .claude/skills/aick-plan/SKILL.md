@@ -47,15 +47,30 @@ Task 선택 전에 모든 `in_progress` Task를 스캔:
 3. 여러 Task 만료 시 모두 한 번에 처리 후 커밋+push
 4. `status: paused` Task는 대상에서 제외 (일시정지는 의도적)
 
+### 0.6 blocked 자동 복귀 (Dependency Re-check)
+
+`status: blocked` Task 전체를 스캔 (v4.8.0 — blocked는 진입만 있고 복귀가 없던 흡수 상태였음):
+
+1. `dependencies`의 모든 의존 Task가 충족 — backlog에서 `done`, 또는 backlog에 없고 completed.json에 존재 — 이면 `status` → `"todo"`
+2. 로그: `🔓 의존성 충족 — blocked 해제: {TASK-ID} "{제목}"`
+3. 해제된 Task는 이번 Step 1 자동 선택 후보에 포함
+4. 변경 발생 시 `metadata.version` 1 증가, 0.5의 잠금 정리와 같은 커밋으로 묶어 커밋+push (양쪽 모두 변경 없으면 쓰기 생략)
+
 ### 1. Task 선택
 **자동 선택 기준** (taskId 미지정 시):
-1. `status: todo` 중 `dependencies` 충족 + `lockedFiles` 충돌 없는 Task
+1. `status: todo` 중 `dependencies` 충족(판정 기준은 0.6과 동일) + `lockedFiles` 충돌 없는 Task
 2. `priority` 높은 순 → 같으면 `phase` 낮은 순
-- 의존성 미충족 → `blocked` 표시
+- 의존성 미충족 → `blocked` 표시 (의존성 충족 시 0.6이 자동 todo 복귀)
 - 같은 파일 수정 중인 `in_progress` Task → 경고
 - `status: paused` Task 감지 시 → "일시정지 Task {ID} 재개할까요?" 확인
   - 재개: `status → in_progress`, `pauseReason → null`, `pausedAt → null`
   - 유지: 다음 todo Task 선택
+
+**`taskId` 지정 + 해당 Task가 이미 `in_progress`(미만료 잠금)인 경우 — 재계획 분기 (v4.8.0)**:
+1. `assignee`가 `{whoami}@{hostname}-`로 시작하지 않으면(접두 매칭 — assignee 포맷은 `{user}@{hostname}-{YYYYMMDD-HHmmss}`, Step 1.5) 다른 세션/머신이 작업 중일 수 있음 → 경고 + 사용자 명시 확인 후에만 계속, 거절 시 STOP
+2. `planApprovedAt != null` + 계획 파일 존재 → 이미 승인된 계획 — `/aick-impl` 안내 후 STOP
+3. `planApprovedAt != null` + 계획 파일 부재 → **계획 유실 복구**: 승인은 유실된 계획에 귀속되므로 무효화 — `planApprovedAt` → `null`, `metadata.version` 1 증가, push 후 재계획 진행 (계획 파일은 `.claude/temp/` 로컬 전용 — temp 정리·머신 이동 시 유실 가능. aick-impl 사전 조건 4가 이 경로로 유도)
+4. `planApprovedAt == null` → 재계획 진행. 기존 잠금·`assignee` 유지 — Step 1.5는 재claim 생략, `lockedAt` 하트비트만 갱신
 
 ### 1.5 조기 잠금 (중복 선택 방지)
 Task 선택 직후 **즉시** backlog.json 업데이트 + push:
@@ -67,6 +82,7 @@ Task 선택 직후 **즉시** backlog.json 업데이트 + push:
 
 **Push 실패 시**: pull --rebase → 해당 Task가 이미 in_progress면 로컬 취소 + 다음 Task 재선택
 **Push 성공 확인 후에만** 다음 단계 진행. 미확인 상태 진행 금지.
+**재계획 분기 진입 시**(Step 1, v4.8.0): 본 단계의 재claim 전체 생략 — `lockedAt`만 현재 시각으로 갱신(기존 `assignee`/`assignedAt` 보존). 이미 claim·push된 Task이므로 신규 커밋 불필요 — 커밋·`metadata.version` 증가·push는 Step 7의 정규 갱신이 일괄 담당
 
 ### 2. 요구사항 확인
 `docs/requirements/{taskId}-spec.md` 읽기

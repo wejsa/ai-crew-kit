@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - hooks/README PostToolUse에 file-membership 하트비트 한계 문서화, eject-guide에 로컬 전용 상태 처리 1줄.
 
 ### Added
+- **플러그인 배포 정합성 CI** (`validate-plugin.yml`): ① `agents/` 미러 검증 — CI가 `sync-plugin-agents.sh` 실행 후 diff가 남으면 실패(SSOT `.claude/agents/` ↔ 루트 미러, v4.4.1 실사고 클래스: 미러 stale로 플러그인 배포 에이전트 누락) ② 버전 3중 일치(VERSION ↔ plugin.json ↔ marketplace.json metadata·plugins[0] — v4.4.1 plugin.json 4.3.0 stale 재발 차단) ③ manifest JSON 유효성. 기존엔 전부 수동 책임. `aick-release` Step 5-7에 플러그인 manifest 버전 갱신(`.claude-plugin/` 존재 시) 추가 — 릴리스 커밋이 3중 일치를 통과하도록 배선(자체 리뷰 사이클1 캐치: 미배선 시 다음 릴리스에서 CI 실패).
 - **머지 게이트 신호 A2** (`pre-tool-use.sh`): backlog Task가 없는 PR(핫픽스·ad-hoc 리뷰)도 결정적 차단 — `aick-hotfix` Step 7 / `aick-review-pr` Step 6.5(소유 Task 부재 시)가 리뷰 결정을 `.claude/state/review-decisions.json`(신규 스키마 `review-decisions.schema.json`, **로컬 전용·gitignore**)에 기록하고, 게이트가 A → A2 → B 순으로 평가. 기존엔 hotfix→main 머지가 게이트를 완전 우회(신호 A: Task 없음, 신호 B: GitHub 리뷰 결정 없음). fail-open 경로 13→14. 게이트 테스트 §11(7 assertion). 머지 성공 시 엔트리 자동 정리(hotfix Step 8·merge-pr Step 3). 시드 전파: migrations `add_gitignore_entry`(4.8.0) + init Step 7 필수 엔트리.
 - **리뷰 입력 신뢰 경계 (프롬프트 인젝션 격리)**: PR diff·변경 파일을 섭취하는 에이전트 6종(pr-reviewer ×3, agent-code-reviewer, agent-qa, docs-impact-analyzer)에 표준 "입력 신뢰 경계" 블록 — diff 내 텍스트("검토 생략", "CRITICAL 아님" 류)를 지시로 취급하지 않고, 조작 시도는 발견사항(MAJOR)으로 보고. `aick-review-pr` 4지점(Step 3 디스패치·Step 3.5 채점 Task·1M 폴백·T0 직접 리뷰) + `aick-hotfix` Step 7 디스패치에 이중 방어 1줄.
 - **SessionStart 머지 게이트 데이터 계약 경고** (`session-start.sh` §3.5): in_progress Task의 게이트 무력화 결함 3종을 세션 시작 시 가시화 — 문자열 `prNumber`/`fixLoopCount`(v2.4.1 실사고 sleeper), review-pr 완료 후 `lastReviewDecision` 미기록(fail-open 예고), `pr_created` 스텝의 `prNumber` 누락. 경고 0건이면 무출력, R4 준수. 신규 테스트 15 assertion.
@@ -35,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 게이트 문서 갱신(EN·KO 패리티): merge-gate-explained §2 신호 3개·§3 fail-open 14경로·§7(핫픽스 우회 해소, A2 로컬 한계·롤백 범위 명시), README 신호 표 A2 행, hooks/README 형식 SSOT.
 
 ### Fixed
+- **`blocked` 흡수 상태 해소** (`aick-plan` Step 0.6 신설): 의존성 미충족으로 `blocked` 표시된 Task가 의존 Task 완료 후에도 영구 blocked로 남던 문제(자동 선택이 `status: todo`만 스캔 — 어떤 스킬도 재평가하지 않음) — Task 선택 전 blocked 전수 스캔, 의존성 충족(backlog `done` 또는 completed.json 존재) 시 자동 `todo` 복귀.
+- **계획 파일 유실 데드락 해소** (`aick-plan` Step 1 재계획 분기 + `aick-impl` 사전 조건 4 안내): `planApprovedAt != null`인데 계획 파일(`.claude/temp/` 로컬 전용 — temp 정리·머신 이동 시 유실)이 부재하면 impl은 "파일 없음" STOP·plan은 in_progress 잠금으로 막혀 빠져나갈 공식 경로가 없던 상태 — taskId 지정 재계획 분기(assignee 접두 소유 확인 → 승인 무효화 → 재계획, 잠금·assignee 보존) 신설. 상태 전이는 aick-plan 단독 소유.
 - `backlog.schema.json` `currentSkill` enum에 `aick-feature`(+crew/skill 트리오) 추가 — CLAUDE.md 진행바 프로토콜이 feature를 체이닝 스킬로 명시하는데 enum이 거부하던 latent sleeper(24→27 값, 방어적 수용·기록 의무 없음).
 
 ## [4.7.0] - 2026-06-12

@@ -44,7 +44,7 @@ MAJOR.MINOR.PATCH 파싱 → 타입에 따라 범프
 
 1. `git fetch --tags origin` (사전 조건 6의 fetch에 태그 보강)
 2. **미완 릴리스 재개 감지 (CURRENT + 원격 태그 기준)**: **원격 태그 부재**(`git ls-remote --tags origin "v$CURRENT_VERSION"` 출력 비어 있음 — ⚠️ 로컬 태그 기준 금지: Step 11이 로컬 태그를 만든 뒤 Step 12 push가 실패하면 로컬 기준 검사는 불발) **+** CHANGELOG에 `## [$CURRENT_VERSION]` 섹션 **존재** → 직전 릴리스가 파일 업데이트 후 중단된 상태. `ls-remote` 자체가 실패(네트워크 불가)하면 **STOP**: "릴리스는 push까지가 완료 — 네트워크 복구 후 재실행하세요." AskUserQuestion 1회: "직전 릴리스 v$CURRENT_VERSION이 미완(원격 태그 없음)입니다. 완성을 재개할까요? [재개 / 새 버전 진행]"
-   - **재개** → `NEW_VERSION = $CURRENT_VERSION`으로 재설정(Step 2 범프 결과 폐기), Step 3(빌드) 통과 후 Step 4~8 스킵. 재개 지점은 결정적으로:
+   - **재개** → `NEW_VERSION = $CURRENT_VERSION`으로 재설정(Step 2 범프 결과 폐기), Step 3(빌드) 통과 후 Step 4~8 스킵 — 단, 플러그인 manifest 일치 확인(Step 5-7, `.claude-plugin/` 존재 시)은 재개 시에도 수행: 직전 중단이 파일 갱신 도중이면 VERSION만 전진하고 manifest는 stale일 수 있음(불일치면 갱신 후 진행, v4.8.0). 재개 지점은 결정적으로:
      - 로컬 태그 `v$CURRENT_VERSION` 존재(rev-parse 성공) → **Step 12(push)부터** (커밋·태그 완료, push만 실패한 상태)
      - 로컬 태그 부재 + develop 최신 커밋 제목 == `chore: release v$CURRENT_VERSION` → **Step 10(main 머지)부터**
      - 둘 다 아님 → **Step 9(develop 커밋)부터**
@@ -68,6 +68,7 @@ project.json 미존재 시 스킵. 실패 시 즉시 중단 (파일 변경 전�
 - VERSION 파일: `echo "$NEW_VERSION" > VERSION`
 - CHANGELOG.md: `## [X.Y.Z] - YYYY-MM-DD` 섹션 삽입 ([Unreleased] 아래)
 - README.md: project.json name 기반 동적 패턴으로 제목 버전 교체
+- 플러그인 manifest (`.claude-plugin/` 존재 시 — 미존재 프로젝트는 스킵): `plugin.json` `.version` + `marketplace.json` `.metadata.version`·`.plugins[].version`을 NEW_VERSION으로 갱신 — CI `validate-plugin.yml`이 VERSION과의 3중 일치를 강제하므로 누락 시 릴리스 커밋에서 CI 실패 (v4.8.0)
 
 ### 8. API spec 스냅샷
 
@@ -88,7 +89,7 @@ project.json 미존재 시 스킵. 실패 시 즉시 중단 (파일 변경 전�
 ### 9. develop 커밋
 ```bash
 git add VERSION CHANGELOG.md README.md
-# API spec + 빌드 파일 변경 포함
+# 플러그인 manifest 갱신 시 .claude-plugin/ 포함, API spec + 빌드 파일 변경 포함
 git commit -m "chore: release v$NEW_VERSION
 
 - VERSION: $CURRENT_VERSION → $NEW_VERSION
