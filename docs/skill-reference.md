@@ -1,6 +1,21 @@
 # 스킬 레퍼런스
 
-> [← README로 돌아가기](../README.md)
+> [← README로 돌아가기](../README.md) · English: [skill-reference.en.md](./skill-reference.en.md)
+
+## 어떤 스킬을 언제 쓰나요?
+
+상황에서 출발하세요 — 나머지는 체인이 처리합니다:
+
+| 상황 | 시작점 |
+|------|--------|
+| "새로 뭔가 만들고 싶다" | `/aick-feature "..."` → 명세 승인 → plan → impl → review → merge 체인이 승인 게이트와 함께 진행 |
+| "다음 작업 줘" | `/aick-plan` (우선순위 최상 + 의존성 충족 Task 자동 선택) |
+| "하던 거 이어서" | `/aick-status`로 파악 후 `/aick-impl --next` — 또는 그냥 "이어서 진행해줘" |
+| "이 PR 리뷰/머지해줘" | `/aick-review-pr N` · `/aick-merge-pr N` |
+| "운영 장애났다" | `/aick-hotfix "..."` (main 긴급 수정) · `/aick-rollback vX.Y.Z` (감사 추적 롤백) |
+| "다 정상인가?" | `/aick-status --health` (~5초) → `/aick-health-check` (정밀, ~30초) |
+| "우리 어떻게 하고 있지?" | `/aick-report` (메트릭) · `/aick-retro` (학습 — 다음 계획에 자동 반영) |
+| "킷 설치/유지보수" | `/aick-init` (신규) · `/aick-onboard` (기존 코드) · `/aick-upgrade` (검증은 자동) |
 
 ## 자주 사용하는 명령어
 
@@ -141,7 +156,8 @@ sub-agent 도출 이슈에 0-100 점수 부여 후 severity × confidence 매트
 | `/aick-create` | 커스텀 스킬 생성 |
 | `/aick-upgrade` | 프레임워크 업그레이드 |
 | `/aick-upgrade --dry-run` | 변경 사항 미리보기 |
-| `/aick-validate` | 업그레이드 후 검증 |
+| `/aick-validate` | 업그레이드 후 검증 (업그레이드 후 자동 실행) |
+| `/aick-validate --fix` | 안전한 항목 자동 수정 (metadata.version 누락, 상태 타임스탬프 형식 교정) |
 
 ## 자연어 매핑
 

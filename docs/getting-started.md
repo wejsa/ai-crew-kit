@@ -7,7 +7,7 @@
 | 구분 | 요구사항 |
 |------|---------|
 | **필수** | [Claude Code](https://claude.ai/download) CLI |
-| **권장** | Git 2.30+ |
+| **권장** | Git 2.30+ · `jq`·`timeout` (머지 게이트 판정에 필요 — 없으면 게이트가 fail-open. macOS는 `brew install coreutils` 후 gnubin을 `PATH`에 추가 — `gtimeout`으로 설치됨) |
 
 > **참고**: Claude Code가 파일을 읽고 직접 수행하므로 Node.js, Python 등 외부 런타임은 불필요합니다.
 
@@ -261,3 +261,28 @@ claude
 - **현재 상태 확인**: `/aick-status`
 - **백로그 확인**: `/aick-backlog dashboard`
 - **기타 에러**: CLAUDE.md "에러 복구 프로토콜"에 10가지 에러 유형별 복구 방법이 안내됩니다.
+
+---
+
+## 팀 도입
+
+킷의 상태는 git에 삽니다(`.claude/state/project.json`, `backlog.json`, `CLAUDE.md`) — 팀은 다른 코드와 똑같이 공유합니다:
+
+1. **한 사람이 초기화합니다.** 프로젝트에서 `/aick-init`(또는 `/aick-onboard`)을 실행하고, 생성 파일을 검토한 뒤 커밋·push합니다.
+2. **나머지 팀원은 플러그인만 설치**(사용자 전역, 명령 2개)하고, 프로젝트를 pull한 뒤 `/aick-status` — 추가 설정 없음. 팀 전체 동일 플러그인 버전 권장(`/plugin update`).
+3. **병렬 작업은 잠금이 보호합니다.** `/aick-plan`이 Task를 잠금(TTL + 활동 하트비트)과 함께 claim — 두 세션이 같은 Task를 잡을 수 없고, 만료된 잠금은 자동 해제됩니다. 한 머신에서는 `claude --worktree <name>`으로 병렬 세션을 띄우세요.
+4. **핫픽스·ad-hoc PR 한 가지 수칙**: 리뷰가 돌았던 머신에서 머지까지 완료하세요. 이 판정은 로컬에만 기록되며(게이트 신호 A2, gitignore), 다른 클론에서의 머지는 GitHub 리뷰 상태에만 의존합니다. 워크플로우 체인 PR(plan→impl→review)은 무관 — 상태가 git으로 이동합니다. ([상세](./merge-gate-explained.ko.md#7-게이트가-하지-않는-것-정직한-한계))
+
+## FAQ
+
+**기존 CI/CD(GitHub Actions, GitLab CI 등)와 충돌하나요?**
+아니요. 킷은 개발자 머신의 Claude Code 세션 안에서만 동작합니다 — CI 파이프라인은 건드리지 않으며 push/PR 트리거도 기존 그대로입니다. 머지 게이트는 *세션 내* Claude의 `gh pr merge` 호출을 지키는 것이지 서버 측 규칙이 아닙니다. 팀 전체 강제가 필요하면 branch protection과 결합하세요.
+
+**스킬이 중간에 끊겼어요(네트워크 오류, 노트북 닫음). 처음부터 다시 하나요?**
+아니요. 프로젝트에서 `claude`를 재시작하고 "이어서 진행해줘"라고 하면 continuation plan과 Task 잠금이 중단 지점부터 재개합니다. *계획 파일* 자체가 유실됐다면(`.claude/temp/`는 로컬 전용 — 머신 이동·temp 정리로 사라질 수 있음) `/aick-plan {TASK-ID}`를 실행하세요: 무효해진 승인을 정리하고 결정적으로 재계획합니다.
+
+**토큰 비용은 얼마나 드나요?**
+프로젝트 규모와 PR 형태에 좌우되며, 공식 벤치마크는 없습니다 — 절대 수치는 의심하고 보세요. 구조적으로는: 리뷰 단계가 가장 비싸고(T2/T3 PR에서 서브에이전트 2~3개가 diff를 각자 읽음), 구현은 스텝 수에 비례하며, 나머지는 가볍습니다. 작은 PR은 자동으로 저렴한 리뷰 티어(T0/T1)로 라우팅됩니다 — **PR을 작게 유지하는 것이 가장 큰 절감 레버**입니다. `/usage`로 측정하고, 조절 레버(프로필·모델 라우팅·컨텍스트 크기)는 [토큰 최적화](./token-optimization.md)를 참조하세요.
+
+**나중에 제거해도 프로젝트는 무사한가요?**
+네 — 코드·git 이력·생성 문서는 평범한 파일입니다. 플러그인을 제거하면 스킬·훅이 사라지고, 상태 파일(`.claude/state/`)은 비활성 상태로 남습니다. 전체 제거 체크리스트: [Eject 가이드](./eject-guide.md).
