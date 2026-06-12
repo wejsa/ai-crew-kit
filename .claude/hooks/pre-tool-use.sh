@@ -8,11 +8,14 @@
 #   519줄 분기를 한 번만 잘못 따라도 나쁜 PR이 auto-merge되는 구멍이 있었다(W2).
 #   여기서 hook이 직접 deny한다 — 프레임워크의 핵심 게이트를 결정적 레이어로 이동.
 #
-# 게이트 신호 (둘 중 하나라도 차단 판정이면 deny):
+# 게이트 신호 (하나라도 차단 판정이면 deny):
 #   A. (state) PR N을 소유한 Task(= step.prNumber==N 또는 workflowState.prNumber==N)의
 #      workflowState.lastReviewDecision == "REQUEST_CHANGES"  → 미해결 CRITICAL 게시됨.
 #      PR 번호의 결정적 SSOT는 step.prNumber(aick-impl Step 8)이므로 거기서도 join해야
 #      프로덕션에서 발동한다(workflowState.prNumber만 보면 no-op — 자체 리뷰 finding #1).
+#   A2. (transient state, v4.8.0) backlog Task가 없는 PR(핫픽스·ad-hoc 리뷰)의 결정 —
+#      .claude/state/review-decisions.json (aick-hotfix Step 7 / aick-review-pr Step 6.5
+#      소유 Task 부재 시 기록, 로컬 전용·gitignore). 오프라인 결정적, 파싱 실패 fail-open.
 #   B. (GitHub, best-effort) gh pr view reviewDecision == "CHANGES_REQUESTED"
 #      — 타인 PR에서 GitHub가 기록한 request-changes. 네트워크/인증 실패 시 fail-open.
 #
@@ -128,6 +131,20 @@ if [ -f "$BACKLOG" ]; then
   if [ "$DECISION" = "REQUEST_CHANGES" ]; then
     BLOCK=1
     REASON="backlog: last review decision is REQUEST_CHANGES (unresolved CRITICAL posted)"
+  fi
+fi
+
+# ── 신호 A2: transient review decision (결정적, 오프라인) ──
+# backlog Task가 없는 PR(핫픽스·ad-hoc 리뷰)의 리뷰 결정. aick-hotfix Step 7 /
+# aick-review-pr Step 6.5(소유 Task 부재 시)가 기록, 머지 성공 시 삭제.
+# 형식 SSOT: .claude/schemas/review-decisions.schema.json (키 = PR 번호 십진 문자열).
+# 로컬 전용(gitignore) — 다른 세션/머신에 비전파. 파싱 실패는 fail-open.
+DECISIONS="$STATE_DIR/review-decisions.json"
+if [ "$BLOCK" -eq 0 ] && [ -f "$DECISIONS" ]; then
+  TDECISION="$(jq -r --arg n "$PRN" '.[$n].decision // empty' "$DECISIONS" 2>/dev/null || echo '')"
+  if [ "$TDECISION" = "REQUEST_CHANGES" ]; then
+    BLOCK=1
+    REASON="transient review state: last review decision is REQUEST_CHANGES (hotfix/ad-hoc review)"
   fi
 fi
 

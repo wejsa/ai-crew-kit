@@ -78,8 +78,9 @@ exec 0</dev/null                  # stdin을 /dev/null로 — 자식 프로세�
 
 **동작**:
 1. `gh pr merge`가 아닌 모든 Bash 명령 → 즉시 `exit 0` (의견 없음, 오버헤드 최소).
-2. PR 번호 추출 후 **차단 신호** 검사 (둘 중 하나라도 차단이면 deny):
+2. PR 번호 추출 후 **차단 신호** 검사 (하나라도 차단이면 deny — A → A2 → B 순 평가, 첫 차단이 이김):
    - **신호 A (state, 오프라인 결정적)**: PR N을 소유한 Task(`step.prNumber == N` **또는** `workflowState.prNumber == N`)의 `workflowState.lastReviewDecision == "REQUEST_CHANGES"` → 미해결 CRITICAL 게시됨. PR 번호의 결정적 SSOT는 `step.prNumber`(aick-impl Step 8)이므로 거기서도 join한다 — `workflowState.prNumber`만 보면 실제 backlog에서 발동하지 못한다.
+   - **신호 A2 (transient state, 오프라인 결정적 — v4.8.0)**: backlog Task가 없는 PR(핫픽스·ad-hoc 리뷰)의 결정 — `.claude/state/review-decisions.json`의 해당 PR 엔트리가 `REQUEST_CHANGES`면 차단. 형식 SSOT는 `review-decisions.schema.json`(키 = PR 번호 십진 문자열, decision/source/updatedAt 필수). 기록 주체: aick-hotfix Step 7, aick-review-pr Step 6.5(소유 Task 부재 시). 머지 성공 시 삭제. **로컬 전용(gitignore)** — 다른 세션/머신에 비전파. 파싱 실패 fail-open.
    - **신호 B (GitHub, best-effort)**: `gh pr view N --json reviewDecision == CHANGES_REQUESTED` (타인 PR에서 GitHub가 기록한 request-changes). 네트워크/인증/`gh` 부재 시 fail-open.
 3. 차단 시 `exit 2` + stderr에 사유·복구 안내(재리뷰 / 우회) 출력.
 
@@ -91,7 +92,7 @@ exec 0</dev/null                  # stdin을 /dev/null로 — 자식 프로세�
 | `CCK_GATE_BYPASS=1` | 이번 1회 의도적 우회 — 로그 + allow (사용자 책임) |
 | `CCK_GATE_NO_GH=1` | 신호 B(GitHub 네트워크 호출) 전면 스킵 — 오프라인/에어갭 환경 |
 
-**fail-open 시나리오** (게이트 장애가 정상 머지를 막지 않도록 → `exit 0`): `jq` 부재, stdin 부재, backlog 부재, PR 번호 추출 불가, 매칭 `workflowState` 없음, GitHub 조회 실패.
+**fail-open 시나리오** (게이트 장애가 정상 머지를 막지 않도록 → `exit 0`): `jq` 부재, stdin 부재, backlog 부재, PR 번호 추출 불가, 매칭 `workflowState` 없음, `review-decisions.json` 부재/파싱 불가, GitHub 조회 실패.
 
 > 신호 A는 `backlog.schema.json`의 `workflowState.lastReviewDecision`(v2.4.0 정식 등록)에 의존한다. 이 필드는 aick-review-pr Step 6.5가 매 리뷰마다 갱신한다. 이전에는 스킬이 참조했으나 schema 미등록(`additionalProperties:false`)으로 거부되던 sleeper였다 — 본 게이트와 함께 정식화되어 aick-fix 모드 판정도 같이 복구됨.
 >

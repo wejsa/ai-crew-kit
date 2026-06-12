@@ -96,6 +96,18 @@
       "to": "4.6.0",
       "changes": [],
       "comment": "v4.6.0 스킬 프리픽스 리네임 crew-* → aick-* (BREAKING — semver상 major이나 채택 규모 고려해 minor로 릴리스, 내용은 breaking). project.json 필드 변경 없음(skillProfile/customSkills/currentSkill 필드명 보존). 구 crew-* 빌트인 스킬 디렉토리는 aick-upgrade(구 crew-upgrade) Step 11의 .claude/skills/ 통째 교체로 자연 제거(custom/은 별도 백업·복원으로 보존) — v4.0.0 skill-*→crew-* 리네임과 동일 메커니즘. customSkills 패턴은 ^(aick|crew|skill)- 셋 다 허용, currentSkill enum도 aick-*(정식)+crew-*+skill-* 모두 허용(in-flight 하위호환, 검증 실패 회피). 첫 업그레이드는 본인 프로젝트의 구 명령 /crew-upgrade --version v4.6.0로 실행. 사용자 안내는 features[].version=4.6.0 참조."
+    },
+    {
+      "from": "*",
+      "to": "4.8.0",
+      "changes": [
+        {
+          "type": "add_gitignore_entry",
+          "entry": ".claude/state/review-decisions.json",
+          "comment": "머지 게이트 신호 A2 — 핫픽스·ad-hoc 리뷰 결정의 로컬 전용 transient 상태 (v4.8.0). 커밋하면 hotfix 플로우의 Clean working tree 전제가 깨지므로 git 추적 제외. 게이트(pre-tool-use.sh)는 로컬 파일을 읽으므로 차단 실효 동일.",
+          "trackedWarning": "이미 .claude/state/review-decisions.json을 추적 중이라면 `git rm --cached .claude/state/review-decisions.json` 실행 후 커밋 권장 (로컬 전용 상태 — 세션 간 공유 의도 없음)"
+        }
+      ]
     }
   ],
   "features": [
@@ -190,6 +202,17 @@
           "description": "22개 빌트인 스킬의 호출 명령어가 /crew-* 에서 /aick-* 로 바뀌었습니다 (예: /crew-impl → /aick-impl, /crew-review-pr → /aick-review-pr). 'AI Crew Kit(AICK)' 브랜드와 명령 프리픽스 일치 + 다른 스킬과의 이름 충돌 방지가 목적입니다. (semver상 BREAKING이나 채택 규모를 고려해 minor 4.6.0으로 릴리스 — 내용은 breaking.)",
           "action": "none",
           "detail": "별도 설정은 불필요합니다. 업그레이드가 .claude/skills/를 통째 교체하므로 구 crew-* 빌트인 디렉토리는 자동 제거되고(커스텀 스킬 .claude/skills/custom/은 보존), CLAUDE.md 스킬 레지스트리도 /aick-*로 재생성됩니다. 첫 업그레이드는 본인 프로젝트의 구 명령 /crew-upgrade --version v4.6.0로 실행하세요(이 명령이 스스로를 aick-upgrade로 교체). 이제부터 /aick-* 명령을 사용하세요. 스크립트·문서·alias에 /crew-* 가 박혀 있으면 /aick-* 로 바꿔야 합니다. 커스텀 스킬을 crew-/skill- 접두사로 만들었던 경우 customSkills 검증은 계속 통과합니다(패턴이 aick-/crew-/skill- 셋 다 허용)."
+        }
+      ]
+    },
+    {
+      "version": "4.8.0",
+      "items": [
+        {
+          "title": "품질 번들 — 게이트 신호 A2·리뷰 인젝션 격리·데이터 계약 경고·에이전트 7종 재편",
+          "description": "①머지 게이트 신호 A2: backlog Task가 없는 PR(핫픽스·ad-hoc 리뷰)도 리뷰 결정(.claude/state/review-decisions.json, 로컬 전용)으로 결정적 차단 — 기존엔 핫픽스 경로가 게이트를 완전 우회했습니다. ②리뷰 에이전트 입력 신뢰 경계: PR diff 내 텍스트를 지시로 취급하지 않는 프롬프트 인젝션 격리. ③SessionStart 데이터 계약 경고: 게이트를 무력화하는 데이터 결함(문자열 prNumber 등)을 세션 시작 시 가시화. ④미배선 에이전트 5종(pm·planner·backend·frontend·docs) 제거 — 12종 → 실동작 7종.",
+          "action": "none",
+          "detail": "별도 설정 불필요. 에이전트 제거는 동작 변화 없음(어떤 스킬도 호출하지 않던 장식) — project.json의 agents.enabled에 구 이름이 남아 있어도 검증은 통과하며(legacy 수용), /aick-health-check가 MINOR로 정리를 안내합니다. .gitignore에 review-decisions.json 엔트리가 자동 추가됩니다."
         }
       ]
     }

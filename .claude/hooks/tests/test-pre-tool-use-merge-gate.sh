@@ -166,6 +166,36 @@ assert_eq "0" "$(run_hook_gh "$S10" "gh pr merge 7 --squash" __ERR__)" "gh 실�
 # 신호 A(backlog REQUEST_CHANGES)가 있으면 신호 B(APPROVED)와 무관하게 차단 — A 우선
 assert_eq "2" "$(run_hook_gh "$S" "gh pr merge 42 --squash" APPROVED)" "신호 A(REQUEST_CHANGES) 우선 — gh가 APPROVED여도 차단" || fails=$((fails+1))
 
+# ── 11. 신호 A2: transient review decision (v4.8.0) ──
+# backlog 없는 sandbox에서 review-decisions.json만으로 차단/통과/fail-open 판정.
+# 키 = PR 번호 십진 문자열 (review-decisions.schema.json).
+print_header "11. 신호 A2: review-decisions.json → block/allow/fail-open/OR"
+S11=$(new_sandbox)   # backlog 없음 → 신호 A 미발동, A2 단독 검증
+write_decisions() {
+  local dir="$1" prn="$2" decision="$3"
+  cat > "$dir/.claude/state/review-decisions.json" <<EOF
+{ "$prn": { "decision": "$decision", "source": "aick-hotfix", "updatedAt": "2026-06-12T00:00:00Z" } }
+EOF
+}
+write_decisions "$S11" 42 REQUEST_CHANGES
+assert_eq "2" "$(run_hook "$S11" "gh pr merge 42 --squash")" "transient REQUEST_CHANGES + backlog 부재 → block(2)" || fails=$((fails+1))
+out="$(printf '{"tool_name":"Bash","tool_input":{"command":"gh pr merge 42 --squash"}}' \
+  | CLAUDE_PROJECT_DIR="$S11" CCK_GATE_NO_GH=1 bash "$HOOK" 2>&1 1>/dev/null)"
+assert_contains "$out" "Merge blocked" "A2 차단 사유 메시지 (고정 토큰)" || fails=$((fails+1))
+write_decisions "$S11" 42 APPROVED
+assert_eq "0" "$(run_hook "$S11" "gh pr merge 42 --squash")" "transient APPROVED → allow(0)" || fails=$((fails+1))
+write_decisions "$S11" 41 REQUEST_CHANGES
+assert_eq "0" "$(run_hook "$S11" "gh pr merge 42 --squash")" "키 불일치(41 기록, 42 머지) → allow(0)" || fails=$((fails+1))
+rm -f "$S11/.claude/state/review-decisions.json"
+assert_eq "0" "$(run_hook "$S11" "gh pr merge 42 --squash")" "transient 파일 부재 → allow(0) (기존 동작 회귀)" || fails=$((fails+1))
+printf 'not json{{{' > "$S11/.claude/state/review-decisions.json"
+assert_eq "0" "$(run_hook "$S11" "gh pr merge 42 --squash")" "malformed JSON → fail-open allow(0)" || fails=$((fails+1))
+# OR 의미론: 신호 A(backlog REQUEST_CHANGES) 차단 + transient APPROVED 공존 → A 우선 차단
+write_backlog "$S" 42 REQUEST_CHANGES
+write_decisions "$S" 42 APPROVED
+assert_eq "2" "$(run_hook "$S" "gh pr merge 42 --squash")" "신호 A 차단 + A2 APPROVED 공존 → block(2) (OR 의미론)" || fails=$((fails+1))
+rm -f "$S/.claude/state/review-decisions.json"
+
 printf '\n'
 if [ "$fails" -eq 0 ]; then
   printf '✅ test-pre-tool-use-merge-gate: 전체 통과\n'; exit 0

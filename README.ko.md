@@ -188,6 +188,7 @@ AI Crew Kit은 **Claude Code 플러그인 마켓플레이스**로 설치합니�
 | 신호 | 출처 | 동작 |
 |------|------|------|
 | **A (state)** | `workflowState.lastReviewDecision == REQUEST_CHANGES` + `step.prNumber` join | 오프라인 결정적 차단 |
+| **A2 (transient state)** | 핫픽스·ad-hoc 리뷰 결정 (`review-decisions.json`) | 오프라인 결정적 차단, 로컬 전용 |
 | **B (GitHub)** | `reviewDecision == CHANGES_REQUESTED` | best-effort 차단 |
 
 > 인프라 실패(jq/git/gh 부재·네트워크 등)는 **fail-open** — 게이트 자체 장애가 정상 머지를 막지 않습니다. 제어 env: `CCK_MERGE_GATE=off`(전면 비활성) · `CCK_GATE_BYPASS=1`(1회 우회) · `CCK_GATE_NO_GH=1`(신호 B 스킵).

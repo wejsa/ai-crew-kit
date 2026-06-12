@@ -114,6 +114,7 @@ Then, in any project:
 | Signal | Source | Behavior |
 |--------|--------|----------|
 | **A (state)** | `workflowState.lastReviewDecision == REQUEST_CHANGES`, joined on `step.prNumber` | deterministic, fully offline |
+| **A2 (transient state)** | hotfix/ad-hoc review decision in `review-decisions.json` | deterministic, fully offline, local-only |
 | **B (GitHub)** | `reviewDecision == CHANGES_REQUESTED` | best-effort, networked |
 
 Infrastructure failures **fail open** — a broken gate must never block legitimate work. Bypass is explicit, human-only, and audited: `CCK_GATE_BYPASS=1` must be in the CLI's own environment, and inline prefixes never reach the hook — **Claude cannot bypass its own gate**. Every block and bypass lands in `hook-errors.log`.

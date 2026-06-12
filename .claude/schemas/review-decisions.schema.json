@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "review-decisions.schema.json",
+  "title": "Transient Review Decisions",
+  "description": "backlog Task가 없는 PR(핫픽스·ad-hoc 리뷰)의 리뷰 결정 기록 — PreToolUse 머지 게이트 신호 A2의 원천 (.claude/state/review-decisions.json). 키 = PR 번호의 십진 문자열. 작성: aick-hotfix Step 7, aick-review-pr Step 6.5(소유 Task 부재 시). 삭제: 머지 성공 시(aick-hotfix Step 8, aick-merge-pr). 로컬 전용(gitignore) — git 전파하지 않음. TTL 없음: PR 번호는 영구 유일하므로 잔존 엔트리는 무해(올바른 차단 유지). 런타임 검증 없음 — 게이트는 방어적 jq로 소비(파싱 실패=fail-open), 본 스키마는 계약 문서+회귀 보호용. v4.8.0 도입.",
+  "type": "object",
+  "patternProperties": {
+    "^[0-9]+$": {
+      "type": "object",
+      "required": ["decision", "source", "updatedAt"],
+      "properties": {
+        "decision": {
+          "type": "string",
+          "enum": ["APPROVED", "COMMENT", "REQUEST_CHANGES"],
+          "description": "본 PR의 마지막 리뷰 결정. REQUEST_CHANGES = 미해결 CRITICAL → pre-tool-use.sh가 gh pr merge를 차단"
+        },
+        "source": {
+          "type": "string",
+          "enum": ["aick-hotfix", "aick-review-pr"],
+          "description": "기록 주체 스킬"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "마지막 갱신 시각 (ISO 8601 UTC)"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

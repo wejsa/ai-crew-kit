@@ -37,7 +37,7 @@ PreToolUse hook (bash) ── reads .claude/state/backlog.json
         └── otherwise             ──► exit 0  ──► command proceeds normally
 ```
 
-The hook is `.claude/hooks/pre-tool-use.sh` (~160 lines of plain bash). It is registered for the
+The hook is `.claude/hooks/pre-tool-use.sh` (~180 lines of plain bash). It is registered for the
 `Bash` tool matcher, ignores every command except `gh pr merge`, and never calls an LLM.
 
 For how this hook fits into the kit's hook taxonomy (bookkeeping vs gate, and why bookkeeping
@@ -46,7 +46,7 @@ hooks must never block), see the SSOT table in
 
 ---
 
-## 2. How it decides: two signals
+## 2. How it decides: three signals
 
 ### Signal A — workflow state (offline, deterministic)
 
@@ -76,9 +76,25 @@ Signal A needs **no network, no GitHub account, and no real PR**. That is what m
 [5-minute demo](../examples/merge-gate-demo/) possible: a single fixture file is enough to make
 the gate fire.
 
+### Signal A2 — transient review decision (offline, deterministic; v4.8.0)
+
+Some PRs legitimately have no backlog task — an emergency hotfix (`/aick-hotfix`) or an ad-hoc
+"review PR 123" on a PR the kit never planned. For those, the reviewing skill records its
+verdict in `.claude/state/review-decisions.json` (keyed by PR number; format pinned by
+[`review-decisions.schema.json`](../.claude/schemas/review-decisions.schema.json)):
+
+```json
+{ "42": { "decision": "REQUEST_CHANGES", "source": "aick-hotfix", "updatedAt": "…" } }
+```
+
+If the entry for the PR being merged says `REQUEST_CHANGES`, the merge is blocked — same
+offline, deterministic semantics as Signal A. Entries are deleted after a successful merge,
+and a re-review overwrites them. The file is **local-only** (gitignored): the verdict protects
+the machine where the review ran, and does not propagate to other clones — see §7.
+
 ### Signal B — GitHub review decision (best-effort, networked)
 
-If Signal A does not block, the gate asks GitHub:
+If neither state signal blocks, the gate asks GitHub:
 
 ```bash
 timeout 8 gh pr view <N> --json reviewDecision
@@ -90,7 +106,8 @@ teammate's PR that has no local backlog state — the merge is blocked too. Any 
 dependency. Set `CCK_GATE_NO_GH=1` to skip it entirely (air-gapped environments, deterministic
 tests).
 
-Signal A wins ties: if it already blocked, Signal B is never consulted.
+The signals are evaluated in order — A, then A2, then B — and the first block wins; later
+signals are never consulted. Allow verdicts don't override blocks: the gate is an OR of blocks.
 
 ---
 
@@ -114,7 +131,8 @@ failure resolves to **allow**:
 | 10 | `backlog.json` absent | Signal A skipped |
 | 11 | `backlog.json` unparseable | Signal A skipped |
 | 12 | No task owns this PR / decision is `APPROVED`·`COMMENT`·null | no block |
-| 13 | Signal B: `gh` missing, network/auth failure, 8s timeout, or `CCK_GATE_NO_GH=1` | Signal B skipped |
+| 13 | `review-decisions.json` absent, unparseable, or has no entry for this PR | Signal A2 skipped |
+| 14 | Signal B: `gh` missing, network/auth failure, 8s timeout, or `CCK_GATE_NO_GH=1` | Signal B skipped |
 
 Why not fail-closed? Because a gate that blocks merges when `jq` is missing punishes you for its
 own dependencies, and a gate that people learn to disable is worse than no gate. The trade-off
@@ -131,7 +149,7 @@ Three environment variables, three different intents:
 |----------|--------|-------|
 | `CCK_GATE_BYPASS=1` | *"I understand, merge anyway."* One deliberate override. Logged to the audit trail and announced with a 🔓 banner. | full bypass |
 | `CCK_MERGE_GATE=off` | *"Don't run this gate at all."* | full disable |
-| `CCK_GATE_NO_GH=1` | *"Never call the network."* Signal A still enforces. | partial — disables Signal B only |
+| `CCK_GATE_NO_GH=1` | *"Never call the network."* Signals A and A2 still enforce. | partial — disables Signal B only |
 
 A property worth knowing: **the bypass cannot be triggered from inside the session.** The hook
 reads its *own* process environment — the one Claude Code was started with. A command-string
@@ -197,16 +215,22 @@ covers blocking, allowing, bypass, fail-open paths, and PR-number extraction edg
 
 A deterministic gate is only as good as the boundary it sits on. Know the edges:
 
-- **It enforces the decision, not the signal.** Signal A reads state that the review workflow
-  *writes*. If a review never ran — or never recorded `lastReviewDecision` — Signal A has
-  nothing to enforce and falls back to Signal B. The gate makes "merge despite a recorded
-  CRITICAL" impossible; it does not conjure reviews that didn't happen.
+- **It enforces the decision, not the signal.** Signals A/A2 read state that the review
+  workflow *writes*. If a review never ran — or never recorded a decision — the state signals
+  have nothing to enforce and fall back to Signal B. The gate makes "merge despite a recorded
+  CRITICAL" impossible; it does not conjure reviews that didn't happen. (Since v4.8.0 the
+  SessionStart hook warns when in-progress tasks carry gate-breaking data — string `prNumber`,
+  reviews without a recorded decision — so silent fail-open is at least visible.)
 - **It gates Claude's Bash tool, not your terminal.** Typing `gh pr merge 42` yourself in a
   shell outside Claude Code is not intercepted — this is a Claude Code hook, not a server-side
   rule. For team-wide hard enforcement, combine it with GitHub branch protection; the gate is
   the in-session layer.
-- **Workflow paths that never register a backlog task** (e.g. an emergency hotfix created
-  outside the standard plan→impl→review chain) are covered by Signal B only.
+- **Signal A2 is local-only.** Hotfix/ad-hoc review verdicts (v4.8.0 — these paths previously
+  bypassed the gate entirely) live in a gitignored file: they protect the machine where the
+  review ran, not other clones or teammates' sessions. Cross-machine enforcement remains
+  Signal B + branch protection.
+- **Rollback (`/aick-rollback`) stays outside the gate** by design: it has no review step at
+  all — it is an audited `git revert` of already-reviewed code, gated by build/test instead.
 - **Bypass is a feature.** `CCK_GATE_BYPASS=1` exists on purpose, is user-only (see §4), and is
   logged. A gate without a deliberate exit teaches people to disable it permanently.
 
