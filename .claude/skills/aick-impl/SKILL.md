@@ -72,33 +72,8 @@ CLAUDE.md 워크트리 프로토콜 참조.
 | fast | <limit | limit~min(limit×2,1000) | — | >min(limit×2,1000) |
 
 ### 5. 빌드 & 테스트
-`project.json`의 `buildCommands` 우선 → 미설정 시 `techStack` 기반 폴백:
-
-| 스택 | 빌드 | 테스트 | 린트 |
-|------|------|--------|------|
-| spring-boot-kotlin | `./gradlew build` | `./gradlew test` | `./gradlew ktlintCheck` |
-| spring-boot-java (Gradle) | `./gradlew build` | `./gradlew test` | `./gradlew checkstyleMain` |
-| spring-boot-java (Maven) | `mvn package` | `mvn test` | `mvn checkstyle:check` |
-| nodejs-typescript | `npm run build` | `npm test` | `npm run lint` |
-| python-fastapi | - | `pytest` | `ruff check .` |
-| python-django | `python manage.py check` | `pytest` | `ruff check .` |
-| go | `go build ./...` | `go test ./...` | `golangci-lint run` |
-| nextjs | `next build` | `vitest` 또는 `jest` | `next lint` |
-| react-vite | `vite build` | `vitest` | `eslint .` |
-| vue-nuxt | `nuxt build` | `vitest` | `eslint .` |
-| vue | `vite build` | `vitest` | `eslint .` |
-| astro | `astro build` | `vitest` | `eslint .` |
-
-**패키지 매니저 자동 감지** (Lock 파일 기준, `buildCommands` 미설정 시):
-
-| Lock 파일 | 매니저 | 빌드 | 테스트 | 린트 |
-|-----------|--------|------|--------|------|
-| `bun.lockb` | bun | `bun run build` | `bun test` | `bun run lint` |
-| `pnpm-lock.yaml` | pnpm | `pnpm build` | `pnpm test` | `pnpm lint` |
-| `yarn.lock` | yarn | `yarn build` | `yarn test` | `yarn lint` |
-| `package-lock.json` | npm | `npm run build` | `npm test` | `npm run lint` |
-
-복수 Lock 파일 존재 시 위 우선순위(bun > pnpm > yarn > npm) 적용.
+`project.json`의 `buildCommands` 우선 → 미설정 시 `techStack` 기반 폴백.
+스택별 명령 표 SSOT: `${CLAUDE_PLUGIN_ROOT}/.claude/templates/protocols/build-commands.md` (clone/seed면 `.claude/templates/protocols/build-commands.md`)를 Read 후 적용 — 본 스킬에 표 복제 금지.
 
 실패 시 수정 후 재실행, 3회 실패 시 사용자 보고.
 

@@ -40,10 +40,8 @@ complexity-hint: light
 MAJOR.MINOR.PATCH 파싱 → 타입에 따라 범프
 
 ### 3. 빌드 & 테스트 검증
-빌드 명령어: `buildCommands` 우선 → `techStack.backend` 폴백
-- spring/kotlin/java → `./gradlew build` + `./gradlew test`
-- node/typescript → `npm run build` + `npm test`
-- go → `go build ./...` + `go test ./...`
+빌드 명령어: `buildCommands` 우선 → `techStack` 폴백.
+스택별 명령 표 SSOT: `${CLAUDE_PLUGIN_ROOT}/.claude/templates/protocols/build-commands.md` (clone/seed면 `.claude/templates/protocols/build-commands.md`)를 Read 후 적용 — 본 스킬에 표 복제 금지.
 
 project.json 미존재 시 스킵. 실패 시 즉시 중단 (파일 변경 전이므로 롤백 불필요).
 
