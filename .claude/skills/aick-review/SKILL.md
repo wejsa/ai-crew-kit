@@ -9,6 +9,8 @@ complexity-hint: medium
 
 # aick-review: 코드 리뷰
 
+> **포지셔닝 — 비-PR 로컬 코드 리뷰** (v4.8.0 명문화): 작업 디렉토리의 지정 경로를 리뷰한다. PR 리뷰(머지 게이트 신호 연동·결정 기록·머지 차단)는 `/aick-review-pr`가 정식 경로다. 본 스킬은 `lastReviewDecision`·`review-decisions.json`을 **쓰지 않으며** 머지 게이트와 무관 — PR 없이 코드 품질을 빠르게 점검하는 용도.
+
 ## 실행 조건
 - 사용자가 `/aick-review {경로}` 또는 "{경로} 코드 리뷰해줘" 요청 시
 

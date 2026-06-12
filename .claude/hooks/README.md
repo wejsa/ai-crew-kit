@@ -133,6 +133,8 @@ exec 0</dev/null                  # stdin을 /dev/null로 — 자식 프로세�
 **매처**: `Edit|Write`
 **동작**: 현재 세션이 `lockedBy`로 소유한 `in_progress` Task의 `lockedAt`을 현재 시각으로 갱신(heartbeat). stop.sh 만료 감지(10분 TTL)와 연동. `lockedBy`/`lockedAt`은 v2.2.0부터 `backlog.schema.json`에 정식 필드로 정의(가변 잠금 의미, `assignee`/`assignedAt`(불변 할당)와 구분).
 
+> **한계 (file-membership)**: 하트비트는 편집 파일이 해당 Task의 `lockedFiles`에 포함될 때만 갱신된다(스킬이 session_id를 얻을 수 없어 파일 소속으로 세션을 대신 식별 — v4.5.0 ADR-010). 계획에 없는 파일만 장시간 편집하는 세션은 하트비트가 갱신되지 않아 lockTTL 만료로 잠금이 회수될 수 있다 — aick-plan의 `lockedFiles` 정확 기록이 전제.
+
 **3단계 무한 루프 방어 + 대량 쓰기 보호 마커** (TFT R1/R2 + v2.2.0, v4.4.0 일반화):
 
 | 단계 | 트리거 | 동작 |

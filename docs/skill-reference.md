@@ -60,7 +60,7 @@
 | `/aick-plan` | 설계 + 스텝 계획 수립 |
 | `/aick-impl` | 코드 구현 (스텝별) |
 | `/aick-impl --next` | 다음 스텝 진행 |
-| `/aick-review` | 코드 리뷰 |
+| `/aick-review` | 비-PR 로컬 코드 리뷰 (지정 경로 — 머지 게이트·결정 기록과 무관. PR 리뷰는 `/aick-review-pr`) |
 | `/aick-review-pr {번호}` | PR 리뷰 (v2.3+: PR 특성 기반 자동 Tier 분류 + confidence 채점) |
 | `/aick-review-pr {번호} --auto-fix` | PR 리뷰 + CRITICAL 이슈 자동 수정 |
 | `/aick-review-pr {번호} --mode standard` | standard 모드로 리뷰 (일회성, 자동 Tier 분류 우회) |
