@@ -39,6 +39,16 @@ complexity-hint: light
 ### 2. 새 버전 계산
 MAJOR.MINOR.PATCH 파싱 → 타입에 따라 범프
 
+### 2.5 멱등 검사 (중복 실행·중간 실패 재개 — v4.8.0)
+**태그 존재 = 릴리스 완료 판정의 SSOT.** 결정적 체크 순서:
+1. `git fetch --tags origin` (사전 조건 6의 fetch에 태그 보강)
+2. **태그 `v$NEW_VERSION` 존재** (`git rev-parse -q --verify "refs/tags/v$NEW_VERSION"` 또는 `git ls-remote --tags origin "v$NEW_VERSION"` 비어있지 않음) → **STOP**: "이미 릴리스된 버전입니다 — 재실행 불필요. 다음 버전이 목적이면 버전타입을 재확인하세요."
+3. 태그 없음 + (CHANGELOG에 `## [$NEW_VERSION]` 섹션 존재 **또는** `VERSION` 파일 == `$NEW_VERSION`) → **중간 실패 재개 모드**: Step 3 통과 후 Step 4~7(변경사항 수집·파일 업데이트) 스킵.
+   - develop 최신 커밋 제목 == `chore: release v$NEW_VERSION` → Step 10(main 머지)부터 재개
+   - 아니면 → Step 9(develop 커밋)부터 재개
+   - 재개 모드임을 출력에 명시: "⟳ 중간 실패 재개 — Step {N}부터"
+4. 둘 다 아님 → 정상 진행 (Step 3으로).
+
 ### 3. 빌드 & 테스트 검증
 빌드 명령어: `buildCommands` 우선 → `techStack` 폴백.
 스택별 명령 표 SSOT: `${CLAUDE_PLUGIN_ROOT}/.claude/templates/protocols/build-commands.md` (clone/seed면 `.claude/templates/protocols/build-commands.md`)를 Read 후 적용 — 본 스킬에 표 복제 금지.
@@ -111,3 +121,4 @@ git merge develop -m "Merge branch 'develop' for release v$NEW_VERSION"
 ## 주의사항
 - develop 브랜치에서만 실행, main 직접 실행 금지
 - Clean 상태 필수, 충돌 발생 시 수동 해결 후 재시도
+- **재실행은 안전(멱등)** — Step 2.5가 태그(완료 SSOT)·CHANGELOG·VERSION으로 완료/재개/정상을 결정적으로 분기. 롤백 표의 Step 10+ 롤백 후 재실행도 동일 분기가 재개 처리
