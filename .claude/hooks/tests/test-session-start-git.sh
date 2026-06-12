@@ -42,6 +42,18 @@ rc=$?
 assert_eq 0 "$rc" "exit 0 with continuation-plan" || fail=$((fail + 1))
 assert_contains "$output" "Resume work" "continuation-plan content on stdout" || fail=$((fail + 1))
 
+# 4. 네트워크 git 호출 timeout 래핑 (v4.8.0) — 정적 가드
+# 네트워크 블랙홀 시뮬은 불가하므로 래퍼 존재 + 네트워크 호출 3곳의 래퍼 사용을 정적 검증.
+HOOK_SRC="$(cat "$SANDBOX/.claude/hooks/session-start.sh")"
+assert_contains "$HOOK_SRC" "net_git()" "net_git wrapper defined" || fail=$((fail + 1))
+assert_contains "$HOOK_SRC" "timeout 8 git" "wrapper uses timeout 8" || fail=$((fail + 1))
+# 래핑 호출 3곳(fetch×2, pull×1) + 라인 선두의 비래핑 네트워크 호출 0 (로그 문자열 내
+# "git pull 실패" 류는 호출이 아니므로 라인 선두 패턴으로만 검사)
+WRAPPED_NET="$(grep -cE '^\s*net_git (fetch|pull)\b' "$SANDBOX/.claude/hooks/session-start.sh")"
+NAKED_NET="$(grep -cE '^\s*git (fetch|pull)\b' "$SANDBOX/.claude/hooks/session-start.sh")"
+assert_eq 3 "$WRAPPED_NET" "3 network git calls wrapped via net_git" || fail=$((fail + 1))
+assert_eq 0 "$NAKED_NET" "no naked network git invocations" || fail=$((fail + 1))
+
 if [ "$fail" -gt 0 ]; then
   printf '\n💥 %d assertion(s) failed\n' "$fail" >&2
   exit 1

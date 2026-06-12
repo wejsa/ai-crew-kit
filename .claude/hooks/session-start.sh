@@ -41,6 +41,17 @@ log_err() {
   printf '⚠️  [%s] %s\n' "$HOOK_NAME" "$msg" >&2
 }
 
+# 네트워크 git 호출 래퍼 (v4.8.0): GIT_TERMINAL_PROMPT=0은 credential 프롬프트만 막고
+# 네트워크 블랙홀(응답 없는 remote)은 못 막는다 — 하네스 30초 cap 전에 8초로 자른다.
+# timeout 부재 환경은 비래핑 실행 (graceful — 기존 fail-open 정신).
+net_git() {
+  if command -v timeout >/dev/null 2>&1; then
+    timeout 8 git "$@"
+  else
+    git "$@"
+  fi
+}
+
 # ── 1. git sync ───────────────────────────────────────────────
 if command -v git >/dev/null 2>&1 && { [ -d .git ] || git rev-parse --git-dir >/dev/null 2>&1; }; then
   printf '🪝 [session-start] git sync…\n'
@@ -67,11 +78,11 @@ if command -v git >/dev/null 2>&1 && { [ -d .git ] || git rev-parse --git-dir >/
     printf '  no upstream configured — sync skipped (%s)\n' "$BRANCH"
   elif [ "$IS_WORKTREE" -eq 1 ]; then
     SYNC_ATTEMPTED=1
-    git fetch --quiet origin 2>/dev/null || log_err "git fetch 실패 (계속 진행)"
+    net_git fetch --quiet origin 2>/dev/null || log_err "git fetch 실패 (계속 진행)"
     git merge --ff-only "$UPSTREAM" 2>/dev/null || log_err "ff-only merge 실패 — 수동 확인 필요 ($UPSTREAM)"
   else
     SYNC_ATTEMPTED=1
-    git pull --ff-only --quiet 2>/dev/null || log_err "git pull 실패 (계속 진행)"
+    net_git pull --ff-only --quiet 2>/dev/null || log_err "git pull 실패 (계속 진행)"
   fi
 
   if [ "$SYNC_ATTEMPTED" -eq 1 ]; then
@@ -153,7 +164,7 @@ if [ -f "$BACKLOG" ] && command -v jq >/dev/null 2>&1 && command -v git >/dev/nu
    && { [ -d .git ] || git rev-parse --git-dir >/dev/null 2>&1; }; then
 
   # 워크트리 브랜치 원격 추적 ref만 타깃 최신화 (비블로킹, 모드 무관)
-  git fetch --quiet origin '+refs/heads/worktree-*:refs/remotes/origin/worktree-*' 2>/dev/null || true
+  net_git fetch --quiet origin '+refs/heads/worktree-*:refs/remotes/origin/worktree-*' 2>/dev/null || true
 
   CUR_BRANCH="${BRANCH:-}"
   CLAIMS=""   # 각 줄: <ref>\t<taskId>\t<assignee>
