@@ -48,12 +48,12 @@ leftover="$(find "$SANDBOX/.claude/state" -name '*.tmp.*' 2>/dev/null | wc -l)"
 assert_eq 0 "$leftover" "no *.tmp.* leftover files" || fail=$((fail + 1))
 
 # ── 스테일 mkdir 뮤텍스 회수 (v4.8.0) ──────────────────────────
-# 크래시 잔재(60초 초과 mutex 디렉토리)가 있어도 쓰기가 성공하고 mutex가 정리돼야 함.
+# 크래시 잔재(약 2분 초과 mutex 디렉토리 — -mmin +1 절사 의미론)가 있어도 쓰기가 성공하고 mutex가 정리돼야 함.
 # ACK_MUTEX_IMPL=mkdir 시임으로 flock 환경에서도 mkdir 경로 강제.
 TARGET2="$SANDBOX/.claude/state/stale-test.json"
 echo '{"v":0}' > "$TARGET2"
 mkdir "$TARGET2.mutex.d"
-# mtime을 2분 전으로 — 스테일 판정(>60s) 충족
+# mtime을 2분 전으로 — 스테일 판정(-mmin +1 = age≥2분) 경계 충족
 touch -d '2 minutes ago' "$TARGET2.mutex.d" 2>/dev/null || touch -t "$(date -d '2 minutes ago' +%Y%m%d%H%M.%S 2>/dev/null || echo 197001010000)" "$TARGET2.mutex.d"
 (
   cd "$SANDBOX"
@@ -72,7 +72,7 @@ fi
 assert_contains "$(cat "$SANDBOX/.claude/state/hook-errors.log" 2>/dev/null)" "stale mkdir mutex reclaimed" "reclaim logged" || fail=$((fail + 1))
 
 # 신선한(스테일 아닌) mutex는 회수하지 않고 timeout으로 보호돼야 함 — 빠른 검증:
-# 방금 만든 mutex(age<60s)에서 atomic_write가 파일을 변경하지 못하고 timeout 로그를 남김
+# 방금 만든 mutex(age<2분)에서 atomic_write가 파일을 변경하지 못하고 timeout 로그를 남김
 TARGET3="$SANDBOX/.claude/state/fresh-test.json"
 echo '{"v":0}' > "$TARGET3"
 mkdir "$TARGET3.mutex.d"

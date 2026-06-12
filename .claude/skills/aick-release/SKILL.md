@@ -43,8 +43,12 @@ MAJOR.MINOR.PATCH 파싱 → 타입에 따라 범프
 **태그 존재 = 릴리스 완료 판정의 SSOT.** ⚠️ 재개 감지는 반드시 **범프 전 `CURRENT_VERSION` 기준** — Step 9 커밋 이후 실패하면 VERSION이 이미 전진해 있어 NEW 기준 검사는 영구 불발(자체 리뷰 finding G1: 데드 브랜치)이다.
 
 1. `git fetch --tags origin` (사전 조건 6의 fetch에 태그 보강)
-2. **미완 릴리스 재개 감지 (CURRENT 기준)**: 태그 `v$CURRENT_VERSION` **부재**(`git rev-parse -q --verify "refs/tags/v$CURRENT_VERSION"` 실패 + `git ls-remote --tags origin "v$CURRENT_VERSION"` 비어 있음) **+** CHANGELOG에 `## [$CURRENT_VERSION]` 섹션 **존재** → 직전 릴리스가 파일 업데이트 후 중단된 상태. AskUserQuestion 1회: "직전 릴리스 v$CURRENT_VERSION이 미완(태그 없음)입니다. 완성을 재개할까요? [재개 / 새 버전 진행]"
-   - **재개** → `NEW_VERSION = $CURRENT_VERSION`으로 재설정(Step 2 범프 결과 폐기), Step 3(빌드) 통과 후 Step 4~8 스킵. develop 최신 커밋 제목 == `chore: release v$CURRENT_VERSION` → Step 10(main 머지)부터, 아니면 Step 9(develop 커밋)부터. 출력에 명시: "⟳ v$CURRENT_VERSION 재개 — Step {N}부터"
+2. **미완 릴리스 재개 감지 (CURRENT + 원격 태그 기준)**: **원격 태그 부재**(`git ls-remote --tags origin "v$CURRENT_VERSION"` 출력 비어 있음 — ⚠️ 로컬 태그 기준 금지: Step 11이 로컬 태그를 만든 뒤 Step 12 push가 실패하면 로컬 기준 검사는 불발) **+** CHANGELOG에 `## [$CURRENT_VERSION]` 섹션 **존재** → 직전 릴리스가 파일 업데이트 후 중단된 상태. `ls-remote` 자체가 실패(네트워크 불가)하면 **STOP**: "릴리스는 push까지가 완료 — 네트워크 복구 후 재실행하세요." AskUserQuestion 1회: "직전 릴리스 v$CURRENT_VERSION이 미완(원격 태그 없음)입니다. 완성을 재개할까요? [재개 / 새 버전 진행]"
+   - **재개** → `NEW_VERSION = $CURRENT_VERSION`으로 재설정(Step 2 범프 결과 폐기), Step 3(빌드) 통과 후 Step 4~8 스킵. 재개 지점은 결정적으로:
+     - 로컬 태그 `v$CURRENT_VERSION` 존재(rev-parse 성공) → **Step 12(push)부터** (커밋·태그 완료, push만 실패한 상태)
+     - 로컬 태그 부재 + develop 최신 커밋 제목 == `chore: release v$CURRENT_VERSION` → **Step 10(main 머지)부터**
+     - 둘 다 아님 → **Step 9(develop 커밋)부터**
+     - 출력에 명시: "⟳ v$CURRENT_VERSION 재개 — Step {N}부터"
    - **새 버전 진행** → 케이스 3으로
 3. **스테일 중복 감지 (NEW 기준)**: 태그 `v$NEW_VERSION` 이미 존재 → **STOP**: "v$NEW_VERSION은 이미 릴리스됨 — 로컬 checkout이 stale합니다. `git pull` 후 재실행하세요."
 4. 둘 다 아님 → 정상 진행 (Step 3으로).

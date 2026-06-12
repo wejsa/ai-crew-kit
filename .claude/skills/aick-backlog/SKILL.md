@@ -119,6 +119,7 @@ type별 기본 priority: feature→medium, bug→high, chore→low, spike→medi
 - 빈 결과: "해당 조건의 Task가 없습니다. 현재 todo N개, in_progress N개, done N개입니다."
 
 ### update 확장 옵션
+- `--status=todo`: in_progress → todo 복귀 시 잠금·승인 필드도 함께 초기화 — assignee/assignedAt/lockedBy/lockedAt/lockedFiles/planApprovedAt (reclaim 목록과 동일. 스테일 승인이 aick-impl 사전 조건 4를 통과하지 않도록)
 - `--title`: 제목 변경
 - `--description`: 설명 변경
 - `--phase`: Phase 변경

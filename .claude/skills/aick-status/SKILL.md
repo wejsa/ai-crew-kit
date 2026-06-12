@@ -111,17 +111,17 @@ in_progress Task 테이블: Task ID, 제목, 담당자, 스텝, 잠금 파일 �
 
 | 스킬 | action | details |
 |------|--------|---------|
-| aick-impl | started, pr_created | stepNumber, prNumber |
-| aick-review-pr | review_started, approved, request_changes, subagent_failed | prNumber, criticalCount, failedAgent 등 |
-| aick-fix | fix_started, fix_completed | prNumber, issueCount |
-| aick-merge-pr | merge_started, merged, task_completed | prNumber, stepNumber |
-| aick-retro | retro_started, retro_completed, checklist_updated, lesson_rejected_secrets, lesson_rejected_secrets_noninteractive | reportFile, files |
+| aick-impl | pr_created | stepNumber, prNumber |
+| aick-review-pr | approved, request_changes | prNumber, criticalCount 등 |
+| aick-fix | fix_completed | prNumber, issueCount |
+| aick-merge-pr | merged, task_completed | prNumber, stepNumber |
+| aick-retro | retro_completed, checklist_updated, lesson_rejected_secrets, lesson_rejected_secrets_noninteractive | reportFile, files |
 | aick-hotfix | hotfix_started, hotfix_completed | description, hotfixId, prNumber, version |
 | aick-rollback | rollback_started, rollback_completed | target, revertSha, prNumber, version |
 | aick-status | orphan_intent_cleanup | method, pendingRecovered, intentFile |
 | aick-health-check | health_check_started, health_check_completed | mode, score, grade, criticalCount, fixCount |
 
-> 본 표가 **알려진 action 목록의 SSOT**다 — `execution-log.schema.json`은 shape(snake_case pattern)만 강제하고 목록은 여기를 가리킨다(복제 금지). 신규 action은 본 표에 행을 추가할 것.
+> 본 표가 **알려진 action 목록의 SSOT**다 — `execution-log.schema.json`은 shape(snake_case pattern)만 강제하고 목록은 여기를 가리킨다(복제 금지). **표는 실제 기록 지시가 있는 action만 담는다**(v4.8.0: 생산자 없는 유령 6종 — started·review_started·subagent_failed·fix_started·merge_started·retro_started — 제거). 신규 action은 기록 지시와 함께 본 표에 행을 추가할 것.
 
 ### 쓰기/동시성 규칙
 - append-only, 파일 미존재 시 `[]` 생성, 500건 초과 시 아카이브

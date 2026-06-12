@@ -11,8 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added (closeout)
 - **plan 승인 영속화**: `task.planApprovedAt`(schema 신설) — `aick-plan` Step 7이 승인 시각을 기록하고 `aick-impl` 사전 조건 4가 null이면 STOP(`--micro` 면제). 사용자 승인이 prose-only였던 마지막 결정 지점 해소. 승인 거절·잠금 만료 reclaim 시 null 초기화(잠금 사이클 귀속).
-- **릴리스 멱등 가드** (`aick-release` Step 2.5): 태그 존재=완료 판정 SSOT — 중복 실행 STOP, 중간 실패는 CHANGELOG/VERSION/릴리스 커밋 기반 결정적 재개(Step 9 또는 10부터).
-- **execution-log 스키마** (`execution-log.schema.json`): 캐노니컬 shape(append-only 배열, timestamp+action 필수) 정식화 — 마지막 무스키마 상태 파일 해소. action은 pattern 강제+알려진 17종 문서화(엄격 enum 비채택 — sleeper 재발 클래스 회피).
+- **릴리스 멱등 가드** (`aick-release` Step 2.5): 원격 태그=완료 판정 SSOT — 미완 릴리스(원격 태그 부재 + CHANGELOG `[CURRENT]` 섹션 존재, **범프 전 CURRENT 기준**)를 감지해 사용자 확인 1회 후 결정적 재개(로컬 태그 유무·릴리스 커밋 유무로 Step 9/10/12 분기). 스테일 클론의 기존 버전 재범프는 STOP. 완주 후 재실행은 정상적으로 다음 버전 진행.
+- **execution-log 스키마** (`execution-log.schema.json`): 캐노니컬 shape(append-only 배열, timestamp+action 필수) 정식화 — 마지막 무스키마 상태 파일 해소. action은 pattern만 강제하고 알려진 목록은 aick-status 표를 SSOT로 단일화(엄격 enum 비채택 — sleeper 재발 클래스 회피).
 - **검증망 확장**: `validate-schema.sh` §6 — backlog·review-decisions·execution-log 스키마 세트 일괄 검증(메타+positive+negative fixture, PASS 22→46). `add_gitignore_entry` 마이그레이션 실행 테스트 6건(멱등성·데이터 계약·kit↔시드 동기).
 - **훅 견고성**: `session-start.sh` 네트워크 git 호출 `timeout 8` 래핑(네트워크 블랙홀 방어, timeout 부재 시 graceful) · `atomic-write.sh` mkdir 뮤텍스 스테일(약 2분 초과 — `-mmin +1` 절사 의미론) 자동 회수 — 크래시 잔재로 이후 쓰기가 유실되던 영구 누수 해소(+`ACK_MUTEX_IMPL` 테스트 시임).
 
