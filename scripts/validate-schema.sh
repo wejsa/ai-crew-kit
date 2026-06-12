@@ -235,6 +235,82 @@ PY
   fi
 fi
 
+# ── 6. 추가 스키마 세트 (backlog / review-decisions / execution-log — v4.8.0) ──
+# project 외 상태 파일 스키마들의 메타스키마 + positive/negative fixture 검증.
+# 메커니즘은 1·3·4번과 동일하되 스키마를 파라미터로 받는다.
+validate_pair() {
+  local schema="$1" file="$2"
+  case "$VALIDATOR" in
+    check-jsonschema)
+      check-jsonschema --schemafile "$schema" "$file" >/dev/null 2>&1
+      ;;
+    python-jsonschema)
+      python3 - "$schema" "$file" <<'PY' >/dev/null 2>&1
+import json, sys, jsonschema
+schema = json.load(open(sys.argv[1]))
+doc = json.load(open(sys.argv[2]))
+jsonschema.validate(doc, schema)
+PY
+      ;;
+    *)
+      python3 -c "import json, sys; json.load(open('$file'))" >/dev/null 2>&1
+      ;;
+  esac
+}
+
+for SET in backlog review-decisions execution-log; do
+  EXTRA_SCHEMA="$REPO_ROOT/.claude/schemas/${SET}.schema.json"
+  EXTRA_DIR="$REPO_ROOT/.claude/schemas/fixtures/${SET}"
+  [ -f "$EXTRA_SCHEMA" ] || continue
+
+  # 메타스키마
+  if [ "$VALIDATOR" = "check-jsonschema" ]; then
+    META_OK=$(check-jsonschema --check-metaschema "$EXTRA_SCHEMA" >/dev/null 2>&1 && echo 1 || echo 0)
+  elif [ "$VALIDATOR" = "python-jsonschema" ]; then
+    META_OK=$(python3 - "$EXTRA_SCHEMA" <<'PY' >/dev/null 2>&1 && echo 1 || echo 0
+import json, sys, jsonschema
+jsonschema.Draft7Validator.check_schema(json.load(open(sys.argv[1])))
+PY
+)
+  else
+    META_OK=$(python3 -c "import json; json.load(open('$EXTRA_SCHEMA'))" >/dev/null 2>&1 && echo 1 || echo 0)
+  fi
+  if [ "$META_OK" = "1" ]; then
+    pass "meta: ${SET}.schema.json"
+    PASS=$((PASS + 1))
+  else
+    fail "meta: ${SET}.schema.json 위반"
+    FAIL=$((FAIL + 1))
+  fi
+
+  if [ -d "$EXTRA_DIR/positive" ]; then
+    for f in "$EXTRA_DIR/positive"/*.json; do
+      [ -f "$f" ] || continue
+      name="$(basename "$f")"
+      if validate_pair "$EXTRA_SCHEMA" "$f"; then
+        pass "${SET}/positive/$name"
+        PASS=$((PASS + 1))
+      else
+        fail "${SET}/positive/$name — 통과해야 하는데 실패"
+        FAIL=$((FAIL + 1))
+      fi
+    done
+  fi
+  if [ -d "$EXTRA_DIR/negative" ] && [ "$VALIDATOR" != "fallback" ]; then
+    for f in "$EXTRA_DIR/negative"/*.json; do
+      [ -f "$f" ] || continue
+      name="$(basename "$f")"
+      if validate_pair "$EXTRA_SCHEMA" "$f"; then
+        fail "${SET}/negative/$name — 거부해야 하는데 통과됨"
+        FAIL=$((FAIL + 1))
+      else
+        pass "${SET}/negative/$name (기대대로 거부됨)"
+        PASS=$((PASS + 1))
+      fi
+    done
+  fi
+done
+
 echo ""
 echo "──────────────────────────────"
 echo "  Validator: $VALIDATOR"

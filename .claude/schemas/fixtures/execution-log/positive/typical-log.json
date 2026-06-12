@@ -1,0 +1,6 @@
+[
+  { "timestamp": "2026-06-12T00:00:00Z", "taskId": "TASK-001", "skill": "aick-impl", "action": "pr_created", "prNumber": 42, "stepNumber": 1 },
+  { "timestamp": "2026-06-12T00:10:00Z", "taskId": "TASK-001", "skill": "aick-review-pr", "action": "request_changes", "prNumber": 42 },
+  { "timestamp": "2026-06-12T01:00:00Z", "skill": "aick-hotfix", "action": "hotfix_completed", "prNumber": 43, "version": "1.2.1", "details": "긴급 수정" },
+  { "timestamp": "2026-06-12T02:00:00Z", "skill": "aick-health-check", "action": "health_check_completed", "details": { "mode": "quick", "score": 92, "grade": "A", "criticalCount": 0, "fixCount": 0 }, "customField": "확장 허용" }
+]
