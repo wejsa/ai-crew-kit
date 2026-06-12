@@ -76,7 +76,7 @@ echo '{"tool_input":{"command":"gh pr merge 42 --squash"}}' \
 
 ## 🚀 Quick start
 
-Installs as a **Claude Code plugin** — 22 skills + 12 agents + quality-gate hooks (SessionStart / PreToolUse / PostToolUse / Stop) registered in one step.
+Installs as a **Claude Code plugin** — 22 skills + 7 agents + quality-gate hooks (SessionStart / PreToolUse / PostToolUse / Stop) registered in one step.
 
 ```bash
 # inside a Claude Code session

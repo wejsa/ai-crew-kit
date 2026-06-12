@@ -32,52 +32,40 @@ AI Crew Kit은 특정 도메인에 종속되지 않는 **범용 AI 크루 개발
 
 ## 에이전트 팀
 
-### 에이전트 구조
+### 구조 — 메인 세션이 오케스트레이션, 에이전트는 품질 분석 전담
+
+구현·기획·문서화는 **메인 세션(스킬 체이닝)**의 몫입니다. 에이전트는 스킬이 필요한
+시점에 호출하는 **품질 분석 전문가**입니다 (v4.8.0: 미배선 에이전트 pm·planner·
+backend·frontend·docs 제거 — 12종 → 실동작 7종, [docs/archive/agents/](./archive/agents/) 참조).
 
 ```
-              ┌───────────────────┐
-              │     agent-pm      │  ← 총괄 오케스트레이터 (항상 활성)
-              │ 요청 분석 → 분배  │
-              └─────────┬─────────┘
-                        │
-       ┌────────────────┼────────────────┐
-       │                │                │
-       ▼                ▼                ▼
-┌─────────────┐  ┌─────────────┐  ┌─────────────┐
-│ 기획/설계   │  │    개발     │  │    검증     │
-├─────────────┤  ├─────────────┤  ├─────────────┤
-│ planner     │  │ backend     │  │ code-reviewer│
-│ db-designer │  │ frontend    │  │ qa          │
-│             │  │             │  │ docs        │
-└─────────────┘  └─────────────┘  └─────────────┘
+        메인 세션 (스킬 체이닝이 오케스트레이션)
+  feature → plan → impl → review-pr → merge-pr
+              │       │        │
+              ▼       ▼        ▼
+        ┌──────────┐ ┌──────────────────┐ ┌──────────────────────┐
+        │ 설계 분석 │ │ 구현 중 분석      │ │ PR 리뷰 (다관점)      │
+        ├──────────┤ ├──────────────────┤ ├──────────────────────┤
+        │db-designer│ │qa                │ │pr-reviewer-architecture│
+        │          │ │docs-impact-      │ │pr-reviewer-security   │
+        │          │ │analyzer          │ │pr-reviewer-test       │
+        └──────────┘ └──────────────────┘ └──────────────────────┘
+                              + agent-code-reviewer (리뷰 가이드 문서)
 ```
 
-### 에이전트 역할
+### 에이전트 7종 (전부 실호출 경로 보유)
 
-| 에이전트 | 역할 | 기본 활성화 |
-|---------|------|------------|
-| **agent-pm** | 오케스트레이션, 워크플로우 관리 | 항상 |
-| **agent-backend** | 백엔드 코드 구현 | 기본 |
-| **agent-code-reviewer** | 다관점 통합 코드 리뷰 | 기본 |
-| **agent-planner** | 요구사항 정의, 기획 | 선택적 |
-| **agent-frontend** | 프론트엔드 구현 | 선택적 |
-| **agent-db-designer** | DB 설계 분석 (sub-agent) | 선택적 |
-| **agent-qa** | 테스트 품질 분석 (sub-agent) | 선택적 |
-| **agent-docs** | 문서 자동화 | 선택적 |
+| | 에이전트 | 호출 스킬 | 역할 | 기본 활성화 |
+|---|---------|----------|------|------------|
+| 🟣 | **pr-reviewer-architecture** | aick-review-pr | 아키텍처 + 비즈니스 로직 일관성 리뷰 | 무조건 호출 |
+| 🔴 | **pr-reviewer-security** | aick-review-pr | 보안 리뷰 | 무조건 호출 |
+| 🔵 | **pr-reviewer-test** | aick-review-pr | 테스트 품질 리뷰 | 무조건 호출 (Tier에 따라) |
+| 📝 | **docs-impact-analyzer** | aick-impl | 문서 영향도 분석 + 초안 제안 | 무조건 호출 |
+| 🧪 | **agent-qa** | aick-impl | 테스트 품질 분석 (백그라운드) | `agents.enabled`에 `qa` (기본 ON) |
+| 🗃️ | **agent-db-designer** | aick-plan | DB 설계 분석 (병렬) | `agents.enabled`에 `db-designer` (기본 OFF) |
+| 👀 | **agent-code-reviewer** | aick-review-pr | 4관점 통합 리뷰 가이드 (참조 문서 — 직접 호출 없음) | 기본 |
 
-### Sub-Agent (스킬에서 자동 호출)
-
-| | 에이전트 | 호출 스킬 | 역할 |
-|---|---------|----------|------|
-| 🔴 | **pr-reviewer-security** | aick-review-pr | 보안 리뷰 |
-| 🟣 | **pr-reviewer-architecture** | aick-review-pr | 아키텍처 + 비즈니스 로직 일관성 리뷰 |
-| 🔵 | **pr-reviewer-test** | aick-review-pr | 테스트 품질 리뷰 |
-| 📝 | **docs-impact-analyzer** | aick-impl | 문서 영향도 분석 + 초안 제안 |
-| 🟠 | **agent-db-designer** | aick-plan | DB 설계 분석 (병렬) |
-| 🟢 | **agent-qa** | aick-impl | 테스트 품질 분석 (백그라운드) |
-
-> Sub-agent는 읽기 전용(Read/Glob/Grep)으로 동작하며, 스킬을 통해서만 호출됩니다.
-> agent-db-designer, agent-qa는 `project.json`의 `agents.enabled`에 포함된 경우에만 실행됩니다.
+> 분석 에이전트는 전부 읽기 전용(Read/Glob/Grep)이며, 스킬을 통해서만 호출됩니다.
 
 ## 디렉토리 구조
 

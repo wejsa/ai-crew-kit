@@ -75,7 +75,7 @@ echo '{"tool_input":{"command":"gh pr merge 42 --squash"}}' \
 
 ## 🚀 빠른 시작
 
-AI Crew Kit은 **Claude Code 플러그인 마켓플레이스**로 설치합니다. 22개 스킬 + 12개 에이전트 + 품질 게이트 훅(SessionStart / PreToolUse / PostToolUse / Stop)이 한 번에 등록됩니다.
+AI Crew Kit은 **Claude Code 플러그인 마켓플레이스**로 설치합니다. 22개 스킬 + 7개 에이전트 + 품질 게이트 훅(SessionStart / PreToolUse / PostToolUse / Stop)이 한 번에 등록됩니다.
 
 ```bash
 # Claude Code 세션 안에서

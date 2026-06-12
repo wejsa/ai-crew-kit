@@ -20,7 +20,7 @@
 /plugin install ai-crew-kit@ai-crew-kit
 ```
 
-This registers 22 skills + 12 agents + the quality-gate hooks in one step, available in any project. (Cloning the repo directly also works — see "Onboarding, scenario B" below — but the plugin is the recommended path.)
+This registers 22 skills + 7 agents + the quality-gate hooks in one step, available in any project. (Cloning the repo directly also works — see "Onboarding, scenario B" below — but the plugin is the recommended path.)
 
 > The CLI command installs **user-wide**. If you install through the `/plugin` UI and pick *project* scope, the plugin stays in that one project.
 

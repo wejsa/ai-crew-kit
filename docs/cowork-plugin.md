@@ -3,7 +3,7 @@
 AI Crew Kit는 리포 clone 방식 외에 **Claude Code · Cowork 플러그인**으로도 설치할 수 있습니다.
 이 리포 자체가 곧 마켓플레이스이자 단일 플러그인입니다 (`.claude-plugin/marketplace.json` + `.claude-plugin/plugin.json`).
 
-플러그인으로 설치하면 clone 없이도 22개 스킬(`/aick-status`, `/aick-impl` 등)과 12개 서브에이전트, 품질 게이트 훅이 현재 작업 중인 프로젝트에서 바로 사용 가능해집니다.
+플러그인으로 설치하면 clone 없이도 22개 스킬(`/aick-status`, `/aick-impl` 등)과 7개 서브에이전트, 품질 게이트 훅이 현재 작업 중인 프로젝트에서 바로 사용 가능해집니다.
 
 ---
 
@@ -39,7 +39,7 @@ AI Crew Kit는 리포 clone 방식 외에 **Claude Code · Cowork 플러그인**
 | 컴포넌트 | 로드 경로 | 동작 |
 |----------|----------|------|
 | 스킬 (22) | `skills` 필드 → `./.claude/skills/` (디렉토리 문자열) | 기본 `skills/`에 **추가** — `<name>/SKILL.md` 자동탐색 |
-| 에이전트 (12) | 루트 `agents/` 디렉토리 (자동탐색, **manifest 필드 없음**) | 플러그인 루트 `agents/*.md`를 서브에이전트로 자동탐색 |
+| 에이전트 (7) | 루트 `agents/` 디렉토리 (자동탐색, **manifest 필드 없음**) | 플러그인 루트 `agents/*.md`를 서브에이전트로 자동탐색 |
 | 훅 (4) | `hooks` 필드 (plugin.json 인라인) | SessionStart / PreToolUse / PostToolUse / Stop |
 
 스킬은 `.claude/skills/`를 그대로 재사용하지만, **에이전트는 루트 `agents/` 미러가 필요**합니다(아래 주의 참조).
@@ -52,7 +52,7 @@ Claude Code 플러그인은 **플러그인 루트의 `agents/` 디렉토리만**
 |------------------------|:------------------------:|:----------------:|
 | `"./.claude/agents/*.md"` 파일 배열 | ✅ 통과 | ❌ **로드 안 됨 (Agents 0)** |
 | `"./.claude/agents"` 디렉토리 문자열 | ❌ 거부 | — |
-| **필드 없음 + 루트 `agents/` 디렉토리** | ✅ 통과 | ✅ **Agents 12 로드** |
+| **필드 없음 + 루트 `agents/` 디렉토리** | ✅ 통과 | ✅ **Agents 7 로드** |
 
 즉 `validate`가 통과해도 `.claude/agents/` 파일배열은 런타임에 로드되지 않습니다. 그래서 매니페스트에서 `agents` 필드를 빼고, **루트 `agents/`에 미러**를 둡니다.
 
@@ -71,7 +71,7 @@ git commit -m "chore: sync plugin agents mirror"
 ```
 
 덕분에 같은 리포가 **(A) clone해서 쓰는 kit** 이면서 동시에 **(B) 설치형 플러그인** 으로 동작합니다.
-검증·실측 결과: `claude plugin validate ./ --strict` 통과 + `claude plugin details ai-crew-kit` 에서 **Skills(22) · Agents(12) · Hooks(4)** 로드 확인.
+검증·실측 결과: `claude plugin validate ./ --strict` 통과 + `claude plugin details ai-crew-kit` 에서 **Skills(22) · Agents(12) · Hooks(4)** 로드 확인 (실측은 v4.7 기준 — v4.8.0부터 Agents 7).
 
 ---
 
