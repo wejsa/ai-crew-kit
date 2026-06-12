@@ -53,7 +53,7 @@ fi
 
 # jq 없으면 아래 로직 전부 스킵 (graceful)
 if ! command -v jq >/dev/null 2>&1; then
-  log_err "jq 미설치 — stop 로직 스킵"
+  log_err "jq not installed — stop logic skipped"
   exit 0
 fi
 
@@ -61,7 +61,7 @@ fi
 # backlog.json에 lockedAt 필드가 있고 heartbeat 만료된 Task의 lock 해제
 if [ -f "$BACKLOG" ]; then
   # shellcheck source=./lib/atomic-write.sh
-  source "$(dirname "$0")/lib/atomic-write.sh" 2>/dev/null || log_err "atomic-write.sh 로드 실패"
+  source "$(dirname "$0")/lib/atomic-write.sh" 2>/dev/null || log_err "failed to load atomic-write.sh"
 
   NOW_EPOCH="$(date -u +%s)"
   # 만료 기준 (v4.5.0): `(lockedAt // assignedAt) + lockTTL < now`. reclaim(aick-plan/impl)과
@@ -131,7 +131,7 @@ if [ -f "$BACKLOG" ]; then
     printf '%s\n' '- Check the plan file for the in-progress task: `.claude/temp/{taskId}-plan.md`'
     printf '%s\n' '- Resume with `/aick-impl` or `/aick-plan`'
   } > "$TMP_PLAN" 2>/dev/null && mv -f "$TMP_PLAN" "$CONT_PLAN" 2>/dev/null || {
-    log_err "continuation-plan 쓰기 실패"
+    log_err "continuation-plan write failed"
     rm -f "$TMP_PLAN" 2>/dev/null
   }
 fi

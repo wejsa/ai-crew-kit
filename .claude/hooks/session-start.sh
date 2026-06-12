@@ -70,19 +70,18 @@ if command -v git >/dev/null 2>&1 && { [ -d .git ] || git rev-parse --git-dir >/
 
   BEFORE_SHA="$(git rev-parse HEAD 2>/dev/null || echo '')"
 
-  # i18n 경계(v4.6.1): 데모 경로에서 보이는 사용자 stdout(sync 상태·in-progress Task)은 영문,
-  # 워크트리 claims 블록·log_err(내부 로그)는 한국어 유지 — 전면 영문화는 v4.7+ 별도 판단.
+  # i18n(v4.8.0): 사용자 가시 출력(stdout/stderr/hook-errors.log)은 전면 영문 — 정책은 hooks/README 참조.
   UPSTREAM="$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)"
   SYNC_ATTEMPTED=0
   if [ -z "$UPSTREAM" ]; then
     printf '  no upstream configured — sync skipped (%s)\n' "$BRANCH"
   elif [ "$IS_WORKTREE" -eq 1 ]; then
     SYNC_ATTEMPTED=1
-    net_git fetch --quiet origin 2>/dev/null || log_err "git fetch 실패 (계속 진행)"
-    git merge --ff-only "$UPSTREAM" 2>/dev/null || log_err "ff-only merge 실패 — 수동 확인 필요 ($UPSTREAM)"
+    net_git fetch --quiet origin 2>/dev/null || log_err "git fetch failed (continuing)"
+    git merge --ff-only "$UPSTREAM" 2>/dev/null || log_err "ff-only merge failed — manual check needed ($UPSTREAM)"
   else
     SYNC_ATTEMPTED=1
-    net_git pull --ff-only --quiet 2>/dev/null || log_err "git pull 실패 (계속 진행)"
+    net_git pull --ff-only --quiet 2>/dev/null || log_err "git pull failed (continuing)"
   fi
 
   if [ "$SYNC_ATTEMPTED" -eq 1 ]; then
@@ -95,7 +94,7 @@ if command -v git >/dev/null 2>&1 && { [ -d .git ] || git rev-parse --git-dir >/
     fi
   fi
 else
-  log_err "git 미설치 또는 비-git 디렉토리 — sync 스킵"
+  log_err "git not installed or not a git directory — sync skipped"
 fi
 
 # ── 2. continuation-plan.md 출력 ─────────────────────────────
@@ -115,7 +114,7 @@ if [ -f "$BACKLOG" ] && command -v jq >/dev/null 2>&1; then
   fi
 elif [ -f "$BACKLOG" ]; then
   # jq 미설치 graceful skip
-  log_err "jq 미설치 — backlog 파싱 스킵"
+  log_err "jq not installed — backlog parsing skipped"
 fi
 
 # ── 3.5. 머지 게이트 데이터 계약 경고 (v4.8.0) ────────────────
@@ -192,16 +191,16 @@ if [ -f "$BACKLOG" ] && command -v jq >/dev/null 2>&1 && command -v git >/dev/nu
       branches="$(printf '%s' "$bset" | paste -sd',' -)"
       asg="$(printf '%s' "$CLAIMS" | awk -F'\t' -v id="$tid" '$2==id{print $3; exit}')"
       if [ "$nb" -gt 1 ]; then
-        ALERTS+="  🔴 ${tid} — 복수 워크트리 동시 claim (${branches}) · develop=todo"$'\n'
+        ALERTS+="  🔴 ${tid} — claimed by multiple worktrees (${branches}) · develop=todo"$'\n'
       else
-        ALERTS+="  🔶 ${tid} — ${branches} claim (assignee: ${asg}) · develop=todo"$'\n'
+        ALERTS+="  🔶 ${tid} — claimed by ${branches} (assignee: ${asg}) · develop=todo"$'\n'
       fi
     done < <(printf '%s' "$CLAIMS" | awk -F'\t' 'NF>=2{print $2}' | sort -u)
 
     if [ -n "$ALERTS" ]; then
-      printf '\n🔶 develop 미반영 워크트리 claim 감지:\n'
+      printf '\n🔶 Worktree claims not yet on develop:\n'
       printf '%s' "$ALERTS"
-      printf '  → 시작 전 해당 워크트리에서 진행 중인지 직접 확인 권장 (claim이 아직 develop SSOT에 없음)\n'
+      printf '  → Before starting, check whether those worktrees are still active (claims not yet in the develop SSOT)\n'
     fi
   fi
 fi

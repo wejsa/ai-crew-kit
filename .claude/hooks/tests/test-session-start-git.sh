@@ -18,7 +18,7 @@ output="$(cd "$SANDBOX" && CLAUDE_PROJECT_DIR="$SANDBOX" \
   bash "$SANDBOX/.claude/hooks/session-start.sh" <<< '{}' 2>&1)"
 rc=$?
 assert_eq 0 "$rc" "exit 0 on non-git directory" || fail=$((fail + 1))
-assert_contains "$output" "비-git" "non-git warning logged" || fail=$((fail + 1))
+assert_contains "$output" "not a git directory" "non-git warning logged" || fail=$((fail + 1))
 
 # 2. jq 미설치 환경 시뮬레이션 — 격리된 bin 디렉토리에 jq 제외한 필수 도구만 심볼릭 링크
 printf '{"tasks":[]}' > "$SANDBOX/.claude/state/backlog.json"
@@ -32,7 +32,7 @@ output="$(cd "$SANDBOX" && CLAUDE_PROJECT_DIR="$SANDBOX" PATH="$FAKE_BIN" \
   "$FAKE_BIN/bash" "$SANDBOX/.claude/hooks/session-start.sh" <<< '{}' 2>&1)"
 rc=$?
 assert_eq 0 "$rc" "exit 0 when jq missing" || fail=$((fail + 1))
-assert_contains "$output" "jq 미설치" "jq missing warning logged" || fail=$((fail + 1))
+assert_contains "$output" "jq not installed" "jq missing warning logged" || fail=$((fail + 1))
 
 # 3. continuation-plan 존재 → stdout 출력 확인
 printf '# Resume work\n\n- T1: 테스트\n' > "$SANDBOX/.claude/state/continuation-plan.md"

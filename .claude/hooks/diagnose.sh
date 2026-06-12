@@ -23,7 +23,7 @@
 set -u
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
-cd "$PROJECT_DIR" 2>/dev/null || { echo "❌ 디렉토리 진입 실패: $PROJECT_DIR" >&2; exit 1; }
+cd "$PROJECT_DIR" 2>/dev/null || { echo "❌ cannot enter directory: $PROJECT_DIR" >&2; exit 1; }
 
 STATE_DIR=".claude/state"
 HOOKS_DIR=".claude/hooks"
@@ -73,7 +73,7 @@ printf '== ai-crew-kit hook diagnosis (%s) ==\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ
 printf 'project: %s\n\n' "$PROJECT_DIR"
 
 # ── [등록 상태] ───────────────────────────────────────────────
-printf '[등록 상태]\n'
+printf '[Registration]\n'
 if [ -f "$SETTINGS" ]; then
   if [ "$have_jq" -eq 1 ]; then
     for hook in SessionStart PostToolUse Stop; do
@@ -81,18 +81,18 @@ if [ -f "$SETTINGS" ]; then
       printf '  %-13s registered=%s\n' "$hook" "$cnt"
     done
   else
-    printf '  (jq 미설치 — settings.json 파싱 스킵)\n'
+    printf '  (jq not installed — settings.json parsing skipped)\n'
   fi
 else
-  printf '  ⚠️  %s 부재 — hook 미설정\n' "$SETTINGS"
+  printf '  ⚠️  %s missing — hooks not configured\n' "$SETTINGS"
 fi
 for script in session-start.sh post-tool-use.sh stop.sh; do
   if [ -x "$HOOKS_DIR/$script" ]; then
     printf '  ✓ %s/%s\n' "$HOOKS_DIR" "$script"
   elif [ -f "$HOOKS_DIR/$script" ]; then
-    printf '  ⚠️  %s/%s (실행 권한 없음)\n' "$HOOKS_DIR" "$script"
+    printf '  ⚠️  %s/%s (not executable)\n' "$HOOKS_DIR" "$script"
   else
-    printf '  ✗ %s/%s 부재\n' "$HOOKS_DIR" "$script"
+    printf '  ✗ %s/%s missing\n' "$HOOKS_DIR" "$script"
   fi
 done
 
@@ -111,14 +111,14 @@ if [ -f "$COUNTER" ]; then
   case "${cnt:-}"       in ''|*[!0-9]*) cnt=0 ;; esac
   printf '  trigger-count: window_start=%s count=%s\n' "$(to_iso "$win_start")" "$cnt"
   if [ "$cnt" -gt "$EFFECTIVE_THRESHOLD" ] 2>/dev/null; then
-    printf '  추정 원인: 응답 1회당 Edit/Write %s회 (%s초 윈도우 내 임계값 %s 초과)\n' \
+    printf '  likely cause: %s Edit/Write calls per response (window %ss, threshold %s exceeded)\n' \
       "$cnt" "$EFFECTIVE_WINDOW" "$EFFECTIVE_THRESHOLD"
   fi
 else
-  printf '  trigger-count: (파일 없음 — 최근 발동 흔적 없음)\n'
+  printf '  trigger-count: (no file — no recent trigger evidence)\n'
 fi
 if [ -f "$ERROR_LOG" ]; then
-  last_disable="$(grep '자동 비활성화 발동' "$ERROR_LOG" 2>/dev/null | tail -1)"
+  last_disable="$(grep -e 'auto-disable triggered' -e '자동 비활성화 발동' "$ERROR_LOG" 2>/dev/null | tail -1)"
   [ -n "$last_disable" ] && printf '  last disable log: %s\n' "$last_disable"
 fi
 # 환경변수 override 가시화
@@ -133,62 +133,63 @@ if [ -f "$CONT_PLAN" ]; then
   cp_mtime="$(stat_mtime "$CONT_PLAN")"
   printf '  continuation-plan.md: present (updated %s)\n' "$(age_human "$cp_mtime")"
 else
-  printf '  continuation-plan.md: absent (idle/0건 스킵 정책의 정상 결과일 수 있음)\n'
+  printf '  continuation-plan.md: absent (may be normal — idle/zero-task skip policy)\n'
 fi
-# 만료 임박/만료된 lock 후보 — stop.sh가 다음 턴에 해제할 대상 (TTL=600s)
+# 만료 임박/만료된 lock 후보 — stop.sh와 동일 만료 의미론(v4.5.0):
+# (lockedAt // assignedAt) + (lockTTL // 3600) < now. 구 600s 고정은 v4.5.0 이전 잔재였음.
 expired_count=0; near_count=0
 if [ "$have_jq" -eq 1 ] && [ -f "$BACKLOG" ]; then
   now_ep="$(date -u +%s)"
-  expired_count="$(jq --argjson now "$now_ep" --argjson ttl 600 '
+  expired_count="$(jq --argjson now "$now_ep" '
     [.tasks[]? | select(
-      (.lockedAt // "") != "" and
-      ((.lockedAt | fromdateiso8601?) // 0) < ($now - $ttl)
+      ((.lockedAt // .assignedAt // "") != "") and
+      ((((.lockedAt // .assignedAt) | fromdateiso8601?) // 0) + (.lockTTL // 3600)) < $now
     )] | length' "$BACKLOG" 2>/dev/null || echo 0)"
-  near_count="$(jq --argjson now "$now_ep" --argjson ttl 600 '
+  near_count="$(jq --argjson now "$now_ep" '
     [.tasks[]? | select(
-      (.lockedAt // "") != "" and
-      ((.lockedAt | fromdateiso8601?) // 0) >= ($now - $ttl) and
-      ((.lockedAt | fromdateiso8601?) // 0) < ($now - $ttl + 120)
+      ((.lockedAt // .assignedAt // "") != "") and
+      (((((.lockedAt // .assignedAt) | fromdateiso8601?) // 0) + (.lockTTL // 3600)) >= $now) and
+      (((((.lockedAt // .assignedAt) | fromdateiso8601?) // 0) + (.lockTTL // 3600)) < ($now + 120))
     )] | length' "$BACKLOG" 2>/dev/null || echo 0)"
-  printf '  만료된 lock (다음 stop 턴에 해제): %s건\n' "$expired_count"
-  printf '  만료 임박 lock (2분 이내): %s건\n' "$near_count"
+  printf '  expired locks (released on next stop turn): %s\n' "$expired_count"
+  printf '  locks expiring soon (within 2m): %s\n' "$near_count"
 fi
 
 # ── [영향 평가] ──────────────────────────────────────────────
-printf '\n[영향 평가]\n'
+printf '\n[Impact]\n'
 in_progress_total=0; with_lock=0
 if [ "$have_jq" -eq 1 ] && [ -f "$BACKLOG" ]; then
   in_progress_total="$(jq -r '[.tasks[]? | select(.status == "in_progress")] | length' "$BACKLOG" 2>/dev/null || echo 0)"
   with_lock="$(jq -r '[.tasks[]? | select(.status == "in_progress" and (.lockedBy // "") != "")] | length' "$BACKLOG" 2>/dev/null || echo 0)"
 fi
-printf '  in_progress Task: %s건 (lockedBy 설정됨: %s건)\n' "$in_progress_total" "$with_lock"
+printf '  in_progress tasks: %s (with lockedBy: %s)\n' "$in_progress_total" "$with_lock"
 
 if [ -f "$FLAG" ]; then
   if [ "$with_lock" = "0" ]; then
-    printf '  🟢 결론: PostToolUse 비활성 영향 없음 (소유된 lock 0건). 복구 선택사항.\n'
+    printf '  🟢 verdict: PostToolUse disable has no impact (0 owned locks). Recovery optional.\n'
   else
-    printf '  🟡 결론: lock 보유 작업이 10분 넘기면 stop 만료 정책으로 자동 해제됨.\n'
-    printf '         짧은 작업은 안전, 장기 작업이면 복구 권장.\n'
+    printf '  🟡 verdict: lock-holding work is auto-released once its lockTTL expires (stop policy).\n'
+    printf '         Short tasks are safe; recover if working long.\n'
   fi
 else
-  printf '  🟢 결론: PostToolUse 정상. heartbeat 매 Edit/Write마다 갱신됨.\n'
+  printf '  🟢 verdict: PostToolUse healthy — heartbeat refreshes on every Edit/Write.\n'
 fi
 
 # ── [행동 옵션] ──────────────────────────────────────────────
-printf '\n[행동 옵션]\n'
+printf '\n[Options]\n'
 if [ -f "$FLAG" ]; then
-  printf '  [A] 그대로 진행 — 단독 작업자/짧은 작업은 안전\n'
-  printf '  [B] 복구       — rm %s %s\n' "$FLAG" "$COUNTER"
-  printf '  [C] 임계값 완화 — export CCK_HOOK_THRESHOLD=8 (응답당 다수 Edit 자주 발생 시)\n'
-  printf '                  영구화: settings.json env 또는 shell rc에 추가\n'
+  printf '  [A] continue as-is — safe for solo/short work\n'
+  printf '  [B] recover     — rm %s %s\n' "$FLAG" "$COUNTER"
+  printf '  [C] relax threshold — export CCK_HOOK_THRESHOLD=8 (frequent multi-edit responses)\n'
+  printf '                  persist: settings.json env or shell rc\n'
 else
-  printf '  현재 정상 — 별도 조치 불필요\n'
-  printf '  멀티파일 Edit이 잦아 자동 비활성화가 자주 발동한다면:\n'
-  printf '    export CCK_HOOK_THRESHOLD=8  # 응답당 Edit 허용량 상향\n'
+  printf '  healthy — no action needed\n'
+  printf '  If auto-disable fires often due to multi-file edits:\n'
+  printf '    export CCK_HOOK_THRESHOLD=8  # raise per-response Edit allowance\n'
 fi
 
 # ── [참고] Stop 동작을 실제로 확인하려면 ─────────────────────
-printf '\n[참고] Stop 훅을 능동 검증하려면 (mutate 가능 — 신중히):\n'
+printf '\n[Note] To actively exercise the Stop hook (may mutate — use with care):\n'
 printf '  echo \"{\\\"stop_hook_active\\\": false}\" | bash %s/stop.sh\n' "$HOOKS_DIR"
 
 exit 0
