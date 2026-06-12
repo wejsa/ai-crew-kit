@@ -10,10 +10,10 @@
 | **인프라** | docker-compose |
 
 ## 에이전트 팀
-- **PM** — 워크플로우 오케스트레이션
-- **backend** — 구현
-- **code-reviewer** — 리뷰
-- **qa** — 테스트 품질
+- **code-reviewer** — 리뷰 가이드
+- **qa** — 테스트 품질 분석
+
+> 오케스트레이션·구현은 메인 세션(스킬 체이닝)이 수행 (v4.8.0)
 
 ## 워크플로우
 plan → impl → review → merge. 자세한 스킬은 GitHub 리포 문서를 참조하세요.

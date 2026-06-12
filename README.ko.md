@@ -75,7 +75,7 @@ echo '{"tool_input":{"command":"gh pr merge 42 --squash"}}' \
 
 ## 🚀 빠른 시작
 
-AI Crew Kit은 **Claude Code 플러그인 마켓플레이스**로 설치합니다. 22개 스킬 + 12개 에이전트 + 품질 게이트 훅(SessionStart / PreToolUse / PostToolUse / Stop)이 한 번에 등록됩니다.
+AI Crew Kit은 **Claude Code 플러그인 마켓플레이스**로 설치합니다. 22개 스킬 + 7개 에이전트 + 품질 게이트 훅(SessionStart / PreToolUse / PostToolUse / Stop)이 한 번에 등록됩니다.
 
 ```bash
 # Claude Code 세션 안에서
@@ -188,6 +188,7 @@ AI Crew Kit은 **Claude Code 플러그인 마켓플레이스**로 설치합니�
 | 신호 | 출처 | 동작 |
 |------|------|------|
 | **A (state)** | `workflowState.lastReviewDecision == REQUEST_CHANGES` + `step.prNumber` join | 오프라인 결정적 차단 |
+| **A2 (transient state)** | 핫픽스·ad-hoc 리뷰 결정 (`review-decisions.json`) | 오프라인 결정적 차단, 로컬 전용 |
 | **B (GitHub)** | `reviewDecision == CHANGES_REQUESTED` | best-effort 차단 |
 
 > 인프라 실패(jq/git/gh 부재·네트워크 등)는 **fail-open** — 게이트 자체 장애가 정상 머지를 막지 않습니다. 제어 env: `CCK_MERGE_GATE=off`(전면 비활성) · `CCK_GATE_BYPASS=1`(1회 우회) · `CCK_GATE_NO_GH=1`(신호 B 스킵).
@@ -263,7 +264,7 @@ rm -f .claude/state/hook-disabled.flag
 | [핵심 개념](./docs/concepts.md) | 에이전트 팀, 디렉토리 구조, 실행 모델 |
 | [스킬 레퍼런스](./docs/skill-reference.md) | 전체 스킬 목록, 자연어 매핑, Tier 분류 매트릭스 |
 | [워크플로우 가이드](./docs/workflow-guide.md) | 자동 체이닝, 7가지 워크플로우, 품질 게이트, Git 전략 |
-| [머지 게이트 해설](./docs/merge-gate-explained.ko.md) ([EN](./docs/merge-gate-explained.md)) | 결정적 머지 게이트 동작 원리 — 신호 A/B, fail-open 설계, 우회 env, standalone 검증 |
+| [머지 게이트 해설](./docs/merge-gate-explained.ko.md) ([EN](./docs/merge-gate-explained.md)) | 결정적 머지 게이트 동작 원리 — 신호 A/A2/B, fail-open 설계, 우회 env, standalone 검증 |
 | [머지 게이트 데모 (5분)](./examples/merge-gate-demo/README.ko.md) ([EN](./examples/merge-gate-demo/README.md)) | 차단 → 우회 실패 → 기록되는 사람의 우회 실습 |
 | [토큰 최적화](./docs/token-optimization.md) | 스킬 프로파일, 모델 라우팅, 리뷰 Tier, 1M 실패 대응 Q&A |
 | [커스터마이징](./docs/customization.md) | 참고자료/체크리스트 추가, DB·마이그레이션 도구 변경, Layered Override |

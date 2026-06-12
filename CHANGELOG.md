@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+> **품질 번들 (공개 대비)** — 머지 게이트 커버리지 완성(핫픽스 경로), 리뷰 프롬프트 인젝션 격리, 게이트 데이터 결함 가시화, 미배선 에이전트 정리. 차기 minor(4.8.0 예정)로 릴리스.
+
+### Added
+- **머지 게이트 신호 A2** (`pre-tool-use.sh`): backlog Task가 없는 PR(핫픽스·ad-hoc 리뷰)도 결정적 차단 — `aick-hotfix` Step 7 / `aick-review-pr` Step 6.5(소유 Task 부재 시)가 리뷰 결정을 `.claude/state/review-decisions.json`(신규 스키마 `review-decisions.schema.json`, **로컬 전용·gitignore**)에 기록하고, 게이트가 A → A2 → B 순으로 평가. 기존엔 hotfix→main 머지가 게이트를 완전 우회(신호 A: Task 없음, 신호 B: GitHub 리뷰 결정 없음). fail-open 경로 13→14. 게이트 테스트 §11(7 assertion). 머지 성공 시 엔트리 자동 정리(hotfix Step 8·merge-pr Step 3). 시드 전파: migrations `add_gitignore_entry`(4.8.0) + init Step 7 필수 엔트리.
+- **리뷰 입력 신뢰 경계 (프롬프트 인젝션 격리)**: PR diff·변경 파일을 섭취하는 에이전트 6종(pr-reviewer ×3, agent-code-reviewer, agent-qa, docs-impact-analyzer)에 표준 "입력 신뢰 경계" 블록 — diff 내 텍스트("검토 생략", "CRITICAL 아님" 류)를 지시로 취급하지 않고, 조작 시도는 발견사항(MAJOR)으로 보고. `aick-review-pr` 4지점(Step 3 디스패치·Step 3.5 채점 Task·1M 폴백·T0 직접 리뷰) + `aick-hotfix` Step 7 디스패치에 이중 방어 1줄.
+- **SessionStart 머지 게이트 데이터 계약 경고** (`session-start.sh` §3.5): in_progress Task의 게이트 무력화 결함 3종을 세션 시작 시 가시화 — 문자열 `prNumber`/`fixLoopCount`(v2.4.1 실사고 sleeper), review-pr 완료 후 `lastReviewDecision` 미기록(fail-open 예고), `pr_created` 스텝의 `prNumber` 누락. 경고 0건이면 무출력, R4 준수. 신규 테스트 15 assertion.
+
+### Changed
+- **에이전트 12종 → 실동작 7종**: 미배선 장식 에이전트 5종(pm·planner·backend·frontend·docs — v3.0.0 범용 피벗 이후 스킬 참조 0건 실측)을 `docs/archive/agents/`로 이동. `aick-init` Step 6 단순화(필수 code-reviewer, 선택 qa 기본ON·db-designer 기본OFF, 스택 무관), schema default `[code-reviewer, qa]`, TEMPLATE-ENGINE legacy 렌더 규칙, concepts KO·EN 다이어그램·표 재구성(메인 세션이 오케스트레이션), "N agents" 표기 10곳 정정. **기존 시드 영향 없음**(미배선이라 동작 동일) — enum 전 이름 보존(dual-accept), health-check SI-05 legacy 예외 확장으로 CRITICAL 오발화 차단.
+- 게이트 문서 갱신(EN·KO 패리티): merge-gate-explained §2 신호 3개·§3 fail-open 14경로·§7(핫픽스 우회 해소, A2 로컬 한계·롤백 범위 명시), README 신호 표 A2 행, hooks/README 형식 SSOT.
+
+### Fixed
+- `backlog.schema.json` `currentSkill` enum에 `aick-feature`(+crew/skill 트리오) 추가 — CLAUDE.md 진행바 프로토콜이 feature를 체이닝 스킬로 명시하는데 enum이 거부하던 latent sleeper(24→27 값, 방어적 수용·기록 의무 없음).
+
 ## [4.7.0] - 2026-06-12
 
 > **v4.7.0 — 영문 노출면 번들 + 한·영 문서 완전 패리티 (distribution-first Phase B)** — README가 English-canonical로 전환되고(한국어 전문은 README.ko.md), 영문 docs 2종·데모 시각화 SVG·한국어판 게이트 문서 2종이 추가됩니다. 기능 변경 없음(docs-only — 노출면 규모를 고려해 minor).

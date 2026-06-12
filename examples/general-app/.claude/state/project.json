@@ -21,8 +21,8 @@
     "infrastructure": "docker-compose"
   },
   "agents": {
-    "enabled": ["pm", "backend", "code-reviewer", "qa"],
-    "disabled": ["planner", "frontend", "db-designer", "docs"]
+    "enabled": ["code-reviewer", "qa"],
+    "disabled": ["db-designer"]
   },
   "conventions": {
     "taskPrefix": "TASK",

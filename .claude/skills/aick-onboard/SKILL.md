@@ -102,7 +102,7 @@ AskUserQuestion: "결과 정확" / "기술 스택 수정"
 `--scan-only` 모드: 여기서 종료
 
 ### Step 3: 추가 정보 수집
-AskUserQuestion: 프로젝트 이름 (디렉토리명 기본값), 설명, 에이전트 구성 (aick-init Step 5 동일 — 스택 기반 필수 자동 결정 + 선택 추가), Task 접두사
+AskUserQuestion: 프로젝트 이름 (디렉토리명 기본값), 설명, 에이전트 구성 (aick-init Step 6 동일 — 필수 code-reviewer + 선택 qa 기본ON·db-designer 기본OFF, 스택 무관), Task 접두사
 
 ### Step 4: 기존 파일 백업
 README.md → README.md.bak / CLAUDE.md → CLAUDE.md.bak (존재 시)

@@ -1,5 +1,6 @@
 # Full Feature Development Workflow
 # 기획부터 배포까지 전체 기능 개발 워크플로우
+# agent: main = 메인 세션이 직접 수행 (v4.8.0 — 미배선 에이전트 제거: 구현·기획·문서화는 메인 세션 몫)
 
 name: full-feature
 displayName: "전체 기능 개발"
@@ -17,7 +18,7 @@ triggers:
 steps:
   - id: plan
     name: "요구사항 정의"
-    agent: agent-planner
+    agent: main
     skill: aick-feature
     input: "{{request}}"
     output: "docs/requirements/{{taskId}}-spec.md"
@@ -46,7 +47,7 @@ steps:
 
   - id: design_code
     name: "코드 설계"
-    agent: agent-backend
+    agent: main
     skill: aick-plan
     input:
       - "{{steps.plan.output}}"
@@ -61,7 +62,7 @@ steps:
 
   - id: implement
     name: "코드 구현"
-    agent: agent-backend
+    agent: main
     skill: aick-impl
     input: "{{steps.design_code.output}}"
     output: "PR"
@@ -75,7 +76,7 @@ steps:
 
   - id: implement_frontend
     name: "프론트엔드 구현"
-    agent: agent-frontend
+    agent: main
     skill: aick-impl
     input: "{{steps.design_code.output}}"
     output: "PR"
@@ -126,7 +127,7 @@ steps:
 
   - id: document
     name: "문서 업데이트"
-    agent: agent-docs
+    agent: main
     input: "{{steps.implement.output}}"
     output: "API 문서 업데이트"
     condition: "agents.docs.enabled"

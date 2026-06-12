@@ -274,17 +274,14 @@ C. 직접 선택 (수동 — escape hatch)
 
 ### Step 6: 에이전트 팀 구성
 
-스택 기반 자동 + multi-select.
+에이전트 팀은 **품질 분석 전담**이다 — 구현·기획·문서화는 메인 세션(스킬 체이닝)의 몫 (v4.8.0: 미배선 에이전트 pm·planner·backend·frontend·docs 제거, 스택 무관 단일 규칙으로 단순화).
 
-| 스택 구성 | 필수 에이전트 |
-|-----------|-------------|
-| 백엔드만 (frontend=none) | pm, backend, code-reviewer |
-| 프론트엔드만 (backend=none) | pm, frontend, code-reviewer |
-| 풀스택 | pm, backend, frontend, code-reviewer |
+- **필수 (자동 포함)**: `code-reviewer` (리뷰 가이드 — aick-review-pr 참조)
+- **선택 (multi-select)**: `qa` (기본 ON — aick-impl이 PR 생성 후 테스트 품질 분석에 사용), `db-designer` (기본 OFF — aick-plan이 DB 설계 분석에 사용. DB 스택 사용 시 권장)
 
-**선택 (multi-select)**: planner, db-designer, qa, docs
+`--quick`: 질문 없이 기본값 — `enabled: ["code-reviewer", "qa"]`, `disabled: ["db-designer"]`.
 
-> **agents 객체 형식**: 선택된 에이전트 → `agents.enabled` 배열, 미선택된 옵션 에이전트 → `agents.disabled` 배열에 저장 (project.schema.json 정합성 + 향후 토글 추적성).
+> **agents 객체 형식**: 선택된 에이전트 → `agents.enabled` 배열, 미선택된 옵션 에이전트 → `agents.disabled` 배열에 저장 (project.schema.json 정합성 + 향후 토글 추적성). pr-reviewer ×3·docs-impact-analyzer는 스킬이 무조건 호출하므로 이 목록의 대상이 아니다.
 
 ### Step 7: 워크플로우 프로필 선택
 AskUserQuestion: Standard (권장, 전체 체이닝) / Fast (리뷰 생략, 프로토타입용)
@@ -537,7 +534,7 @@ chmod 444 "$BACKUP_DIR/MANIFEST.txt" "$BACKUP_DIR/MANIFEST.sha256" 2>/dev/null |
 4. **VERSION**: `echo "0.1.0" > VERSION`
 5. **README.md**: `${CLAUDE_PLUGIN_ROOT}/.claude/templates/README.md.tmpl` (clone/seed면 `.claude/templates/README.md.tmpl`) 마커 치환
 6. **docs/api-specs/**: `mkdir -p`
-7. **.gitignore** 업데이트
+7. **.gitignore** 업데이트 — 필수 엔트리: `.claude/worktrees/`(상태 파일 경합 방지), `.claude/state/review-decisions.json*`(머지 게이트 신호 A2 — 로컬 전용 transient 상태 + atomic-write tmp 잔재, v4.8.0)
 8. **Git 초기 커밋** (선택): `git add` → `git commit` → `git checkout -b develop`
 
 **Python 스택 시 추가 생성**:

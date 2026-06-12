@@ -22,7 +22,7 @@ general-app/
 **특징:**
 - 도메인 무관 범용 설정
 - 기술 스택 자동 감지 + 빌드/테스트 게이트
-- PM, backend, code-reviewer, qa 에이전트 활성화
+- code-reviewer, qa 에이전트 활성화 (오케스트레이션·구현은 메인 세션 — v4.8.0)
 - plan → impl → review → merge 오케스트레이션 예시
 
 ---

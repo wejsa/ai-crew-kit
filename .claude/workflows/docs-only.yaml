@@ -1,5 +1,6 @@
 # Documentation Only Workflow
 # 문서화 전용 워크플로우
+# agent: main = 메인 세션이 직접 수행 (v4.8.0 — 미배선 에이전트 제거: 구현·기획·문서화는 메인 세션 몫)
 
 name: docs-only
 displayName: "문서 작성/업데이트"
@@ -20,7 +21,7 @@ triggers:
 steps:
   - id: analyze
     name: "문서 분석"
-    agent: agent-docs
+    agent: main
     input: "{{request}}"
     output: "문서 분석 결과"
     description: |
@@ -31,7 +32,7 @@ steps:
 
   - id: generate
     name: "문서 생성/업데이트"
-    agent: agent-docs
+    agent: main
     input: "{{steps.analyze.output}}"
     output: "생성된 문서"
     description: |

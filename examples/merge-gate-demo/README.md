@@ -231,7 +231,7 @@ Also good to know:
 | The block is deterministic | bash hook, `exit 2`, fires before execution; reproducible via stdin pipe with zero network |
 | Claude can't bypass it | inline env prefix / in-session export never reach the hook process |
 | Humans can, deliberately | `CCK_GATE_BYPASS=1` at CLI start — and it's logged |
-| Failures never lock you out | 13 fail-open paths ([explained](../../docs/merge-gate-explained.md#3-fail-open-by-design)) |
+| Failures never lock you out | 14 fail-open paths ([explained](../../docs/merge-gate-explained.md#3-fail-open-by-design)) |
 
 Next: install into a real project with `/aick-init`, and the same gate guards every
 `gh pr merge` your AI crew attempts.

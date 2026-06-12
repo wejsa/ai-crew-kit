@@ -31,39 +31,42 @@ Frontend: Next.js · React + Vite · Vue / Nuxt · Astro (all `npm run build`). 
 
 ## The agent team
 
+### Structure — the main session orchestrates; agents do quality analysis
+
+Implementation, planning, and documentation belong to the **main session** (skill chaining).
+Agents are **quality-analysis specialists** that skills invoke at the right moment
+(v4.8.0: the unwired agents pm·planner·backend·frontend·docs were removed — 12 → 7 that
+actually run; see [docs/archive/agents/](./archive/agents/)).
+
 ```
-              ┌───────────────────┐
-              │     agent-pm      │  ← orchestrator (always on)
-              └─────────┬─────────┘
-       ┌────────────────┼────────────────┐
-       ▼                ▼                ▼
-  planning          development      verification
-  planner           backend          code-reviewer
-  db-designer       frontend         qa · docs
+        main session (skill chaining orchestrates)
+  feature → plan → impl → review-pr → merge-pr
+              │       │        │
+              ▼       ▼        ▼
+        ┌──────────┐ ┌──────────────────┐ ┌──────────────────────┐
+        │ design    │ │ in-flight        │ │ PR review (multi-     │
+        │ analysis  │ │ analysis         │ │ perspective)          │
+        ├──────────┤ ├──────────────────┤ ├──────────────────────┤
+        │db-designer│ │qa                │ │pr-reviewer-architecture│
+        │          │ │docs-impact-      │ │pr-reviewer-security   │
+        │          │ │analyzer          │ │pr-reviewer-test       │
+        └──────────┘ └──────────────────┘ └──────────────────────┘
+                          + agent-code-reviewer (review guide document)
 ```
 
-| Agent | Role | Activation |
-|-------|------|------------|
-| **agent-pm** | orchestration, workflow management | always on |
-| **agent-backend** | backend implementation | default |
-| **agent-code-reviewer** | multi-perspective code review | default |
-| **agent-planner** | requirements definition, planning | optional |
-| **agent-frontend** | frontend implementation | optional |
-| **agent-db-designer** | DB design analysis (sub-agent) | optional |
-| **agent-qa** | test quality analysis (sub-agent) | optional |
-| **agent-docs** | documentation automation | optional |
+### The 7 agents (6 spawned + 1 review guide)
 
-**Sub-agents invoked automatically by skills** (read-only: Read/Glob/Grep):
+| Agent | Invoked by | Role | Activation |
+|-------|------------|------|------------|
+| **pr-reviewer-architecture** | `aick-review-pr` | architecture + business-logic consistency | auto (per tier/mode) |
+| **pr-reviewer-security** | `aick-review-pr` | security review | auto (per tier/mode) |
+| **pr-reviewer-test** | `aick-review-pr` | test quality review | auto (per tier/mode) |
+| **docs-impact-analyzer** | `aick-impl` | docs impact analysis + draft suggestions | always |
+| **agent-qa** | `aick-impl` | test quality analysis (background) | `qa` in `agents.enabled` (default ON) |
+| **agent-db-designer** | `aick-plan` | DB design analysis (parallel) | `db-designer` in `agents.enabled` (default OFF) |
+| **agent-code-reviewer** | `aick-review-pr` | 4-perspective review guide (reference doc — never spawned) | default |
 
-| Sub-agent | Invoked by | Role |
-|-----------|------------|------|
-| pr-reviewer-security | `aick-review-pr` | security review |
-| pr-reviewer-architecture | `aick-review-pr` | architecture + business-logic consistency |
-| pr-reviewer-test | `aick-review-pr` | test quality review |
-| docs-impact-analyzer | `aick-impl` | docs impact analysis + draft suggestions |
-| agent-db-designer | `aick-plan` | DB design analysis (parallel) |
-| agent-qa | `aick-impl` | test quality analysis (background) |
-
+All analysis agents are read-only (Read/Glob/Grep), and are invoked only through skills.
 `agent-db-designer` and `agent-qa` run only when listed in `project.json` → `agents.enabled`.
 
 ## Directory layout

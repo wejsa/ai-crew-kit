@@ -199,7 +199,7 @@ complexity-hint: heavy
   - 주의: 필드명은 agents.enabled (agents.active 아님)
   - enabled에 있으나 파일 없음 → CRITICAL
   - 파일 있으나 enabled에 없음 → MINOR (정보 제공)
-  - **레거시 제거 에이전트 예외**: `devops`는 v1.40.0(ADR-009)에서 제거됐다. backward-compat로 `project.schema.json` enum엔 남아 구 시드의 `agents.disabled`에 존재할 수 있다. `enabled`에 `devops`가 있으면 만족 불가한 CRITICAL이 아니라 **MINOR("제거된 레거시 에이전트 — enabled에서 빼세요")**로 보고하고, `disabled`/미사용이면 무시한다.
+  - **레거시 제거 에이전트 예외**: legacy 집합 = `{devops, pm, planner, backend, frontend, docs}`. `devops`는 v1.40.0(ADR-009), 나머지 5종은 v4.8.0(미배선 장식 — docs/archive/agents/ 참조)에서 제거됐다. backward-compat로 `project.schema.json` enum엔 남아 구 시드의 `agents.enabled`/`disabled`에 존재할 수 있다. `enabled`에 legacy 이름이 있으면 만족 불가한 CRITICAL이 아니라 **MINOR("제거된 레거시 에이전트 — enabled에서 빼세요")**로 보고하고, `disabled`/미사용이면 무시한다. (이 예외가 없으면 v4.8.0 업그레이드 직후 기존 시드 전체에 CRITICAL이 대량 발화한다.)
 - FAIL 시: backlog 자동 등록
 - autoFix: 불가
 

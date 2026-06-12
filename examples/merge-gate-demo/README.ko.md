@@ -229,7 +229,7 @@ cat .claude/state/hook-errors.log
 | 차단은 결정적이다 | bash 훅, `exit 2`, 실행 전 발동; stdin 파이프로 네트워크 0회 재현 가능 |
 | Claude는 우회할 수 없다 | 인라인 env 접두 / 세션 내 export는 훅 프로세스에 도달하지 않음 |
 | 사람은 의도적으로 우회할 수 있다 | CLI 시작 시 `CCK_GATE_BYPASS=1` — 그리고 기록됨 |
-| 고장이 사용자를 가두지 않는다 | fail-open 13경로 ([해설](../../docs/merge-gate-explained.ko.md#3-fail-open-설계-철학)) |
+| 고장이 사용자를 가두지 않는다 | fail-open 14경로 ([해설](../../docs/merge-gate-explained.ko.md#3-fail-open-설계-철학)) |
 
 다음 단계: 실제 프로젝트에 `/aick-init`으로 설치하면, 당신의 AI 크루가 시도하는 모든
 `gh pr merge`를 같은 게이트가 지킵니다.

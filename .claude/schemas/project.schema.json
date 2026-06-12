@@ -66,7 +66,7 @@
     },
     "agents": {
       "type": "object",
-      "description": "에이전트 활성화 설정",
+      "description": "에이전트 활성화 설정. 현역 = qa·code-reviewer·db-designer (v4.8.0). pm·planner·backend·frontend·docs는 v4.8.0에서 제거된 legacy 이름, devops는 v1.40.0 제거 — 기존 시드 호환을 위해 enum에 보존(dual-accept)하되 신규 구성 금지. enabled에 legacy 이름이 있으면 /aick-health-check(SI-05)가 MINOR로 정리를 안내한다.",
       "properties": {
         "enabled": {
           "type": "array",
@@ -74,8 +74,8 @@
             "type": "string",
             "enum": ["pm", "planner", "backend", "frontend", "qa", "code-reviewer", "docs", "db-designer", "devops"]
           },
-          "default": ["pm", "backend", "code-reviewer"],
-          "description": "활성화된 에이전트 목록"
+          "default": ["code-reviewer", "qa"],
+          "description": "활성화된 에이전트 목록 (현역: qa, code-reviewer, db-designer — 나머지 enum 값은 legacy 수용 전용)"
         },
         "disabled": {
           "type": "array",
@@ -438,8 +438,8 @@
         "infrastructure": "docker-compose"
       },
       "agents": {
-        "enabled": ["pm", "backend", "code-reviewer", "qa", "db-designer"],
-        "disabled": ["frontend", "planner", "docs"]
+        "enabled": ["code-reviewer", "qa", "db-designer"],
+        "disabled": []
       },
       "conventions": {
         "taskPrefix": "PG-GW",

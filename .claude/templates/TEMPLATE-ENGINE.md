@@ -151,29 +151,31 @@ def generate_tech_stack_section(tech_stack: dict) -> str:
 ```python
 def generate_agents_section(agents: dict) -> str:
     """
-    활성화된 에이전트 섹션 생성
+    활성화된 에이전트 섹션 생성.
+    dict 미등재 이름(legacy — v4.8.0에서 제거된 pm/planner/backend/frontend/docs,
+    v1.40.0에서 제거된 devops)은 행을 생략하고 표 하단에 legacy 안내 1줄을 추가한다.
     """
     enabled = agents.get("enabled", [])
 
     agent_info = {
-        "pm": {"icon": "🎯", "name": "agent-pm", "role": "총괄 오케스트레이터"},
-        "backend": {"icon": "⚙️", "name": "agent-backend", "role": "백엔드 개발"},
-        "frontend": {"icon": "🎨", "name": "agent-frontend", "role": "프론트엔드 개발"},
         "code-reviewer": {"icon": "👀", "name": "agent-code-reviewer", "role": "코드 리뷰"},
         "qa": {"icon": "🧪", "name": "agent-qa", "role": "테스트/품질 검증"},
-        "docs": {"icon": "📚", "name": "agent-docs", "role": "문서화"},
-        "db-designer": {"icon": "🗃️", "name": "agent-db-designer", "role": "DB 설계"},
-        "planner": {"icon": "📋", "name": "agent-planner", "role": "기획/요구사항 정의"}
+        "db-designer": {"icon": "🗃️", "name": "agent-db-designer", "role": "DB 설계"}
     }
 
     lines = ["### 활성화된 에이전트", "", "| 에이전트 | 역할 |", "|----------|------|"]
+    legacy = []
 
     for agent_id in enabled:
-        info = agent_info.get(agent_id, {})
-        icon = info.get("icon", "")
-        name = info.get("name", agent_id)
-        role = info.get("role", "")
-        lines.append(f"| {icon} `{name}` | {role} |")
+        info = agent_info.get(agent_id)
+        if info is None:
+            legacy.append(agent_id)   # legacy 이름 — 행 생략
+            continue
+        lines.append(f"| {info['icon']} `{info['name']}` | {info['role']} |")
+
+    if legacy:
+        lines.append("")
+        lines.append(f"> legacy 에이전트 {', '.join(legacy)}: v4.8.0에서 제거됨 — /aick-health-check가 project.json 정리를 안내")
 
     return "\n".join(lines)
 ```
@@ -184,9 +186,8 @@ def generate_agents_section(agents: dict) -> str:
 
 | 에이전트 | 역할 |
 |----------|------|
-| 🎯 `agent-pm` | 총괄 오케스트레이터 |
-| ⚙️ `agent-backend` | 백엔드 개발 |
 | 👀 `agent-code-reviewer` | 코드 리뷰 |
+| 🧪 `agent-qa` | 테스트/품질 검증 |
 ```
 
 ### CONVENTIONS_SECTION (레이지 로딩 — 트리거 테이블)
