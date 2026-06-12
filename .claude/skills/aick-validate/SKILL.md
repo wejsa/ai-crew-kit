@@ -46,6 +46,9 @@ SKILL.md에서 참조하는 스킬/에이전트 파일 존재 확인
 project.schema.json, backlog.schema.json → JSON Schema Draft-07 호환.
 migrations.json → 유효 JSON + 필수 구조.
 
+**5.5 상태 타임스탬프 형식 (v4.8.0)**
+`state/backlog.json` 모든 Task의 시각 필드(`assignedAt`·`lockedAt`·`planApprovedAt`·`createdAt`·`updatedAt`·`completedAt`·`pausedAt`·`mergedAt`)를 jq `fromdateiso8601` 파싱 시뮬레이션으로 검사 — null이 아닌데 파싱 불가(예: 시간 없는 `"2026-06-12"`)면 WARNING + Task ID·필드·현재 값 출력. 만료 판정(stop.sh·aick-plan 0.5·aick-impl 잠금 정리)은 파싱 불가 타임스탬프를 **만료로 취급하지 않으므로**(v4.8.0, M002 — 거짓 만료 방지), 교정 전까지 해당 잠금은 자동 만료되지 않는다 → `--fix` 안내.
+
 ### Category 3: [OPTIONAL] 확장 검증
 
 **6. 워크플로우 YAML**
@@ -61,6 +64,12 @@ migrations.json → 유효 JSON + 필수 구조.
 ## --fix 모드
 
 자동 수정 가능: metadata.version 누락 → 기본값 1
+타임스탬프 형식 오류 (v4.8.0, 검증 5.5 — 잠금 만료에 관여하는 필드만):
+- `lockedAt` 파싱 불가 → 현재 시각(ISO 8601) — 가변 하트비트라 안전
+- `assignedAt` 파싱 불가 → 현재 시각 + 경고 — 원칙적으로 불변 필드이나 손상 값은 복원 불가, TTL은 교정 시점부터 재기산됨을 명시
+- `planApprovedAt` 파싱 불가 → `null` — 승인 기록 손상은 보수적으로 무효화(aick-plan 재승인 강제)
+- 그 외 이력 필드(`createdAt`·`completedAt` 등) 파싱 불가 → 자동 수정 불가, 경고만(원본 값 추정 불가·만료 판정 무관)
+- 수정 시 `metadata.version` 1 증가 + `aick-backlog` 쓰기 프로토콜 준수
 자동 수정 불가 (수동): JSON 문법 오류, YAML 프론트매터 오류, 누락 파일
 
 ## 주의사항

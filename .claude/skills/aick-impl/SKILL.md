@@ -31,7 +31,7 @@ complexity-hint: medium
 
 ## 잠금 자동 정리 (Lock Auto-cleanup)
 사전 조건 검사 중, 현재 작업 Task **외**의 `in_progress` Task를 스캔:
-1. `(lockedAt // assignedAt)` + (`lockTTL` ?? 3600) < 현재 시각 → 만료 감지 (v4.5.0: 활동 하트비트 `lockedAt` 우선)
+1. `(lockedAt // assignedAt)` + (`lockTTL` ?? 3600) < 현재 시각 → 만료 감지 (v4.5.0: 활동 하트비트 `lockedAt` 우선). 타임스탬프 파싱 불가 시 만료로 취급하지 않음(v4.8.0, M002) — `/aick-validate --fix` 안내
 2. 만료된 Task: `status` → `"todo"`, `assignee`/`assignedAt`/`lockedBy`/`lockedAt`/`lockedFiles`/`planApprovedAt` 초기화 (승인은 잠금 사이클에 귀속 — 재선택 시 aick-plan이 재승인)
 3. 로그: `🔓 잠금 만료 자동 해제: {TASK-ID}`
 4. 현재 작업 Task는 제외 (자기 자신의 lock은 정리하지 않음)

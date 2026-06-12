@@ -38,7 +38,7 @@ CLAUDE.md 상태 추적 패턴. currentSkill="aick-plan"
 
 Task 선택 전에 모든 `in_progress` Task를 스캔:
 
-1. 각 Task의 `(lockedAt // assignedAt)` + (`lockTTL` ?? 3600) < 현재 시각인지 검사 (v4.5.0: 활동 하트비트 `lockedAt` 우선, 없으면 `assignedAt` 폴백)
+1. 각 Task의 `(lockedAt // assignedAt)` + (`lockTTL` ?? 3600) < 현재 시각인지 검사 (v4.5.0: 활동 하트비트 `lockedAt` 우선, 없으면 `assignedAt` 폴백). 타임스탬프가 ISO 8601로 파싱 불가하면 **만료로 취급하지 않음**(v4.8.0, M002 — 거짓 만료 방지) — `/aick-validate --fix` 교정 안내만 출력
 2. 만료된 Task 발견 시:
    - `status` → `"todo"`, `assignee` → `null`, `assignedAt` → `null`, `lockedBy` → `null`, `lockedAt` → `null`, `lockedFiles` → `[]`, `planApprovedAt` → `null`
    - `workflowState` → `null`

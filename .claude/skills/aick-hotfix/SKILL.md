@@ -112,5 +112,5 @@ execution-log.json에 `hotfix_completed`: hotfixId, prNumber, version, descripti
 - develop 백머지 필수
 - Worktree 환경 실행 불가
 - 보안 리뷰만 수행 (전체 리뷰 대신 빠른 머지 우선)
-- Step 7의 결정 기록이 PreToolUse 머지 게이트 **신호 A2**의 원천 — REQUEST_CHANGES 기록 상태에서 `gh pr merge`는 결정적으로 차단된다(`.claude/state/review-decisions.json`, 로컬 전용)
+- Step 7의 결정 기록이 PreToolUse 머지 게이트 **신호 A2**의 원천 — REQUEST_CHANGES 기록 상태에서 `gh pr merge`는 결정적으로 차단된다(`.claude/state/review-decisions.json`, 로컬 전용). **리뷰한 머신/세션에서 머지까지 완료할 것** — 타 머신 머지는 A2 미적용, 신호 B에만 의존 (v4.8.0)
 - 롤백 필요 시: `/aick-rollback v{버전}` 안내

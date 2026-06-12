@@ -233,7 +233,8 @@ A deterministic gate is only as good as the boundary it sits on. Know the edges:
 - **Signal A2 is local-only.** Hotfix/ad-hoc review verdicts (v4.8.0 — these paths previously
   bypassed the gate entirely) live in a gitignored file: they protect the machine where the
   review ran, not other clones or teammates' sessions. Cross-machine enforcement remains
-  Signal B + branch protection.
+  Signal B + branch protection. **Practical rule**: complete the merge in the session/machine
+  where the review ran — merging an ad-hoc PR from another clone falls back to Signal B alone.
 - **Rollback (`/aick-rollback`) stays outside the gate** by design: it has no review step at
   all — it is an audited `git revert` of already-reviewed code, gated by build/test instead.
 - **Bypass is a feature.** `CCK_GATE_BYPASS=1` exists on purpose, is user-only (see §4), and is

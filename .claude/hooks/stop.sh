@@ -66,6 +66,9 @@ if [ -f "$BACKLOG" ]; then
   NOW_EPOCH="$(date -u +%s)"
   # 만료 기준 (v4.5.0): `(lockedAt // assignedAt) + lockTTL < now`. reclaim(aick-plan/impl)과
   # 동일 윈도우(lockTTL ≥3600). 구 고정 600초(10분)는 긴 빌드/사고 중 거짓 만료 위험이라 폐기.
+  # 비-ISO8601 타임스탬프는 만료로 취급하지 않음 (v4.8.0, M002 해소): 구 `// 0` 단독 폴백은
+  # 파싱 실패를 epoch 0으로 간주해 활성 잠금을 즉시 거짓 만료시켰다. 파싱 불가 잠금은
+  # 자동 만료되지 않으므로 /aick-validate --fix 로 교정한다 (diagnose.sh가 가시화).
   # 비파괴적: 만료된 활성 잠금의 liveness 표시(lockedBy/lockedAt)만 null로 초기화하고
   # status/assignee는 건드리지 않는다(전체 회수는 스킬 진입 시 reclaim이 수행).
   if command -v atomic_write >/dev/null 2>&1; then
@@ -73,8 +76,8 @@ if [ -f "$BACKLOG" ]; then
     HAS_EXPIRED="$(jq --argjson now "$NOW_EPOCH" '
       [.tasks[]? | select(
         .status == "in_progress" and
-        ((.lockedAt // .assignedAt // "") != "") and
-        (((.lockedAt // .assignedAt) | fromdateiso8601?) // 0) + (.lockTTL // 3600) < $now
+        ((((.lockedAt // .assignedAt // "") | fromdateiso8601?) // null) != null) and
+        ((((.lockedAt // .assignedAt) | fromdateiso8601?) // 0) + (.lockTTL // 3600) < $now)
       )] | length > 0
     ' "$BACKLOG" 2>/dev/null || echo false)"
 
@@ -86,8 +89,8 @@ if [ -f "$BACKLOG" ]; then
         '.tasks |= with_entries(
           .value |= (
             if .status == "in_progress" and
-               ((.lockedAt // .assignedAt // "") != "") and
-               (((.lockedAt // .assignedAt) | fromdateiso8601?) // 0) + (.lockTTL // 3600) < $now
+               ((((.lockedAt // .assignedAt // "") | fromdateiso8601?) // null) != null) and
+               ((((.lockedAt // .assignedAt) | fromdateiso8601?) // 0) + (.lockTTL // 3600) < $now)
             then . + {lockedAt: null, lockedBy: null}
             else . end
           )

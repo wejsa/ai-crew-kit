@@ -387,6 +387,14 @@ Step 3 sub-agent들이 반환한 markdown 표 + prose를 다음 정규식 규약
 - **이슈 ID**(`[C{NNN}]`/`[H{NNN}]`/`[M{NNN}]`, Step 4 채번 규칙)는 라벨 다음에 표기 가능하다. 강등은 `H` 채널을 사용한다.
 - 이모지(`🔴`/`🟠`/`🟡`)는 시각 보조이며, aick-fix 파싱은 `**CRITICAL**` 볼드 토큰과 `[원래 CRITICAL · 강등]` 마커를 기준으로 한다(이모지 누락에도 견고하도록).
 
+#### 게시 라벨 self-check (aick-fix 파싱 계약 보호, v4.8.0)
+
+인라인 코멘트 게시 직후, 게시 응답에서 수집한 comment id로 게시본을 재조회해 위 라벨 SSOT 준수를 검증한다 — 게시 단계의 형식 이탈을 aick-fix 파싱 전에 조기 발견:
+- `gh api repos/{owner}/{repo}/pulls/comments/{id} -q .body` (본 회차 게시분만 대상 — 게시 시 응답의 `id` 수집)
+- 검증 규칙(위 SSOT 표와 동일 — 별도 기준 금지): 첫 줄이 `\*\*(CRITICAL|MAJOR|MINOR)\*\*` 매치 + 강등 항목은 같은 줄에 `\[원래 CRITICAL\s*·\s*강등\]` 마커 존재
+- 불일치 → `gh api -X PATCH repos/{owner}/{repo}/pulls/comments/{id} -f body=...`로 **라벨 줄만** 교정 후 1회 재검증. 그래도 불일치 → 요약 코멘트에 경고 1줄 추가(`⚠️ label self-check failed: comment {id} — aick-fix may miss this issue`) 후 진행(비차단)
+- 재조회 자체 실패(네트워크 등) → 스킵(비차단) — 게시는 이미 완료, 검증만 생략됐음을 출력에 명시
+
 ### 6. 리뷰 결정 (Step 4 매트릭스 SSOT 참조)
 
 #### 결정 분기 (위에서 아래로 첫 매치 — CRITICAL 게시 우선, 그 다음 강등 가드, 마지막 정상)
@@ -413,6 +421,7 @@ Step 3 sub-agent들이 반환한 markdown 표 + prose를 다음 정규식 규약
      '.[$n] = {decision:$d, source:$s, updatedAt:$t}' "$f" > "$f.tmp.$$" && mv "$f.tmp.$$" "$f" || rm -f "$f.tmp.$$"
   jq -r --arg n "$n" '.[$n].decision' "$f"   # 기록 검증 — 출력이 결정값과 다르면 사용자에게 보고
   ```
+  ad-hoc PR은 **리뷰한 머신/세션에서 머지까지 완료**할 것 — 기록은 로컬 전용이라 타 머신에서의 머지는 신호 B에만 의존한다 (출력에 1줄 안내, v4.8.0).
 
 ### 7. 다음 스킬
 

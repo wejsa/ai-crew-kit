@@ -44,7 +44,7 @@ CLAUDE.md 상태 추적 패턴. currentSkill="aick-fix"
 
 ### 2. fix 후보 이슈 목록 파싱
 
-PR 리뷰 코멘트에서 직접 파싱 (`gh api repos/{owner}/{repo}/pulls/{number}/comments`). 인라인 코멘트 라벨 형식의 **단일 진실 소스는 `aick-review-pr` SKILL.md Step 5 "인라인 코멘트 라벨 형식 (SSOT)"** — 본 Step의 정규식은 그 SSOT를 파싱 대상으로 가정한다. v2.3+ 강등 매트릭스 인지로 모드별 분기:
+PR 리뷰 코멘트에서 직접 파싱 (`gh api repos/{owner}/{repo}/pulls/{number}/comments`). 인라인 코멘트 라벨 형식의 **단일 진실 소스는 `aick-review-pr` SKILL.md Step 5 "인라인 코멘트 라벨 형식 (SSOT)"** — 본 Step의 정규식은 그 SSOT를 파싱 대상으로 가정한다. 게시 측은 같은 Step 5의 "게시 라벨 self-check"(v4.8.0)가 게시 직후 형식을 재검증한다 — PR 요약에 `label self-check failed` 경고가 보이면 해당 코멘트는 파싱에서 누락될 수 있으므로 사용자에게 보고. v2.3+ 강등 매트릭스 인지로 모드별 분기:
 
 **파싱 정규식 (SSOT 기준)**:
 - **정상 게시 CRITICAL**: 본문 첫 줄에 `**CRITICAL**` 볼드 토큰 매치 — regex `\*\*CRITICAL\*\*` (이모지 `🔴` 유무 무관). 레거시 호환으로 `[CRITICAL]` 대괄호 태그도 인정.

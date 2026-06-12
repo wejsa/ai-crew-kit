@@ -137,24 +137,34 @@ else
 fi
 # 만료 임박/만료된 lock 후보 — stop.sh와 동일 만료 의미론(v4.5.0):
 # (lockedAt // assignedAt) + (lockTTL // 3600) < now. 구 600s 고정은 v4.5.0 이전 잔재였음.
-expired_count=0; near_count=0
+# v4.8.0 (M002 해소): 파싱 불가 타임스탬프는 만료 아님 — 별도 카운트로 가시화.
+expired_count=0; near_count=0; badts_count=0
 if [ "$have_jq" -eq 1 ] && [ -f "$BACKLOG" ]; then
   now_ep="$(date -u +%s)"
   expired_count="$(jq --argjson now "$now_ep" '
     [.tasks[]? | select(
       .status == "in_progress" and
-      ((.lockedAt // .assignedAt // "") != "") and
-      ((((.lockedAt // .assignedAt) | fromdateiso8601?) // 0) + (.lockTTL // 3600)) < $now
+      ((((.lockedAt // .assignedAt // "") | fromdateiso8601?) // null) != null) and
+      (((((.lockedAt // .assignedAt) | fromdateiso8601?) // 0) + (.lockTTL // 3600)) < $now)
     )] | length' "$BACKLOG" 2>/dev/null || echo 0)"
   near_count="$(jq --argjson now "$now_ep" '
     [.tasks[]? | select(
       .status == "in_progress" and
-      ((.lockedAt // .assignedAt // "") != "") and
+      ((((.lockedAt // .assignedAt // "") | fromdateiso8601?) // null) != null) and
       (((((.lockedAt // .assignedAt) | fromdateiso8601?) // 0) + (.lockTTL // 3600)) >= $now) and
       (((((.lockedAt // .assignedAt) | fromdateiso8601?) // 0) + (.lockTTL // 3600)) < ($now + 120))
     )] | length' "$BACKLOG" 2>/dev/null || echo 0)"
+  badts_count="$(jq '
+    [.tasks[]? | select(
+      .status == "in_progress" and
+      ((.lockedAt != null) or (.assignedAt != null)) and
+      ((((.lockedAt // .assignedAt) | fromdateiso8601?) // null) == null)
+    )] | length' "$BACKLOG" 2>/dev/null || echo 0)"
   printf '  expired locks (released on next stop turn): %s\n' "$expired_count"
   printf '  locks expiring soon (within 2m): %s\n' "$near_count"
+  if [ "$badts_count" != "0" ]; then
+    printf '  🟡 locks with unparseable timestamps (never auto-expire): %s — fix via /aick-validate --fix\n' "$badts_count"
+  fi
 fi
 
 # ── [영향 평가] ──────────────────────────────────────────────
