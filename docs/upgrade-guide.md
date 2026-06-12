@@ -23,6 +23,13 @@ AI Crew Kit이 업데이트되면, 기존 프로젝트에서 프레임워크 파
 /aick-upgrade --source https://github.com/wejsa/ai-crew-kit.git
 ```
 
+## v4.7.x → v4.8.0 마이그레이션 (에이전트 7종 재편 + 게이트 신호 A2)
+
+수동 작업 0건 — 업그레이드가 자동 처리합니다.
+
+- **에이전트 12종 → 7종**: 미배선 장식 에이전트 5종(pm·planner·backend·frontend·docs)이 제거됩니다. **동작 변화 없음**(어떤 스킬도 호출하지 않던 에이전트). `.claude/agents/` 통째 교체로 자동 전파되며, 기존 `project.json`의 `agents.enabled`에 구 이름이 남아 있어도 검증은 통과하고(`schema` legacy 수용) `/aick-health-check`(SI-05)가 MINOR로 정리를 안내합니다.
+- **머지 게이트 신호 A2**: 핫픽스·ad-hoc 리뷰 PR도 게이트가 차단합니다. `.gitignore`에 `.claude/state/review-decisions.json` 엔트리가 자동 추가됩니다(`migrations.json` `add_gitignore_entry` — 로컬 전용 transient 상태).
+
 ## v1.x → v2.0 마이그레이션
 
 v1.x 사용자는 `/aick-upgrade --version v2.0.0` 한 번이면 충분합니다 — `migrations.json` v2.0.0의 4 add_field(`hooks` / `conventions.skillProfile` / `conventions.overridePriority` / `tokenHints`)가 자동 적용됩니다.
