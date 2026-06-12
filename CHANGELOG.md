@@ -7,7 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-> **품질 번들 (공개 대비)** — 머지 게이트 커버리지 완성(핫픽스 경로), 리뷰 프롬프트 인젝션 격리, 게이트 데이터 결함 가시화, 미배선 에이전트 정리. 차기 minor(4.8.0 예정)로 릴리스.
+> **품질 번들 + 마감 번들 (공개 대비)** — 머지 게이트 커버리지 완성(핫픽스 경로), 리뷰 프롬프트 인젝션 격리, 게이트 데이터 결함 가시화, 미배선 에이전트 정리 + 완결 감사 기반 마감(승인 영속화·빌드 SSOT·릴리스 멱등·훅 견고성·i18n 전면 영문). 차기 minor(4.8.0 예정)로 릴리스.
+
+### Added (closeout)
+- **plan 승인 영속화**: `task.planApprovedAt`(schema 신설) — `aick-plan` Step 7이 승인 시각을 기록하고 `aick-impl` 사전 조건 4가 null이면 STOP(`--micro` 면제). 사용자 승인이 prose-only였던 마지막 결정 지점 해소. 승인 거절·잠금 만료 reclaim 시 null 초기화(잠금 사이클 귀속).
+- **릴리스 멱등 가드** (`aick-release` Step 2.5): 태그 존재=완료 판정 SSOT — 중복 실행 STOP, 중간 실패는 CHANGELOG/VERSION/릴리스 커밋 기반 결정적 재개(Step 9 또는 10부터).
+- **execution-log 스키마** (`execution-log.schema.json`): 캐노니컬 shape(append-only 배열, timestamp+action 필수) 정식화 — 마지막 무스키마 상태 파일 해소. action은 pattern 강제+알려진 17종 문서화(엄격 enum 비채택 — sleeper 재발 클래스 회피).
+- **검증망 확장**: `validate-schema.sh` §6 — backlog·review-decisions·execution-log 스키마 세트 일괄 검증(메타+positive+negative fixture, PASS 22→46). `add_gitignore_entry` 마이그레이션 실행 테스트 6건(멱등성·데이터 계약·kit↔시드 동기).
+- **훅 견고성**: `session-start.sh` 네트워크 git 호출 `timeout 8` 래핑(네트워크 블랙홀 방어, timeout 부재 시 graceful) · `atomic-write.sh` mkdir 뮤텍스 스테일(60초 초과) 자동 회수 — 크래시 잔재로 이후 쓰기가 유실되던 영구 누수 해소(+`ACK_MUTEX_IMPL` 테스트 시임).
+
+### Changed (closeout)
+- **빌드 명령 표 SSOT**: `protocols/build-commands.md`로 추출(스택 12행+패키지 매니저 표) — impl 12스택 vs release 3스택 발산 해소, 소비 스킬 6곳(impl·release·fix·hotfix·rollback·onboard) 참조 전환.
+- **훅 i18n 전면 영문**: 사용자 가시 출력(stdout/stderr/hook-errors.log) 전체 영문화(diagnose 포함 60+ 문자열) + 정책 명문화(hooks/README — 가시 출력=영문, 주석·SKILL prose=한국어). 테스트 assert 12곳 동기.
+- **`aick-review` 포지셔닝 명문화**: "비-PR 로컬 코드 리뷰" — 게이트 연동 정식 경로(`aick-review-pr`)와의 역할 구분을 SKILL.md·skill-reference에 기재.
+
+### Fixed (closeout)
+- `diagnose.sh` lock 만료 판정이 v4.5.0 이전 잔재(600초 고정)였던 드리프트 → stop.sh와 동일 의미론(`(lockedAt // assignedAt) + lockTTL`)으로 정렬.
+- hooks/README PostToolUse에 file-membership 하트비트 한계 문서화, eject-guide에 로컬 전용 상태 처리 1줄.
 
 ### Added
 - **머지 게이트 신호 A2** (`pre-tool-use.sh`): backlog Task가 없는 PR(핫픽스·ad-hoc 리뷰)도 결정적 차단 — `aick-hotfix` Step 7 / `aick-review-pr` Step 6.5(소유 Task 부재 시)가 리뷰 결정을 `.claude/state/review-decisions.json`(신규 스키마 `review-decisions.schema.json`, **로컬 전용·gitignore**)에 기록하고, 게이트가 A → A2 → B 순으로 평가. 기존엔 hotfix→main 머지가 게이트를 완전 우회(신호 A: Task 없음, 신호 B: GitHub 리뷰 결정 없음). fail-open 경로 13→14. 게이트 테스트 §11(7 assertion). 머지 성공 시 엔트리 자동 정리(hotfix Step 8·merge-pr Step 3). 시드 전파: migrations `add_gitignore_entry`(4.8.0) + init Step 7 필수 엔트리.
