@@ -132,7 +132,7 @@
         "planApprovedAt": {
           "type": ["string", "null"],
           "format": "date-time",
-          "description": "aick-plan Step 6 사용자 승인 시각 — aick-impl 사전 조건이 검증하는 결정적 승인 기록 (v4.8.0: 사용자 승인이 prose-only였던 마지막 결정 지점 해소). 승인 전·승인 거절(N)·잠금 만료로 Task가 todo로 복귀할 때 null. workflowState가 아닌 task 레벨인 이유: workflowState는 체이닝 스킬이 전체 객체로 재작성하므로 드롭 위험 — 승인 라이프사이클은 Task 라이프사이클을 따른다."
+          "description": "aick-plan Step 6 사용자 승인 시각 — aick-impl 사전 조건이 검증하는 결정적 승인 기록 (v4.8.0: 사용자 승인이 prose-only였던 마지막 결정 지점 해소). 승인 전, 그리고 Task가 todo로 복귀하는 모든 경로에서 null — 승인 거절(N)·잠금 만료 reclaim(plan/impl)·blocked 해제(plan 0.6)·unlock --force·update/batch --status=todo·SI-02 autoFix. workflowState가 아닌 task 레벨인 이유: workflowState는 체이닝 스킬이 전체 객체로 재작성하므로 드롭 위험 — 승인 라이프사이클은 Task 라이프사이클을 따른다."
         },
         "lockedBy": {
           "type": ["string", "null"],

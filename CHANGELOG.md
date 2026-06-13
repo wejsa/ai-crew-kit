@@ -56,7 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **비-ISO8601 타임스탬프 거짓 만료 해소 (M002)** (`stop.sh`·`diagnose.sh`): 만료 판정의 `fromdateiso8601? // 0` 폴백이 파싱 실패를 epoch 0으로 간주해 활성 잠금을 즉시 거짓 만료(동시 편집 위험)시키던 결함 — 파싱 불가는 **만료 아님**으로 변경(주의: jq `?`는 실패 시 null이 아닌 empty 스트림 — `// null` 승격 후 비교, 직접 `!= null` 비교는 조건 전체를 empty로 전파). 교정은 `aick-validate --fix`·가시화는 `diagnose.sh` 담당. `aick-plan` 0.5·`aick-impl` 잠금 정리 prose 동일 의미론 정렬. `test-lock-expiry.sh` T3 기대 반전(M002 해소) + T6(assignedAt 폴백 경로 date-only) 추가.
-- **`blocked` 흡수 상태 해소** (`aick-plan` Step 0.6 신설): 의존성 미충족으로 `blocked` 표시된 Task가 의존 Task 완료 후에도 영구 blocked로 남던 문제(자동 선택이 `status: todo`만 스캔 — 어떤 스킬도 재평가하지 않음) — Task 선택 전 blocked 전수 스캔, 의존성 충족(backlog `done` 또는 completed.json 존재) 시 자동 `todo` 복귀.
+- **`blocked` 흡수 상태 해소** (`aick-plan` Step 0.6 신설): 의존성 미충족으로 `blocked` 표시된 Task가 의존 Task 완료 후에도 영구 blocked로 남던 문제(자동 선택이 `status: todo`만 스캔 — 어떤 스킬도 재평가하지 않음) — Task 선택 전 blocked 전수 스캔, 의존성 충족(backlog `done` 또는 completed.json 존재) 시 자동 `todo` 복귀. 복귀 시 잠금·승인 필드도 0.5 reclaim 목록과 동일하게 초기화 — todo 복귀의 7번째 경로로서, 수동 blocked를 거친 Task의 스테일 `planApprovedAt`이 승인 영속화(A1) 게이트를 우회하지 않도록.
 - **계획 파일 유실 데드락 해소** (`aick-plan` Step 1 재계획 분기 + `aick-impl` 사전 조건 4 안내): `planApprovedAt != null`인데 계획 파일(`.claude/temp/` 로컬 전용 — temp 정리·머신 이동 시 유실)이 부재하면 impl은 "파일 없음" STOP·plan은 in_progress 잠금으로 막혀 빠져나갈 공식 경로가 없던 상태 — taskId 지정 재계획 분기(assignee 접두 소유 확인 → 승인 무효화 → 재계획, 잠금·assignee 보존) 신설. 상태 전이는 aick-plan 단독 소유.
 - `backlog.schema.json` `currentSkill` enum에 `aick-feature`(+crew/skill 트리오) 추가 — CLAUDE.md 진행바 프로토콜이 feature를 체이닝 스킬로 명시하는데 enum이 거부하던 latent sleeper(24→27 값, 방어적 수용·기록 의무 없음).
 
