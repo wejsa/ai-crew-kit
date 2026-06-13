@@ -51,7 +51,7 @@ Task 선택 전에 모든 `in_progress` Task를 스캔:
 
 `status: blocked` Task 전체를 스캔 (v4.8.0 — blocked는 진입만 있고 복귀가 없던 흡수 상태였음):
 
-1. `dependencies`의 모든 의존 Task가 충족 — backlog에서 `done`, 또는 backlog에 없고 completed.json에 존재 — 이면 `status` → `"todo"`
+1. `dependencies`의 모든 의존 Task가 충족 — backlog에서 `done`, 또는 backlog에 없고 completed.json에 존재 — 이면 `status` → `"todo"` + 잠금·승인 필드 초기화: `assignee`/`assignedAt`/`lockedBy`/`lockedAt` → `null`, `lockedFiles` → `[]`, `planApprovedAt` → `null`, `workflowState` → `null` (0.5 reclaim 목록과 동일 — in_progress에서 수동 blocked된 Task의 스테일 승인이 aick-impl 사전 조건 4를 통과하지 않도록. 통상의 blocked Task는 해당 필드가 전부 null이라 no-op)
 2. 로그: `🔓 의존성 충족 — blocked 해제: {TASK-ID} "{제목}"`
 3. 해제된 Task는 이번 Step 1 자동 선택 후보에 포함
 4. 변경 발생 시 `metadata.version` 1 증가, 0.5의 잠금 정리와 같은 커밋으로 묶어 커밋+push (양쪽 모두 변경 없으면 쓰기 생략)
