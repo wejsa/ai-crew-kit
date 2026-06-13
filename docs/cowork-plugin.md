@@ -24,9 +24,12 @@ AI Crew Kit는 리포 clone 방식 외에 **Claude Code · Cowork 플러그인**
 # 2) 플러그인 설치
 /plugin install ai-crew-kit@ai-crew-kit
 
-# 변경 반영 / 업데이트
-/plugin marketplace update ai-crew-kit
+# 변경 반영 / 업데이트 — 2단계
+/plugin marketplace update ai-crew-kit     # ① 플러그인 파일 갱신 (skills·agents·hooks·templates)
+# ② 프로젝트에서 /aick-upgrade 1회 — 프로젝트-로컬 마이그레이션 (v4.8.0+)
 ```
+
+> 왜 2단계인가: 플러그인 업데이트는 플러그인 캐시만 교체하고 **사용자 리포 안의 파일**(`.gitignore` 엔트리, `project.json` kitVersion, `CLAUDE.md`)은 건드릴 수 없습니다. `/aick-upgrade`가 플러그인 모드를 자동 감지해 그 부분만 적용합니다(파일 교체 없음).
 
 > 로컬에서 먼저 검증하려면 clone 후 로컬 경로로 추가합니다:
 > `/plugin marketplace add ./ai-crew-kit` → `/plugin install ai-crew-kit@ai-crew-kit`

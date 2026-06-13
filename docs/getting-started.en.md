@@ -138,7 +138,7 @@ Each phase has a user-approval gate, and `gh pr merge` is additionally guarded b
 The kit's state lives in git (`.claude/state/project.json`, `backlog.json`, `CLAUDE.md`), so a team shares it like any other code:
 
 1. **One person initializes.** Run `/aick-init` (or `/aick-onboard`) in the project, review the generated files, commit and push them.
-2. **Everyone else installs the plugin** (user-wide, two commands), pulls the project, and runs `/aick-status` — no further setup. Same plugin version across the team is recommended (`/plugin update`).
+2. **Everyone else installs the plugin** (user-wide, two commands), pulls the project, and runs `/aick-status` — no further setup. Same plugin version across the team is recommended (`/plugin update`). After a plugin update, run `/aick-upgrade` once in the project — it applies project-local migrations (`.gitignore` entries, `kitVersion`, `CLAUDE.md` regeneration) that a plugin cache swap can't reach (v4.8.0+).
 3. **Parallel work is lock-protected.** `/aick-plan` claims a task with a lock (TTL + activity heartbeat); two sessions cannot claim the same task, and expired locks self-release. On one machine, use `claude --worktree <name>` for parallel sessions.
 4. **One rule for hotfix/ad-hoc PRs:** finish the merge on the machine where the review ran. Those verdicts are recorded locally only (gate signal A2, gitignored) — merging from another clone falls back to GitHub's review state alone. Workflow-chain PRs (plan→impl→review) are unaffected: their state travels through git. ([details](./merge-gate-explained.md#7-what-the-gate-does-not-do-honest-edition))
 

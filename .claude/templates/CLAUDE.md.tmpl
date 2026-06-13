@@ -34,7 +34,7 @@
 
 > **예외 1 — 프로젝트 상태는 항상 로컬**: `.claude/state/`, `.claude/temp/`, `.claude/plans/`, `project.json`, `CLAUDE.md`, `README.md`, `.claude/settings.json`은 프로젝트별 읽기/쓰기 대상이므로 **항상 프로젝트 로컬 경로**를 쓰며 `${CLAUDE_PLUGIN_ROOT}` 접두를 붙이지 않습니다.
 >
-> **예외 2 — aick-upgrade의 클론-소스 읽기는 규칙 밖**: aick-upgrade는 kit 리포를 임시 디렉토리에 클론해 그 소스의 `templates/`·`schemas/` 등을 읽습니다(번들 경로도 프로젝트 경로도 아닌 클론 경로). 이 업그레이드-시점 읽기 경로에는 `${CLAUDE_PLUGIN_ROOT}` 접두를 적용하지 않습니다.
+> **예외 2 — aick-upgrade의 소스 읽기**: **클론/시드 모드**의 aick-upgrade는 kit 리포를 임시 디렉토리에 클론해 그 소스의 `templates/`·`schemas/` 등을 읽으며(번들 경로도 프로젝트 경로도 아닌 클론 경로), 이 읽기 경로에는 `${CLAUDE_PLUGIN_ROOT}` 접두를 적용하지 않습니다. **플러그인 모드 분기(v4.8.0+)**는 클론 없이 번들 경로(`${CLAUDE_PLUGIN_ROOT}`)에서 템플릿·migrations를 읽습니다.
 
 ---
 

@@ -106,7 +106,7 @@ exec 0</dev/null                  # stdin을 /dev/null로 — 자식 프로세�
 
 > 신호 A는 `backlog.schema.json`의 `workflowState.lastReviewDecision`(v2.4.0 정식 등록)에 의존한다. 이 필드는 aick-review-pr Step 6.5가 매 리뷰마다 갱신한다. 이전에는 스킬이 참조했으나 schema 미등록(`additionalProperties:false`)으로 거부되던 sleeper였다 — 본 게이트와 함께 정식화되어 aick-fix 모드 판정도 같이 복구됨.
 >
-> **한계**: kit 개발 리포 자체는 backlog state가 없어 신호 A가 no-op(claim 감지와 동일) — 실효는 사용자 프로젝트에서 발현. 기존 사용자가 업그레이드 시 PreToolUse 등록을 받으려면 `settings.json` 병합이 필요(aick-upgrade 후속 과제).
+> **한계**: kit 개발 리포 자체는 backlog state가 없어 신호 A가 no-op(claim 감지와 동일) — 실효는 사용자 프로젝트에서 발현. 기존 사용자가 업그레이드 시 PreToolUse 등록을 받으려면 `settings.json` 병합이 필요 — aick-upgrade Step 12-2가 수행한다(v2.5.1 출하, 클론/시드 모드. 플러그인 모드는 plugin manifest가 훅을 등록하므로 해당 없음).
 
 ### SessionStart (`session-start.sh`)
 

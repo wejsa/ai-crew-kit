@@ -1,6 +1,6 @@
 ---
 name: aick-upgrade
-description: 프레임워크 업그레이드 - ai-crew-kit 최신 버전으로 프레임워크 파일 업데이트. /aick-upgrade로 호출합니다.
+description: 프레임워크 업그레이드 - 클론/시드는 프레임워크 파일 교체, 플러그인 모드는 프로젝트-로컬 마이그레이션(gitignore·kitVersion·CLAUDE.md 재생성). /aick-upgrade로 호출합니다.
 disable-model-invocation: true
 allowed-tools: Bash(git:*), Bash(cp:*), Bash(rm:*), Bash(tar:*), Bash(diff:*), Bash(mktemp:*), Bash(mkdir:*), Bash(cat:*), Bash(ls:*), Bash(date:*), Bash(wc:*), Bash(df:*), Bash(jq:*), Bash(echo:*), Read, Write, Edit, Glob, Grep, AskUserQuestion
 argument-hint: "[--dry-run] [--source <git-url|local-path>] [--version <tag>] [--rollback <backup-path>]"
@@ -27,13 +27,31 @@ complexity-hint: light
 `--rollback` 옵션 감지 시, 아래 플로우만 실행하고 종료:
 
 1. 백업 경로 결정: `--rollback <path>` → 해당 경로, 경로 없음 → `.claude/temp/upgrade-backup-*/` 중 최신
-2. 백업 디렉토리 존재 및 무결성 확인
+2. 백업 디렉토리 존재 및 무결성 확인. 백업 내용물에 프레임워크 디렉토리가 포함되어 있는데 현재 설치가 플러그인 모드(= Step 0.5 D1 앵커가 절대경로로 치환되어 있음 — 롤백은 Step 0.5를 실행하지 않으므로 앵커 관찰로 직접 판정)이면 경고 1줄: "클론 시절 백업 — 복원 시 로컬 시드가 재생성됩니다"
 3. 사용자 확인: "다음 백업에서 롤백합니다: {경로}. 진행하시겠습니까?"
-4. `backup.tar.gz` 해제 → 프레임워크 파일 복원
+4. `backup.tar.gz` 해제 → 백업 내용물 복원 (모드별 상이 — 클론 백업: 프레임워크 디렉토리·CLAUDE.md 등 / 플러그인 P4 백업: 프로젝트-로컬 4파일. **플러그인 백업의 project.json은 통째 스냅샷 복원** — 업그레이드 이후의 변이도 함께 되돌아감)
 5. `project.json`의 `kitVersion`을 백업 시점 값으로 되돌림
 6. 롤백 완료 리포트 출력
 
 ## 실행 플로우
+
+### Step 0.5: 설치 모드 판별 (v4.8.0)
+
+**`${CLAUDE_PLUGIN_ROOT}`는 env 변수가 아니라 스킬 로드 시점의 텍스트 치환이다** (CLAUDE.md "경로 해석 규칙" 판정 규칙과 동일). Bash로 env를 검사하지 말 것.
+
+- **D1 (로드 출처)**: 아래 **앵커 라인**의 경로 표기만 보고 판정한다(설명 문장 자체의 `${...}`도 플러그인 모드에선 치환되므로, 판정은 오직 앵커 라인 기준). 앵커가 절대경로로 치환되어 있으면 **플러그인 로드**, 리터럴 `${CLAUDE_PLUGIN_ROOT}/...` 형태 그대로면 **클론/시드 로드**.
+  - 앵커: `${CLAUDE_PLUGIN_ROOT}/.claude/templates/CLAUDE.md.tmpl`
+  - 플러그인 로드면 치환된 절대경로에서 plugin root를 얻고 `<root>/VERSION` 존재 확인 (부재 → "플러그인 설치 손상 — `/plugin` 재설치 후 재시도" STOP)
+- **D2 (로컬 시드 존재)**: Glob `.claude/skills/aick-*/SKILL.md` 결과가 비어있지 않음 = 빌트인 시드 존재. `.claude/skills/custom/`은 판별에서 제외(플러그인 모드에도 존재 가능). `.claude/templates/` 존재 여부도 판별자가 **아님**(부분 시드 오판 위험).
+- **라우팅**:
+
+| D1 | D2 | 플로우 |
+|----|----|--------|
+| 클론/시드 로드 | — | 아래 Step 1~15.5 (클론 플로우) |
+| 플러그인 로드 | 시드 없음 | **"플러그인 모드 플로우" 섹션 (P1~P6)**. 로컬 `.claude/templates/*.tmpl`만 잔존하면 안내 1줄("로컬 템플릿 감지 — 번들 템플릿이 SSOT, 로컬본 미사용") 후 진행 |
+| 플러그인 로드 | 시드 존재 | 클론 플로우 + 안내 1줄: "플러그인과 로컬 시드 동시 감지 — 로컬 시드 기준 업그레이드. 플러그인-only 전환은 eject-guide §플러그인-only 전환 참조" |
+
+- `--rollback`은 모드 무관 (위 롤백 모드 섹션).
 
 ### Step 1: 환경 검증
 
@@ -196,6 +214,48 @@ v{version}: {title}
 - 그 외 미지정 값: `recommend`와 동일하게 정보성+설정 안내로 처리(분기 누락으로 안내가 누락되지 않도록 폴백)
 
 해당 버전 범위에 features가 없으면 이 단계를 스킵한다.
+
+## 플러그인 모드 플로우 (P1~P6) — v4.8.0
+
+플러그인 파일(skills·agents·hooks·templates)은 `/plugin marketplace update`의 소유다. 본 플로우는 **프로젝트-로컬 파일만** 다룬다: `.gitignore`·`.claude/state/project.json`·`CLAUDE.md`·`README.md`. 파일 교체 계열 단계(Step 2·3·6-0~6-2·9·11·11.5·12-1·12-2)는 전부 생략하며, **어떤 P-스텝도 로컬 프레임워크 디렉토리를 생성하지 않는다** (시드 전환 금지 — `.claude/skills/`·`.claude/templates/` 등).
+
+### P1. 환경 검증
+- project.json 부재 → "/aick-init 먼저 실행" 안내 후 종료
+- `<plugin root>/VERSION` 부재 → STOP (Step 0.5 백스톱)
+- Git uncommitted changes → 경고 + 진행 여부 질문 (Step 1과 동일)
+- `.claude/temp/.upgrade.lock` 존재 → **차단** + "`--rollback` 또는 잠금 수동 삭제 후 재시도" 안내 (클론 Step 1은 경고만 — 플러그인 분기는 P3.5~P6 동시 실행을 차단)
+
+### P2. 버전 비교
+current = `project.json.kitVersion`, target = `<plugin root>/VERSION`.
+- current 부재·`unknown`·semver 패턴 불일치(`v4.7.0`·`0.1.0` 오기입 등) → **부트스트랩**: current를 `0.0.0`으로 간주
+- target == current → "이미 최신" + 진행 여부 질문 (재적용은 수렴 의미론으로 안전 — 아래 불변식)
+- target < current → "플러그인이 프로젝트 기록보다 구버전 — `/plugin marketplace update` 먼저 실행 권장" + 진행 여부 질문
+- `--source`/`--version` 지정 시 → "플러그인 모드의 타깃은 설치된 플러그인 버전입니다. 다른 버전은 `/plugin marketplace update` 또는 클론 모드를 사용하세요" 안내 후 **종료**
+
+### P3. 미리보기 + 확인
+적용 예정 마이그레이션 목록(**필터: current < to ≤ target** — migrations.json `from` 필드는 문서화 용도, 필터에 미사용) + 재생성 대상(CLAUDE.md, README는 마커 존재 시) + kitVersion 전환 출력. `--dry-run`이면 여기서 **종료**. 일반: AskUserQuestion 1회.
+
+### P3.5. 잠금
+`.claude/temp/.upgrade.lock` + `upgrade-state.json` 생성 — P3.5~P6 구간 보호 (클론 Step 11 첫 줄과 동일 패턴).
+
+### P4. 경량 백업
+`.claude/temp/upgrade-backup-{YYYYMMDD-HHmmss}/backup.tar.gz` — `CLAUDE.md`·`README.md`·`.gitignore`·`.claude/state/project.json` 중 **존재하는 파일만** 포함(부재 파일은 `absent.txt` 매니페스트에 기록 — 롤백 시 생성하지 않음). `tar tzf` 무결성 검증 + 현재 kitVersion을 `kitVersion.txt`에 기록 (Step 9와 동일 형식 — `--rollback` 호환).
+
+### P5. 적용 (순서 고정 — kitVersion 기록은 마지막)
+1. **마이그레이션**: Step 12-4 `add_gitignore_entry`(no-op 멱등·trackedWarning 동일) + Step 12-3 `add_field` — 단 **path 루트가 project.json 스키마 top-level 속성인 항목만** 적용, 그 외(`backlog.*` 등)는 스킵+로그(부트스트랩에서 비-project.json 마이그레이션이 project.json을 오염하지 않도록 — `scripts/validate-v2-migration.py`의 schema-top-key 필터와 동일 대상 규칙. 단 그 스크립트는 `to ≤ target` 누적 적용이고 하한 `current`는 없다 — 적용 가능한 change type이 모두 멱등이라 종료 상태 동일). `kitSource` add_field는 플러그인 모드 스킵(클론 캡처 변수 — 기존 값 보존, 부재 시 미기록).
+2. **CLAUDE.md 재생성**: Step 13 재사용 (13-0 CUSTOM_SECTION 안전장치, 13-1 결정적 치환 — 템플릿 = `<plugin root>/.claude/templates/CLAUDE.md.tmpl`, 13-3 검증+재시도 1회, 서브 에이전트 위임 금지)
+3. **README.md 재생성 — 조건부**: CUSTOM_SECTION 마커 있으면 13-2 재사용(번들 템플릿), 마커 없으면 **스킵** + 안내 "README는 사용자 소유로 보임 — 재생성을 원하면 CUSTOM_SECTION 마커 복원 후 재실행" (CLAUDE.md는 프레임워크 소유라 무조건 재생성 — 10-0 안전장치 적용)
+4. **kitVersion = target 기록** + `metadata.version` 1 증가 — **2~3 검증 통과 후에만** (중간 실패 시 SI-06 드리프트 신호가 살아남아 재실행을 유도)
+
+**실패 시 자동 복원**: P5 중 오류 → P4 `backup.tar.gz` **자동 해제**(`tar xzf` — 클론 Step 11 자동 롤백과 동일 패턴, 안내가 아니라 자동) + 잠금 삭제 + 실패 보고.
+
+### P6. 마무리
+잠금·진행 상태 파일 삭제 → `Skill tool: skill="aick-validate"` 자동 호출 (출력에 1줄 명시: "플러그인 모드 — 검증 범위는 state·custom 스킬 중심") → 신규 기능 안내 (Step 15.5 동일 필터 — 부트스트랩은 전체 features) → 출력: 버전 전환, 적용 마이그레이션, 재생성 결과(README 스킵 여부 포함), 백업 위치, 롤백 명령.
+
+### 불변식 (P-플로우)
+- **수렴 의미론**: 입력(project.json·CUSTOM_SECTION·플러그인 버전) 불변 시 재실행 = no-op 동등. 입력 변경 시 현재 값으로 수렴(안전).
+- state 중 `project.json` **제외** 무변경(backlog.json·completed.json 등). custom 스킬·settings.json 무변경.
+- 플러그인 모드 적용 가능 마이그레이션 대상은 **P4 백업 4파일로 한정** — migrations.json에 새 change type 추가 시 P4 백업 목록 동시 확장 의무.
 
 ## 출력
 

@@ -205,12 +205,12 @@ complexity-hint: heavy
 
 #### SI-06. kitVersion 드리프트 탐지 (MINOR / INFO) — v4.4.0
 - 사전 조건: .claude/state/project.json 존재
-- 배경: 플러그인 설치 프로젝트는 `/plugin update`가 플러그인 파일만 교체하고 `project.json`을 건드리지 않으며, `aick-upgrade`는 플러그인 모드 EXEMPT다. 따라서 `kitVersion`이 설치 시점 값에 고정되어 실제 사용 중인 kit 버전과 어긋날 수 있다(동작 게이트는 아님 — 메타데이터 정합성/진단 목적).
+- 배경: 플러그인 설치 프로젝트는 `/plugin update`가 플러그인 파일만 교체하고 `project.json`을 건드리지 않는다. v4.8.0부터 `aick-upgrade` 플러그인 모드 분기가 프로젝트-로컬 마이그레이션(gitignore 엔트리·kitVersion·CLAUDE.md 재생성)을 적용한다(파일 교체는 여전히 `/plugin update` 소유). **드리프트 = 아직 적용하지 않은 프로젝트-로컬 마이그레이션이 있을 수 있다는 신호**(동작 게이트는 아님).
 - 검사:
   - `project.json.kitVersion` **부재 또는 빈 값** → MINOR (init이 값 출처 규칙대로 기입했어야 함 — aick-init `kitVersion 결정 규칙` 참조)
-  - 플러그인 모드(`${CLAUDE_PLUGIN_ROOT}` 존재)에서 `kitVersion` ≠ `${CLAUDE_PLUGIN_ROOT}/VERSION` 값 → **INFO** (드리프트 안내). 비교 불가(VERSION 미확인) 시 SKIP.
+  - 플러그인 모드(`${CLAUDE_PLUGIN_ROOT}` 존재)에서 `kitVersion` ≠ `${CLAUDE_PLUGIN_ROOT}/VERSION` 값 → **INFO** (드리프트 안내 — "`/aick-upgrade` 실행으로 정렬"). 비교 불가(VERSION 미확인) 시 SKIP.
 - FAIL 시: backlog 자동 등록(MINOR만; INFO는 보고만)
-- autoFix: `project.json.kitVersion`을 현재 플러그인 `VERSION` 값으로 갱신 + `metadata.version` 1 증가 (confirm: true. 1줄 메타데이터라 무위험)
+- autoFix: **없음** (v4.8.0 — 구 autoFix의 버전 직접 스탬핑 제거: 마이그레이션 미적용 상태로 버전만 정렬하면 aick-upgrade P2가 "이미 최신"으로 빠져 미적용 마이그레이션이 영구 마스킹됨). `/aick-upgrade` 실행 안내로 대체.
 
 ### 카테고리: security (기본 보안)
 
