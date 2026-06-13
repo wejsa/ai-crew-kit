@@ -74,6 +74,7 @@ echo '{"tool_input":{"command":"gh pr merge 42 --squash"}}' \
 
 ---
 
+<!-- PARITY: this Why section pairs with README.ko.md "그냥 Claude Code만 쓰면 안 되나?" — always update both together -->
 ## 🧭 Why not just plain Claude Code?
 
 Claude Code alone already writes excellent code. What it doesn't give you is a *process* that holds up across sessions, branches, and contributors:
