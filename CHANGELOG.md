@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-> **품질 번들 + 마감 번들 + 분석 후속 + Phase C 문서 + CC 기능 채택 (공개 대비)** — 머지 게이트 커버리지 완성(핫픽스 경로), 리뷰 프롬프트 인젝션 격리, 게이트 데이터 결함 가시화, 미배선 에이전트 정리 + 완결 감사 기반 마감(승인 영속화·빌드 SSOT·릴리스 멱등·훅 견고성·i18n 전면 영문) + 재분석 후속(blocked 복귀·데드락 해소·플러그인 CI·M002) + 공개 대비 문서(Why·영문 스킬 레퍼런스·팀 도입 FAQ·비용 기대치) + Claude Code 신기능 채택(maxTurns·disallowed-tools, ADR-011). 차기 minor(4.8.0 예정)로 릴리스.
+## [4.8.0] - 2026-06-13
+
+> **품질 번들 + 마감 번들 + 분석 후속 + Phase C 문서 + CC 기능 채택 + 플러그인 모드 마이그레이션** — 머지 게이트 커버리지 완성(핫픽스 경로), 리뷰 프롬프트 인젝션 격리, 게이트 데이터 결함 가시화, 미배선 에이전트 정리 + 완결 감사 기반 마감(승인 영속화·빌드 SSOT·릴리스 멱등·훅 견고성·i18n 전면 영문) + 재분석 후속(blocked 복귀·데드락 해소·플러그인 CI·M002) + 공개 대비 문서(Why·영문 스킬 레퍼런스·팀 도입 FAQ·비용 기대치) + Claude Code 신기능 채택(maxTurns·disallowed-tools, ADR-011) + **플러그인 모드 마이그레이션 경로**(플러그인 설치 프로젝트가 프로젝트-로컬 마이그레이션을 받는 `/aick-upgrade` 분기, ADR-012). 기능 추가·BREAKING 없음 → minor.
 
 ### Added (plugin-mode migration path — ADR-012)
 - **플러그인 모드 마이그레이션 경로** (`aick-upgrade` Step 0.5 모드 판별 + P1~P6 분기): 플러그인 설치 프로젝트는 `/plugin update`가 플러그인 캐시만 교체해 **프로젝트-로컬 마이그레이션**(`.gitignore` 엔트리·`project.json` kitVersion·`CLAUDE.md` 재생성)이 도달할 공식 경로가 없던 갭 해소(본 릴리스의 A2 gitignore 엔트리가 첫 실질 영향). 설치 모드 자동 판별은 **텍스트 치환 기반**(`${CLAUDE_PLUGIN_ROOT}`는 env 변수가 아님 — 리터럴 잔존=클론, 절대경로 치환=플러그인) + 빌트인 시드 glob, 하이브리드는 클론 플로우로 라우팅. P-플로우는 파일 교체 없음(시드 전환 금지 불변식)·경량 백업(존재 파일만)·잠금(P3.5)·kitVersion **마지막** 기록(중간 실패 시 드리프트 신호 보존)·README는 CUSTOM_SECTION 마커 존재 시만 재생성(사용자 소유 README 보호)·실패 시 자동 복원. `aick-health-check` SI-06 autoFix(버전 직접 스탬핑) **제거** — 미적용 마이그레이션을 영구 마스킹하던 경로. 문서 동기: cowork-plugin 2단계 절차, upgrade-guide 모드 표, eject-guide §플러그인-only 전환 신설, README·getting-started EN/KO 페어, CLAUDE.md.tmpl 예외 2 개정(구 문구 재주입 순환 차단). 설계 기록 = ADR-012(v4.3.0 "upgrade EXEMPT" 입장 전환).

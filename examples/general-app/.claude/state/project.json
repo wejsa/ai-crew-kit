@@ -2,7 +2,7 @@
   "name": "general-app",
   "description": "범용 최소 예제 — 도메인 무관 워크플로우/설정 구조 시연",
   "version": "1.0.0",
-  "kitVersion": "4.7.0",
+  "kitVersion": "4.8.0",
   "kitSource": "https://github.com/wejsa/ai-crew-kit",
   "createdAt": "2026-06-06T00:00:00Z",
   "metadata": {
@@ -21,8 +21,13 @@
     "infrastructure": "docker-compose"
   },
   "agents": {
-    "enabled": ["code-reviewer", "qa"],
-    "disabled": ["db-designer"]
+    "enabled": [
+      "code-reviewer",
+      "qa"
+    ],
+    "disabled": [
+      "db-designer"
+    ]
   },
   "conventions": {
     "taskPrefix": "TASK",

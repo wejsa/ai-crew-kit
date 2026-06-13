@@ -1,12 +1,12 @@
 <div align="center">
 
-# AI Crew Kit v4.7.0
+# AI Crew Kit v4.8.0
 
 **A general-purpose AI crew framework — orchestration · quality gates · stack awareness**
 
 Process management for AI-agent-team software development, native to Claude Code
 
-[![Version](https://img.shields.io/badge/version-v4.7.0-blue?style=flat-square)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v4.8.0-blue?style=flat-square)](./CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](./LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/wejsa/ai-crew-kit?style=flat-square)](https://github.com/wejsa/ai-crew-kit)
 [![Built with Claude Code](https://img.shields.io/badge/built_with-Claude_Code-blueviolet?style=flat-square)](https://claude.ai/download)
