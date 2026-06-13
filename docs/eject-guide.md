@@ -74,6 +74,16 @@ rmdir .claude 2>/dev/null
 - [ ] **PR 크기 제한**: GitHub Actions 등으로 라인 수 체크 설정
 - [ ] **보안 체크**: SonarQube/Snyk 등 보안 도구 도입
 
+## 플러그인-only 전환
+
+클론/시드로 시작했지만 앞으로 **플러그인으로만** 쓰고 싶다면 (프레임워크 제거가 아니라 설치 방식 전환):
+
+1. 플러그인 설치 확인: `/plugin install ai-crew-kit@ai-crew-kit`
+2. **로컬 프레임워크 디렉토리만 삭제**: `.claude/{agents,skills,domains,templates,schemas,workflows,docs,hooks}` — 단 `.claude/skills/custom/`(커스텀 스킬)은 보존하려면 미리 다른 위치로 옮긴 뒤 삭제
+3. **유지**: `.claude/state/`(backlog 등 누적 데이터), `.claude/settings.json`, `CLAUDE.md`, `README.md`, `.claude/temp/`, `.claude/plans/`
+4. **`settings.json`의 프레임워크 훅 등록 제거**: `hooks`의 `PreToolUse`/`PostToolUse`/`SessionStart`/`Stop`에서 `.claude/hooks/*.sh`(`$CLAUDE_PROJECT_DIR/.claude/hooks/...` 포함)를 참조하는 항목을 삭제 — 플러그인 manifest가 같은 이벤트를 등록하므로, 안 지우면 **이중 등록 + 삭제된 로컬 파일 참조**가 된다. `.claude/hooks/`를 참조하지 않는 사용자 커스텀 훅은 보존.
+5. 이후 업데이트는 `/plugin marketplace update` + `/aick-upgrade`(플러그인 모드 — 프로젝트-로컬 마이그레이션만 적용)
+
 ## 부분 제거
 
 프레임워크의 일부만 유지하고 싶다면:

@@ -269,7 +269,7 @@ claude
 킷의 상태는 git에 삽니다(`.claude/state/project.json`, `backlog.json`, `CLAUDE.md`) — 팀은 다른 코드와 똑같이 공유합니다:
 
 1. **한 사람이 초기화합니다.** 프로젝트에서 `/aick-init`(또는 `/aick-onboard`)을 실행하고, 생성 파일을 검토한 뒤 커밋·push합니다.
-2. **나머지 팀원은 플러그인만 설치**(사용자 전역, 명령 2개)하고, 프로젝트를 pull한 뒤 `/aick-status` — 추가 설정 없음. 팀 전체 동일 플러그인 버전 권장(`/plugin update`).
+2. **나머지 팀원은 플러그인만 설치**(사용자 전역, 명령 2개)하고, 프로젝트를 pull한 뒤 `/aick-status` — 추가 설정 없음. 팀 전체 동일 플러그인 버전 권장(`/plugin update`). 플러그인 업데이트 후에는 프로젝트에서 `/aick-upgrade`를 1회 실행하세요 — 플러그인 캐시 교체가 닿지 못하는 프로젝트-로컬 마이그레이션(`.gitignore` 엔트리·`kitVersion`·`CLAUDE.md` 재생성)을 적용합니다 (v4.8.0+).
 3. **병렬 작업은 잠금이 보호합니다.** `/aick-plan`이 Task를 잠금(TTL + 활동 하트비트)과 함께 claim — 두 세션이 같은 Task를 잡을 수 없고, 만료된 잠금은 자동 해제됩니다. 한 머신에서는 `claude --worktree <name>`으로 병렬 세션을 띄우세요.
 4. **핫픽스·ad-hoc PR 한 가지 수칙**: 리뷰가 돌았던 머신에서 머지까지 완료하세요. 이 판정은 로컬에만 기록되며(게이트 신호 A2, gitignore), 다른 클론에서의 머지는 GitHub 리뷰 상태에만 의존합니다. 워크플로우 체인 PR(plan→impl→review)은 무관 — 상태가 git으로 이동합니다. ([상세](./merge-gate-explained.ko.md#7-게이트가-하지-않는-것-정직한-한계))
 

@@ -118,6 +118,8 @@ Then, in any project:
 /reload-plugins                             # ③ apply to the current session
 ```
 
+Then run `/aick-upgrade` once in each project that uses the kit — it applies project-local migrations (`.gitignore` entries, `kitVersion`, `CLAUDE.md` regeneration) that a plugin cache swap can't reach (v4.8.0+).
+
 > [!IMPORTANT]
 > **v4.5.x → v4.6.0 is BREAKING**: skill commands were renamed `/crew-*` → `/aick-*`. Coming from a v4.0–4.5 seed, run `/crew-upgrade --version v4.6.0` once (it replaces itself with `aick-upgrade`), then use `/aick-*`. Details: [upgrade guide (Korean)](./docs/upgrade-guide.md) · update troubleshooting: [한국어 안내](./README.ko.md#기존-사용자--업데이트)
 

@@ -5,6 +5,17 @@
 AI Crew Kit이 업데이트되면, 기존 프로젝트에서 프레임워크 파일만 선택적으로 업그레이드할 수 있습니다.
 프로젝트 코드, 상태 파일(backlog, project.json, lessons-learned), 커스텀 설정은 보존됩니다.
 
+## 설치 방식별 차이 (v4.8.0+)
+
+`/aick-upgrade`는 설치 모드를 자동 판별해 다르게 동작합니다:
+
+| 모드 | 프레임워크 파일 (skills·agents·hooks·templates) | 프로젝트-로컬 (gitignore·kitVersion·CLAUDE.md) |
+|------|------|------|
+| **클론/시드** | 본 스킬이 교체 (아래 본문 전체 적용) | 본 스킬이 적용 |
+| **플러그인** | `/plugin marketplace update`가 교체 (본 스킬 무관여) | **본 스킬이 적용** — 마이그레이션·kitVersion·CLAUDE.md 재생성만 수행, 로컬 프레임워크 디렉토리는 생성하지 않음 |
+
+플러그인 사용자: 아래 본문의 파일 교체·settings 머지·커스터마이징 복원 단계는 해당되지 않습니다. 권장 절차 = `/plugin marketplace update` → 프로젝트에서 `/aick-upgrade` 1회.
+
 ## 업그레이드 실행
 
 > ⚠️ **구버전 시드에서 처음 올리는 경우** 아래 `/aick-upgrade` 명령이 아직 프로젝트에 없을 수 있습니다 (v4.0~4.5 시드는 `/crew-upgrade`, v3.x 시드는 `/skill-upgrade`만 존재). 본인 프로젝트에 있는 구 업그레이드 명령으로 아래 **프리픽스 마이그레이션** 섹션을 따라 한 번 올린 뒤, 이후부터 아래 명령을 사용하세요.
@@ -29,6 +40,7 @@ AI Crew Kit이 업데이트되면, 기존 프로젝트에서 프레임워크 파
 
 - **에이전트 12종 → 7종**: 미배선 장식 에이전트 5종(pm·planner·backend·frontend·docs)이 제거됩니다. **동작 변화 없음**(어떤 스킬도 호출하지 않던 에이전트). `.claude/agents/` 통째 교체로 자동 전파되며, 기존 `project.json`의 `agents.enabled`에 구 이름이 남아 있어도 검증은 통과하고(`schema` legacy 수용) `/aick-health-check`(SI-05)가 MINOR로 정리를 안내합니다.
 - **머지 게이트 신호 A2**: 핫픽스·ad-hoc 리뷰 PR도 게이트가 차단합니다. `.gitignore`에 `.claude/state/review-decisions.json*` 엔트리가 자동 추가됩니다(글롭 — atomic-write tmp 잔재 포함. `migrations.json` `add_gitignore_entry` — 로컬 전용 transient 상태).
+- **플러그인 사용자도 1회 실행 필요**: 위 gitignore 엔트리 등 프로젝트-로컬 마이그레이션은 `/plugin update`로 도달하지 않습니다 — 플러그인 갱신 후 프로젝트에서 `/aick-upgrade`를 1회 실행하세요(플러그인 모드 자동 감지, 파일 교체 없음).
 
 ## v1.x → v2.0 마이그레이션
 
