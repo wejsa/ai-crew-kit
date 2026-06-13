@@ -3,6 +3,7 @@ name: aick-hotfix
 description: main 긴급 수정 - 핫픽스 브랜치 + 보안 리뷰 + 패치 릴리스 + develop 백머지. 사용자가 "긴급 수정해줘" 또는 /aick-hotfix를 요청할 때 사용합니다.
 disable-model-invocation: false
 allowed-tools: Bash(git:*), Bash(gh:*), Bash(./gradlew:*), Bash(npm:*), Read, Write, Edit, Glob, Grep
+disallowed-tools: WebFetch, WebSearch, NotebookEdit
 argument-hint: "\"{긴급 수정 설명}\""
 complexity-hint: medium
 ---

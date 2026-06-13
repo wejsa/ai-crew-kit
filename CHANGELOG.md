@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-> **품질 번들 + 마감 번들 + 분석 후속 + Phase C 문서 (공개 대비)** — 머지 게이트 커버리지 완성(핫픽스 경로), 리뷰 프롬프트 인젝션 격리, 게이트 데이터 결함 가시화, 미배선 에이전트 정리 + 완결 감사 기반 마감(승인 영속화·빌드 SSOT·릴리스 멱등·훅 견고성·i18n 전면 영문) + 재분석 후속(blocked 복귀·데드락 해소·플러그인 CI·M002) + 공개 대비 문서(Why·영문 스킬 레퍼런스·팀 도입 FAQ·비용 기대치). 차기 minor(4.8.0 예정)로 릴리스.
+> **품질 번들 + 마감 번들 + 분석 후속 + Phase C 문서 + CC 기능 채택 (공개 대비)** — 머지 게이트 커버리지 완성(핫픽스 경로), 리뷰 프롬프트 인젝션 격리, 게이트 데이터 결함 가시화, 미배선 에이전트 정리 + 완결 감사 기반 마감(승인 영속화·빌드 SSOT·릴리스 멱등·훅 견고성·i18n 전면 영문) + 재분석 후속(blocked 복귀·데드락 해소·플러그인 CI·M002) + 공개 대비 문서(Why·영문 스킬 레퍼런스·팀 도입 FAQ·비용 기대치) + Claude Code 신기능 채택(maxTurns·disallowed-tools, ADR-011). 차기 minor(4.8.0 예정)로 릴리스.
+
+### Added (CC feature adoption — ADR-011)
+- **자문 에이전트 `maxTurns: 15`** (agent-qa·docs-impact-analyzer·agent-db-designer): 읽기 전용 백그라운드 자문 3종에 하네스 레벨 턴 캡 — 기존 보호가 prose timeout(60초)뿐이라 LLM 폭주 시 토큰 무방비이던 지점의 결정적 백스톱. pr-reviewer 3종은 **의도적 미적용**(하드 캡이 대형 PR 심층 리뷰를 조용히 절단 → 게이트 false-negative 위험 — ADR-011 §3).
+- **파괴적 플로우 `disallowed-tools`** (aick-rollback: `Task, WebFetch, WebSearch, NotebookEdit` / aick-hotfix: `WebFetch, WebSearch, NotebookEdit` — Task는 Step 7 보안 리뷰 디스패치에 필요해 유지): `allowed-tools`는 자동 승인 목록일 뿐 가용 제한이 아님(공식 의미론 확인) — 파괴적 플로우에서 웹 섭취(인젝션 표면)·플로우 밖 도구를 실제 제거.
+- **ADR-011** (`docs/requirements/adr-011-cc-feature-adoption.md`): 공식 문서로 후보 전수 검증(subagent 14필드·skill 16필드·훅 27이벤트·plugin manifest·명령 3종 실재 확인) 후 채택 2건 + **보류 7건의 근거·재평가 트리거 박제**(background=호출 측 SSOT, reviewer maxTurns=게이트 품질 위험, memory=lessons-learned 이중화, 신규 훅=비용>가치 등). `.gitignore`에 ADR 클래스 화이트리스트(`docs/requirements/adr-*.md` — 신규 ADR이 `docs/*` 제외에 걸리던 갭, 디렉토리 재포함 패턴).
 
 ### Added (Phase C docs)
 - **영문 스킬 레퍼런스** (`docs/skill-reference.en.md`): 전체 명령·Tier 분류·confidence 매트릭스 영문화 + **"Which skill, when?" 상황 기반 의사결정 표** 신설(한국어판에도 동일 표 추가 — 22개 스킬 인지 부하 해소). README 문서 표·Commands 링크 EN 승격, `.gitignore` 화이트리스트 등재.
