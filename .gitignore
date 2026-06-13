@@ -92,6 +92,9 @@ docs/*
 !docs/assets/**
 !docs/v2/
 !docs/v2/**
+!docs/requirements/
+docs/requirements/*
+!docs/requirements/adr-*.md
 !docs/archive/
 !docs/archive/**
 
