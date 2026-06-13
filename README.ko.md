@@ -73,6 +73,7 @@ echo '{"tool_input":{"command":"gh pr merge 42 --squash"}}' \
 
 ---
 
+<!-- PARITY: 아래 Why 섹션은 README.md의 "Why not just plain Claude Code?"와 페어 — 한쪽 수정 시 반드시 동시 갱신 -->
 ## 🧭 그냥 Claude Code만 쓰면 안 되나?
 
 Claude Code 단독으로도 코드는 이미 훌륭하게 작성합니다. 단독으로 얻을 수 없는 것은 세션·브랜치·구성원을 가로질러 유지되는 **프로세스**입니다:
